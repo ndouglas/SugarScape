@@ -331,7 +331,7 @@ impl RetirementWorld {
         self.cohorts.entry(born).or_default().push(i as u32);
         *self.born_size.entry(born).or_default() += 1;
         if self.config.renewal == Renewal::Replace {
-            // Everyone who knew the dead agent picks someone new within their extent.
+            // Replace within each holder's extent, preserving the friend's group category.
             for h in std::mem::take(&mut self.known_by[i]) {
                 let h = h as usize;
                 let (hb, he, hg) = (
@@ -339,7 +339,7 @@ impl RetirementWorld {
                     self.agents[h].extent,
                     self.agents[h].group,
                 );
-                let same = self.config.groups.enabled.then_some((hg, true));
+                let same = self.config.groups.enabled.then_some((hg, group == hg));
                 let pool: Vec<u32> = self
                     .pool(hb, he, h, same)
                     .into_iter()
@@ -1049,6 +1049,65 @@ mod tests {
             })
             .count();
         assert!(stale > 0, "slot renewal leaves newborns in old networks");
+    }
+
+    // Four hand-placed agents in one cohort; only holder 0 knows deceased 1.
+    fn group_replacement_fixture(groups: [u8; 4], network: &[u32]) -> RetirementWorld {
+        let mut w = world(|c| {
+            c.per_cohort = 2;
+            c.groups.enabled = true;
+            c.renewal = Renewal::Replace;
+        });
+        w.agents.truncate(4);
+        w.cohorts.clear();
+        w.cohorts.insert(-10, vec![0, 1, 2, 3]);
+        w.born_size.clear();
+        w.born_size.insert(-10, 4);
+        w.known_by = vec![Vec::new(); 4];
+        for (i, a) in w.agents.iter_mut().enumerate() {
+            a.born = -10;
+            a.extent = 0;
+            a.group = groups[i];
+            a.network.clear();
+        }
+        w.agents[0].network = network.to_vec();
+        for &m in network {
+            w.known_by[m as usize].push(0);
+        }
+        consistent(&w);
+        w
+    }
+
+    #[test]
+    fn replace_renewal_preserves_opposite_group_friendship() {
+        let mut w = group_replacement_fixture([0, 1, 1, 0], &[1]);
+        w.die(1);
+        assert_eq!(w.agents[0].network, vec![2]);
+        consistent(&w);
+    }
+
+    #[test]
+    fn replace_renewal_preserves_same_group_friendship() {
+        let mut w = group_replacement_fixture([0, 0, 0, 1], &[1]);
+        w.die(1);
+        assert_eq!(w.agents[0].network, vec![2]);
+        consistent(&w);
+    }
+
+    #[test]
+    fn replace_renewal_removes_cross_group_edge_when_only_duplicate_matches() {
+        let mut w = group_replacement_fixture([0, 1, 1, 0], &[1, 2]);
+        w.die(1);
+        assert_eq!(w.agents[0].network, vec![2]);
+        consistent(&w);
+    }
+
+    #[test]
+    fn replace_renewal_removes_same_group_edge_when_only_holder_matches() {
+        let mut w = group_replacement_fixture([0, 0, 1, 1], &[1]);
+        w.die(1);
+        assert!(w.agents[0].network.is_empty());
+        consistent(&w);
     }
 
     #[test]

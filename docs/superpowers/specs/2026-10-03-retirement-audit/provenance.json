@@ -1,0 +1,595 @@
+{
+  "recorded": "2026-10-03",
+  "durable_root": "docs/superpowers/specs/2026-10-03-retirement-audit",
+  "ignored_source_root": ".superpowers/sdd/2026-10-03-retirement-audit",
+  "notes": "Native measurements retain identical values; prior-tick mode is labelled previous_tick_mode_at_switch. Probe dynamics unchanged; this diagnostic excludes actual switch-tick events and is not directly comparable to independent mode_at_switch. Plot paths use retained crops; selected native summary is regenerated. Figure crop pixels unchanged.",
+  "original_rendered_page_sha256": {
+    "ae-fig-09.png": "4ec9ad7d45b1f9537d33a90511f476696bd9699e43d5260cb83706ab4125e85b",
+    "ae-fig-10.png": "b02d3e89f5f43d49520fed5471c3e9f77d75a51acc9b2a815bcca575789cd910",
+    "ae-fig-11.png": "0b25a2ca9d0fcdde04b16bcf604607a35494980209489842cb47c65d5b8b777a",
+    "ae-fig-12.png": "7773c3e95750ce58b8f05b61eae7371427ff98fb0fe8faf0c877d2332e250077",
+    "ae-fig-14.png": "e6d0ecdb345dde6fed77e860f44eb4a37a94180215a3d634a62bd05900699c99",
+    "ae-p15-fig610.png": "ca23ea9728eb09a8aa3b644687673f8594ff3a794d1f53ad70b2bc96c4b30f92",
+    "ae-p16-fig611.png": "58c5223be28ffcf941933f5110bbaa3b1617080bac2264ed738a41e341f248a7"
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "50ac65753e68c8a36d807f2547edb5d653aef9314f01cfd39faacdb594643f1f"
+    },
+    {
+      "path": "figures/comparison-611.png",
+      "sha256": "00a3fb9e4b6abff884048c677499ac5b1980cdca1a5a30af4948c5e85e7c5578",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/comparison-611.png",
+      "source_sha256": "00a3fb9e4b6abff884048c677499ac5b1980cdca1a5a30af4948c5e85e7c5578"
+    },
+    {
+      "path": "figures/comparison-64.png",
+      "sha256": "9c34eac10eb6a249195f66ed9a4a9ace22b616107b2d397dc4f59ed529fb3f48",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/comparison-64.png",
+      "source_sha256": "9c34eac10eb6a249195f66ed9a4a9ace22b616107b2d397dc4f59ed529fb3f48"
+    },
+    {
+      "path": "figures/comparison-65.png",
+      "sha256": "46d92e09246feaab74edd5b195b2b0fc8c2e4d2674a9b1cb8037f3a288cc827a",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/comparison-65.png",
+      "source_sha256": "46d92e09246feaab74edd5b195b2b0fc8c2e4d2674a9b1cb8037f3a288cc827a"
+    },
+    {
+      "path": "figures/comparison-66.png",
+      "sha256": "17cdfeaa17e2985408ea09683bfd9169eccf5ba471042f184a29bc441add7a2f",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/comparison-66.png",
+      "source_sha256": "17cdfeaa17e2985408ea09683bfd9169eccf5ba471042f184a29bc441add7a2f"
+    },
+    {
+      "path": "figures/comparison-67.png",
+      "sha256": "20ac53114db89eb5b8ea233abc41a37c55aa2c9ebf9d835fc04fa1050e81ade8",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/comparison-67.png",
+      "source_sha256": "20ac53114db89eb5b8ea233abc41a37c55aa2c9ebf9d835fc04fa1050e81ade8"
+    },
+    {
+      "path": "figures/comparison-69.png",
+      "sha256": "6524b50967ae02140179cc5290c13388c4a403e9f35f51210165dca1bcd797b1",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/comparison-69.png",
+      "source_sha256": "6524b50967ae02140179cc5290c13388c4a403e9f35f51210165dca1bcd797b1"
+    },
+    {
+      "path": "figures/comparison-policy-ae.png",
+      "sha256": "117ab95927407fa827da760a4519e34d2b76b880ad3a28af494cd47899532cda",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/comparison-policy-ae.png",
+      "source_sha256": "117ab95927407fa827da760a4519e34d2b76b880ad3a28af494cd47899532cda"
+    },
+    {
+      "path": "figures/comparison-policy-gss.png",
+      "sha256": "c9eb2d48bf0d14ecf46afd0aaa723cc4e5f0531d38ea75a6d6c5746eb2ca3ea2",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/comparison-policy-gss.png",
+      "source_sha256": "c9eb2d48bf0d14ecf46afd0aaa723cc4e5f0531d38ea75a6d6c5746eb2ca3ea2"
+    },
+    {
+      "path": "figures/contact-sheet.png",
+      "sha256": "664d197574d9db68ca1d7f35dc332b8778e0c4ae15b316388ca0665b25ec8a3e",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/contact-sheet.png",
+      "source_sha256": "664d197574d9db68ca1d7f35dc332b8778e0c4ae15b316388ca0665b25ec8a3e"
+    },
+    {
+      "path": "figures/methods.md",
+      "sha256": "57df4aac41d1f67c6a246a9568536e7bcdfc1c2c6fafe6f4e6decbbb1004b9d9",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/methods.md",
+      "source_sha256": "3190287ce8b3876e473bd1abe24bc1ec684bdd16329eaa73b31b9ede84a8e805"
+    },
+    {
+      "path": "figures/plots.py",
+      "sha256": "11da358ea80b3f18a86d40cca2052b89c38e91417bd0312c3f909ae32ecef5ce",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/plots.py",
+      "source_sha256": "c338a67edb680ce8c146a405420c6e3e8dbfb122c832e8bb9c8ad13ec1b74e86"
+    },
+    {
+      "path": "figures/policy-age-diagnostics.png",
+      "sha256": "0bf30d20b22522d35c696a1d6a97d676fa614fb9e9028a57c8baf38f85cf828f",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/policy-age-diagnostics.png",
+      "source_sha256": "0bf30d20b22522d35c696a1d6a97d676fa614fb9e9028a57c8baf38f85cf828f"
+    },
+    {
+      "path": "figures/source-610.png",
+      "sha256": "b77f3e951399c0019a584bc4b370aa6728197689e36dd284089cc8256151b4e8",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/source-610.png",
+      "source_sha256": "b77f3e951399c0019a584bc4b370aa6728197689e36dd284089cc8256151b4e8"
+    },
+    {
+      "path": "figures/source-611.png",
+      "sha256": "0508e6f3162aabd126b87ef7a48723f5f74432f38e045f2ad87aa936bc8a8a45",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/source-611.png",
+      "source_sha256": "0508e6f3162aabd126b87ef7a48723f5f74432f38e045f2ad87aa936bc8a8a45"
+    },
+    {
+      "path": "figures/source-64.png",
+      "sha256": "edfa2c59c87057c68da7a8f71f3d8fcc741385b0c100f46da6d8e2c1da04b585",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/source-64.png",
+      "source_sha256": "edfa2c59c87057c68da7a8f71f3d8fcc741385b0c100f46da6d8e2c1da04b585"
+    },
+    {
+      "path": "figures/source-65.png",
+      "sha256": "a53f7e3d269e08921640c1eabdfb3bb966afe0d2009062994a64ccf67dafda00",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/source-65.png",
+      "source_sha256": "a53f7e3d269e08921640c1eabdfb3bb966afe0d2009062994a64ccf67dafda00"
+    },
+    {
+      "path": "figures/source-66.png",
+      "sha256": "11114d08c1992f5cb8be7d9c1239b6767d42e2e8b092bee74df68413451dca82",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/source-66.png",
+      "source_sha256": "11114d08c1992f5cb8be7d9c1239b6767d42e2e8b092bee74df68413451dca82"
+    },
+    {
+      "path": "figures/source-67.png",
+      "sha256": "b7c50bbed3d59e731b11235aa3999c2c3e12c3fd7f7dcd439a988c820ca70102",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/source-67.png",
+      "source_sha256": "b7c50bbed3d59e731b11235aa3999c2c3e12c3fd7f7dcd439a988c820ca70102"
+    },
+    {
+      "path": "figures/source-69.png",
+      "sha256": "5af491897ff81ecc237181fb40888cd10590ce8f9cbbd41c644337c3db483dc5",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/figures/source-69.png",
+      "source_sha256": "5af491897ff81ecc237181fb40888cd10590ce8f9cbbd41c644337c3db483dc5"
+    },
+    {
+      "path": "independent/probe.cpp",
+      "sha256": "ceb7d8ab29b72cfb8509687d84cd7603c0f65036f75ab505b8405af345f5390f",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/independent/continuous/probe.cpp",
+      "source_sha256": "ceb7d8ab29b72cfb8509687d84cd7603c0f65036f75ab505b8405af345f5390f"
+    },
+    {
+      "path": "independent/protocol.md",
+      "sha256": "f0d09b8fefbba1bba1f4d046ccc6ba55898fd1c411f2c8959f4e296487ea0c63",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/independent/continuous/protocol.md",
+      "source_sha256": "d070e299ef95eb8abc15cb13493906150a045922b273881c113b72681ed74a0a"
+    },
+    {
+      "path": "independent/report.md",
+      "sha256": "4d02a4e5bd35a446de5c3168e08d7df9d654352990e096b45771b33fbb26efe1",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/independent/continuous/report.md",
+      "source_sha256": "96f9169a805e8a1f9bb1f98534ff8377a9c15177c7f61d22f46c42caea3ad948"
+    },
+    {
+      "path": "independent/seeds.csv",
+      "sha256": "018d338fa804ced8097f15b50f82e0d023fc1f539e10013260c475caea99ed12",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/independent/continuous/seeds.csv",
+      "source_sha256": "018d338fa804ced8097f15b50f82e0d023fc1f539e10013260c475caea99ed12"
+    },
+    {
+      "path": "independent/seeds_enriched.csv",
+      "sha256": "22e9feae90f10e05d9a301573250d454ce2cb6503d7d4e99e7024203365e02bc",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/independent/continuous/seeds_enriched.csv",
+      "source_sha256": "22e9feae90f10e05d9a301573250d454ce2cb6503d7d4e99e7024203365e02bc"
+    },
+    {
+      "path": "independent/selected_trace.csv",
+      "sha256": "452c1420a2e2a582c8dd21596f56ce141d54b1f417d05e6c9ea6425998bf31f1",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/independent/continuous/selected_trace.csv",
+      "source_sha256": "452c1420a2e2a582c8dd21596f56ce141d54b1f417d05e6c9ea6425998bf31f1"
+    },
+    {
+      "path": "independent/summarize.py",
+      "sha256": "46facdf26a884434607089db5160df5eee4435c25792b83bbe858c435f147449",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/independent/continuous/summarize.py",
+      "source_sha256": "46facdf26a884434607089db5160df5eee4435c25792b83bbe858c435f147449"
+    },
+    {
+      "path": "independent/summary.csv",
+      "sha256": "9eae813aa7ad87e4edf1d6e674f4164c0f92adcff41c2a3f8c49af70d1f6cf1e",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/independent/continuous/summary.csv",
+      "source_sha256": "9eae813aa7ad87e4edf1d6e674f4164c0f92adcff41c2a3f8c49af70d1f6cf1e"
+    },
+    {
+      "path": "native/cohort-source_200-config.json",
+      "sha256": "c4074666dc777e646ce9fa57b5b6e48828d2db986de49ee1d35b9bd2e4b40ee6",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/cohort-source_200-config.json",
+      "source_sha256": "c4074666dc777e646ce9fa57b5b6e48828d2db986de49ee1d35b9bd2e4b40ee6"
+    },
+    {
+      "path": "native/cohort-source_300-config.json",
+      "sha256": "264bb4c98095aa3163510cf6b6df5e6d292ef332381c26329eb6ea5ef7a612a1",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/cohort-source_300-config.json",
+      "source_sha256": "264bb4c98095aa3163510cf6b6df5e6d292ef332381c26329eb6ea5ef7a612a1"
+    },
+    {
+      "path": "native/counts_Replace_All-config.json",
+      "sha256": "00ee30123641a12b8435b995651cee12972bdc8aafea29defcc45ecf8002a58f",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/counts_Replace_All-config.json",
+      "source_sha256": "00ee30123641a12b8435b995651cee12972bdc8aafea29defcc45ecf8002a58f"
+    },
+    {
+      "path": "native/counts_Replace_Eligible-config.json",
+      "sha256": "a3217bfe14dc0118bcc7cdef3df16ee0fef174c9c7db8b7b7b6e0b18037cc00b",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/counts_Replace_Eligible-config.json",
+      "source_sha256": "a3217bfe14dc0118bcc7cdef3df16ee0fef174c9c7db8b7b7b6e0b18037cc00b"
+    },
+    {
+      "path": "native/counts_Slot_All-config.json",
+      "sha256": "9c6a6bb6cfaab403b92f066e9123a5cbeb11ca8f80ccad671bd83bb02fdd0f67",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/counts_Slot_All-config.json",
+      "source_sha256": "9c6a6bb6cfaab403b92f066e9123a5cbeb11ca8f80ccad671bd83bb02fdd0f67"
+    },
+    {
+      "path": "native/counts_Slot_Eligible-config.json",
+      "sha256": "b0a636d84340c9b5617c15c113a8ecd193c151d9926893b21d193b0a89a9a86c",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/counts_Slot_Eligible-config.json",
+      "source_sha256": "b0a636d84340c9b5617c15c113a8ecd193c151d9926893b21d193b0a89a9a86c"
+    },
+    {
+      "path": "native/critical_Slot_0-config.json",
+      "sha256": "0af6d15a1689c077a3ba876f9a9f51f0377e62f4fabb3d678464ddd3c424af02",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/critical_Slot_0-config.json",
+      "source_sha256": "0af6d15a1689c077a3ba876f9a9f51f0377e62f4fabb3d678464ddd3c424af02"
+    },
+    {
+      "path": "native/critical_Slot_0.02-config.json",
+      "sha256": "34c17bfcdec5461b4513b7f6feaac4b6793658b916b40982e949ad4cdabc07e7",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/critical_Slot_0.02-config.json",
+      "source_sha256": "34c17bfcdec5461b4513b7f6feaac4b6793658b916b40982e949ad4cdabc07e7"
+    },
+    {
+      "path": "native/critical_Slot_0.05-config.json",
+      "sha256": "e023e32855397984540a63b0553284d19a70a84f78b5e5e658250774564ccebd",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/critical_Slot_0.05-config.json",
+      "source_sha256": "e023e32855397984540a63b0553284d19a70a84f78b5e5e658250774564ccebd"
+    },
+    {
+      "path": "native/critical_Slot_0.1-config.json",
+      "sha256": "b0a636d84340c9b5617c15c113a8ecd193c151d9926893b21d193b0a89a9a86c",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/critical_Slot_0.1-config.json",
+      "source_sha256": "b0a636d84340c9b5617c15c113a8ecd193c151d9926893b21d193b0a89a9a86c"
+    },
+    {
+      "path": "native/extent_10-config.json",
+      "sha256": "9d6790f4e062d44524eff32bbe4a1eac9a0344084873c418b674d94e552e77b9",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/extent_10-config.json",
+      "source_sha256": "9d6790f4e062d44524eff32bbe4a1eac9a0344084873c418b674d94e552e77b9"
+    },
+    {
+      "path": "native/extent_6-config.json",
+      "sha256": "ec63ce1ffa3771d167287791a5680a09eeeeea3d83d920ac7a63a89302fc2031",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/extent_6-config.json",
+      "source_sha256": "ec63ce1ffa3771d167287791a5680a09eeeeea3d83d920ac7a63a89302fc2031"
+    },
+    {
+      "path": "native/extent_7-config.json",
+      "sha256": "933519e316478d312379112233f5aed8152bdc91acab43fa45d625fc279cae16",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/extent_7-config.json",
+      "source_sha256": "933519e316478d312379112233f5aed8152bdc91acab43fa45d625fc279cae16"
+    },
+    {
+      "path": "native/extent_8-config.json",
+      "sha256": "65196e4f6697bd87b0d7900c30ed600bf6452ea6d19a9db9f12be9b89ab90696",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/extent_8-config.json",
+      "source_sha256": "65196e4f6697bd87b0d7900c30ed600bf6452ea6d19a9db9f12be9b89ab90696"
+    },
+    {
+      "path": "native/extent_9-config.json",
+      "sha256": "47f1ff23666f792d35e33f4ef40b8f57f61b468d5c0fbf9a250fe7bd078fe915",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/extent_9-config.json",
+      "source_sha256": "47f1ff23666f792d35e33f4ef40b8f57f61b468d5c0fbf9a250fe7bd078fe915"
+    },
+    {
+      "path": "native/groups-source_0.05-config.json",
+      "sha256": "be6e21640ffb1f234ffa35e3a781bba344762cb2279b17a3c8595518686a4e3d",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/groups-source_0.05-config.json",
+      "source_sha256": "be6e21640ffb1f234ffa35e3a781bba344762cb2279b17a3c8595518686a4e3d"
+    },
+    {
+      "path": "native/groups-source_0.08-config.json",
+      "sha256": "f52e8bc97c5225c8e8935092b74e363f8c5681f0613d42fb705f98304a6b667b",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/groups-source_0.08-config.json",
+      "source_sha256": "f52e8bc97c5225c8e8935092b74e363f8c5681f0613d42fb705f98304a6b667b"
+    },
+    {
+      "path": "native/groups-source_0.1-config.json",
+      "sha256": "6e53a740ed8a32b0c92d06ad25cb990acabb4e97a5bd0608f20aac09581e3349",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/groups-source_0.1-config.json",
+      "source_sha256": "6e53a740ed8a32b0c92d06ad25cb990acabb4e97a5bd0608f20aac09581e3349"
+    },
+    {
+      "path": "native/groups-source_0.12-config.json",
+      "sha256": "8740391db8a5483ac9ad510558ca3c0237499f4c5c9cbdc0a57797e4c593e810",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/groups-source_0.12-config.json",
+      "source_sha256": "8740391db8a5483ac9ad510558ca3c0237499f4c5c9cbdc0a57797e4c593e810"
+    },
+    {
+      "path": "native/groups-source_0.15-config.json",
+      "sha256": "fb583f20d17f2a2f4d81aee57a309a7bdc41c544628bd6c148daec1214519145",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/groups-source_0.15-config.json",
+      "source_sha256": "fb583f20d17f2a2f4d81aee57a309a7bdc41c544628bd6c148daec1214519145"
+    },
+    {
+      "path": "native/groups-source_0.2-config.json",
+      "sha256": "bfafe29591959a9dac709f9df7a337023f5f67f71a19f4ed52114f68639a50f2",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/groups-source_0.2-config.json",
+      "source_sha256": "bfafe29591959a9dac709f9df7a337023f5f67f71a19f4ed52114f68639a50f2"
+    },
+    {
+      "path": "native/policy-seeds.csv",
+      "sha256": "42eee7980100160fce76d2ff556019ad51e044a352bb6f8c382ad643c58e678c",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy-seeds.csv",
+      "source_sha256": "f17f789ea38b466795a72582ea090dd31315671a3cb155b341cc1ea51d05776e"
+    },
+    {
+      "path": "native/policy_ae_0.01_auto-config.json",
+      "sha256": "bdb6c7099e670385510de8bd831d145c9ef6929eb664ca6848523b83a993c995",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_ae_0.01_auto-config.json",
+      "source_sha256": "bdb6c7099e670385510de8bd831d145c9ef6929eb664ca6848523b83a993c995"
+    },
+    {
+      "path": "native/policy_ae_0.01_fixed-config.json",
+      "sha256": "fa02c8c8915884d266b267d2f2ff41c45760c8f25a394eec92b059bfca1eda52",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_ae_0.01_fixed-config.json",
+      "source_sha256": "fa02c8c8915884d266b267d2f2ff41c45760c8f25a394eec92b059bfca1eda52"
+    },
+    {
+      "path": "native/policy_ae_0.01_sustained-config.json",
+      "sha256": "fa02c8c8915884d266b267d2f2ff41c45760c8f25a394eec92b059bfca1eda52",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_ae_0.01_sustained-config.json",
+      "source_sha256": "fa02c8c8915884d266b267d2f2ff41c45760c8f25a394eec92b059bfca1eda52"
+    },
+    {
+      "path": "native/policy_ae_0.02_auto-config.json",
+      "sha256": "4eb8a4b56fa93cd213cebb485facb3678247797572884ea4263208cb32fe70e6",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_ae_0.02_auto-config.json",
+      "source_sha256": "4eb8a4b56fa93cd213cebb485facb3678247797572884ea4263208cb32fe70e6"
+    },
+    {
+      "path": "native/policy_ae_0.02_fixed-config.json",
+      "sha256": "f204a6ab40f1807ad11da1a707bff427d6710ce99ba5cdd94d18ae7d19c2d07a",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_ae_0.02_fixed-config.json",
+      "source_sha256": "f204a6ab40f1807ad11da1a707bff427d6710ce99ba5cdd94d18ae7d19c2d07a"
+    },
+    {
+      "path": "native/policy_ae_0.02_sustained-config.json",
+      "sha256": "f204a6ab40f1807ad11da1a707bff427d6710ce99ba5cdd94d18ae7d19c2d07a",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_ae_0.02_sustained-config.json",
+      "source_sha256": "f204a6ab40f1807ad11da1a707bff427d6710ce99ba5cdd94d18ae7d19c2d07a"
+    },
+    {
+      "path": "native/policy_ae_0.04_auto-config.json",
+      "sha256": "67af8e7f89bf0f08ae5874988e4d68c197dafdd04fd02ef4be727512474536c0",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_ae_0.04_auto-config.json",
+      "source_sha256": "67af8e7f89bf0f08ae5874988e4d68c197dafdd04fd02ef4be727512474536c0"
+    },
+    {
+      "path": "native/policy_ae_0.04_fixed-config.json",
+      "sha256": "f85ddb24fc4c344419ef9a3a904180b508c98ef65dac943563d083dac8c725ea",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_ae_0.04_fixed-config.json",
+      "source_sha256": "f85ddb24fc4c344419ef9a3a904180b508c98ef65dac943563d083dac8c725ea"
+    },
+    {
+      "path": "native/policy_ae_0.04_sustained-config.json",
+      "sha256": "f85ddb24fc4c344419ef9a3a904180b508c98ef65dac943563d083dac8c725ea",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_ae_0.04_sustained-config.json",
+      "source_sha256": "f85ddb24fc4c344419ef9a3a904180b508c98ef65dac943563d083dac8c725ea"
+    },
+    {
+      "path": "native/policy_ae_0.05_auto-1001-trace.csv",
+      "sha256": "bc976d78915445bb0ea12fcea86eda72edbec5ba87612215384fb76260d25f77",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_ae_0.05_auto-1001-trace.csv",
+      "source_sha256": "bc976d78915445bb0ea12fcea86eda72edbec5ba87612215384fb76260d25f77"
+    },
+    {
+      "path": "native/policy_ae_0.05_auto-config.json",
+      "sha256": "5eeb45b5ab310fea353e29ced824df74775f3e45376b851cd957ec699b0cd7a8",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_ae_0.05_auto-config.json",
+      "source_sha256": "5eeb45b5ab310fea353e29ced824df74775f3e45376b851cd957ec699b0cd7a8"
+    },
+    {
+      "path": "native/policy_ae_0.05_fixed-config.json",
+      "sha256": "96609b08179944916859f453a4d5bc56f70d88f08309cd1ae6800877d83fb38a",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_ae_0.05_fixed-config.json",
+      "source_sha256": "96609b08179944916859f453a4d5bc56f70d88f08309cd1ae6800877d83fb38a"
+    },
+    {
+      "path": "native/policy_ae_0.05_sustained-config.json",
+      "sha256": "96609b08179944916859f453a4d5bc56f70d88f08309cd1ae6800877d83fb38a",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_ae_0.05_sustained-config.json",
+      "source_sha256": "96609b08179944916859f453a4d5bc56f70d88f08309cd1ae6800877d83fb38a"
+    },
+    {
+      "path": "native/policy_gss_0.01_auto-config.json",
+      "sha256": "50751a9b82eca0e27ac4e0f2bb5b18150c91332c4d55d946f50075e63e0d3680",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_gss_0.01_auto-config.json",
+      "source_sha256": "50751a9b82eca0e27ac4e0f2bb5b18150c91332c4d55d946f50075e63e0d3680"
+    },
+    {
+      "path": "native/policy_gss_0.01_fixed-config.json",
+      "sha256": "3a74e6ff576abcce969c25e29dd16545e268b939f3288024ed67ffa0728b231b",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_gss_0.01_fixed-config.json",
+      "source_sha256": "3a74e6ff576abcce969c25e29dd16545e268b939f3288024ed67ffa0728b231b"
+    },
+    {
+      "path": "native/policy_gss_0.01_sustained-config.json",
+      "sha256": "3a74e6ff576abcce969c25e29dd16545e268b939f3288024ed67ffa0728b231b",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_gss_0.01_sustained-config.json",
+      "source_sha256": "3a74e6ff576abcce969c25e29dd16545e268b939f3288024ed67ffa0728b231b"
+    },
+    {
+      "path": "native/policy_gss_0.02_auto-config.json",
+      "sha256": "f52fff53da9071ca0e168964ffee026f0d01b7839544e8e15c551108ca5a68cc",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_gss_0.02_auto-config.json",
+      "source_sha256": "f52fff53da9071ca0e168964ffee026f0d01b7839544e8e15c551108ca5a68cc"
+    },
+    {
+      "path": "native/policy_gss_0.02_fixed-config.json",
+      "sha256": "8d4a99c2355ba6f883395c46c7a8d749b09e00db4045d36ecedd42c423d3f904",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_gss_0.02_fixed-config.json",
+      "source_sha256": "8d4a99c2355ba6f883395c46c7a8d749b09e00db4045d36ecedd42c423d3f904"
+    },
+    {
+      "path": "native/policy_gss_0.02_sustained-config.json",
+      "sha256": "8d4a99c2355ba6f883395c46c7a8d749b09e00db4045d36ecedd42c423d3f904",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_gss_0.02_sustained-config.json",
+      "source_sha256": "8d4a99c2355ba6f883395c46c7a8d749b09e00db4045d36ecedd42c423d3f904"
+    },
+    {
+      "path": "native/policy_gss_0.04_auto-config.json",
+      "sha256": "97a9696dcf473bf359a24600c17583c69e7d522255507226ce91b938787f52ca",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_gss_0.04_auto-config.json",
+      "source_sha256": "97a9696dcf473bf359a24600c17583c69e7d522255507226ce91b938787f52ca"
+    },
+    {
+      "path": "native/policy_gss_0.04_fixed-config.json",
+      "sha256": "68104f0694d9bd5d28dfbb877052fd8854b5905f9eedae7ce0f8e6016476e8e8",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_gss_0.04_fixed-config.json",
+      "source_sha256": "68104f0694d9bd5d28dfbb877052fd8854b5905f9eedae7ce0f8e6016476e8e8"
+    },
+    {
+      "path": "native/policy_gss_0.04_sustained-config.json",
+      "sha256": "68104f0694d9bd5d28dfbb877052fd8854b5905f9eedae7ce0f8e6016476e8e8",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_gss_0.04_sustained-config.json",
+      "source_sha256": "68104f0694d9bd5d28dfbb877052fd8854b5905f9eedae7ce0f8e6016476e8e8"
+    },
+    {
+      "path": "native/policy_gss_0.05_auto-1001-trace.csv",
+      "sha256": "58f5104c5ed7b1a753d89acacc9734a597ff39275a0e4fa40c8d09dbeb362d7a",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_gss_0.05_auto-1001-trace.csv",
+      "source_sha256": "58f5104c5ed7b1a753d89acacc9734a597ff39275a0e4fa40c8d09dbeb362d7a"
+    },
+    {
+      "path": "native/policy_gss_0.05_auto-config.json",
+      "sha256": "18d2559f36482f0df429382e8c9c6697548470e023a09ef289ebea470a57437e",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_gss_0.05_auto-config.json",
+      "source_sha256": "18d2559f36482f0df429382e8c9c6697548470e023a09ef289ebea470a57437e"
+    },
+    {
+      "path": "native/policy_gss_0.05_fixed-config.json",
+      "sha256": "bc313228f1a455b36b3f1e1629d46c402775c5c180a961bae68a3ddb0117a179",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_gss_0.05_fixed-config.json",
+      "source_sha256": "bc313228f1a455b36b3f1e1629d46c402775c5c180a961bae68a3ddb0117a179"
+    },
+    {
+      "path": "native/policy_gss_0.05_sustained-config.json",
+      "sha256": "bc313228f1a455b36b3f1e1629d46c402775c5c180a961bae68a3ddb0117a179",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/policy_gss_0.05_sustained-config.json",
+      "source_sha256": "bc313228f1a455b36b3f1e1629d46c402775c5c180a961bae68a3ddb0117a179"
+    },
+    {
+      "path": "native/protocol.md",
+      "sha256": "895fad460f7db162880df3d465c396ff7d7b21a012308cf7bf6a8513ed3ad024"
+    },
+    {
+      "path": "native/results.md",
+      "sha256": "76a323ff77f0193ce23eca3b62894664721749029286b870f972798df55ac165"
+    },
+    {
+      "path": "native/selected-seeds.csv",
+      "sha256": "135885a4501ed61006e35fe6063cc02effe6f0346ccd46314b4aacdf37e1c28c"
+    },
+    {
+      "path": "native/spread-source_0-config.json",
+      "sha256": "b0a636d84340c9b5617c15c113a8ecd193c151d9926893b21d193b0a89a9a86c",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/spread-source_0-config.json",
+      "source_sha256": "b0a636d84340c9b5617c15c113a8ecd193c151d9926893b21d193b0a89a9a86c"
+    },
+    {
+      "path": "native/spread-source_0.05-config.json",
+      "sha256": "60b369b5a0f4d1eb971c148b6b00029a788c8336bd93cdeb9fa4a5a97cf210a8",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/spread-source_0.05-config.json",
+      "source_sha256": "60b369b5a0f4d1eb971c148b6b00029a788c8336bd93cdeb9fa4a5a97cf210a8"
+    },
+    {
+      "path": "native/spread-source_0.1-config.json",
+      "sha256": "402a771d3fb73117070e57361bd09c6682ecd3236970315859b55cf0199bdb16",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/spread-source_0.1-config.json",
+      "source_sha256": "402a771d3fb73117070e57361bd09c6682ecd3236970315859b55cf0199bdb16"
+    },
+    {
+      "path": "native/spread-source_0.2-config.json",
+      "sha256": "693d86d31d795826af74fd30a8ddc429141b1ab28e622ddca91847f23b663b0c",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/spread-source_0.2-config.json",
+      "source_sha256": "693d86d31d795826af74fd30a8ddc429141b1ab28e622ddca91847f23b663b0c"
+    },
+    {
+      "path": "native/spread-source_0.3-config.json",
+      "sha256": "7490518ecbb3bd8f98d8ea1ef2c7068bfb2373bec1cd7e7b72938664c2dc88d0",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/spread-source_0.3-config.json",
+      "source_sha256": "7490518ecbb3bd8f98d8ea1ef2c7068bfb2373bec1cd7e7b72938664c2dc88d0"
+    },
+    {
+      "path": "native/spread-source_0.4-config.json",
+      "sha256": "81cadb3a1a512af155569dd11f0842ae035b453d05eacd5d9a2368f8565f0313",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/spread-source_0.4-config.json",
+      "source_sha256": "81cadb3a1a512af155569dd11f0842ae035b453d05eacd5d9a2368f8565f0313"
+    },
+    {
+      "path": "native/spread-source_0.5-config.json",
+      "sha256": "2b7128dcbea83d2159235186d0208c3c0db0ca231b8cc03a40c1931e109a20ad",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/spread-source_0.5-config.json",
+      "source_sha256": "2b7128dcbea83d2159235186d0208c3c0db0ca231b8cc03a40c1931e109a20ad"
+    },
+    {
+      "path": "native/summarize.py",
+      "sha256": "2975b449a8e390bd361be2652212c6530e94fd38a882b741830ead23c6c573d5",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/summarize.py",
+      "source_sha256": "58c54faced2250f7e0a533fae16555b26fc5d9d0cdbd2d739ec2126491efb254"
+    },
+    {
+      "path": "native/summary.csv",
+      "sha256": "ce4371c19de80c19ccb9d9c6113e757978cbd096a56dd004878cbea9da7cf445",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/summary.csv",
+      "source_sha256": "e4adeb5fb95a18d206ab9ff378b56a9015cc627afe072bd61b3ac7b72dfdf2e4"
+    },
+    {
+      "path": "native/trajectory_0.05-1001-trace.csv",
+      "sha256": "9bf13643f19437ececa43fe36b9ec58e5201fbfeff19bfa4208e8f2743194820",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/trajectory_0.05-1001-trace.csv",
+      "source_sha256": "9bf13643f19437ececa43fe36b9ec58e5201fbfeff19bfa4208e8f2743194820"
+    },
+    {
+      "path": "native/trajectory_0.05-config.json",
+      "sha256": "e023e32855397984540a63b0553284d19a70a84f78b5e5e658250774564ccebd",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/trajectory_0.05-config.json",
+      "source_sha256": "e023e32855397984540a63b0553284d19a70a84f78b5e5e658250774564ccebd"
+    },
+    {
+      "path": "native/trajectory_0.15-1001-trace.csv",
+      "sha256": "727e9c3121a58411cdea430adb51ab65dfe101bd672713d83a06a23d10059cca",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/trajectory_0.15-1001-trace.csv",
+      "source_sha256": "727e9c3121a58411cdea430adb51ab65dfe101bd672713d83a06a23d10059cca"
+    },
+    {
+      "path": "native/trajectory_0.15-config.json",
+      "sha256": "432dbd3325972e8684d795af5669985972d122422b3f938c0f42c5f6f63ac019",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/trajectory_0.15-config.json",
+      "source_sha256": "432dbd3325972e8684d795af5669985972d122422b3f938c0f42c5f6f63ac019"
+    },
+    {
+      "path": "native/trajectory_0.2-1001-trace.csv",
+      "sha256": "3341b6295257a5ef52c0b5d4b63889b3cf5cedff9bf06f48ca28484795c2638f",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/trajectory_0.2-1001-trace.csv",
+      "source_sha256": "3341b6295257a5ef52c0b5d4b63889b3cf5cedff9bf06f48ca28484795c2638f"
+    },
+    {
+      "path": "native/trajectory_0.2-config.json",
+      "sha256": "54c013cf68ce1eece7a92a3af1abf4d1873eac22325909704263a2bc11a94e34",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/trajectory_0.2-config.json",
+      "source_sha256": "54c013cf68ce1eece7a92a3af1abf4d1873eac22325909704263a2bc11a94e34"
+    },
+    {
+      "path": "native-probe/Cargo.lock",
+      "sha256": "9d5a87d8f96ba00df461adb1697c731feff1664ecf98ab263ee5d9f1c5c3b0d9",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/probe/Cargo.lock",
+      "source_sha256": "9d5a87d8f96ba00df461adb1697c731feff1664ecf98ab263ee5d9f1c5c3b0d9"
+    },
+    {
+      "path": "native-probe/Cargo.toml",
+      "sha256": "81d9ed5b10eac02b38809614e62f546276a3ccaa6ed26d8fa8ce018bdbad9d31",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/probe/Cargo.toml",
+      "source_sha256": "81d9ed5b10eac02b38809614e62f546276a3ccaa6ed26d8fa8ce018bdbad9d31"
+    },
+    {
+      "path": "native-probe/src/main.rs",
+      "sha256": "fe88e7a61b2cca7a572d12801c571ad4eed631a6cdc4fc7942919ac567cb9ad7",
+      "source_artifact": ".superpowers/sdd/2026-10-03-retirement-audit/native/probe/src/main.rs",
+      "source_sha256": "ef039c58b98ced1e6d7cf6d7c193066596faec3c836064530dfaff0d4d2eb772"
+    },
+    {
+      "path": "select-results.py",
+      "sha256": "eede72f00999dae297bfd46c25c5078c0aff2dd8d1f75cc8ca2db999dfa4ab26"
+    }
+  ]
+}

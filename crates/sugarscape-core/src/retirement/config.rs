@@ -22,8 +22,8 @@ pub enum Counts {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Renewal {
-    /// It passes to the 20-year-old reborn in the dead agent's slot (the
-    /// pseudo-code's reused agent objects).
+    /// It passes to the 20-year-old reborn in the dead agent's slot.
+    /// This pointer-renewal interpretation is a reconstruction choice.
     Slot,
     /// The holder picks someone new within its own extent.
     Replace,
@@ -36,7 +36,7 @@ pub enum Order {
     /// Cohorts oldest first, randomly within each (the footnote: "randomized
     /// within cohorts"; the cohort order is not given).
     ByCohort,
-    /// One random order over everyone (the pseudo-code).
+    /// One random order over everyone (a global-order reconstruction).
     Shuffled,
 }
 
@@ -68,7 +68,7 @@ impl Default for Size {
 #[serde(default, deny_unknown_fields)]
 pub struct Policy {
     pub enabled: bool,
-    /// The new eligibility age, once the norm is reached.
+    /// The new eligibility age, once the aggregate proxy is reached.
     pub to: u32,
 }
 
@@ -125,7 +125,7 @@ pub struct RetirementConfig {
     pub mandatory: u32,
     pub policy: Policy,
     pub groups: Groups,
-    /// The share of eligible agents retired that marks the norm.
+    /// The eligible-retired share marking the operational first-crossing proxy.
     pub norm: f64,
     /// Stop once the norm (with the policy, the new norm) is reached.
     pub stop_at_norm: bool,
@@ -285,8 +285,8 @@ pub fn schema() -> Vec<Param> {
             "order",
             "Each period, agents act",
             &[
-                ("by_cohort", "Cohort by cohort, oldest first (the footnote)"),
-                ("shuffled", "In one random order (the pseudo-code)"),
+                ("by_cohort", "Cohort by cohort, oldest first"),
+                ("shuffled", "In one random order"),
             ],
             Live,
         ),

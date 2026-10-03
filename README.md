@@ -2914,34 +2914,38 @@ Credit: Mark Granovetter, "Threshold Models of Collective Behavior," *American J
 nearly three decades for the most common retirement age to follow. Axtell and Epstein's agents live
 in 81 one-year cohorts, die at random between 60 and 100, and are replaced by 20-year-olds. A few are
 rational and retire as soon as they may; a few retire at random; most imitate, retiring once half the
-eligible members of their own small network — people within a few years of their age — have.
+eligible members of their own small network have.
 
-Measured (the survey and the presets' descriptions):
+The native audit below uses seeds 1001–1050 (the current survey uses 1–50); ± gives sample SD.
+Measured with explicit reconstruction choices: Slot newborn-pointer renewal, oldest-cohort-first
+activation and random order within each cohort. The papers do not uniquely specify dead pointers
+or cohort traversal direction. Networks begin near the holder's birth cohort; newborn replacement
+can change friends' age proximity. First95 is the first period with 95 % of eligible agents retired,
+an operational proxy distinct from the authors' undefined age norm and from persistent absorption.
 
-- **The realizations reproduce in shape, a little slower.** With 15 % rational, 95 % of those eligible
-  have retired by period 8 on average, rising steadily (the text says "within the first 6 periods"; 4
-  runs of 20 make it by then); with 5 %, retirement
-  stalls, wavers and "percolates up" from the old, finishing near period 61. Larger networks slow the
-  transition, a spread of network sizes speeds it, the cohort size does not matter, and retirement
-  mandatory at 70 speeds it — all as stated. Wider networks speed it at 10 % rational, as stated, but
-  not at 5 % (Figure 6-9), where the narrowest are as fast as the widest.
-- **Footnote 5 is false.** Counting every friend instead of the eligible ones is said to leave the
-  results' "qualitative character" unchanged; counting every friend, no norm ever forms — the young
-  friends hold the share retired below one half.
-- **Figure 6-6 needs an unstated rule.** Under the pseudo-code's reading — a dead friend's place
-  passes to the newborn in its slot — no minimum of rationality is needed (72 periods with no
-  rationals at all) and nothing takes the paper's hundreds of periods. Only if friends who die are
-  replaced by someone of about the same age do the paper's "minimum proportions" and long, erratic
-  transitions appear (no norm at 0 or 5 % rational; at 10 %, 8 runs of 10 reach it after 22 to 279 periods and 2 never
-  do within 600).
-- **The policy switch does not reproduce.** Lowering eligibility to 62 once the norm is established,
-  the paper's new norm "emerges after twenty to thirty periods"; here it comes in 2, at every share of
-  rationals, under either rule: an imitator just turned 62 counts its retired 65-to-67-year-old friends
-  and retires at once. The decades the model was built to explain do not follow from its rules.
-- **Coupling pulls both ways.** A little coupling between a community without rationals and one with
-  them pulls the first into line (75 → 46 periods at 0.1), as the paper says, but slows the second just
-  as much (19 → 34), until both take about 58; the paper's figure keeps the rational group fast. A
-  little spread in the thresholds first doubles the transition time before more spread shortens it.
+- **Realization shape:** 15 % rational reaches first 95 % crossing near 7.8 periods; 20 % (AE's caption) near 5.
+  The source describes one six-period realization. At 5 %, retirement wavers then cascades near 61.5;
+  this does not reproduce the source's displayed plateau near 375 or its perfect absorbing state.
+- **Denominator and rationality:** counting all members reaches no first 95 % crossing in 50 Slot runs over 600,
+  while eligible counting reaches 50/50. Both counting rules allow imitator retirements; a rolling
+  mode 65 can be produced by a small minority. Slot first 95 % crossing also occurs with 0 or 2 % rational within 2000.
+  These observations do not categorically refute qualitative footnote 5 or establish infinite-time
+  criticality. Replace is another reconstruction, rather than a rule proved necessary by the source.
+- **Sensitivity:** network-size effects reproduce qualitative trends. The source positive threshold
+  spreads show an overall decline with a final uptick; zero spread is a separate extension. Extent 6→10
+  at 5 % rational shortens first 95 % crossing from 57.8 to 52.8 (50 runs each). C 200 and 300 support equivalence
+  within a declared 20 % margin for this proxy, matching the revised strict C > 100 comparison.
+- **Policy requires separate setups:** AE uses threshold .5; GSS uses uniform[.5,1] (mean .75,
+  SD .14433756729740646). At 5 % rational, automatic proxy initialization and mandatory 70,
+  AE post-switch first 95 % crossing occurs near 2 periods; GSS reaches 22/50 within 100 periods, conditional
+  mean 43.73±32.90. A separate implementation with matched continuous mortality reaches 28/50,
+  conditional 49.61±31.88. Censored runs remain excluded from conditional means. The native previous-tick event mode
+  before revised automatic switching is 70 in 50/50 runs; the independent actual switch-tick mode is
+  70 in 50/50. These observation windows differ and must not be compared directly. Subsequent modal crossings can reverse: these tests do not establish
+  the source's prerequisite age 65 norm or categorical failure of its new-age norm.
+- **Coupling pulls both ways in the paper too:** with 10 % rational in B and 0 % in A (expected 5 %
+  globally), source coupling .05→.20 slows B's first 95 % crossing from 24.7 to 57.9; A converges 64.1→58.2,
+  50 runs each. This supports source trend shape, not exact numerical reproduction.
 
 Switches: **Agents per cohort**, **The first agents' death ages**, **Each period, agents act** (cohort by
 cohort, oldest first, or in one random order), **Rational share**, **Random share**, **Random agents'

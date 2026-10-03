@@ -1195,19 +1195,19 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "ae-rapid",
-        "15 % decide rationally, and retiring at 65 sets in within a few years",
+        "15 % decide rationally, and retirement spreads quickly",
     ),
     (
         "ae-base",
-        "A tenth decide rationally, and retiring at 65 takes hold in about 16 years",
+        "A tenth decide rationally: aggregate retirement grows",
     ),
     (
         "ae-slow",
-        "5 % rational: retiring at 65 spreads slowly, up from the old",
+        "5 % rational: retirement wavers before spreading",
     ),
     (
         "ae-policy",
-        "Congress lowers the age to 62: here the new norm comes in a few years",
+        "Eligibility drops to 62 after the aggregate retirement crossing",
     ),
     (
         "ae-groups",
@@ -1215,11 +1215,11 @@ pub const TITLES: [(&str, &str); 379] = [
     ),
     (
         "ae-all-members",
-        "Count every friend, not just the eligible, and no norm ever forms",
+        "Count every network member: a denominator sensitivity",
     ),
     (
         "ae-replace",
-        "Replace friends who die, and 5 % rationality is no longer enough",
+        "Replace friends who die: a renewal sensitivity",
     ),
     (
         "bg-base",

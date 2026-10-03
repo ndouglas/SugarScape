@@ -27,26 +27,22 @@ Axtell and Epstein's retirement model as one model kind, `retirement` ("The Timi
 - **Base case (Table 6-1):** C 100, 10 % rational, 85 % imitators, 5 % random, τ 0.50, S U[10, 25], E U[0, 5], p 0.50.
 - **Sensitivity (50 realizations each):** "C … was found to have no effect on the average transition time" (GSS: "for C > 100"); Fig. 6-6: "Reducing the proportion of rationals … increases transition time. When randoms comprise 0 percent or 5 percent of the population, certain minimum proportions of the population must be rational for a retirement age norm to arise. For a given fraction of rationals, the transition time decreases as the proportion of randoms increases … the variances increase rapidly with transition times" (times to 2 000, log scale); Fig. 6-7: "Increasing the variance in the threshold decreases the average transition time"; Fig. 6-8a: "the time required to transit to a uniform retirement age increases very rapidly with increasing social network size"; 6-8b: "as the variance increases the transition time decreases, although this is a relatively weak effect"; 6-8c: "the transition time increases very rapidly with S̄" (U[10, S̄]); Fig. 6-9: "the effect of increasing the extent … is to decrease the transition times" (10 % and 5 % rational).
 - **"As if":** "The attainment per se of the age 65 retirement norm is compatible with any rationality fraction above a critical level."
-- **Policy:** "Now we require that all agents retire at age 70. This increases the speed at which the age 65 retirement norm is established … once the age 65 norm is established, we throw a 'policy switch' and lower the retirement age from 65 to 62 … Animation 6-3 … shows that a new norm indeed emerges after twenty to thirty periods"; Fig. 6-10: "a new norm is instituted in about 35 periods if between 1 and 4 percent of the population responds rationally."
+- **Original policy (AE, homogeneous threshold .5):** "Now we require that all agents retire at age 70. This increases the speed at which the age 65 retirement norm is established … once the age 65 norm is established, we throw a 'policy switch' and lower the retirement age from 65 to 62 … Animation 6-3 … shows that a new norm indeed emerges after twenty to thirty periods"; Fig. 6-10: "a new norm is instituted in about 35 periods if between 1 and 4 percent of the population responds rationally."
+- **Revised policy (GSS p.163):** rational and random agents each 5 %, thresholds U[.5,1], otherwise base networks; illustrative new norm after some twenty periods, and about 35 at 1–4 % rational. The original figure's approximate 1/2/3/4 % means are 70/40/30/20.
 - **Two sub-populations:** "The 50 agents on the left do not include any rational agents, while those on the right include 10% rationals … 10% of each agent's network belongs to the other sub-population … Even this rather loose coupling is sufficient for the group containing some rationals to pull the other into conformity"; Fig. 6-11: "very little coupling is needed for the non-rational sub-population to be pulled into conformity with the more rational sub-population."
 - **Transition time** — "the time required for … the age 65 retirement norm to emerge" — is never defined in either text.
 
-## Measured in planning
+## Measured reconstruction
 
-A throwaway prototype (Rust) of the rules below; 20 runs each unless stated; "transition" is the first period with 95 % of eligible agents retired; shuffled activation unless stated; the survey reproduces each with the implementation.
+The native audit uses 50 fresh seeds 1001–1050 per source sensitivity point (the survey uses 1–50), oldest-cohort-first activation with within-cohort shuffle, continuous death ages, and Slot renewal unless stated. First95 means the first period with 95 % of eligible agents retired. It is an operational proxy: neither the modal retirement age nor a persistent all-retired state. Timing means and sample SDs are conditional on attainment; nonattainment is right-censored at the stated horizon.
 
-- **Realizations:** 15 % rational: 95 % retired at period 8 (19 %, 27 %, 37 %, 47 %, 65 %, 80 % over periods 1–6), monotone; 20 % rational: 6 periods (the AE caption's 20 % fits "the first 6 periods"); 5 % rational: 67 periods, not monotone (23 % at 20, 19 % at 50).
-- **Footnote 5 fails:** counting all network members instead of eligible ones, no norm forms at all (0 of 20 runs in 2 000 periods, base case): an imitator's network spans five years either side, and its younger members hold f below ½.
-- **Fig. 6-6 depends on an unstated rule.** When a dead member's place passes to the 20-year-old reborn in its slot (`slot`), there is no minimum of rationals and no long transitions: with 5 % randoms, 83, 79, 69, 23, 10, 6, 4 periods at 0, 2, 5, 10, 15, 20, 25 % rational; with no randoms, never at 0 but 92 at 2 %. When the holder replaces a dead member within its own age range (`replace`), the paper's shape appears: with 5 % randoms, 0 and 5 % rational never converge in 1 500 periods; 10 % takes 139 ± 195 periods; 15 %, 15; 20 %, 8 (C 50, 10 runs).
-- **Fig. 6-7:** transition 23, 55, 28, 13, 9, 9 at threshold spreads 0, 0.05, 0.1, 0.15, 0.2, 0.25 — decreasing overall, but a little spread first slows it.
-- **Fig. 6-8:** mean size 10, 15, 20, 25, 30, 40 (± 7): 8, 14, 45, 67, 75, 80 — rising steeply, then leveling; size 17 ± 0, 3, 7, 10, 14: 27, 25, 19, 17, 14 — weakly falling; U[10, S̄] for S̄ 10–80: 9, 15, 37, 58, 73, 78 — rising. As stated.
-- **Fig. 6-9:** at 10 % rational, 21, 22, 22, 23, 20, 18 for extents 1, 2, 3, 5, 7, 10 (weak); at 5 %, 65 ± 25, 81, 76, 69, 64, 59 — falling from extent 2.
-- **C:** 21, 21, 23, 24 at C 25, 50, 100, 200 — no effect, as stated.
-- **Order:** activating cohorts oldest first, randomly within each (the footnote's reading), is faster than one shuffled order: 58, 15, 8 against 69, 23, 10 at 5, 10, 15 % rational.
-- **Initial death ages:** no effect (23 against 25 when initial agents draw only ages still ahead of them).
-- **Mandatory retirement at 70:** 65 norm in 6 periods against 69 (5 % rational) — faster, as stated.
-- **The policy switch fails:** with retirement mandatory at 70 and eligibility cut from 65 to 62 when the 65 norm is reached, 95 % of those 62 and older are retired within 2–7 periods at every rational share (0–14 %), 2–11 under `replace` — not the 20–35 the paper reports. A 62-year-old's eligible network already includes retired 65-to-67-year-olds; imitators tip at once.
-- **Two sub-populations:** the group without rationals is pulled in (82 periods uncoupled, 70 at coupling 0.05, 56 at 0.1), as stated; but the coupling drags the rational group just as hard (17, 24, 41 at 0, 0.05, 0.1; about 65 for both from 0.15) — the paper's figure keeps it fast.
+- **Realizations:** at 15 % rational the mean first 95 % crossing is 7.78 ± 1.25 periods; at the original caption's 20 %, 4.96 ± .64. The source describes one six-period realization, not a success probability. At 5 %, wavering followed by a cascade occurs, with first 95 % crossing 61.54 ± 3.92. This matches qualitative shape, not the displayed source plateau near 375 or perfect absorption.
+- **Counting:** eligible-only Slot reaches first 95 % crossing in 50/50 over 600; all-members in 0/50. All-member imitators nevertheless retire (mean 91.48 events per run), and rolling mode 65 can arise from a small retiring minority. Under Replace, eligible-only reaches 37/50 and all-members 3/50 over 600. These selected-rule proxy differences do not categorically refute footnote 5's undefined qualitative norm.
+- **Rationality:** Slot with 0 or 2 % rational reaches first 95 % crossing in 50/50 over 2000 (means 73.14 and 69.84). Finite-horizon first crossings cannot identify the source's critical norm or an infinite-time minimum. Slot/newborn pointers and Replace are explicit reconstruction choices; neither is proved by the pseudocode.
+- **Thresholds:** at base 10 % rational, positive uniform half-widths .05,.10,.20,.30,.40,.50 (SD half-width/√3) give conditional first 95 % crossing means 43.18,36.36,17.34,10.08,7.96,10.20 over 600, all 50/50. The overall decline and final uptick match the source pattern. Zero spread (16.60) is an extension, not a plotted source point.
+- **Extent and cohorts:** the source 5 %-rational branch spans 6–10, with endpoint means 57.80→52.78 (50/50 each over 600). Its 10 % branch spans 2–10. The revised C > 100 comparison uses 200 and 300, means 16.66 and 15.82,50/50 each over 600; the declared 20 % equivalence margin supports proxy equivalence, not every norm definition. Network-size surveys test qualitative trend only.
+- **Policy:** original AE uses homogeneous threshold .5; revised GSS uses U[.5,1], represented by mean .75 and SD .14433756729740646, with random 5 %. At rational 5 %, mandatory 70 and the automatic first 95 % crossing switch, original post-switch first 95 % crossing is about 2 periods. Revised reaches 22/50 within 100 post-switch periods, conditional mean 43.73 ±32.90. An independent implementation with matched continuous death ages reaches 28/50, conditional 49.61 ±31.88. For revised automatic switching, native previous-tick event mode is 70 in 50/50 and independent actual switch-tick mode is 70 in 50/50. These observation windows differ and must not be compared directly; a first 95 % crossing initialization is not a demonstrated established age 65 norm. First modal crossings can reverse, and persistence is weak. Neither diagnostic establishes categorical source failure. Original figure means near 70/40/30/20 at 1/2/3/4 % are visual approximations, not a flat 20–40 acceptance band; revised text describes twenty and about 35 without defining termination.
+- **Groups:** config rational .10 gives 10 % rational within B,0 % within A and expected 5 % globally. On source coupling .05–.20, B slows 24.72→57.90 and A converges 64.06→58.24 (50/50 each over 600). Both source and reconstruction show rational-group slowing; quantitative equivalence is not asserted.
 
 ## Architecture
 
@@ -65,14 +61,14 @@ Model kind `retirement` ("The Timing of Retirement"): `ModelKind::Retirement`, `
 | `extent` | 5 | reset | E ~ U[0, extent], whole numbers |
 | `counts` | `eligible` | live | f over eligible members (the text), or `all` members (footnote 5) |
 | `renewal` | `slot` | reset | a dead member's place in a network: `slot` (the newborn in its slot), or `replace` (the holder picks a new member within its own extent) |
-| `order` | `by_cohort` | live | each period: cohorts oldest first, randomly within each (the footnote), or `shuffled` (one random order: the pseudo-code) |
+| `order` | `by_cohort` | live | each period: cohorts oldest first, randomly within each (cohort direction is a reconstruction choice), or `shuffled` (global-order alternative) |
 | `initial_deaths` | `literal` | reset | initial agents draw U[60, 100] (those past it die in period 1), or `survivors` (U[max(age, 60), 100]) |
 | `eligibility` | 65 | live | the earliest age of retirement |
 | `mandatory` | 0 | live | the age everyone retires (0: none) |
-| `policy` | off | live | `policy.enabled`, `to` 62: once the norm is reached, eligibility becomes `to` |
+| `policy` | off | live | `policy.enabled`, `to` 62: once the aggregate proxy is reached, eligibility becomes `to` |
 | `groups` | off | reset | `groups.enabled`, `coupling` 0.1: each cohort halved; rationals only in the second half; each network member drawn from the other half with probability `coupling` |
-| `norm` | 0.95 | live | the share of eligible agents retired that marks the norm (transition time) |
-| `stop_at_norm` | false | live | `finished()` once the norm is reached (with `policy`, the new norm) |
+| `norm` | 0.95 | live | the share of eligible agents retired marking the operational first-crossing proxy |
+| `stop_at_norm` | false | live | `finished()` once the aggregate proxy is reached (with `policy`, the post-switch proxy) |
 | `stop_at` | 0 | live | `finished()` at this period (0: never) |
 
 ## Step (one period)
@@ -81,7 +77,7 @@ In activation order, each agent: ages a year; if its age reaches its death age i
 
 ## Statistics
 
-`SERIES`: `retired` (the share of eligible agents retired), `retired_a` and `retired_b` (by group; equal to `retired` without groups), `transition` (the period the norm was reached; NaN before), `transition_new` (periods from the policy switch to the new norm; NaN before), `modal_age` and `mean_age` (retirement ages over the last 10 periods), `rational_share` (among the living).
+`SERIES`: `retired` (the share of eligible agents retired), `retired_a` and `retired_b` (by group; equal to `retired` without groups), `transition` (the first aggregate proxy-crossing period; NaN before), `transition_new` (periods from the policy switch to the new aggregate proxy crossing; NaN before), `modal_age` and `mean_age` (retirement ages over the last 10 periods), `rational_share` (among the living).
 
 ## Views
 
@@ -98,13 +94,13 @@ Titles follow `titles.rs`'s style; drafts.
 
 | Preset | Title | Setup |
 |---|---|---|
-| `ae-rapid` | 15 % decide rationally, and retiring at 65 sets in within a few years | 15/80/5 (Fig. 6-4, GSS's shares) |
-| `ae-base` | A tenth decide rationally, and retiring at 65 takes hold in about 16 years | Table 6-1 (the kind's default) |
-| `ae-slow` | 5 % rational: retiring at 65 spreads slowly, up from the old | 5/90/5 (Fig. 6-5) |
-| `ae-policy` | Congress lowers the age to 62: here the new norm comes in a few years | 5 % rational, mandatory 70, policy |
+| `ae-rapid` | 15 % decide rationally, and retirement spreads quickly | 15/80/5 (Fig. 6-4, GSS's shares) |
+| `ae-base` | A tenth decide rationally: aggregate retirement grows | Table 6-1 (the kind's default) |
+| `ae-slow` | 5 % rational: retirement wavers before spreading | 5/90/5 (Fig. 6-5) |
+| `ae-policy` | Eligibility 65→62 after the aggregate proxy crossing | 5 % rational, mandatory 70, policy |
 | `ae-groups` | Two communities, one with no rational agents, loosely linked | groups, coupling 0.1 |
-| `ae-all-members` | Count every friend, not just the eligible, and no norm ever forms | `counts: all` |
-| `ae-replace` | Replace friends who die, and a minimum of rationality appears | `renewal: replace`, 5 % rational |
+| `ae-all-members` | Count every network member: a denominator sensitivity | `counts: all` |
+| `ae-replace` | Replace friends who die: a renewal sensitivity | `renewal: replace`, 5 % rational |
 
 **Compare entry:** "15 % vs 5 % rational — Retirement (Compare)": `ae-rapid` and `ae-slow`.
 
@@ -122,7 +118,7 @@ The CLI names the stop `(its last period)`.
 
 ## Survey
 
-A `retirement` claims module: the realizations (15 % within six periods and monotone; 5 % slow and not monotone); footnote 5; Fig. 6-6 under both renewals (the minimum of rationals, randoms speeding it, variance growing with the mean); C; Figs. 6-7, 6-8a–c, 6-9; "as if"; mandatory 70; the policy switch (20–35 periods; 35 at 1–4 %); the sub-populations (the non-rational group pulled in; the rational group's time). Claims that fail are reported, and the descriptions, titles and README say so.
+A `retirement` claims module retains 15 IDs. Source-domain grids and 50-run ensembles judge qualitative operational trends. Footnote 5, criticality, the “as if” inference, mandatory retirement and policy remain Weak diagnostics because first 95 % crossing does not identify the authors' unspecified age norm. Each changed claim states that its operational rule was revised after the earlier result was known. Rapid timing checks compatibility with one published realization; slow timing does not assert quantitative reproduction. Censoring and conditional means remain visible.
 
 ## Page
 
@@ -137,16 +133,10 @@ The presets menu gains a **The Timing of Retirement** group and the Compare entr
 
 ## Docs
 
-README: a Timing of Retirement section (the model, the stated choices, switches, presets, sweeps, and the findings: the realizations reproduce; footnote 5 fails — counting all members, no norm forms; Fig. 6-6's minimum of rationals and long times need the unstated `replace` rule; the network-size and extent effects hold; the policy switch's decades-long response does not follow — the new norm comes in a few periods; the rational group is slowed by the coupling that pulls the other in). `docs/papers.md`: the milestone's row (with GSS ch. 7); the Queue's first entry removed; roadmap: Milestone 26 done.
+README and `docs/papers.md` describe the source-specific parameterizations, explicit reconstruction choices, operational trends and limits summarized above.
 
-## Amendments (implementation planning)
+## Implementation details
 
-The model was implemented in full while planning (`docs/superpowers/plans/2026-09-28-retirement.md`) and measured with it; these change or extend the sections above.
+Each agent ages on its own activation; agents awaiting activation remain a year younger. Cohorts are birth periods, so network geometry uses birth-period distances. Initial networks draw peers from available nearby birth cohorts; newborn networks cannot include future younger cohorts. Under Slot renewal, later newborns inherit dead friends' places, so age proximity need not persist. Oldest-first traversal and sequential newborn sampling are explicit choices; the source specifies within-cohort randomization but leaves traversal direction and dead pointers unresolved.
 
-- **Each agent ages when it is activated** (the pseudo-code: "select an agent … increment its age"); those not yet activated in a period are a year younger. A first implementation that aged everyone at the start of the period took twice as long (31 periods for the base case, 55 shuffled): an imitator's peers who had just turned 65 were already eligible, and still working, when it decided. Cohorts are birth periods, so a network's extent compares birth periods, which never change.
-- **`mandatory` may be any age up to 100** (0: none); below 20 everyone retires at once.
-- **Statistics** add `transition_a` and `transition_b`, each group's first period at the norm (both `transition` without groups), for Fig. 6-11's two sweeps (`ae-coupling`, `ae-coupling-rational`) — a sweep reads one series. `modal_age` and `mean_age` are NaN (null) with no retirements in the window; `eligibility` is the age now (it drops at the switch).
-- **Color modes** are Status, Type, Threshold and Group; the Network mode (a selected agent's network marked) is dropped — the frame has no selection. Inspect lists an agent's network with how many members are eligible and retired.
-- **Sweeps:** `ae-rational`, `ae-rational-replace`, `ae-threshold`, `ae-size` (S ~ U[10, max], Fig. 6-8c), `ae-extent`, `ae-policy`, `ae-coupling`, `ae-coupling-rational`; the metric is the final `transition` (or `transition_new`, `transition_a`, `transition_b`), which keeps its value once reached.
-- **With retirement mandatory at 70**, those forced out are most of the eligible, so the 95 % measure reaches the 65 "norm" in about 3 periods whatever the rationality; the claim that a mandatory age speeds the norm holds but says little about retiring at 65.
-- **Measured with the implementation** (the survey, 15 claims; 8 hold, 7 fail): 15 % rational reaches 95 % by period 6 in 4 of 20 runs (mean 7.7), monotone in all; 5 % takes 61 periods, not monotone in 20 of 20; counting all members, no norm in 20 of 20; transition 69.5, 61.1, 16.4, 7.7, 5.2, 3.9 at 2–25 % rational (5 % random); no minimum of rationals (0 %: 72; 2 %: 69) under `slot`, none of 0 and 5 % reaching it under `replace`; randoms speed it (72, 61, 18 at 0, 5, 10 % random, 5 % rational); C 100 and 200 equivalent (17 and 17; C 25: 18); threshold spread 16.4, 36.6, 19.7, 11.8, 8.3, 7.9 (not monotone); network size 7 → 73 (mean), 18 → 12 (spread), 7 → 70 (maximum); extent 1 against 10: 18 against 13.5 at 10 %, 53.5 against 54.5 at 5 % (no effect); every run from 2 % rational reaches the norm; mandatory 70: 3 against 61 periods; the policy switch 2.0 periods at 1, 2, 4 % rational; the group without rationals 75 → 49 at coupling 0.1, the group with rationals 17.5 → 32.5 (60 at 0.25).
+Group transitions are first aggregate crossings and retain their values after later declines. `modal_age` and `mean_age` describe the last 10 periods of retirement events and are NaN/null when the window has no retirements. An event mode is distinct from retirement hazard by age and from the fraction of current eligible agents retired. Color modes are Status, Type, Threshold and Group; Inspect lists network members and their eligibility/retirement counts. Sweeps report retained first-crossing values and censored runs; policy presets and built-in sweeps use the original homogeneous threshold setup. Revised policy requires the explicit threshold/spread settings above.

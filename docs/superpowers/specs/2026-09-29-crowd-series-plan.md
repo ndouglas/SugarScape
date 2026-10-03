@@ -42,7 +42,7 @@ which the user is doing separately.
 | 7 | The riot that needs one person ✅ | Granovetter 1978; Watts 2002 | `thresholds` | One threshold decides the riot; cascades on networks |
 | 8 | Ants at two food piles ✅ | Kirman 1993; Alfarano & Milaković 2007 | `ants` | Asymmetric crowds can flip; 80–20 is not a preferred split in the base chain |
 | 9 | Nobody goes, it's too crowded ✅ | Arthur 1994; Challet & Zhang 1997 | `farol` | Coordination without communication |
-| 10 | When to retire | Axtell & Epstein 1999 | `retirement` | A norm spreads through networks; footnote 5 is false |
+| 10 | When to retire | Axtell & Epstein 1999 | `retirement` | Retirement spreads through networks; aggregate crossings and age norms differ, with source-specific policy thresholds and reconstruction-dependent denominator effects |
 | 11 | Finale | all | — | The ledger |
 
 Episodes 1–3 are Schelling's: his own rules first, as the default, then later researchers' versions as named variations (see `2026-09-29-schelling-reading-notes.md`).
