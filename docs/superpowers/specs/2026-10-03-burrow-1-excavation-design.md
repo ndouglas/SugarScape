@@ -2,7 +2,9 @@
 
 **Date:** 2026-10-03
 
-**Status:** proposed first-world design for review; implementation and judged runs have not begun.
+**Status:** approved by the user on 2026-10-03; implementation and judged runs have not begun.
+
+**Implementation:** [staged plan](../plans/2026-10-03-burrow-1-excavation.md), ready for review.
 
 **Programme:** [Cultures, construction and underworlds](../../studies/2026-10-03-cultures-construction-and-underworlds.md),
 branch B, beginning with its B1/B2 questions. This is not a new Minds milestone.
