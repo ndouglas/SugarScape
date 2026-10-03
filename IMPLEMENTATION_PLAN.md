@@ -31,4 +31,4 @@ Design approved; this implementation plan and the proposed protocol await review
 **Goal**: Preserve checkpoints, default reductions and native/WASM agreement before any scientific run.
 **Success Criteria**: Full relevant suites pass, every authoritative state component is covered, whole-branch review passes and executable manifest is ready for review.
 **Tests**: Mid-attempt checkpoint continuation, state serialization/hash sensitivity, diagnostic noninterference, exact native/WASM traces and full project quality gates.
-**Status**: Not Started
+**Status**: In Progress — implementation and checks complete; independent task/whole-branch review pending. Scientific execution remains pending separate manifest/opportunity review.

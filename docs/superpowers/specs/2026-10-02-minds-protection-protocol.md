@@ -1,6 +1,6 @@
 # Minds P3: proposed measured protocol
 
-**Status:** ready for protocol review with the implementation plan; no campaign has run.
+**Status:** implementation and verification ready for whole-branch review. Scientific execution awaits separate review of the committed executable manifest and construction opportunity evidence; no campaign has run.
 **Design:** [approved protection spec](2026-10-02-minds-protection-design.md).
 **Route/schema:** `survey --protection`, `minds-protection-measured-v1`.
 

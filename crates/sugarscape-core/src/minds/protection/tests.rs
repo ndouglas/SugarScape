@@ -363,3 +363,80 @@ fn protection_constructor_requires_zero_initial_burial_cost() {
         .iter()
         .any(|e| e.field == "caching.bury_cost"));
 }
+
+#[test]
+fn protection_constructed_to_source_checkpoint_and_active_ledger_continue_exactly() {
+    use crate::{geometry::Pos, model::ModelWorld};
+    let mut w = crate::world::World::new(
+        super::lab::rig_config(LabConfig {
+            policy: Policy::Selective,
+            fixture: Fixture::Mixed {
+                observed_first: true,
+            },
+            ..Default::default()
+        }),
+        7,
+    )
+    .unwrap();
+    w.protection_ledger = Some(super::ledger::Ledger::new(1, 44.0));
+    for _ in 0..8 {
+        w.step();
+    }
+    // Construction-only distance extends source travel beyond one turn.
+    w.move_agent(1, Pos::new(3, 1));
+    w.step();
+    assert_eq!(
+        w.agent(1)
+            .unwrap()
+            .protection
+            .as_ref()
+            .unwrap()
+            .intent
+            .as_ref()
+            .unwrap()
+            .stage,
+        Stage::ToSource
+    );
+    let mut original = ModelWorld::Sugarscape(Box::new(w));
+    let checkpoint = original.checkpoint().unwrap();
+    let mut replay = ModelWorld::Sugarscape(Box::new(original.sugarscape().unwrap().clone()));
+    replay.model_mut().run(3);
+    replay.restore(&checkpoint).unwrap();
+    assert_eq!(
+        replay.sugarscape().unwrap().protection_ledger,
+        original.sugarscape().unwrap().protection_ledger
+    );
+    for _ in 9..64 {
+        original.model_mut().run(1);
+        replay.model_mut().run(1);
+        assert_eq!(original.model().fingerprint(), replay.model().fingerprint());
+        assert_eq!(
+            original.sugarscape().unwrap().protection_ledger,
+            replay.sugarscape().unwrap().protection_ledger
+        );
+        assert_eq!(
+            original.sugarscape().unwrap().protection_actions,
+            replay.sugarscape().unwrap().protection_actions
+        );
+    }
+}
+
+#[test]
+fn protection_diagnostic_state_and_collection_are_unhashed() {
+    let mut w = rig(Policy::Selective);
+    for _ in 0..9 {
+        w.step();
+    }
+    let fingerprint = w.fingerprint();
+    w.relocation_events = Some(RelocationEvents::default());
+    w.protection_actions.clear();
+    w.protection_deaths.push(super::runner::DeathRecord {
+        id: 99,
+        pos: crate::geometry::Pos::new(1, 1),
+        cause: "diagnostic".into(),
+    });
+    w.protection_ledger = Some(super::ledger::Ledger::new(1, 44.0));
+    w.protection_ledger_errors.push("diagnostic".into());
+    w.protection_fixture_errors.push("diagnostic".into());
+    assert_eq!(w.fingerprint(), fingerprint);
+}
