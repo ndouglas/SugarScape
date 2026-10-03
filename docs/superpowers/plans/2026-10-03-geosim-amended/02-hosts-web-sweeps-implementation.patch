@@ -370,6 +370,22 @@ index eacc540d9d4405e30520fbf860743df4d37b5cfd..8c2b4c5c6c6b35039af0124c9bf9b8ab
    export function mkdtempSync(prefix: string): string;
    export function existsSync(path: string): boolean;
    export function writeFileSync(path: string, data: string): void;
+diff --git a/web/src/schema-form.ts b/web/src/schema-form.ts
+index 8b2094fb2ff60e98fb37054b5ea45e8c52cd8261..01a40a1094edc23b58fd5df7e22b8bd3774b41c4 100644
+--- a/web/src/schema-form.ts
++++ b/web/src/schema-form.ts
+@@ -8,6 +8,11 @@ import type { ModelConfig, Param } from './types';
+  */
+ export type ParamInput = string | boolean | { min: string; max: string; edited?: 'min' | 'max' };
+ 
++/** The accessible name a schema field contributes to a single or paired control. */
++export function schemaControlLabel(label: string, part?: 'slider' | 'number' | 'minimum' | 'maximum'): string {
++  return part ? `${label} ${part}`.trim() : label;
++}
++
+ /** The params in panel sections, in the order each group first appears. */
+ export function groupParams(params: Param[]): { group: string; params: Param[] }[] {
+   const out: { group: string; params: Param[] }[] = [];
 diff --git a/web/src/types.ts b/web/src/types.ts
 index e5cf53394594c12d2ba0b2f14e1949ee28512b1c..e324439527fed0870a5ca7aa56740d3fa858e99d 100644
 --- a/web/src/types.ts
@@ -590,14 +606,19 @@ index 4eb3c6a5d0537e0c033315e39deede7b1c337aa2..3ccb32b891db9ca7ffd21f18c7bc7a7f
          : isHoardView(view)
          ? this.hoardRows(view)
 diff --git a/web/src/ui/schema-panel.ts b/web/src/ui/schema-panel.ts
-index a009eb51f689b77df82006e64a115e2cc6516654..56f56f342e2702e8f6f87404922b10469818a337 100644
+index a009eb51f689b77df82006e64a115e2cc6516654..bb6d1819f37803e82897e2de7821fbc8c057d61c 100644
 --- a/web/src/ui/schema-panel.ts
 +++ b/web/src/ui/schema-panel.ts
-@@ -1,3 +1,4 @@
+@@ -1,7 +1,8 @@
 +import { GEOSIM_RULES, geosimParams } from '../geosim';
  import { scheduleLines } from '../civil';
  import type { Engine } from '../engine';
  import { errorsFor } from '../paths';
+-import { describedBy, groupParams, paramEdit, paramInput, paramShown, paramSlider, type ParamInput } from '../schema-form';
++import { describedBy, groupParams, paramEdit, paramInput, paramShown, paramSlider, schemaControlLabel, type ParamInput } from '../schema-form';
+ import type { CivilConfig, FieldError, ModelKind, Param } from '../types';
+ import { h } from './dom';
+ 
 @@ -63,12 +64,13 @@ export class SchemaPanel {
      this.syncers = [];
      this.slots = [];
@@ -614,6 +635,82 @@ index a009eb51f689b77df82006e64a115e2cc6516654..56f56f342e2702e8f6f87404922b1046
      const schedule = model === 'civil' ? [this.schedule()] : [];
      this.el.replaceChildren(...extra, this.general, ...sections, ...schedule);
      this.renderErrors();
+@@ -118,6 +120,7 @@ export class SchemaPanel {
+ 
+   private controlBody(p: Param): HTMLElement {
+     const id = `${this.idPrefix}-${p.path.replace(/[^A-Za-z0-9_-]/g, '-')}`;
++    const labelId = `${id}-label`;
+     const ids = { help: p.help ? `${id}-help` : null, error: `${id}-error` };
+     const slot = h('div', { class: 'error', id: ids.error });
+     const inputs: HTMLElement[] = [];
+@@ -134,18 +137,23 @@ export class SchemaPanel {
+         return h('div', { class: 'control' }, h('label', { class: 'switch' }, box, ` ${p.label}`), help, slot);
+       }
+       case 'choice': {
++        const selectId = `${id}-choice`;
+         const select = h(
+           'select',
+-          { onchange: () => void this.commit(p, select.value) },
++          { id: selectId, 'aria-labelledby': labelId, onchange: () => void this.commit(p, select.value) },
+           ...(p.choices ?? []).map((c) => h('option', { value: c.value }, c.label)),
+         );
+         inputs.push(select);
+         this.syncers.push(() => (select.value = String(current())));
+-        return h('div', { class: 'control' }, h('label', {}, p.label), select, help, slot);
++        return h('div', { class: 'control' }, h('label', { id: labelId, htmlFor: selectId }, schemaControlLabel(p.label)), select, help, slot);
+       }
+       case 'range': {
+-        const lo = h('input', { type: 'number', class: 'num', ...bounds });
+-        const hi = h('input', { type: 'number', class: 'num', ...bounds });
++        const loId = `${id}-minimum`;
++        const hiId = `${id}-maximum`;
++        const loNameId = `${loId}-name`;
++        const hiNameId = `${hiId}-name`;
++        const lo = h('input', { id: loId, type: 'number', class: 'num', 'aria-labelledby': `${labelId} ${loNameId}`, ...bounds });
++        const hi = h('input', { id: hiId, type: 'number', class: 'num', 'aria-labelledby': `${labelId} ${hiNameId}`, ...bounds });
+         const apply = (edited: 'min' | 'max') => void this.commit(p, { min: lo.value, max: hi.value, edited });
+         inputs.push(lo, hi);
+         lo.addEventListener('change', () => apply('min'));
+@@ -158,15 +166,19 @@ export class SchemaPanel {
+         return h(
+           'div',
+           { class: 'control' },
+-          h('label', {}, p.label),
+-          h('div', { class: 'row' }, lo, h('span', { class: 'hint' }, 'to'), hi),
++          h('label', { id: labelId, htmlFor: loId }, schemaControlLabel(p.label)),
++          h('div', { class: 'row' }, lo, h('span', { id: loNameId, hidden: true }, schemaControlLabel('', 'minimum')), h('span', { class: 'hint' }, 'to'), hi, h('span', { id: hiNameId, hidden: true }, schemaControlLabel('', 'maximum'))),
+           help,
+           slot,
+         );
+       }
+       default: {
+-        const slider = h('input', { type: 'range', ...bounds });
+-        const num = h('input', { type: 'number', class: 'num', ...bounds });
++        const sliderId = `${id}-slider`;
++        const numberId = `${id}-number`;
++        const sliderNameId = `${sliderId}-name`;
++        const numberNameId = `${numberId}-name`;
++        const slider = h('input', { id: sliderId, type: 'range', 'aria-labelledby': `${labelId} ${sliderNameId}`, ...bounds });
++        const num = h('input', { id: numberId, type: 'number', class: 'num', 'aria-labelledby': `${labelId} ${numberNameId}`, ...bounds });
+         inputs.push(slider, num);
+         slider.addEventListener('input', () => (num.value = slider.value));
+         slider.addEventListener('change', () => void this.commit(p, slider.value));
+@@ -177,7 +189,14 @@ export class SchemaPanel {
+           // value it falls back to, not the browser's own midpoint default for an empty value.
+           if (!focused(slider)) slider.value = paramSlider(p, this.engine.config);
+         });
+-        return h('div', { class: 'control' }, h('label', {}, p.label), h('div', { class: 'row' }, slider, num), help, slot);
++        return h(
++          'div',
++          { class: 'control' },
++          h('label', { id: labelId, htmlFor: sliderId }, schemaControlLabel(p.label)),
++          h('div', { class: 'row' }, slider, h('span', { id: sliderNameId, hidden: true }, schemaControlLabel('', 'slider')), num, h('span', { id: numberNameId, hidden: true }, schemaControlLabel('', 'number'))),
++          help,
++          slot,
++        );
+       }
+     }
+   }
 diff --git a/web/src/ui/series-data.ts b/web/src/ui/series-data.ts
 index 63152eb4815fe0aeb50968824535391934b9db4c..fefae16b54606f9c6bf266ff39e45acd833a7c4c 100644
 --- a/web/src/ui/series-data.ts

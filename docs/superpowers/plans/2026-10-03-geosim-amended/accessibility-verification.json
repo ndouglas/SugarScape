@@ -1,0 +1,68 @@
+{
+  "accessibility_fix_commit": "9d53d4ef8be6809ad6374bad9993a02458af596e",
+  "all_declaration_field_differences": [],
+  "arms": 37,
+  "arms_keys_jobs_methods_differences": [],
+  "broad_suites_run": false,
+  "clean_six_stage_replay": true,
+  "current_final_tree": "8878653c459202ef11cfabc39b853d32608d7693",
+  "current_manifest_sha256": "2973290ae0954c07b14735840faf4b8490cde5be5af077e424b1755d556ba072",
+  "declaration_sha256": "8b5043e2c2a1be68d161231861e295f3dfb61fa98a8871ac6ad645917ff418b5",
+  "evidence_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-execution/survey/out/geosim-packet-accessibility-refresh-20261003-143445-8962dd",
+  "execution_checkpoint": 4,
+  "execution_product_spec_plan_unchanged": true,
+  "fix_base_commit": "29b795321106378602a2808a9998189bd1ce5c48",
+  "full_final_byte_mode_equal": true,
+  "full_inventory_count": 1398,
+  "jobs": 72,
+  "keys": 1490,
+  "method_contract_sha256": "23dfcea82e39a0a869aa60df5e6d2b22244e70a837a05ac3b22185e94f7630e7",
+  "patch_changes": [
+    {
+      "after": "d3b9ded37e4a0bd0d1ef362e78c23a3f5b86ef1321f02422a66b397d745562a5",
+      "before": "6f4ff3bcb26084d416a7b65058b44f7df4bde7bc19a458b8119ea5d3b7b41cc0",
+      "name": "02-hosts-web-sweeps-tests.patch"
+    },
+    {
+      "after": "bc3c95e499da106103d45598c400b3634b454cf5877fd2a4c8cfffef3158b291",
+      "before": "ed461d62d1684ce5076b131bddf98c50e74bae4fe7278ab69346ef954696681a",
+      "name": "02-hosts-web-sweeps-implementation.patch"
+    }
+  ],
+  "previous_final_tree": "4fdd94aad9a2ab4db3aa85dc80e0672eafd35601",
+  "previous_manifest_sha256": "ff98e449fa8b493604968f7887b8a2534ae16b1e613b676188d687d1dff53df2",
+  "previous_packet_commit": "cd1de5fb0f9392609bf64e02dd3b3243d01893fe",
+  "product_counts": [
+    504,
+    513,
+    520,
+    524,
+    525,
+    538,
+    552
+  ],
+  "protected_count": 846,
+  "real_git_replay_tests": 18,
+  "regenerated_declaration_byte_equal": true,
+  "registered_worlds_run": false,
+  "replay_rules_tooling_protected_roster_unchanged": true,
+  "retained_worktrees": {
+    "expected": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-accessibility-expected-8962dd",
+    "replay": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-accessibility-replay-8962dd"
+  },
+  "scientific_source_count": 325,
+  "scientific_source_roster_hashes_unchanged": true,
+  "source_inventory_differences": [],
+  "source_inventory_sha256": "e84e46c4573c4e5ac217f1f57c45ce8f28174a902f24756bef494a27c252a04a",
+  "stage1_stage2_stage5_stage6_patches_unchanged": true,
+  "trees": [
+    "4ab07d31fedc7e8f3cf35a36252da71218668fce",
+    "e1dae85e71befd4619a1337cafd64d7a2c039434",
+    "f301a54730b443cf597fc8afdc4d0fdb188e0b00",
+    "a5632ba6a0a0ad604f91902b99208926641e6c02",
+    "89675fe9168da07ca6383442732a7f6011f70628",
+    "63193172ad293822dd5e5201db3dab463ad36199",
+    "8878653c459202ef11cfabc39b853d32608d7693"
+  ],
+  "ui_rereview_pending": true
+}

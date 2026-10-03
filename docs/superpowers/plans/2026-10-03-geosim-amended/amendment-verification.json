@@ -50,6 +50,7 @@
       }
     }
   },
+  "current_verification": "accessibility-verification.json",
   "evidence_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-execution/survey/out/geosim-packet-amendment-20261003-133620-f233e6",
   "execution_checkpoint": 2,
   "execution_product_spec_unchanged": true,
@@ -87,6 +88,8 @@
   ],
   "protected_count": 846,
   "real_git_security_tests": 18,
+  "record_scope": "historical_task1_packet_verification",
+  "recorded_packet_commit": "cd1de5fb0f9392609bf64e02dd3b3243d01893fe",
   "retained_worktrees": {
     "expected": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-amendment-expected-f233e6",
     "replay": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-amendment-replay-f233e6"

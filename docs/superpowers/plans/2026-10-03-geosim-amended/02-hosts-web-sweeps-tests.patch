@@ -413,3 +413,29 @@ index 0000000000000000000000000000000000000000..0153194972390f485878fea26c4f175d
 +    expect(captureExperimentBase('geosim-paper',false,original)).toEqual({preset:'geosim-paper'});
 +  });
 +});
+diff --git a/web/src/schema-form.test.ts b/web/src/schema-form.test.ts
+index c9e169fe9af421516b0ccaf4b0593571ca0fa146..2975e051b84eb3199b440d57446c3b4544eb45c5 100644
+--- a/web/src/schema-form.test.ts
++++ b/web/src/schema-form.test.ts
+@@ -1,5 +1,5 @@
+ import { describe, expect, it } from 'vitest';
+-import { describedBy, groupParams, paramEdit, paramInput, paramShown, paramSlider } from './schema-form';
++import { describedBy, groupParams, paramEdit, paramInput, paramShown, paramSlider, schemaControlLabel } from './schema-form';
+ import type { AnasaziConfig, DpdConfig, EthnoConfig, ImageConfig, ModelConfig, Param, RingConfig, SchellingConfig } from './types';
+ 
+ const ring = (): RingConfig => ({
+@@ -14,6 +14,14 @@ const ring = (): RingConfig => ({
+ const param = (p: Partial<Param> & Pick<Param, 'path' | 'kind'>): Param => ({ label: p.path, apply: 'reset', group: 'Setup', ...p });
+ 
+ describe('the schema form', () => {
++  it('names a GeoSim choice and distinguishes its numeric slider from its number field', () => {
++    expect(schemaControlLabel('Defender threshold')).toBe('Defender threshold');
++    expect([schemaControlLabel('Shock shift', 'slider'), schemaControlLabel('Shock shift', 'number')]).toEqual([
++      'Shock shift slider',
++      'Shock shift number',
++    ]);
++  });
++
+   it('groups params in the order their groups first appear', () => {
+     const params = [param({ path: 'a', kind: 'integer' }), param({ path: 'b', kind: 'bool', group: 'Other' }), param({ path: 'c', kind: 'integer' })];
+     expect(groupParams(params).map((s) => [s.group, s.params.map((p) => p.path)])).toEqual([
