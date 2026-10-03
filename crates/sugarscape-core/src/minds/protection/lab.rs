@@ -235,3 +235,279 @@ pub(crate) fn note_prepared_deposit(world: &mut World, owner: AgentId, site: u32
     );
     state.exposure.remember(site, tick, exposed);
 }
+
+pub(crate) fn begin_tick(world: &mut World) {
+    let Some(lab) = world.config.protection_lab.clone() else {
+        return;
+    };
+    if world.tick == 8 {
+        world.config.caching.bury_cost = lab.reburial_cost;
+        if lab.policy == Policy::Erased {
+            if let Some(state) = world.agent_mut(1).and_then(|a| a.protection.as_mut()) {
+                state.exposure.entries.clear();
+            }
+        }
+    }
+}
+fn observer_route(lab: &LabConfig) -> Vec<Pos> {
+    let initial_observed = match lab.fixture {
+        Fixture::Single {
+            initial_observed, ..
+        }
+        | Fixture::Stumble { initial_observed } => initial_observed,
+        _ => true,
+    };
+    let later_observed = matches!(
+        lab.fixture,
+        Fixture::Single {
+            redeposit_observed: true,
+            ..
+        }
+    );
+    let xy: Vec<_> = match lab.fixture {
+        Fixture::CueUnseenWatcher => vec![(4, 6), (5, 6), (6, 6), (7, 6)],
+        _ => match (initial_observed, later_observed) {
+            (true, true) => vec![(3, 6)],
+            (true, false) => vec![(4, 5), (5, 5), (6, 5), (7, 5), (7, 6)],
+            (false, true) => vec![(6, 5), (5, 5), (4, 5), (3, 5), (3, 6)],
+            (false, false) => vec![(7, 6)],
+        },
+    };
+    xy.into_iter()
+        .map(|(x, y)| transform(lab, Pos::new(x, y)))
+        .collect()
+}
+pub(crate) fn scripted_action(world: &mut World, id: AgentId) -> Option<crate::rules::Harvest> {
+    use crate::rules::{movement, Harvest};
+    let lab = world.config.protection_lab.clone()?;
+    let tick = world.tick;
+    let mut target = None;
+    let mut deposit = 0.0;
+    let mut encounter = false;
+    if id == 1 {
+        if tick >= 8 {
+            return None;
+        }
+        match lab.fixture {
+            Fixture::Mixed { observed_first } => match tick {
+                0 => deposit = 6.0,
+                1 | 3 => target = Some(transform(&lab, Pos::new(4, 3))),
+                2 => {
+                    target = Some(transform(
+                        &lab,
+                        Pos::new(if observed_first { 5 } else { 3 }, 3),
+                    ));
+                    deposit = 6.0;
+                }
+                _ => {}
+            },
+            _ if tick == 0 => deposit = 12.0,
+            _ => {}
+        }
+    } else if id == 2 {
+        match lab.fixture {
+            Fixture::Mixed { .. } => {
+                if tick >= 20 {
+                    return None;
+                }
+                if (3..=7).contains(&tick) {
+                    target = Some(transform(
+                        &lab,
+                        [
+                            Pos::new(4, 5),
+                            Pos::new(5, 5),
+                            Pos::new(6, 5),
+                            Pos::new(7, 5),
+                            Pos::new(7, 6),
+                        ][(tick - 3) as usize],
+                    ));
+                }
+            }
+            Fixture::Stumble { .. } => {
+                if tick >= 26 {
+                    return None;
+                }
+                if (18..=25).contains(&tick) {
+                    encounter = true;
+                    target = Some(transform(
+                        &lab,
+                        [
+                            Pos::new(6, 6),
+                            Pos::new(5, 6),
+                            Pos::new(4, 6),
+                            Pos::new(3, 6),
+                            Pos::new(3, 5),
+                            Pos::new(3, 4),
+                            Pos::new(3, 3),
+                            Pos::new(3, 2),
+                        ][(tick - 18) as usize],
+                    ));
+                } else if tick > 0 {
+                    target = observer_route(&lab).get((tick - 1) as usize).copied();
+                }
+            }
+            _ => {
+                if tick >= 12 {
+                    return None;
+                }
+                if tick > 0 {
+                    target = observer_route(&lab).get((tick - 1) as usize).copied();
+                }
+            }
+        }
+    } else {
+        return None;
+    }
+    let phase = if encounter {
+        "encounter"
+    } else if tick < 8 {
+        "preparation"
+    } else {
+        "observer_hold"
+    };
+    if let Some(a) = world.protection_actions.last_mut() {
+        a.phase = phase.into();
+        a.action = if deposit > 0.0 {
+            "prepare_deposit"
+        } else if target.is_some() {
+            "walk"
+        } else {
+            "hold"
+        }
+        .into();
+        a.target = target;
+    }
+    if !encounter {
+        *world.protection_restrictions.entry(id).or_default() += 1;
+    }
+    let mut harvest = Harvest::default();
+    if let Some(target) = target {
+        if encounter {
+            harvest = movement::arrive(world, id, target);
+        } else {
+            movement::walk_without_gather(world, id, target);
+        }
+        if world.agent(id).unwrap().pos != target {
+            world.protection_fixture_errors.push(format!(
+                "tick {tick} agent {id}: scripted target ({},{}) not reached",
+                target.x, target.y
+            ));
+            deposit = 0.0;
+        }
+    }
+    if deposit > 0.0 {
+        crate::minds::caching::bury(world, id, deposit);
+    }
+    Some(harvest)
+}
+
+#[cfg(test)]
+mod schedule_tests {
+    use super::*;
+    #[test]
+    fn reflection_transforms_supplied_geometry_without_tuning_destinations() {
+        for fixture in [
+            Fixture::Single {
+                initial_observed: true,
+                redeposit_observed: true,
+            },
+            Fixture::Single {
+                initial_observed: true,
+                redeposit_observed: false,
+            },
+            Fixture::Single {
+                initial_observed: false,
+                redeposit_observed: true,
+            },
+            Fixture::Single {
+                initial_observed: false,
+                redeposit_observed: false,
+            },
+            Fixture::Mixed {
+                observed_first: true,
+            },
+            Fixture::Mixed {
+                observed_first: false,
+            },
+            Fixture::CueVisibleNonwatcher,
+            Fixture::CueUnseenWatcher,
+            Fixture::Stumble {
+                initial_observed: true,
+            },
+            Fixture::Stumble {
+                initial_observed: false,
+            },
+        ] {
+            let base = LabConfig {
+                fixture,
+                ..Default::default()
+            };
+            let mirror = LabConfig {
+                mirrored: true,
+                ..base.clone()
+            };
+            let (a, b) = starts(&base);
+            let (ma, mb) = starts(&mirror);
+            assert_eq!((ma, mb), (Pos::new(8 - a.x, a.y), Pos::new(8 - b.x, b.y)));
+            assert_eq!(
+                observer_route(&mirror),
+                observer_route(&base)
+                    .iter()
+                    .map(|p| Pos::new(8 - p.x, p.y))
+                    .collect::<Vec<_>>()
+            );
+            let w = World::new(rig_config(mirror.clone()), 7).unwrap();
+            for p in [Pos::new(2, 2), Pos::new(2, 3)] {
+                assert_eq!(
+                    w.site(transform(&mirror, p)).resource[0],
+                    if matches!(base.fixture, Fixture::Mixed { .. }) {
+                        0.0
+                    } else {
+                        4.0
+                    }
+                );
+            }
+            for p in [
+                Pos::new(3, 3),
+                Pos::new(5, 3),
+                Pos::new(4, 3),
+                Pos::new(3, 2),
+                Pos::new(3, 4),
+            ] {
+                assert_eq!(transform(&mirror, p), Pos::new(8 - p.x, p.y));
+            }
+            for p in [
+                Pos::new(6, 6),
+                Pos::new(5, 6),
+                Pos::new(4, 6),
+                Pos::new(3, 6),
+                Pos::new(3, 5),
+                Pos::new(3, 4),
+                Pos::new(3, 3),
+                Pos::new(3, 2),
+            ] {
+                assert_eq!(transform(&mirror, p), Pos::new(8 - p.x, p.y));
+            }
+        }
+    }
+    #[test]
+    fn blocked_script_is_preserved_as_fixture_failure_without_teleport_or_deposit() {
+        let mut w = World::new(
+            rig_config(LabConfig {
+                fixture: Fixture::Mixed {
+                    observed_first: true,
+                },
+                ..Default::default()
+            }),
+            7,
+        )
+        .unwrap();
+        w.step();
+        w.move_agent(2, Pos::new(4, 3));
+        let before = w.agent(1).unwrap().pos;
+        w.step();
+        assert_eq!(w.agent(1).unwrap().pos, before);
+        assert_eq!(w.protection_fixture_errors.len(), 1);
+        assert!(w.protection_fixture_errors[0].contains("scripted target"));
+    }
+}

@@ -552,6 +552,11 @@ pub(crate) fn gather_site(
     for (have, got) in a.holdings.iter_mut().zip(&harvest.gathered).take(n) {
         *have += got;
     }
+    crate::minds::protection::ledger::update(world, id, |l| l.harvest(harvest.gathered[0]));
+    if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+        a.harvest += harvest.gathered[0];
+    }
+    crate::minds::protection::ledger::reconcile_world(world);
     harvest
 }
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -636,6 +641,9 @@ fn walking_stop(world: &mut World, id: AgentId, target: Pos) -> (Pos, bool) {
 /// that stays for want of a path forgets the caches it saw buried at the
 /// target (`watching::give_up`, under `watching.on`).
 pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
+    if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+        a.target = Some(target);
+    }
     let torus = world.torus;
     let (stop, unreachable) = walking_stop(world, id, target);
     let harvest = go_and_gather(world, id, stop);

@@ -29,10 +29,26 @@ pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
         agent.fed -= from_fed;
         from_holdings[0] = burned[0] - from_fed;
     }
+    let consumed = if n > 0 {
+        from_holdings[0].min(agent.holdings[0].max(0.0))
+    } else {
+        0.0
+    };
     for (have, burn) in agent.holdings.iter_mut().zip(&from_holdings).take(n) {
         *have -= burn;
     }
     let pos = agent.pos;
+    crate::minds::protection::ledger::update(world, id, |l| {
+        l.outflow(
+            consumed,
+            crate::minds::protection::ledger::Outflow::Consumption,
+        )
+    });
+    if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+        a.metabolic_demand += burned[0];
+        a.metabolic_consumed += consumed;
+    }
+    crate::minds::protection::ledger::reconcile_world(world);
     if let Some(events) = crate::minds::spatial_hoarding::stores::tick_events(world) {
         events.metabolism.demand += metabolic_food.0;
         events.metabolism.consumed += metabolic_food.1;

@@ -24,6 +24,15 @@ pub(crate) fn cancel(world: &mut World, owner: AgentId, reason: CancelReason) {
         .and_then(|a| a.protection.as_mut())
         .and_then(|s| s.intent.take());
     if let Some(intent) = intent {
+        if let Some(a) = world
+            .protection_actions
+            .last_mut()
+            .filter(|a| a.id == owner)
+        {
+            a.phase = "relocation".into();
+            a.action = "cancel".into();
+            a.source = Some(intent.source);
+        }
         if let Some(e) = &mut world.relocation_events {
             *e.cancellations.entry(reason).or_default() += 1;
             e.source_events.push(SourceEvent {
@@ -140,6 +149,28 @@ pub(crate) fn act(world: &mut World, owner: AgentId) -> Option<Harvest> {
         cancel(world, owner, CancelReason::Expired);
         return Some(Harvest::default());
     }
+    if let Some(a) = world
+        .protection_actions
+        .last_mut()
+        .filter(|a| a.id == owner)
+    {
+        a.phase = "relocation".into();
+        a.source = Some(intent.source);
+        a.action = match intent.stage {
+            Stage::ToSource | Stage::ToDestination => "walk",
+            Stage::Retrieve => "retrieve",
+            Stage::Deposit => "redeposit",
+        }
+        .into();
+        a.target = Some(
+            if matches!(intent.stage, Stage::ToSource | Stage::Retrieve) {
+                world.torus.pos(intent.source as usize)
+            } else {
+                intent.destination
+            },
+        );
+    }
+    let a = world.agent(owner).unwrap();
     match intent.stage {
         Stage::ToSource | Stage::ToDestination => {
             let target = if matches!(intent.stage, Stage::ToSource) {
@@ -627,6 +658,7 @@ mod balance_tests {
     #[test]
     fn protection_off_lab_suppresses_generic_surplus_burial() {
         let mut w = rig(Policy::Off);
+        w.tick = 8;
         w.config.caching.rule = crate::config::CachingRule::Even;
         w.agent_mut(1).unwrap().caching_rule = crate::config::CachingRule::Even;
         crate::rules::agent_turn(&mut w, 1);

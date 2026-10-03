@@ -19,7 +19,7 @@ Design approved; this implementation plan and the proposed protocol await review
 **Goal**: Exact scheduled opportunities and conserved source-cohort outcomes.
 **Success Criteria**: Fixed routes never teleport; preparation holdings match; renewed observation and departure opportunities exist; ledger collection cannot change behavior.
 **Tests**: Proportional mixing, partial theft, starvation/death, all construction schedules, original-food reconciliation, ledger/fate diagnostics trace equality.
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 4: Reproducible measured campaign
 **Goal**: Complete fixed manifest, validated raw archive and deterministic saved-data analysis.
