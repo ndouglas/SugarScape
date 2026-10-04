@@ -39,3 +39,15 @@ Before registered histories, digitize Figures9–11 with an extraction envelope 
 Success means evidence about survival and expansion of cooperation under the specified mechanisms. A rule preventing democratic–democratic aggression is not by itself a substantive mechanism result. Compatibility, source equivalence, causal contrasts and historical fit must remain separate claims.
 
 Next design stage: agree the architecture and initial scope, then write/review the specification and create a verified implementation plan. Research notes do not authorize implementation.
+
+## Prospective methodological handoff — 2026-10-04
+
+This dated addendum preserves the research record above and precedes population registration and every registered period. The approved Cederman2001 reconstruction, fixed source table, readable mask, methods and runtime gate now define the study. Its future [registered findings](2026-10-03-democratic-peace-findings.md) will report the attempted census and scientific availability without changing these source readings.
+
+Conditional source comparison asks whether independently generated histories agree with the frozen inferred figure envelopes under the declared reconstruction. Independent mechanism contrasts ask whether tagging, alliances and collective security differ under fixed interventions. Neither identifies the original executable, RNG or statistic collector: exact original-code and original-statistic identity remain **Unresolved**, even if a conditional comparison is compatible.
+
+The paper's printed probability decreases with the superiority ratio, whereas the surrounding prose suggests an increasing probability. The registered primary reading is `printed_decreasing`; the named `prose_increasing` reading is an unmeasured alternative, not a substitute selected after results. Democratic–democratic nonattack is stipulated by the rules. Its absence cannot itself demonstrate the survival or expansion of cooperation; those outcomes and the separate mechanism contrasts require measured histories.
+
+The exposure denominator and figure curves include explicitly documented reconstruction inferences. The frozen table retains intervals and unreadable or absent source slots rather than inventing point targets. The independent precision population supplies source comparisons and significance judgments only if prospectively registered; the original 30-history family cannot replace its 100-history arms. The retained scheduling gate requires the entire original family only, so those precision judgments will remain unavailable rather than be inferred from original-family means.
+
+These bounded lattice experiments concern the survival, territory and clustering of rule-defined regimes. They do not establish historical fit, human political intent, or AI intent. Cederman/Rao2001 and Cederman/Gleditsch2004 remain attributed context and later challenges, not additions to this source contract. Findings must keep measured descriptive outcomes, conditional reconstruction assumptions and unresolved source equivalence separate; no favorable postmeasurement reading or source-value change is authorized.
