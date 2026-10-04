@@ -114,7 +114,11 @@ fn burrow_manifest_preserves_panel_opportunity_budgets() {
 }
 
 #[test]
-fn burrow_manifest_analysis_with_index_explains_unavailable_route() {
+fn burrow_manifest_analysis_requires_output_and_rejects_overrides() {
     let error = cli(&["--analyze".into(), "index.json".into()]).unwrap_err();
-    assert!(error.contains("unavailable"), "{error}");
+    assert!(error.contains("requires"), "{error}");
+    for extra in ["--run", "--construction", "--seed", "--manifest"] {
+        let args = ["--analyze", "index.json", "--out", "out", extra].map(String::from);
+        assert!(cli(&args).is_err());
+    }
 }

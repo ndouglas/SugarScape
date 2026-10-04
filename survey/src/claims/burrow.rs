@@ -148,8 +148,13 @@ pub(super) fn expected_keys(m: &Manifest, panel: Panel) -> Vec<RunKey> {
         .collect()
 }
 pub(crate) fn cli(args: &[String]) -> Result<(), String> {
-    const UNAVAILABLE: &str =
-        "burrow saved analysis unavailable: saved analysis is not installed at this task boundary";
+    if args.first().is_some_and(|a| a == "--analyze") {
+        return match args {
+            [_, index, flag, out] if flag == "--out" && !index.starts_with("--") && !out.starts_with("--") =>
+                super::burrow_report::analyze_saved(std::path::Path::new(index),std::path::Path::new(out)),
+            _ => Err("burrow analysis requires --analyze INDEX --out NEW_DIR; run, seed and panel overrides are forbidden".into()),
+        };
+    }
     if args.first().is_some_and(|a| a == "--run") {
         let mut panel = Panel::Scientific;
         let mut construction = false;
@@ -197,13 +202,9 @@ pub(crate) fn cli(args: &[String]) -> Result<(), String> {
                 "survey --burrow [--manifest|--help]\n",
                 "--run [--construction] --protocol-revision COMMIT --approval-context TEXT --out NEW_DIR\n",
                 "Default prints the reviewed candidate only. Scientific execution requires a ",
-                "separately reviewed committed registration. --analyze is unavailable."
+                "separately reviewed committed registration.\n--analyze INDEX --out NEW_DIR uses saved records only."
             ));
             return Ok(());
-        }
-        [flag] if flag == "--analyze" => return Err(UNAVAILABLE.into()),
-        [flag, index] if flag == "--analyze" && !index.starts_with("--") => {
-            return Err(UNAVAILABLE.into())
         }
         _ => return Err("burrow: unknown, duplicate or conflicting flags; use --help".into()),
     }

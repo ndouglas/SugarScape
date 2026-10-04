@@ -46,8 +46,6 @@ pub(super) struct Envelope {
     pub(super) options: RunOptions,
     pub(super) episode: Episode,
 }
-// Saved-only analysis consumes this API in the next task.
-#[allow(dead_code)]
 #[derive(Debug)]
 pub(super) struct Archive {
     pub(super) index: Index,
@@ -275,7 +273,6 @@ fn safe_path(path: &str) -> Result<(), String> {
         Ok(())
     }
 }
-#[allow(dead_code)] // Public saved-only consumer is installed in the next task.
 pub(super) fn load(index_path: &Path) -> Result<Archive, String> {
     let index: Index = serde_json::from_slice(
         &fs::read(index_path).map_err(|e| format!("{}: {e}", index_path.display()))?,

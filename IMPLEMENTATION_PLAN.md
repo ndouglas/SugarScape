@@ -24,4 +24,4 @@ Plan: docs/superpowers/plans/2026-10-04-burrow-1-measured-harness.md
 **Goal**: Deterministic paired reports with exact reductions and censoring.
 **Success Criteria**: Byte-identical reanalysis, six contrasts, complete diagnostics, no scientific execution.
 **Tests**: `cargo test --manifest-path survey/Cargo.toml burrow_report`
-**Status**: Not Started
+**Status**: In Progress
