@@ -1,6 +1,8 @@
 # Democratic peace as selection — proposed design
 
-Date: 2026-10-03. Proposed kind: `democratic_peace`. Scope: Cederman 2001 JCR45(4),470–502. The user approved the2001-only scope and a separate kind; this written design awaits user review. It authorizes neither implementation nor scientific runs. The milestone number is assigned at integration.
+Date: 2026-10-03. Proposed kind: `democratic_peace`. Scope: Cederman 2001 JCR45(4),470–502. The user approved the 2001-only scope, separate kind and written design on 2026-10-03. Verified scratch preparation follows the requested before-plan workflow; product execution and registered scientific runs await written-plan review. The milestone number is assigned at integration.
+
+Source extraction: [figure table](2026-10-03-democratic-peace-source-table.json), [methods and availability](2026-10-03-democratic-peace-source-extraction.md), [independent review](2026-10-03-democratic-peace-source-review.json).
 
 Research: [primary mechanics](2026-10-03-democratic-peace-mechanics-reading-notes.md), [author/follow-up audit](2026-10-03-democratic-peace-author-and-followup-reading-notes.md), [research handoff](2026-10-03-democratic-peace-reading-notes.md), and [GeoSim diagnosis](2026-10-03-geosim-diagnosis.md). Printed2001 pages supply source claims; the named decisions below supply otherwise missing algorithms. Their presence does not certify original executable identity.
 
