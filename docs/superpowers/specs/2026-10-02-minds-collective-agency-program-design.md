@@ -14,6 +14,8 @@ adds an independent exchange-design branch using the existing identity, memory a
 foundation; it does not require finishing P4 or implementing general communication first.
 Behavior trees and HTN retain their place after the pilfering campaign.
 
+The [shared ontology review](../../studies/2026-10-04-minds-construction-ontology.md) records the current conceptual boundaries and a compact ontology record for future campaign designs. It clarifies this programme without replacing its campaign labels or authorizing additional runtime work.
+
 ## Purpose and scope
 
 Develop an experimental framework for embodied individual and collective agency, with cheap,

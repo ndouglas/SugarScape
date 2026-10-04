@@ -28,6 +28,19 @@ The [source audit](../../studies/2026-10-04-burrow-studies-reading.md) distingui
 
 Resource coordinates, positive goal weights, worker task memory and structural-access evaluation below are engineering assumptions. No source currently establishes that animals use this particular known-coordinate rule. The proposed access predicate is an explicit relation between a layout and the present movement capability, a first practical step toward later affordance studies; body-dependent, cultural or ecological-psychology conclusions require additional designs and sources.
 
+## Ontology record
+
+Use the [shared ontology review](../../studies/2026-10-04-minds-construction-ontology.md) to preserve the distinction between physical state, agent information and researcher measurements. These records clarify the approved scope; they introduce no new runtime fields or controller behavior.
+
+| Concept and category | State carrier and visibility | Change mechanism and measurement | Origin and evidence boundary |
+|---|---|---|---|
+| Goal site: task designation attached to a coordinate | Outer AccessTask; researcher sees it, KnownGoal workers receive the coordinate, Explore workers do not | Physical digging opens the designated cell; the marker changes no material rules | Supplied benchmark metadata; no food quantity, ownership or learned resource discovery |
+| Worker and spoil unit: physical entities | Existing World identities, positions and unit locations; workers receive ordinary local observations | Existing paid transactions move workers/material and excavate; inventory and material histories record consequences | Existing verified Burrow physics; bookkeeping units are not calibrated mass or energy |
+| Structural access: layout–movement relation | Observer evaluates goal openness and the existing exit topology field; no completion truth is broadcast | Check after every recorded action; preserve first opportunity and route distance, report final access and censoring | Researcher-defined function for the current mover; transient occupancy and actual consumer use are separate |
+| Coordinate guidance: decision process | KnownGoal's supplied coordinate and positive weight, own position and local frontier | Bias only newly selected improving frontiers with a Manhattan factor; count evaluated candidates | Supplied heuristic; no scent propagation, inferred blueprint, model learning or guaranteed success |
+| Completion memory: private observation history | One seen_open latch per KnownGoal worker; only its ordinary local observation updates it | Check before every decision, including loaded turns; record each worker's first observation with pre-action opportunity count | Supplied finite-state memory; remote workers retain uncertainty, no shared discovery or message |
+| Outcome record: researcher evidence | Outer AccessEpisode contains task, base episode, milestones, assumptions and separate diagnostics | Run the whole budget, freeze historical first access and compare exact Explore reductions | Engineering behavior and consistency evidence; biological benefit, culture and scientific treatment effects require later studies |
+
 ## World and task overlay
 
 Reuse finite bounded four-neighbor geometry, material accounting, carried capacity one, two-worker occupancy, unchanged action prices and sequential seeded scheduling. Keep uniform diggable soil, traversable loose spoil and supplied exit navigation. Do not add a second material system or alter spoil birth/fate semantics.

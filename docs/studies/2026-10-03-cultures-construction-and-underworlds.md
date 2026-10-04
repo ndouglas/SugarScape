@@ -9,6 +9,8 @@ independent reviews are complete; a judged scientific campaign remains future wo
 
 **Scope:** campaign families and research questions, not an approved implementation spec or run protocol.
 
+The [shared ontology review](2026-10-04-minds-construction-ontology.md) records the current conceptual boundaries and a compact ontology record for future campaign designs. It clarifies this programme without replacing its campaign labels or authorizing additional runtime work.
+
 ## Purpose and motivation
 
 Develop speculative cultures from inspectable biological, behavioral, social and environmental
