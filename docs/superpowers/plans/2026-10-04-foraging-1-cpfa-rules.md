@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Status: written spec approved by the user on 2026-10-04; this implementation plan awaits review. Standing execution method: subagent-driven development. Scientific registration/execution remain separate.
+- Status: written spec approved by the user on 2026-10-04; implementation plan approved by the user on 2026-10-04. Standing execution method: subagent-driven development. Scientific registration/execution remain separate.
 - Implement F1 only. F2 world reconstruction, F3 passages, F4 excavation and F5 termite comparisons retain their own design gates.
 - Seven parameters are explicit; no claimed evolved defaults. Probabilities are finite in `[0,1]`; `omega` is finite in `[0,4*pi]`; decay rates are finite and nonnegative.
 - Counts are integers from 0 through 256; fidelity/publication rates are finite in `[0,256]`. These are supplied reference-utility bounds, not biological limits.
@@ -256,4 +256,4 @@ Commands shown together are separate verification actions, not a shell script to
 
 Coverage: Task 1 implements the parameter/numeric contracts; Task 2 implements the separate information choices and all source variants; Task 3 exercises the public boundary and preserves the research handoff. Each Review Focus item has an owning test. Types/signatures match across tasks; later worlds are explicitly excluded. No new dependencies or schemas are required.
 
-The written design is approved. This plan must be reviewed before execution under the writing-plans handoff. Preserve the user's standing subagent-driven method; do not ask them to choose it again. After plan approval, read the execution/worktree/review skills and proceed task by task.
+The written design is approved. The user approved this implementation plan on 2026-10-04; execution is now authorized. Preserve the user's standing subagent-driven method; do not ask them to choose it again. After plan approval, read the execution/worktree/review skills and proceed task by task.
