@@ -1,7 +1,7 @@
 # Foraging and construction: source audit
 
 **Date:** 2026-10-04.
-**Status:** initial methods/code audit supporting the approved campaign design. The [F1 rule reference](../foraging.md) is implemented and independently reviewed, not yet integrated; no simulated results.
+**Status:** initial methods/code audit supporting the approved campaign design. The [F1 rule reference](../foraging.md) is implemented and independently reviewed, merged into `main` at `5819a04`; no simulated results.
 
 ## Purpose
 
