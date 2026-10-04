@@ -1,3 +1,4 @@
+import { democraticPeaceChartCaption } from '../democratic-peace';
 import { geosimChartCaption } from '../geosim';
 import { polarityChartCaption } from '../polarity';
 import { auctionChartCaption, auctionChartLines } from '../auctions';
@@ -9,7 +10,7 @@ import { cachingOn, calendarYear, pilferingOn, watcherSplit, watchingOn } from '
 import { winterBands } from '../minds';
 import { hasPatches } from '../patches';
 import { CHART_POINTS, type ChartGroup, type HoardCharts, type HoardGenerationSeries, type Wants } from '../protocol';
-import type { AuctionsConfig, GeosimConfig, PolarityConfig, Config, HoardConfig, ModelConfig, ModelKind } from '../types';
+import type { AuctionsConfig, DemocraticPeaceConfig, GeosimConfig, PolarityConfig, Config, HoardConfig, ModelConfig, ModelKind } from '../types';
 import { h } from './dom';
 import { compactNumber } from './format';
 import {
@@ -670,7 +671,9 @@ export class ChartsPanel {
       const good = p.def.good;
       const named = good === undefined ? undefined : configs.find((c) => good < c.goods.length)?.goods[good];
       p.caption.textContent =
-        p.def.model === 'geosim'
+        p.def.model === 'democratic_peace'
+          ? democraticPeaceChartCaption(p.def.title, this.worlds.filter((world) => world.model === 'democratic_peace').map((world) => world.config as DemocraticPeaceConfig))
+          : p.def.model === 'geosim'
           ? geosimChartCaption(p.def.title, this.worlds.filter((w) => w.model === 'geosim').map((w) => w.config as GeosimConfig))
           : p.def.model === 'polarity'
           ? polarityChartCaption(p.def.title, this.worlds.filter((w) => w.model === 'polarity').map((w) => w.config as PolarityConfig))

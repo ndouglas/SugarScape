@@ -24,7 +24,12 @@ export interface Sweep {
   metric: Metric;
 }
 export interface Point { index: number; series: number; x: number; seed: number }
-interface RunBase { point: number; series: number; x: number; seed: number }
+export interface DemocraticPeaceRunAvailability {
+  status: 'complete' | 'invalid' | 'incomplete';
+  completed_periods: number; attempted_period: number; last_tick_periods: number;
+  invalid_reason: string | null; invalid_phase: string | null; clustering_reason: string | null;
+}
+interface RunBase { point: number; series: number; x: number; seed: number; democratic_peace?: DemocraticPeaceRunAvailability }
 /** `null` stands for NaN. */
 export type RunResult = (RunBase & { value: number | null }) | (RunBase & { values: (number | null)[] });
 export interface ScalarRow {

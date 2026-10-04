@@ -391,6 +391,12 @@ impl Sweep {
         })?;
         if let Some(max) = config.max_ticks().filter(|&max| self.ticks > max) {
             let why = match config.kind() {
+                crate::model::ModelKind::DemocraticPeace => {
+                    let crate::model::ModelConfig::DemocraticPeace(c) = &config else {
+                        unreachable!()
+                    };
+                    format!("Democratic peace source horizon of {} periods requires {max} display ticks in this config", c.horizon_periods)
+                }
                 crate::model::ModelKind::Geosim => {
                     let crate::model::ModelConfig::Geosim(c) = &config else {
                         unreachable!()
@@ -493,6 +499,20 @@ pub struct RunResult {
     pub seed: u64,
     #[serde(flatten)]
     pub outcome: Outcome,
+    /// Exploratory source-clock/availability receipt; absent in legacy and other-model results.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub democratic_peace: Option<DemocraticPeaceAvailability>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct DemocraticPeaceAvailability {
+    pub status: String,
+    pub completed_periods: u64,
+    pub attempted_period: u64,
+    pub last_tick_periods: u32,
+    pub invalid_reason: Option<String>,
+    pub invalid_phase: Option<String>,
+    pub clustering_reason: Option<String>,
 }
 
 /// The mean of the finite values (summed in order from 0.0), or NaN when
@@ -564,9 +584,33 @@ pub fn run_config(sweep: &Sweep, point: &Point, config: ModelConfig) -> RunResul
         .model()
         .series(sweep.metric.series())
         .expect("the metric's series is checked against every config");
+    let democratic_peace = match &world {
+        ModelWorld::DemocraticPeace(w) => {
+            let latest = w.snapshot();
+            let outcome = w.outcome();
+            Some(DemocraticPeaceAvailability {
+                status: outcome
+                    .map_or(
+                        "incomplete",
+                        |o| if o.valid { "complete" } else { "invalid" },
+                    )
+                    .into(),
+                completed_periods: latest.completed_periods,
+                attempted_period: latest.attempted_period,
+                last_tick_periods: latest.last_tick_periods,
+                invalid_reason: outcome.and_then(|o| o.invalid_reason.clone()),
+                invalid_phase: outcome.and_then(|o| o.invalid_phase.clone()),
+                clustering_reason: latest.clustering_reason,
+            })
+        }
+        _ => None,
+    };
     // Raw GeoSim statistics remain inspectable after an invalid attempted period,
     // but no portion of that run may enter experiment metric aggregates.
     if matches!(&world, ModelWorld::Geosim(w) if w.outcome().is_some_and(|outcome| !outcome.valid))
+        || democratic_peace
+            .as_ref()
+            .is_some_and(|receipt| receipt.status == "invalid")
     {
         history.fill(f64::NAN);
     }
@@ -579,6 +623,7 @@ pub fn run_config(sweep: &Sweep, point: &Point, config: ModelConfig) -> RunResul
         }
     }
     RunResult {
+        democratic_peace,
         point: point.index,
         series: point.series,
         x: point.x,
@@ -879,6 +924,38 @@ pub fn runs_csv(result: &SweepResult) -> String {
                 }
             }
         }
+    }
+    if result.runs.iter().any(|run| run.democratic_peace.is_some()) {
+        let mut lines = out.lines();
+        let header = lines.next().unwrap_or_default();
+        let mut enriched = format!("{header},status,completed_periods,attempted_period,last_tick_periods,invalid_reason,invalid_phase,clustering_reason\n");
+        let mut rows = lines;
+        for run in &result.runs {
+            let row_count = match &run.outcome {
+                Outcome::Scalar { .. } => 1,
+                Outcome::Series { values } => values.len(),
+            };
+            let suffix = run
+                .democratic_peace
+                .as_ref()
+                .map(|receipt| {
+                    format!(
+                        "{},{},{},{},{},{},{}",
+                        csv_text(&receipt.status),
+                        receipt.completed_periods,
+                        receipt.attempted_period,
+                        receipt.last_tick_periods,
+                        csv_text(receipt.invalid_reason.as_deref().unwrap_or("")),
+                        csv_text(receipt.invalid_phase.as_deref().unwrap_or("")),
+                        csv_text(receipt.clustering_reason.as_deref().unwrap_or(""))
+                    )
+                })
+                .unwrap_or_else(|| ",,,,,,".into());
+            for row in rows.by_ref().take(row_count) {
+                writeln!(enriched, "{row},{suffix}").unwrap();
+            }
+        }
+        return enriched;
     }
     out
 }
@@ -2310,6 +2387,7 @@ mod tests {
     #[test]
     fn run_results_write_nan_as_null() {
         let run = RunResult {
+            democratic_peace: None,
             point: 3,
             series: 1,
             x: 0,
@@ -2420,6 +2498,7 @@ mod tests {
     fn scalar_run(point: usize, s: &Sweep, value: f64) -> RunResult {
         let p = s.point(point).unwrap();
         RunResult {
+            democratic_peace: None,
             point,
             series: p.series,
             x: p.x,
@@ -2430,6 +2509,7 @@ mod tests {
 
     fn series_run(point: usize, s: &Sweep, values: Vec<f64>) -> RunResult {
         RunResult {
+            democratic_peace: None,
             outcome: Outcome::Series { values },
             ..scalar_run(point, s, 0.0)
         }

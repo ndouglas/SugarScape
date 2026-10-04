@@ -43,6 +43,7 @@ import type {
   StructureConfig,
   StructureInspection,
   ColorMode,
+  DemocraticPeaceInspection,
   Config,
   DpdConfig,
   DpdInspection,
@@ -62,7 +63,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion', 'auctions', 'polarity', 'geosim'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion', 'auctions', 'polarity', 'geosim', 'democratic_peace'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -97,12 +98,13 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   auctions: 'Q-learning Auctions',
   polarity: 'Emergent Polarity',
   geosim: 'GeoSim: The Size of Wars',
+  democratic_peace: 'Democratic Peace as Selection',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion' || tag === 'auctions' || tag === 'polarity' || tag === 'geosim'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion' || tag === 'auctions' || tag === 'polarity' || tag === 'geosim' || tag === 'democratic_peace'
     ? tag
     : 'sugarscape';
 }
@@ -680,6 +682,7 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['effort', 'Effort'],
     ['income', 'Income'],
   ],
+  democratic_peace: [['territory', 'Ownership'], ['governing_regime', 'Governing regime'], ['latent_regime', 'Latent regime'], ['resources', 'Resources'], ['alliances', 'Alliance threat and membership'], ['pariahs', 'Pariah status']],
   geosim: [['territory', 'Ownership'], ['capacity', 'Resource capacity'], ['technology', 'Technology'], ['alert', 'Alert and campaign'], ['wars', 'War membership']],
   polarity: [['territory', 'Territory'], ['resources', 'Resources'], ['strategy', 'Latent strategy'], ['coalitions', 'Coalitions']],
   auctions: [['bids', 'Bids · whole run'], ['late', 'Bids · final 20%'], ['values', 'Values']],
@@ -722,6 +725,7 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   // Each firm's strategy map: price or how often each state was visited.
   collusion: [],
   geosim: [],
+  democratic_peace: [],
   polarity: [],
   auctions: [],
 };
@@ -732,4 +736,8 @@ export function isPolarityView(v: AnyInspection): v is PolarityInspection {
 
 export function isGeosimView(v: AnyInspection): v is GeosimInspection {
   return 'model' in v && v.model === 'geosim';
+}
+
+export function isDemocraticPeaceView(view: AnyInspection): view is DemocraticPeaceInspection {
+  return 'model' in view && view.model === 'democratic_peace';
 }

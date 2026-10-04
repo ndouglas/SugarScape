@@ -65,6 +65,12 @@ struct RunArgs {
     /// Write the config as loaded (normalized JSON).
     #[arg(long, value_name = "PATH")]
     config_out: Option<PathBuf>,
+    /// Write the democratic-peace terminal outcome, retaining undefined metric reasons.
+    #[arg(long, value_name = "PATH")]
+    outcome_out: Option<PathBuf>,
+    /// Write the democratic-peace complete current state and source clocks.
+    #[arg(long, value_name = "PATH")]
+    state_out: Option<PathBuf>,
     /// Print the final world's fingerprint as 0x%016x.
     #[arg(long)]
     fingerprint: bool,
@@ -230,8 +236,32 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
     } else {
         world.model_mut().run(args.ticks);
     }
+    if args.outcome_out.is_some() || args.state_out.is_some() {
+        let ModelWorld::DemocraticPeace(dp) = &world else {
+            return Err(vec![FieldError::new(
+                "export",
+                "--outcome-out and --state-out require democratic_peace",
+            )]
+            .into());
+        };
+        if let Some(path) = &args.outcome_out {
+            write(
+                path,
+                &(serde_json::to_string_pretty(&dp.outcome()).expect("finite outcome serializes")
+                    + "\n"),
+            )?;
+        }
+        if let Some(path) = &args.state_out {
+            write(path, &(dp.state_json() + "\n"))?;
+        }
+    }
     let world = world.model();
-    if world.finished() && matches!(config.kind(), ModelKind::Polarity | ModelKind::Geosim) {
+    if world.finished()
+        && matches!(
+            config.kind(),
+            ModelKind::Polarity | ModelKind::Geosim | ModelKind::DemocraticPeace
+        )
+    {
         let latest: serde_json::Value =
             serde_json::from_str(&world.latest_json()).expect("core snapshot is JSON");
         let periods = latest["periods"].as_u64().unwrap_or(0);
@@ -241,7 +271,13 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
             world.tick()
         );
         if let Some(invalidity) = latest["invalidity"].as_str() {
-            eprintln!("invalid reconstruction: {invalidity}");
+            if config.kind() == ModelKind::DemocraticPeace {
+                let attempted = latest["attempted_period"].as_u64().unwrap_or(periods);
+                let phase = latest["invalid_phase"].as_str().unwrap_or("unknown phase");
+                eprintln!("invalid reconstruction at attempted period {attempted} ({periods} completed), {phase}: {invalidity}");
+            } else {
+                eprintln!("invalid reconstruction: {invalidity}");
+            }
         }
     } else if world.finished() && world.tick() < u64::from(args.ticks) {
         // The anasazi stops at its end year; civil violence when a group is gone;
@@ -280,6 +316,7 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
             ModelKind::Firms => "its last period",
             ModelKind::Auctions => "its last auction",
             // A session stops when its strategies settle, or at its cap.
+            ModelKind::DemocraticPeace => "its source horizon",
             ModelKind::Collusion => {
                 if world.latest_value("converged") == Some(0.0) {
                     "its cap"

@@ -786,6 +786,13 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
   ],
   // Minds 7 charts by generation and this season's bouts (HOARD_CHARTS), not over the whole run.
   hoard: [],
+  democratic_peace: [
+    { title: 'Democratic territory', lines: [{ key: 'democratic_share', label: 'Share of cells governed democratically', color: '--c1' }], range: [0, 1] },
+    { title: 'Governments', lines: [{ key: 'democratic_states', label: 'Democratic states', color: '--c1' }, { key: 'predatory_states', label: 'Predatory states', color: '--red' }] },
+    { title: 'Clustering', lines: [{ key: 'clustering_ratio', label: 'Exposure / initial democratic share', color: '--c2' }] },
+    { title: 'Alignments and conflict', lines: [{ key: 'alliance_count', label: 'Defensive alliances', color: '--c1' }, { key: 'pariah_count', label: 'Pariahs', color: '--red' }, { key: 'conflict_fronts', label: 'Conflict fronts', color: '--c2' }] },
+    { title: 'Source clock', lines: [{ key: 'periods', label: 'Completed source periods', color: '--c1' }, { key: 'last_tick_periods', label: 'Periods in last display tick', color: '--c2' }] },
+  ],
   geosim: [
     { title: 'Governments and territory', lines: [{key:'sovereign_count',label:'Sovereign governments',color:'--c1'}, {key:'largest_territory',label:'Largest territory (cells)',color:'--c2'}] },
     { title: 'Resources and technology', lines: [{key:'total_capacity',label:'Total resource capacity',color:'--c1'}, {key:'mean_threshold',label:'Mean technology threshold',color:'--c2'}] },

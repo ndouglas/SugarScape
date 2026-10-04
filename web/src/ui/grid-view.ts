@@ -1,10 +1,11 @@
+import { democraticPeaceLegend } from '../democratic-peace';
 import { geosimLegend } from '../geosim';
 import { polarityLegend } from '../polarity';
 import { auctionLegend } from '../auctions';
 import type { Engine } from '../engine';
 import { isSugarView } from '../models';
 import { NETWORKS, type NetworkOverlay } from '../protocol';
-import type { AgentView, GeosimConfig, GeosimStats, AuctionsConfig, AuctionsStats, PolarityConfig, PolarityStats, HoardConfig } from '../types';
+import type { AgentView, DemocraticPeaceConfig, DemocraticPeaceStats, GeosimConfig, GeosimStats, AuctionsConfig, AuctionsStats, PolarityConfig, PolarityStats, HoardConfig } from '../types';
 import { linkSegments, SETTLEMENT_COLOR, settlementRadius, settlements, WATER_COLOR } from '../valley';
 import { cacheSize, cacheSummary, compartmentName, isCheaterOnly, isLarder, labStatus } from '../minds';
 import { h } from './dom';
@@ -274,7 +275,8 @@ export class GridView {
     const auction = this.engine.model === 'auctions' ? auctionLegend(this.engine.config as AuctionsConfig, this.engine.colorMode, (this.engine.latest as AuctionsStats | null)?.periods ?? 0) : null;
     const polarity = this.engine.model === 'polarity' ? polarityLegend(this.engine.config as PolarityConfig, this.engine.colorMode, (this.engine.latest as PolarityStats | null)?.periods ?? 0) : null;
     const geosim = this.engine.model === 'geosim' ? geosimLegend(this.engine.config as GeosimConfig, this.engine.colorMode, (this.engine.latest as GeosimStats | null)?.periods ?? 0) : null;
-    const status = geosim ?? polarity ?? (auction ? auction.status : sugar && marks.lab ? labStatus(marks.lab) : hoard ? HOARD_STATUS : '');
+    const democraticPeace = this.engine.model === 'democratic_peace' ? democraticPeaceLegend(this.engine.config as DemocraticPeaceConfig, this.engine.colorMode, (this.engine.latest as DemocraticPeaceStats | null)?.periods ?? 0) : null;
+    const status = democraticPeace ?? geosim ?? polarity ?? (auction ? auction.status : sugar && marks.lab ? labStatus(marks.lab) : hoard ? HOARD_STATUS : '');
     const items = auction ? auction.items : sugar
       ? [...colorLegend(this.engine.colorMode, this.engine.sugar), ...overlayLegend(marks, this.engine.sugar)]
       : hoard

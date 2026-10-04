@@ -8,13 +8,13 @@
 **Goal**: CLI/WASM/playground/Inspect/Compare/Experiments.
 **Success Criteria**: Actual seeded state parity and unavailable metrics pass.
 **Tests**: CLI/sweep/browser/WASM and web suites.
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 3: Scientific protocol
 **Goal**: Bound recorder, audited sources and fixed offline inference.
 **Success Criteria**: Full declaration validates without worlds; bounded integrity fixtures pass.
 **Tests**: Native/Python protocol and replay suites.
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 4: Findings and publication
 **Goal**: Fixed registered census, findings, review and deployed result.

@@ -41,6 +41,7 @@ export function buildExportMenu(opts: ExportOptions): HTMLDetailsElement {
   const fill = (): void => {
     items.replaceChildren(
       perWorld('Statistics (CSV)', async (w) => downloadText(`${opts.slug(w)}-series.csv`, await w.engine.seriesCsv())),
+      ...(opts.worlds().every((world) => world.engine.model === 'democratic_peace') ? [perWorld('State and outcomes (JSON)', async (w) => downloadText(`${opts.slug(w)}-state.json`, await w.engine.modelJson()))] : []),
       perWorld('Agents (CSV)', async (w) => downloadText(`${opts.slug(w)}-agents.csv`, await w.engine.agentsCsv())),
       perWorld('Grid (PNG)', async (w) => downloadBlob(`${opts.slug(w)}-grid.png`, await w.grid.toPngBlob())),
       h('button', { onclick: () => guard(() => opts.charts()) }, 'Charts (PNG)'),

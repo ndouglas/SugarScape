@@ -1,3 +1,4 @@
+import { democraticPeaceRows } from '../democratic-peace';
 import { geosimRows } from '../geosim';
 import { polarityRows } from '../polarity';
 import { auctionRows } from '../auctions';
@@ -7,7 +8,7 @@ import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
 import { hoardStatusText } from '../hoard';
-import { hasCaches, isGeosimView, isPolarityView, isHoardView, isFirmsView, isCollusionView, isAuctionsView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { hasCaches, isDemocraticPeaceView, isGeosimView, isPolarityView, isHoardView, isFirmsView, isCollusionView, isAuctionsView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
@@ -824,7 +825,9 @@ export class InspectPanel {
             : `Agent #${shown.agentId} has left.`;
       const note = gone ? [h('p', { class: 'error' }, left)] : [];
       // First: an empty ethnocentrism or demographic PD site is shaped like an empty Schelling site.
-      const rows = isGeosimView(view)
+      const rows = isDemocraticPeaceView(view)
+        ? democraticPeaceRows(view).map(([key, value]) => h('tr', {}, h('th', {}, key), h('td', {}, value)))
+        : isGeosimView(view)
         ? geosimRows(view).map(([k, v]) => h('tr', {}, h('th', {}, k), h('td', {}, v)))
         : isPolarityView(view)
         ? polarityRows(view).map(([k, v]) => h('tr', {}, h('th', {}, k), h('td', {}, v)))

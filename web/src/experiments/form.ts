@@ -1,4 +1,4 @@
-import type { GeosimConfig, AuctionsConfig, PolarityConfig, FieldError, ModelConfig, ModelKind, Param } from '../types';
+import type { DemocraticPeaceConfig, GeosimConfig, AuctionsConfig, PolarityConfig, FieldError, ModelConfig, ModelKind, Param } from '../types';
 import type { Axis, Metric, ShorthandAxis, Sweep, SweepBase } from './types';
 import { formatValues, parseValues, type AxisScalar } from './values';
 
@@ -109,6 +109,10 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
   if (model === 'firms') {
     // The built-in firms-beta's axis: the size exponent against increasing returns (A99 Table 3).
     return { ...form, x: { path: 'beta', values: '1.7:2.1:0.1' }, ticks: 5000, metric: { ...form.metric, kind: 'final', series: 'mu' } };
+  }
+  if (model === 'democratic_peace') {
+    const d = config as DemocraticPeaceConfig | undefined;
+    return { ...form, description: 'Exploratory initial democratic density; terminal territory share after the captured source horizon. Undefined clustering and invalid runs retain their reasons. This is not the registered scientific study.', x: { path: 'initial_democratic_share', values: '0,0.1,0.3,0.5,1' }, ticks: d ? Math.ceil(d.horizon_periods / d.periods_per_tick) : 1000, metric: { ...form.metric, kind: 'final', series: 'democratic_share' } };
   }
   if (model === 'geosim') {
     const g = config as GeosimConfig | undefined;

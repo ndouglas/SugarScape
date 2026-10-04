@@ -599,6 +599,16 @@ impl Sim {
         serde_json::to_string(&self.model().series_names()).expect("names serialize")
     }
 
+    /// Full finite state, science availability reasons, and clocks for democratic peace.
+    pub fn export_model_json(&self) -> Result<String, JsValue> {
+        match &self.world {
+            ModelWorld::DemocraticPeace(world) => Ok(world.state_json()),
+            _ => Err(edit_error(
+                "full model JSON is available for democratic_peace".into(),
+            )),
+        }
+    }
+
     pub fn export_series_csv(&self) -> String {
         self.model().series_csv()
     }

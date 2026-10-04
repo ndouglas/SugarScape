@@ -1,3 +1,4 @@
+import { DEMOCRATIC_PEACE_RULES, democraticPeaceParams } from '../democratic-peace';
 import { GEOSIM_RULES, geosimParams } from '../geosim';
 import { scheduleLines } from '../civil';
 import type { Engine } from '../engine';
@@ -65,12 +66,12 @@ export class SchemaPanel {
     this.slots = [];
     this.errors = [];
     const params = this.engine.schemas[model] ?? [];
-    const sections = groupParams(model === 'geosim' ? geosimParams(params) : params).map(({ group, params }) => {
+    const sections = groupParams(model === 'democratic_peace' ? democraticPeaceParams(params) : model === 'geosim' ? geosimParams(params) : params).map(({ group, params }) => {
       const section = h('section', { class: 'group' }, h('h3', {}, group), h('p', { class: 'hint' }, note(params)), ...params.map((p) => this.control(p)));
       if (params.every((p) => p.show_if)) this.syncers.push(() => (section.hidden = !params.some((p) => paramShown(p, this.engine.config))));
       return section;
     });
-    const extra = model === 'anasazi' ? [valleyCredit()] : model === 'geosim' ? [h('p', { class: 'hint' }, GEOSIM_RULES)] : [];
+    const extra = model === 'anasazi' ? [valleyCredit()] : model === 'geosim' ? [h('p', { class: 'hint' }, GEOSIM_RULES)] : model === 'democratic_peace' ? [h('p', { class: 'hint' }, DEMOCRATIC_PEACE_RULES)] : [];
     const schedule = model === 'civil' ? [this.schedule()] : [];
     this.el.replaceChildren(...extra, this.general, ...sections, ...schedule);
     this.renderErrors();

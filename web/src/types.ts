@@ -256,7 +256,7 @@ export interface Config {
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion' | 'auctions' | 'polarity' | 'geosim';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion' | 'auctions' | 'polarity' | 'geosim' | 'democratic_peace';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -675,7 +675,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig | AuctionsConfig | PolarityConfig | GeosimConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig | AuctionsConfig | PolarityConfig | GeosimConfig | DemocraticPeaceConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -1473,7 +1473,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats | AuctionsStats | PolarityStats | GeosimStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats | AuctionsStats | PolarityStats | GeosimStats | DemocraticPeaceStats;
 
 export interface SiteView {
   x: number;
@@ -2214,7 +2214,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection | AuctionsInspection | PolarityInspection | GeosimInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection | AuctionsInspection | PolarityInspection | GeosimInspection | DemocraticPeaceInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -2224,6 +2224,10 @@ export type AnyInspection = Inspection | SchellingInspection | RingInspection | 
  * `payoff`.
  */
 export type ColorMode =
+  | 'governing_regime'
+  | 'latent_regime'
+  | 'alliances'
+  | 'pariahs'
   | 'capacity'
   | 'technology'
   | 'alert'
@@ -2473,4 +2477,72 @@ export interface GeosimInspection {
   wars: GeosimWar[]; period: number; periods: number; attempted_period: number; counting_start: number;
   finish_reason: string | null; invalidity: string | null; outcome: GeosimOutcome | null;
   last_structural_event: GeosimEvent | null; events: GeosimEvent[]; events_dropped: number; agent: null;
+}
+
+/** Cederman 2001 democratic peace reconstruction; source periods are distinct from display ticks. */
+export interface DemocraticPeaceConfig {
+  model: 'democratic_peace'; width: number; height: number;
+  initial_democratic_share: number; initial_resourced_share: number; mobile_share: number;
+  superiority_threshold: number; superiority_exponent: number; victory_threshold: number; victory_exponent: number;
+  stalemate_probability: number; tax_rate: number; distance_gradient: number; min_threat: number;
+  horizon_periods: number; periods_per_tick: number; event_recording: boolean; event_limit: number;
+  mechanism: 'tagging' | 'alliances' | 'collective_security';
+  probability_direction: 'printed_decreasing' | 'prose_increasing';
+  zero_ratio: 'equal_zero_neutral' | 'reject_zero_denominator';
+  assignment: 'independent_bernoulli' | 'rounded_quota';
+  distance_metric: 'euclidean' | 'manhattan' | 'territorial_path';
+  enemy_total: 'active_fronts' | 'all_fronts';
+  inactive_commitment: 'per_front_opponent' | 'first_inactive_opponent';
+  latent_regime: 'persistent_cell_tags' | 'overwrite_on_conquest';
+  capital_capture: 'collapse_only' | 'capture_and_fragment';
+  claim_locking: 'affected_cells' | 'affected_states';
+  opposing_victories: 'independent_claims' | 'single_draw';
+  alliance_maintenance: 'rebuild_each_period' | 'persist_while_threatened';
+  threat_ties: 'lowest_state_id' | 'random_tie';
+  obligation_observation: 'prior_actions' | 'current_plans_once';
+  security_scope: 'all_democracies' | 'same_alliance';
+  clustering_exposure: 'unique_state_neighbors' | 'border_edges';
+  clustering_weights: 'territory_weighted' | 'equal_states';
+}
+export interface DemocraticPeaceStats {
+  tick: number; period: number; periods: number; completed_periods: number; attempted_period: number; last_tick_periods: number;
+  finish_reason: string | null; invalidity: string | null; invalid_phase: string | null;
+  democratic_share: number; clustering_ratio: number | null; clustering_reason: string | null; sovereign_count: number; democratic_states: number;
+  predatory_states: number; conflict_fronts: number; alliance_count: number; pariah_count: number;
+  metrics: DemocraticPeaceMetrics;
+}
+export interface DemocraticPeaceStateId { capital_cell: number; sovereignty_generation: number }
+export type DemocraticPeaceRegime = 'democratic' | 'predatory';
+export interface DemocraticPeaceCell { id: number; owner: DemocraticPeaceStateId; initial_regime: DemocraticPeaceRegime; latent_regime: DemocraticPeaceRegime; next_generation: number }
+export interface DemocraticPeaceState { id: DemocraticPeaceStateId; regime: DemocraticPeaceRegime; resources: number; members: number[] }
+export interface DemocraticPeaceRatio { numerator: number; denominator: number; tag: string; value: number | null }
+export interface DemocraticPeaceAllocation { fixed: number; mobile_pool: number; eligible_fronts: number; old_opposing: number; enemy_total: number; inactive_term: number; active: boolean }
+export interface DemocraticPeaceFront {
+  states: [DemocraticPeaceStateId, DemocraticPeaceStateId]; previous: [boolean, boolean]; actions: [boolean, boolean];
+  old_commitments: [number, number]; commitments: [number, number]; allocations: [DemocraticPeaceAllocation, DemocraticPeaceAllocation];
+  initiations: [boolean, boolean]; previous_initiations: [boolean, boolean]; obligations: [string[], string[]];
+  path: [number, number] | null; path_proposer: DemocraticPeaceStateId | null;
+  attack_probabilities: [number | null, number | null]; attack_ratios: [DemocraticPeaceRatio | null, DemocraticPeaceRatio | null];
+  victory_probabilities: [number | null, number | null]; victory_ratios: [DemocraticPeaceRatio | null, DemocraticPeaceRatio | null]; claims: [boolean, boolean];
+}
+export interface DemocraticPeaceAlliance { threat_id: DemocraticPeaceStateId; creation_period: number; serial: number; members: DemocraticPeaceStateId[]; pooled_resources: number }
+export interface DemocraticPeaceCounters { initiated_fronts: number; mutual_d_front_periods: number; completed_victory_battles: number; completed_stalemate_battles: number; opposing_claims: number; successful_claims: number; stale_claims: number; locked_claims: number; retired_states: number; released_states: number }
+export interface DemocraticPeaceMetrics {
+  democratic_cells: number; total_cells: number; democratic_share: number; sovereign_count: number; democratic_states: number; predatory_states: number;
+  democratic_mean_size: number | null; predatory_mean_size: number | null; democratic_max_size: number | null; predatory_max_size: number | null;
+  democratic_size_reason: string | null; predatory_size_reason: string | null; democratic_exposure: number | null; clustering_ratio: number | null; clustering_reason: string | null;
+  conflict_fronts: number; alliance_count: number; pariah_count: number; democratic_extinction: boolean; all_democratic: boolean; first_extinction_period: number | null; first_all_democratic_period: number | null;
+}
+export interface DemocraticPeaceOutcome { valid: boolean; finish_reason: string; invalid_reason: string | null; invalid_phase: string | null; attempted_period: number; completed_periods: number; final_metrics: DemocraticPeaceMetrics | null; census: DemocraticPeaceCounters }
+export interface DemocraticPeaceEvent { period: number; kind: string; states: DemocraticPeaceStateId[]; cells: number[] }
+export interface DemocraticPeaceExtraction { state: DemocraticPeaceStateId; resources_before: number; resources_after: number; province_terms: [number, number, number][] }
+export interface DemocraticPeaceInspection {
+  model: 'democratic_peace'; config: Omit<DemocraticPeaceConfig, 'model'>; seed: number;
+  cell: DemocraticPeaceCell; state: DemocraticPeaceState; members: number[];
+  fronts: DemocraticPeaceFront[]; alliances: DemocraticPeaceAlliance[]; extraction: DemocraticPeaceExtraction | null;
+  distance: number; pariah_sources: DemocraticPeaceStateId[]; metrics: DemocraticPeaceMetrics;
+  setup: { initial_democratic_cells: number; initial_resourced_cells: number; total_cells: number };
+  period: number; periods: number; completed_periods: number; attempted_period: number; last_tick_periods: number; horizon_periods: number;
+  finish_reason: string | null; invalidity: string | null; invalid_phase: string | null; outcome: DemocraticPeaceOutcome | null;
+  census: DemocraticPeaceCounters; last_structural_event: DemocraticPeaceEvent | null; events: DemocraticPeaceEvent[]; events_dropped: number; path_priority: string; agent: null;
 }
