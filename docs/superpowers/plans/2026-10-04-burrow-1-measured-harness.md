@@ -303,6 +303,21 @@ Ruling: Trace clocks are nondecreasing, with exact per-round clocks and unique w
 
 Ruling: Permit a narrowly scoped temporary dead_code allowance on the saved-loader entrypoint/return type until Task4 consumes it — each staged commit must compile lint-clean without adding an unplanned CLI — if wrong, an unused interface could be hidden; Task4 must remove the temporary annotations.
 
+Ruling: Keep build attestation outside this increment and require the documented fresh Cargo execution workflow — runtime code_revision identifies the clean checkout, not an independently attested retained binary — if wrong, direct stale-binary execution could misattribute controller policy to a newer revision; document the limitation before scientific registration.
+
+### Disposition of every declined-to-judge item
+
+| Item | Controller disposition |
+|---|---|
+| Controller/RNG/exact controller BFS authentication | Approved spec explicitly excludes controller replay; physical/provenance distinction retained. No changed requirement. |
+| Strictly increasing opportunity clocks | Existing nondecreasing-clock ruling applies; exact round clocks and unique workers remain checked. |
+| Scientific effect sizes/animal inference/campaign runtime | Unregistered/unauthorized campaign remains unexecuted; no result claim permitted. Explicit global constraint. |
+| Rewritten archive authenticity/offline Git availability | Hashes provide consistency rather than signatures; offline saved validation intentionally does not need original checkout. |
+| Stale native binary build identity | Ruling below; documented fresh Cargo workflow required, no new build-attestation subsystem. |
+| Atomic two-file publication/directory power-loss durability | Exclusive creation/file sync is the approved contract; write errors may leave partial results. Document new-destination retry. |
+| Zero-tick native choice record validation | Measured choice validator requires a selection; zero-tick native choice exports remain valid exports but outside this validator's measured-choice acceptance. Clarify public boundary in docs. |
+| Raw Episode labels as physical evidence | Retained metadata, not numerical outcomes; reports use fixed explicit assumptions. No changed requirement. |
+
 ### Final source verification
 
 After source freeze and ten passing focused report tests, each required final broad check ran once:

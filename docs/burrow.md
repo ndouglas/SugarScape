@@ -23,7 +23,8 @@ sampling must be positive. Validation errors exit with code 2 and contextual `fi
 lines. I/O failures exit with code 1. The CLI validates the entire request before creating or
 writing output, creates missing directories, accepts empty directories and refuses nonempty
 directories or file paths. A later write failure reports the directory as potentially partial;
-it does not report successful completion.
+it does not report successful completion. Retry into a new destination because files from a
+failed write may already remain in the original directory.
 
 The four examples vary only `transport` (`direct`, `relay`) and `cue` (`blind`, `responsive`).
 Their fixture uses the existing externally tagged JSON enum, with snake_case variant names:
@@ -167,6 +168,13 @@ cmp /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-analysis-a/results.md /tm
 All commands above exited zero and both files were byte-identical. The construction report retains 36 seed rows, action/inventory/search/work/travel/storage/material diagnostics and carried/loose censoring; it contains no growing scientific contrasts or condition means. A tampered raw-file acceptance check exited 2 with a condition/seed SHA-256 error and created no results directory. Full commands and hashes are recorded in the [implementation closure](superpowers/plans/2026-10-04-burrow-1-measured-harness.md#engineering-closure).
 
 Archives use `burrow-archive-v1`: `index.incomplete.json` records the entire expected canonical key set before execution; complete `index.json` binds manifest/config/options, full code/protocol revisions, approval provenance, relative raw paths and SHA-256 bytes. Complete Episode envelopes are saved under `raw/`; exclusive per-record receipts remain under `progress/`. Failures retain an incomplete archive and `failure.json`; there is no silent resume. Analysis requires all canonical keys and validates raw paths, hashes, identities, setup, horizon and physical consistency before creating any output. It writes deterministic pretty `burrow-analysis-v1` JSON and Markdown, with no absolute input paths or generation time. `--analyze` rejects run, seed and panel overrides.
+
+Raw SHA-256 hashes prove byte consistency with the saved index; they do not establish external
+authenticity or provide signatures. Recorded `code_revision` is clean runtime-checkout metadata,
+not build attestation for a retained binary. Use the documented fresh `cargo run` workflow; a
+stale binary invoked directly is not proven to match that revision. The measured choice validator
+requires a first selection, so valid native zero-tick choice exports are outside its measured-choice
+acceptance. Report I/O failure can leave partial output; retry into a new destination.
 
 `validate_episode` reconstructs checked physical transitions, round schedules, material ownership/conservation, histories, physical snapshots and derived work. It consumes no controller decisions or RNG continuation. Fingerprints are format-checked state identifiers; controller BFS counts are bounded consistent diagnostics, not independently authenticated policy replay. Code provenance and unchanged engine regression tests support policy fidelity separately. A report cannot turn connected-open area, supplied global exit navigation or a one-cell corridor into evidence of emergent coordination or production throughput.
 
