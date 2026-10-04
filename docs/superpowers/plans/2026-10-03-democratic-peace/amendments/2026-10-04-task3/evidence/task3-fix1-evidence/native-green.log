@@ -1,0 +1,28 @@
+
+running 8 tests
+test tests::source_inventory_paths_cannot_escape_root ... ok
+test tests::nonfinite_json_and_trailing_garbage_are_rejected ... ok
+test tests::duplicate_nested_json_fields_are_rejected ... ok
+test tests::missing_panic_context_and_completed_errors_are_rejected ... ok
+test tests::explicit_construction_failure_and_partial_panic_are_retained ... ok
+test tests::valid_zero_and_null_json_remain_distinct ... ok
+test tests::output_aliases_reject_without_creating_files ... ok
+test tests::forged_required_build_locks_and_empty_command_are_rejected ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+test duplicate_manifest_fields_are_rejected_before_resolved_export ... ok
+test malformed_manifest_is_rejected_before_output_creation ... ok
+test canonical_registered_arm_and_analysis_job_drift_reject_before_outputs ... ok
+test analysis_cli_rejects_input_and_source_aliases_before_either_write ... ok
+test valid_complete_invalid_construction_and_partial_outcomes_remain_resumable ... ok
+test corrupt_scientific_rows_reject_without_touching_raw_or_resolved_outputs ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 34.22s
+
+   Compiling survey v0.1.0 (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.26s
+     Running unittests src/bin/democratic_peace.rs (survey/target/debug/deps/democratic_peace-6987307e59eade4f)
+     Running tests/democratic_peace_native.rs (survey/target/debug/deps/democratic_peace_native-5941499948835038)

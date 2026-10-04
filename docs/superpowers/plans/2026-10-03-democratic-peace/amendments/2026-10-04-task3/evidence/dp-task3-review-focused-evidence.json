@@ -1,0 +1,38 @@
+{
+  "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+  "base": "8b2c7f2500b6d52db9bdfa71a41715060d61084b",
+  "head": "edb15b6c489959af778560f33d9928b80459f697",
+  "registered_histories_executed": 0,
+  "note": "Transcript of actual focused commands and observed results retained after execution. TemporaryDirectory input/output copies were automatically removed. Original retained fixture inputs remain untouched. No command rerun to create this transcript.",
+  "checks": [
+    {
+      "invocation": "PYTHONDONTWRITEBYTECODE=1 python3 -",
+      "stdin": "from pathlib import Path\nimport tempfile,json,subprocess,copy\nfrom survey.democratic_peace import records\nroot=Path.cwd(); evidence=root/'survey/out/democratic-peace-preparation-final'; binary=root/'survey/target/release/democratic_peace'\nwith tempfile.TemporaryDirectory(prefix='dp-task3-review-') as tmp:\n    tmp=Path(tmp)\n    rows=[json.loads(l) for l in (evidence/'fixture-sessions.jsonl').read_text().splitlines()]\n    rows[0]['outcome']['outcome']['final_metrics']={}\n    out=tmp/'corrupt.jsonl'; out.write_text(''.join(json.dumps(r)+'\\n' for r in rows))\n    resolved=tmp/'resolved.json'\n    command=[str(binary),'--manifest',str(evidence/'fixture-manifest.json'),'--resolved',str(resolved),'--repo',str(root),'--out',str(out),'--receipt',str(evidence/'fixture-build-receipt.json')]\n    result=subprocess.run(command,capture_output=True,text=True)\n    print('CORRUPT_FINAL_METRICS',json.dumps({'exit':result.returncode,'stdout':result.stdout.strip(),'stderr':result.stderr.strip()}))\n    manifest=json.loads((evidence/'fixture-manifest.json').read_bytes()); bound=json.loads((evidence/'fixture-resolved.json').read_bytes()); binding={k:bound[k] for k in records.BINDING_FIELDS}\n    try: records.read_sessions(out,manifest,bound,binding)\n    except ValueError as e: print('PYTHON_SAME_ROWS',str(e))\n    provisional=json.loads((evidence/'provisional-full-manifest.json').read_bytes())\n    provisional['arms'][0]['id']='arbitrary-noncanonical-name'\n    manifest_path=tmp/'changed-manifest.json'; manifest_path.write_text(json.dumps(provisional))\n    result=subprocess.run([str(binary),'--manifest',str(manifest_path),'--resolved',str(tmp/'changed-resolved.json'),'--repo',str(root),'--validate-only'],capture_output=True,text=True)\n    print('NONCANONICAL_REGISTERED_ARM_ID',json.dumps({'exit':result.returncode,'stdout':result.stdout.strip(),'stderr':result.stderr.strip()}))\n",
+      "observed_results": {
+        "CORRUPT_FINAL_METRICS": {
+          "exit": 0,
+          "stdout": "recorded 6 attempted histories",
+          "stderr": ""
+        },
+        "PYTHON_SAME_ROWS": "raw line 1: complete final metrics differ from committed census",
+        "NONCANONICAL_REGISTERED_ARM_ID": {
+          "exit": 0,
+          "stdout": "validated 216 arms/14040 keys without world construction; provenance=provisional_unfrozen",
+          "stderr": ""
+        }
+      }
+    },
+    {
+      "invocation": "PYTHONDONTWRITEBYTECODE=1 python3 -",
+      "stdin": "from pathlib import Path\nimport tempfile,subprocess,hashlib\nroot=Path.cwd(); e=root/'survey/out/democratic-peace-preparation-final'\nwith tempfile.TemporaryDirectory(prefix='dp-task3-review-alias-') as tmp:\n    manifest=Path(tmp)/'manifest.json'; original=(e/'fixture-manifest.json').read_bytes(); manifest.write_bytes(original)\n    command=['python3','-m','survey.democratic_peace.analysis','--manifest',str(manifest),'--source',str(root/'docs/superpowers/specs/2026-10-03-democratic-peace-source-table.json'),'--sessions',str(e/'fixture-sessions.jsonl'),'--resolved',str(e/'fixture-resolved.json'),'--build-receipt',str(e/'fixture-build-receipt.json'),'--binary',str(root/'survey/target/release/democratic_peace'),'--source-root',str(root),'--output',str(manifest)]\n    result=subprocess.run(command,capture_output=True,text=True)\n    print('ANALYSIS_MANIFEST_OUTPUT_ALIAS',{'exit':result.returncode,'manifest_changed':manifest.read_bytes()!=original,'stderr':result.stderr.strip(),'new_prefix':manifest.read_text()[:120]})\n",
+      "observed_results": {
+        "ANALYSIS_MANIFEST_OUTPUT_ALIAS": {
+          "exit": 0,
+          "manifest_changed": true,
+          "stderr": "",
+          "classification": "synthetic_fixture"
+        }
+      }
+    }
+  ]
+}

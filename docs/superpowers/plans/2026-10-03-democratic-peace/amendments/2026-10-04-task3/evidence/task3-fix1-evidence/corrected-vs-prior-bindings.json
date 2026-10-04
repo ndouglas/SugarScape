@@ -1,0 +1,20 @@
+[
+  {
+    "label": "prior_preserved",
+    "receipt": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-final/fixture-build-receipt.json",
+    "binary_sha256": "084b4fed44d199b25258bba21681d472ceb9864d3c2ec7ef9cbc8a8bb256fd87",
+    "source_inventory_sha256": "16b022b1078a5d4374d15b4b7af245962830b3024a57ae8e52c10666a371727d",
+    "manifest_sha256": "278e65fc0659f72b6f35c5da2212ce26fd592575c04862b3c8e6a0942c921742",
+    "build_receipt_sha256": "6b8a27a9a814a57d6bf2a6f269cdb586e4e7b63ec6efe151a0508acf4c37d831",
+    "resolved_configs_sha256": "697988ff514a827de11b7d3b9955806f41775c69904bd24486c6572b1d856899"
+  },
+  {
+    "label": "corrected_authoritative",
+    "receipt": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/fixture-build-receipt.json",
+    "binary_sha256": "8bfac59be856cd68cf22186eff69c2f070026622fc7f81cfc2d0520f031461a5",
+    "source_inventory_sha256": "2efca959cc4c3af6156c305cefcdc094fa5772ad37709fc9e6c78148ae55c1f9",
+    "manifest_sha256": "c2e9fc149f549c9abd3b77ecb133065d7a510a828af35c73fbd69ab0086727bd",
+    "build_receipt_sha256": "c03e2e1c81bea0cebd10edb4ee365191e573b7fb2068715f36bffa30c56d538a",
+    "resolved_configs_sha256": "697988ff514a827de11b7d3b9955806f41775c69904bd24486c6572b1d856899"
+  }
+]

@@ -1,0 +1,116 @@
+{
+  "classification": "metadata_final_checks_before_commit",
+  "commands": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--cached",
+        "--name-only"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "docs/superpowers/plans/2026-10-03-democratic-peace.md\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/.gitattributes\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/01-core-tests.patch\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/02-core.patch\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/03-host-tests.patch\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/04-hosts.patch\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/05-protocol-tests.patch\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/06-protocol.patch\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/README.md\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/construction-verification.json\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/build-amendment.py\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix-clippy.log\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix-discovery.log\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix-fmt.log\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix-focused-all.log\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix-golden.log\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix-red.log\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix2-census.log\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix2-clippy.log\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix2-domain.log\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix2-fmt.log\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix2-golden.log\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix2-red.log\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/task-1-fix1-review.md\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/task-1-fix2-review.md\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/task-1-report.md\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/task-1-review.md\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/manifest.json\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/original-README.md\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/original-packet-inventory.json\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/original-plan-self-review.json\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/original-preparation-verification.json\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/original-replay-verification.json\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/prepare_checks.py\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/publish_findings.py\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/register_study.py\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/replay-verification.json\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/replay.py\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/test_replay.py\ndocs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/verify_amendment.py\n"
+    },
+    {
+      "command": [
+        "python3",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/replay.py",
+        "--target",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+        "--through",
+        "2",
+        "--verify-only"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "Verified checkpoint 2/6: 578 product files and 897 protected files, bytes and Git modes.\n"
+    },
+    {
+      "command": [
+        "python3",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/replay.py",
+        "--target",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-task1-amend-replay-d4e17d0bea30",
+        "--verify-only"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "Verified checkpoint 6/6: 613 product files and 897 protected files, bytes and Git modes.\n"
+    },
+    {
+      "command": [
+        "python3",
+        "-c",
+        "import hashlib,json;from pathlib import Path;p=Path('docs/superpowers/plans/2026-10-03-democratic-peace');a=p/'amendments/2026-10-04-task1';expected=json.loads((a/'original-packet-inventory.json').read_text());actual={f.name:{'sha256':hashlib.sha256(f.read_bytes()).hexdigest(),'bytes':f.stat().st_size,'mode':'100755' if f.stat().st_mode&0o100 else '100644'} for f in p.iterdir() if f.is_file()};assert actual==expected;print('All 16 original top-level packet files preserve bytes and modes.')"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+      "exit_code": 0,
+      "stderr": "",
+      "stdout": "All 16 original top-level packet files preserve bytes and modes.\n"
+    }
+  ],
+  "execution_checkpoint": 2,
+  "final_checkpoint": 6,
+  "metadata_only_staged_paths": [
+    "docs/superpowers/plans/2026-10-03-democratic-peace.md",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/.gitattributes",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/01-core-tests.patch",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/02-core.patch",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/03-host-tests.patch",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/04-hosts.patch",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/05-protocol-tests.patch",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/06-protocol.patch",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/README.md",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/construction-verification.json",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/build-amendment.py",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix-clippy.log",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix-discovery.log",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix-fmt.log",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix-focused-all.log",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix-golden.log",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix-red.log",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix2-census.log",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix2-clippy.log",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix2-domain.log",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix2-fmt.log",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix2-golden.log",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/dp-task1-fix2-red.log",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/task-1-fix1-review.md",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/task-1-fix2-review.md",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/task-1-report.md",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/evidence/task-1-review.md",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/manifest.json",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/original-README.md",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/original-packet-inventory.json",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/original-plan-self-review.json",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/original-preparation-verification.json",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/original-replay-verification.json",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/prepare_checks.py",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/publish_findings.py",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/register_study.py",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/replay-verification.json",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/replay.py",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/test_replay.py",
+    "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task1/verify_amendment.py"
+  ],
+  "normal_patch_empty_context_and_exact_logs_have_local_whitespace_attributes": true,
+  "original_packet_files_preserved": 16,
+  "original_spec_source_scientific_files_changed": 0,
+  "replay_tests_witnessed_passed": 18
+}

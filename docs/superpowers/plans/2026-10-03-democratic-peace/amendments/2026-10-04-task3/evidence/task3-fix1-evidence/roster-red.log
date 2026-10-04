@@ -1,0 +1,14 @@
+F
+======================================================================
+FAIL: test_native_registered_roster_digest_matches_independent_fixed_ids_and_seed_states (survey.democratic_peace.test_manifest.NativeRosterBindingTests.test_native_registered_roster_digest_matches_independent_fixed_ids_and_seed_states)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/democratic_peace/test_manifest.py", line 78, in test_native_registered_roster_digest_matches_independent_fixed_ids_and_seed_states
+    self.assertIsNotNone(declared)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+AssertionError: unexpectedly None
+
+----------------------------------------------------------------------
+Ran 1 test in 0.022s
+
+FAILED (failures=1)

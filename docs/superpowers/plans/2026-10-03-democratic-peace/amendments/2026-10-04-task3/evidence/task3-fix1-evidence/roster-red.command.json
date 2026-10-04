@@ -1,0 +1,9 @@
+{
+  "command": [
+    "python3",
+    "-m",
+    "unittest",
+    "survey.democratic_peace.test_manifest.NativeRosterBindingTests"
+  ],
+  "exit_code": 1
+}

@@ -1,0 +1,14 @@
+{
+  "command": [
+    "cargo",
+    "clippy",
+    "--manifest-path",
+    "survey/Cargo.toml",
+    "--all-targets",
+    "--",
+    "-D",
+    "warnings"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 0.49642449989914894
+}

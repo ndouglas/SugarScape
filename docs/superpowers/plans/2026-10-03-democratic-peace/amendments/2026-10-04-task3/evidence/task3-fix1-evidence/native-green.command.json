@@ -1,0 +1,17 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "--locked",
+    "--manifest-path",
+    "survey/Cargo.toml",
+    "--bin",
+    "democratic_peace",
+    "--test",
+    "democratic_peace_native",
+    "--",
+    "--nocapture"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 35.52698645927012
+}

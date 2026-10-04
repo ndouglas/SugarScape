@@ -1,0 +1,462 @@
+diff --git a/crates/sugarscape-cli/tests/democratic_peace_host.rs b/crates/sugarscape-cli/tests/democratic_peace_host.rs
+new file mode 100644
+index 0000000..a4ae748
+--- /dev/null
++++ b/crates/sugarscape-cli/tests/democratic_peace_host.rs
+@@ -0,0 +1,48 @@
++//! Actual CLI discovery, finite exports, and grouped source clocks.
++use std::process::Command;
++#[test]
++fn democratic_peace_cli_discovers_presets_and_exports_grouped_outcome() {
++    let binary = env!("CARGO_BIN_EXE_sugarscape");
++    let catalog = Command::new(binary).arg("presets").output().unwrap();
++    assert!(catalog.status.success());
++    assert!(String::from_utf8(catalog.stdout)
++        .unwrap()
++        .contains("democratic-peace-printed-2001"));
++    let dir = std::env::temp_dir().join(format!("democratic-peace-cli-{}", std::process::id()));
++    std::fs::create_dir_all(&dir).unwrap();
++    let config = dir.join("config.json");
++    std::fs::write(&config, r#"{"model":"democratic_peace","width":4,"height":4,"horizon_periods":14,"periods_per_tick":3,"probability_direction":"prose_increasing","zero_ratio":"equal_zero_neutral"}"#).unwrap();
++    let output = Command::new(binary)
++        .args(["run", "--config"])
++        .arg(&config)
++        .args(["--seed", "312312", "--ticks", "100", "--outcome-out"])
++        .arg(dir.join("outcome.json"))
++        .arg("--state-out")
++        .arg(dir.join("state.json"))
++        .arg("--config-out")
++        .arg(dir.join("resolved.json"))
++        .arg("--series-csv")
++        .arg(dir.join("series.csv"))
++        .output()
++        .unwrap();
++    assert!(
++        output.status.success(),
++        "{}",
++        String::from_utf8_lossy(&output.stderr)
++    );
++    assert!(String::from_utf8_lossy(&output.stderr).contains("14 completed periods"));
++    let state: serde_json::Value =
++        serde_json::from_str(&std::fs::read_to_string(dir.join("state.json")).unwrap()).unwrap();
++    assert!(state.is_object());
++    let outcome: serde_json::Value =
++        serde_json::from_str(&std::fs::read_to_string(dir.join("outcome.json")).unwrap()).unwrap();
++    assert_eq!(outcome["valid"], true);
++    assert_eq!(outcome["completed_periods"], 14);
++    let resolved: serde_json::Value =
++        serde_json::from_str(&std::fs::read_to_string(dir.join("resolved.json")).unwrap()).unwrap();
++    assert_eq!(resolved["probability_direction"], "prose_increasing");
++    assert_eq!(resolved["zero_ratio"], "equal_zero_neutral");
++    let csv = std::fs::read_to_string(dir.join("series.csv")).unwrap();
++    assert!(csv.contains("periods"));
++    std::fs::remove_dir_all(dir).unwrap();
++}
+diff --git a/crates/sugarscape-core/tests/democratic_peace_host_sweep.rs b/crates/sugarscape-core/tests/democratic_peace_host_sweep.rs
+new file mode 100644
+index 0000000..59c5a61
+--- /dev/null
++++ b/crates/sugarscape-core/tests/democratic_peace_host_sweep.rs
+@@ -0,0 +1,48 @@
++use sugarscape_core::sweep::{aggregate, run_point, runs_csv, Sweep, SweepResult};
++fn sweep(extra: &str, metric: &str) -> Sweep {
++    Sweep::from_json(&format!(r#"{{"name":"tiny exploratory host probe","base":{{"config":{{"model":"democratic_peace","width":4,"height":4,"horizon_periods":14,"periods_per_tick":3,{extra}}}}},"x":{{"path":"initial_democratic_share","values":[0]}},"seeds":{{"from":1,"count":1}},"ticks":5,"metric":{{"kind":"final","series":"{metric}"}}}}"#)).unwrap()
++}
++#[test]
++fn undefined_clustering_is_complete_and_exported_with_its_reason() {
++    let sweep = sweep(r#""zero_ratio":"equal_zero_neutral""#, "clustering_ratio");
++    let point = sweep.points().unwrap().remove(0);
++    let run = run_point(&sweep, &point);
++    let json = serde_json::to_value(&run).unwrap();
++    assert!(json["value"].is_null());
++    assert_eq!(json["democratic_peace"]["status"], "complete");
++    assert_eq!(
++        json["democratic_peace"]["clustering_reason"],
++        "undefined_initial_density"
++    );
++    assert_eq!(json["democratic_peace"]["completed_periods"], 14);
++    assert_eq!(json["democratic_peace"]["last_tick_periods"], 2);
++    let result = SweepResult::new(sweep, vec![run]);
++    assert!(runs_csv(&result).contains("complete,14,14,2,,,undefined_initial_density"));
++}
++#[test]
++fn complete_zero_territory_share_remains_in_exploratory_aggregate() {
++    let sweep = sweep(r#""zero_ratio":"equal_zero_neutral""#, "democratic_share");
++    let point = sweep.points().unwrap().remove(0);
++    let run = run_point(&sweep, &point);
++    let summary = serde_json::to_value(aggregate(&sweep, &[run])).unwrap();
++    assert_eq!(summary["rows"][0]["n"], 1);
++    assert_eq!(summary["rows"][0]["mean"], 0.0);
++}
++#[test]
++fn invalid_attempt_preserves_clock_and_excludes_entire_metric_history() {
++    let sweep = sweep(
++        r#""initial_resourced_share":0,"zero_ratio":"reject_zero_denominator""#,
++        "democratic_share",
++    );
++    let point = sweep.points().unwrap().remove(0);
++    let run = run_point(&sweep, &point);
++    let json = serde_json::to_value(&run).unwrap();
++    assert!(json["value"].is_null());
++    assert_eq!(json["democratic_peace"]["status"], "invalid");
++    assert_eq!(json["democratic_peace"]["completed_periods"], 0);
++    assert_eq!(json["democratic_peace"]["attempted_period"], 1);
++    assert!(json["democratic_peace"]["invalid_reason"].is_string());
++    let summary = serde_json::to_value(aggregate(&sweep, &[run])).unwrap();
++    assert_eq!(summary["rows"][0]["n"], 0);
++    assert_eq!(summary["rows"][0]["nan"], 1);
++}
+diff --git a/crates/sugarscape-wasm/tests/democratic_peace.rs b/crates/sugarscape-wasm/tests/democratic_peace.rs
+new file mode 100644
+index 0000000..de7d3ab
+--- /dev/null
++++ b/crates/sugarscape-wasm/tests/democratic_peace.rs
+@@ -0,0 +1,46 @@
++//! Tiny deterministic tests of the production WASM boundary; no registered study.
++use sugarscape_wasm::{model_schemas_json, presets_json, Sim};
++use wasm_bindgen::JsValue;
++use wasm_bindgen_test::*;
++#[wasm_bindgen_test]
++fn democratic_peace_discovers_presets_schema_and_finite_partial_tick_exports() {
++    let presets: serde_json::Value = serde_json::from_str(&presets_json()).unwrap();
++    let entries = presets
++        .as_array()
++        .unwrap()
++        .iter()
++        .filter(|entry| entry["config"]["model"] == "democratic_peace")
++        .collect::<Vec<_>>();
++    assert_eq!(entries.len(), 6);
++    let schemas: serde_json::Value = serde_json::from_str(&model_schemas_json()).unwrap();
++    assert!(schemas["democratic_peace"]
++        .as_array()
++        .unwrap()
++        .iter()
++        .any(|param| param["path"] == "probability_direction"));
++    let mut sim = Sim::new(r#"{"model":"democratic_peace","width":4,"height":4,"horizon_periods":14,"periods_per_tick":3}"#, 393939, JsValue::NULL).unwrap();
++    sim.step(5);
++    let latest: serde_json::Value = serde_json::from_str(&sim.stats_latest()).unwrap();
++    assert_eq!(latest["periods"], 14);
++    assert_eq!(latest["last_tick_periods"], 2);
++    assert!(sim.finished());
++    let fingerprint = sim.fingerprint();
++    for mode in [
++        "territory",
++        "governing_regime",
++        "latent_regime",
++        "resources",
++        "alliances",
++        "pariahs",
++    ] {
++        assert!(sim.render(mode, "sugar").is_ok());
++        assert!(sim.frame_len() > 0);
++    }
++    let inspect: serde_json::Value = serde_json::from_str(&sim.inspect(0, 0).unwrap()).unwrap();
++    assert_eq!(inspect["model"], "democratic_peace");
++    let state: serde_json::Value = serde_json::from_str(&sim.export_model_json().unwrap()).unwrap();
++    assert!(state.is_object());
++    assert!(sim.export_series_csv().contains("periods"));
++    sim.step(1);
++    assert_eq!(sim.fingerprint(), fingerprint);
++}
+diff --git a/web/src/democratic-peace-engine.test.ts b/web/src/democratic-peace-engine.test.ts
+new file mode 100644
+index 0000000..d886cc1
+--- /dev/null
++++ b/web/src/democratic-peace-engine.test.ts
+@@ -0,0 +1,113 @@
++import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
++import { execFileSync } from 'node:child_process';
++import { tmpdir } from 'node:os';
++import { fileURLToPath } from 'node:url';
++import { describe, expect, it } from 'vitest';
++import { Engine } from './engine';
++import { Lockstep } from './compare/lockstep';
++import { captureExperimentBase, defaultForm, formToSweep } from './experiments/form';
++import { SimHost } from './sim-host';
++import { InlineTransport } from './transport';
++import { wasmSimModule } from './sim-module';
++import { readoutText } from './valley';
++import { initSync, presets_json, model_schemas_json, aggregate, run_point } from './wasm-pkg/sugarscape.js';
++import type { DemocraticPeaceConfig, DemocraticPeaceStats, Preset } from './types';
++import type { RunResult } from './experiments/types';
++const setup = async (partial: Partial<DemocraticPeaceConfig> = {}, seed = 9123) => {
++  const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
++  const presets = JSON.parse(presets_json()) as Preset[];
++  const base = presets.find((preset) => preset.id === 'democratic-peace-printed-2001');
++  expect(base, 'the production WASM catalog discovers democratic peace').toBeDefined();
++  return Engine.create({ config: { ...base!.config, width: 4, height: 4, horizon_periods: 14, periods_per_tick: 3, ...partial } as DemocraticPeaceConfig, seed }, { presets, schemas: JSON.parse(model_schemas_json()), transport: new InlineTransport(new SimHost(wasmSimModule(wasm.memory))) });
++};
++describe('Democratic peace through production WASM hosts', () => {
++  it('discovers all six presets and reading controls', async () => {
++    const engine = await setup();
++    expect(engine.presets.filter((preset) => 'model' in preset.config && preset.config.model === 'democratic_peace')).toHaveLength(6);
++    expect(engine.schemas.democratic_peace!.map((param) => param.path)).toEqual(expect.arrayContaining(['mechanism', 'probability_direction', 'zero_ratio', 'assignment', 'capital_capture', 'claim_locking', 'security_scope', 'clustering_weights']));
++  });
++  it('finishes its partial final tick and inspection/rendering never consumes randomness', async () => {
++    const engine = await setup();
++    await engine.advance(5);
++    expect(engine.latest).toMatchObject({ periods: 14, attempted_period: 14, last_tick_periods: 2, finish_reason: 'complete' });
++    const before = await engine.fingerprint();
++    for (const color of ['territory', 'governing_regime', 'latent_regime', 'resources', 'alliances', 'pariahs'] as const) {
++      engine.setDisplay({ colorMode: color });
++      await engine.select(0, 0);
++      expect(engine.inspection!.view).toMatchObject({ model: 'democratic_peace' });
++      expect(await engine.fingerprint()).toBe(before);
++    }
++    await engine.advance(1);
++    expect(await engine.fingerprint()).toBe(before);
++  });
++  it('keeps real Compare worlds independent with different period groupings', async () => {
++    const a = await setup({ periods_per_tick: 3 }, 11);
++    const b = await setup({ periods_per_tick: 2 }, 12);
++    const standalone = await setup({ periods_per_tick: 2 }, 12);
++    const pair = new Lockstep([a, b], 1);
++    await pair.settled();
++    await pair.advance(1);
++    await standalone.advance(1);
++    expect(readoutText(a, b)).toContain('A 3 periods');
++    expect(readoutText(a, b)).toContain('B 2 periods');
++    expect(await b.fingerprint()).toBe(await standalone.fingerprint());
++  });
++  it('captures the authoritative config and includes valid zero and undefined clustering histories', async () => {
++    const engine = await setup({ initial_democratic_share: 0, periods_per_tick: 3 });
++    const captured = captureExperimentBase(engine.presetId, true, engine.config);
++    const form = defaultForm('democratic_peace', engine.config);
++    form.x.values = '0';
++    form.seeds = 1;
++    const sweep = formToSweep(form, captured).sweep!;
++    const spec = JSON.stringify(sweep);
++    const run = JSON.parse(run_point(spec, 0)) as RunResult;
++    expect(run).toMatchObject({ value: 0, democratic_peace: { status: 'complete', completed_periods: 14, clustering_reason: 'undefined_initial_density' } });
++    expect(JSON.parse(aggregate(spec, JSON.stringify([run]))).rows[0]).toMatchObject({ n: 1, nan: 0, mean: 0 });
++    const clusterSpec = JSON.stringify({ ...sweep, metric: { kind: 'final', series: 'clustering_ratio' } });
++    const cluster = JSON.parse(run_point(clusterSpec, 0));
++    expect(cluster).toMatchObject({ value: null, democratic_peace: { status: 'complete', clustering_reason: 'undefined_initial_density' } });
++    await engine.resetModelWith((config) => { (config as DemocraticPeaceConfig).horizon_periods = 100; });
++    expect((captured as { config: DemocraticPeaceConfig }).config.horizon_periods).toBe(14);
++  });
++  it('excludes every metric sample of an invalid attempted history', async () => {
++    const engine = await setup({ initial_resourced_share: 0, zero_ratio: 'reject_zero_denominator' });
++    const form = defaultForm('democratic_peace', engine.config);
++    form.x.values = '0.1';
++    form.seeds = 1;
++    const sweep = formToSweep(form, { config: engine.config }).sweep!;
++    const spec = JSON.stringify(sweep);
++    const run = JSON.parse(run_point(spec, 0));
++    expect(run).toMatchObject({ value: null, democratic_peace: { status: 'invalid', completed_periods: 0, attempted_period: 1 } });
++    expect(JSON.parse(aggregate(spec, JSON.stringify([run]))).rows[0]).toMatchObject({ n: 0, nan: 1 });
++    await engine.advance(1);
++    expect((engine.latest as DemocraticPeaceStats).invalidity).toBeTruthy();
++  });
++});
++
++for (const [index, partial] of [
++  { mechanism: 'tagging', probability_direction: 'printed_decreasing' },
++  { mechanism: 'alliances', probability_direction: 'prose_increasing' },
++  { mechanism: 'collective_security', assignment: 'rounded_quota', distance_metric: 'territorial_path', capital_capture: 'capture_and_fragment' },
++] .entries()) {
++  it(`matches actual native/WASM states and RNG through representative small history ${index + 1}`, async () => {
++    const engine = await setup({ ...partial, width: 6, height: 6, horizon_periods: 60, periods_per_tick: 7, initial_democratic_share: 0.3, initial_resourced_share: 0.2 } as Partial<DemocraticPeaceConfig>, 914000 + index);
++    const scratch = mkdtempSync(`${tmpdir()}/democratic-peace-host-parity-`);
++    const root = fileURLToPath(new URL('../../', import.meta.url));
++    try {
++      writeFileSync(`${scratch}/config.json`, JSON.stringify(engine.config));
++      execFileSync(`${root}/target/release/sugarscape`, ['run', '--config', `${scratch}/config.json`, '--seed', String(914000 + index), '--ticks', '100', '--fingerprint-trace', `${scratch}/trace.json`, '--state-out', `${scratch}/state.json`, '--outcome-out', `${scratch}/outcome.json`], { cwd: root, encoding: 'utf8', stdio: 'pipe' });
++      const trace = JSON.parse(readFileSync(`${scratch}/trace.json`, 'utf8')) as { tick: number; fingerprint: string }[];
++      for (const row of trace) {
++        if (row.tick > 0) await engine.advance(1);
++        expect(await engine.fingerprint()).toBe(row.fingerprint);
++      }
++      expect(JSON.parse(await engine.modelJson())).toEqual(JSON.parse(readFileSync(`${scratch}/state.json`, 'utf8')));
++      const outcome = JSON.parse(readFileSync(`${scratch}/outcome.json`, 'utf8'));
++      expect(outcome).toMatchObject({ valid: true, completed_periods: 60 });
++      expect(outcome.census.initiated_fronts).toBeGreaterThan(0);
++    } finally {
++      engine.close();
++      rmSync(scratch, { recursive: true, force: true });
++    }
++  });
++}
+diff --git a/web/src/democratic-peace-host.test.ts b/web/src/democratic-peace-host.test.ts
+new file mode 100644
+index 0000000..1188eee
+--- /dev/null
++++ b/web/src/democratic-peace-host.test.ts
+@@ -0,0 +1,37 @@
++import { describe, expect, it } from 'vitest';
++import { finishedNotice } from './engine';
++import { COLOR_MODES, MODELS, modelOf, MODEL_LABELS } from './models';
++import { defaultForm } from './experiments/form';
++import { readoutText } from './valley';
++import type { ModelConfig, ModelKind, ModelStats } from './types';
++
++const config = { model: 'democratic_peace', width: 4, height: 4, horizon_periods: 14, periods_per_tick: 3 } as unknown as ModelConfig;
++const kind = 'democratic_peace' as ModelKind;
++const snapshot = (periods: number, extra: Record<string, unknown> = {}) => ({ periods, completed_periods: periods, attempted_period: periods, last_tick_periods: 3, finish_reason: null, invalidity: null, ...extra }) as unknown as ModelStats;
++
++describe('Democratic peace shared host integration', () => {
++  it('discovers the separate model with six explained canvas modes', () => {
++    expect(modelOf(config)).toBe('democratic_peace');
++    expect(MODELS).toContain(kind);
++    expect(MODEL_LABELS[kind]).toContain('Democratic');
++    expect(COLOR_MODES[kind].map(([mode]) => mode)).toEqual(['territory', 'governing_regime', 'latent_regime', 'resources', 'alliances', 'pariahs']);
++  });
++  it('reports completed source clocks after the partial final display tick', () => {
++    expect(finishedNotice(config, 5, snapshot(14, { last_tick_periods: 2, finish_reason: 'complete' }))).toContain('14');
++    expect(finishedNotice(config, 5, snapshot(14, { finish_reason: 'complete' }))).toContain('period');
++  });
++  it('reports atomic invalid attempts with the committed period and phase', () => {
++    const notice = finishedNotice(config, 1, snapshot(2, { attempted_period: 3, invalidity: 'zero denominator', invalid_phase: 'allocation' }));
++    expect(notice).toContain('attempted period 3');
++    expect(notice).toContain('2 completed');
++    expect(notice).toContain('allocation');
++  });
++  it('presents each Compare world source clock independently', () => {
++    expect(readoutText({ config, tick: 1, population: 10, latest: snapshot(3) }, { config: { ...config, periods_per_tick: 2 } as ModelConfig, tick: 1, population: 12, latest: snapshot(2) })).toContain('A 3 periods');
++    expect(readoutText({ config, tick: 1, population: 10, latest: snapshot(3) }, { config, tick: 1, population: 12, latest: snapshot(2) })).toContain('B 2 periods');
++  });
++  it('suggests an exploratory captured-density sweep covering the grouped horizon', () => {
++    expect(defaultForm(kind, config)).toMatchObject({ x: { path: 'initial_democratic_share' }, ticks: 5, metric: { kind: 'final', series: 'democratic_share' } });
++    expect(defaultForm(kind, config).description).toContain('Exploratory');
++  });
++});
+diff --git a/web/src/democratic-peace-inspection.test.ts b/web/src/democratic-peace-inspection.test.ts
+new file mode 100644
+index 0000000..9af65fc
+--- /dev/null
++++ b/web/src/democratic-peace-inspection.test.ts
+@@ -0,0 +1,48 @@
++import { describe, expect, it } from 'vitest';
++import * as presentation from './democratic-peace';
++import type { DemocraticPeaceConfig, DemocraticPeaceMetrics } from './types';
++const id = { capital_cell: 4, sovereignty_generation: 2 };
++const opponent = { capital_cell: 9, sovereignty_generation: 0 };
++const allocation = { fixed: 1, mobile_pool: 2, eligible_fronts: 1, old_opposing: 0, enemy_total: 0, inactive_term: 0, active: false };
++const metrics: DemocraticPeaceMetrics = { democratic_cells: 0, total_cells: 16, democratic_share: 0, sovereign_count: 16, democratic_states: 0, predatory_states: 16, democratic_mean_size: null, predatory_mean_size: 1, democratic_max_size: null, predatory_max_size: 1, democratic_size_reason: 'no_surviving_states', predatory_size_reason: null, democratic_exposure: null, clustering_ratio: null, clustering_reason: 'undefined_extinction', conflict_fronts: 1, alliance_count: 0, pariah_count: 1, democratic_extinction: true, all_democratic: false, first_extinction_period: 0, first_all_democratic_period: null };
++const fixture = {
++  model: 'democratic_peace', config: { horizon_periods: 14, periods_per_tick: 3, probability_direction: 'printed_decreasing' } as DemocraticPeaceConfig,
++  cell: { id: 4, owner: id, initial_regime: 'predatory', latent_regime: 'democratic', next_generation: 3 },
++  state: { id, regime: 'predatory', resources: 0, members: [4] }, members: [4], distance: 0, extraction: null,
++  fronts: [{ states: [id, opponent], previous: [false, true], actions: [true, true], old_commitments: [0, 0], commitments: [5, 0], allocations: [allocation, allocation], initiations: [true, false], previous_initiations: [false, false], obligations: [['attacked_ally'], []], path: [4, 9], path_proposer: id, attack_probabilities: [0, null], attack_ratios: [{ numerator: 5, denominator: 0, tag: 'positive_over_zero', value: null }, null], victory_probabilities: [0, 1], victory_ratios: [null, null], claims: [false, true] }],
++  alliances: [], pariah_sources: [opponent], metrics, setup: { initial_democratic_cells: 1, initial_resourced_cells: 0, total_cells: 16 },
++  periods: 2, completed_periods: 2, attempted_period: 3, last_tick_periods: 2, horizon_periods: 14,
++  finish_reason: 'invalid', invalidity: 'zero denominator', invalid_phase: 'allocation', outcome: null,
++  census: { initiated_fronts: 1, mutual_d_front_periods: 1, completed_victory_battles: 0, completed_stalemate_battles: 0, opposing_claims: 0, successful_claims: 0, stale_claims: 0, locked_claims: 0, retired_states: 0, released_states: 0 },
++  last_structural_event: null, events: [], events_dropped: 5, path_priority: 'lower_id_path_priority', agent: null,
++};
++const rows = () => {
++  const fn = (presentation as unknown as { democraticPeaceRows?: (view: unknown) => [string, string][] }).democraticPeaceRows;
++  expect(fn).toBeTypeOf('function');
++  return fn!(fixture);
++};
++describe('Democratic peace Inspect explanations', () => {
++  it('distinguishes governing, latent and initial regimes while retaining valid zero resources', () => {
++    const table = Object.fromEntries(rows());
++    expect(table.Regimes).toContain('governing predatory');
++    expect(table.Regimes).toContain('latent democratic');
++    expect(table.Resources).toContain('0.000');
++    expect(table.Government).toContain('generation 2');
++  });
++  it('shows undefined availability reasons and zero first-passage separately from absent first-passage', () => {
++    const table = Object.fromEntries(rows());
++    expect(table.Clustering).toContain('undefined_extinction');
++    expect(table['State sizes']).toContain('no_surviving_states');
++    expect(table['First passages']).toContain('extinction 0');
++    expect(table['First passages']).toContain('all-democratic not observed');
++  });
++  it('shows commitments, probability ratio limits, obligations and failed atomic clocks', () => {
++    const table = Object.fromEntries(rows());
++    expect(table.Fronts).toContain('positive_over_zero');
++    expect(table.Fronts).toContain('attacked_ally');
++    expect(table['Invalid reconstruction']).toContain('allocation');
++    expect(table['Source clock']).toContain('2 completed');
++    expect(table['Source clock']).toContain('attempted 3');
++    expect(JSON.stringify(rows())).not.toContain('Infinity');
++  });
++});
+diff --git a/web/src/democratic-peace-presentation.test.ts b/web/src/democratic-peace-presentation.test.ts
+new file mode 100644
+index 0000000..990f7a2
+--- /dev/null
++++ b/web/src/democratic-peace-presentation.test.ts
+@@ -0,0 +1,24 @@
++import { describe, expect, it } from 'vitest';
++import type { DemocraticPeaceConfig, Param } from './types';
++const presentation = async () => await import('./democratic-peace').catch(() => ({})) as unknown as { democraticPeaceParams?: (params: Param[]) => Param[]; democraticPeaceLegend?: (config: DemocraticPeaceConfig, mode: string, periods: number) => string; DEMOCRATIC_PEACE_RULES?: string };
++describe('Democratic peace source explanations', () => {
++  it('explains the printed probability conflict without changing field bounds or choices', async () => {
++    const helpers = await presentation();
++    expect(helpers.democraticPeaceParams).toBeTypeOf('function');
++    const field: Param = { path: 'probability_direction', kind: 'choice', label: 'Probability direction', apply: 'reset', group: 'Readings', choices: [{ value: 'printed_decreasing', label: 'Printed decreasing' }, { value: 'prose_increasing', label: 'Prose increasing' }] };
++    const shown = helpers.democraticPeaceParams!([field])[0];
++    expect(shown).toMatchObject(field);
++    expect(shown.help).toContain('496');
++    expect(shown.help).toContain('decreasing');
++    expect(shown.help).toContain('increasing');
++  });
++  it('provides explicit alliance canvas meaning and source/display clocks', async () => {
++    const helpers = await presentation();
++    expect(helpers.democraticPeaceLegend).toBeTypeOf('function');
++    const config = { horizon_periods: 14, periods_per_tick: 3, mechanism: 'alliances', probability_direction: 'printed_decreasing' } as DemocraticPeaceConfig;
++    expect(helpers.democraticPeaceLegend!(config, 'alliances', 12)).toContain('12 of 14 source periods');
++    expect(helpers.democraticPeaceLegend!(config, 'alliances', 12)).toContain('threat');
++    expect(helpers.DEMOCRATIC_PEACE_RULES).toContain('2001');
++    expect(helpers.DEMOCRATIC_PEACE_RULES).toContain('stipulated');
++  });
++});
+diff --git a/web/src/experiments/democratic-peace-availability.test.ts b/web/src/experiments/democratic-peace-availability.test.ts
+new file mode 100644
+index 0000000..a5cb7ad
+--- /dev/null
++++ b/web/src/experiments/democratic-peace-availability.test.ts
+@@ -0,0 +1,21 @@
++import { describe, expect, it } from 'vitest';
++import * as format from './format';
++import type { RunResult } from './types';
++
++const describeRuns = (runs: unknown[]) => {
++  const fn = (format as unknown as { runAvailability?: (runs: RunResult[]) => string }).runAvailability;
++  expect(fn).toBeTypeOf('function');
++  return fn!(runs as RunResult[]);
++};
++const run = (status: string, reason: string | null = null) => ({ point: 0, series: 0, x: 0, seed: 1, value: null, democratic_peace: { status, completed_periods: 14, attempted_period: 14, last_tick_periods: 2, invalid_reason: null, invalid_phase: null, clustering_reason: reason } });
++describe('Democratic peace experiment availability', () => {
++  it('counts legitimate undefined clustering as a complete history with its reason', () => {
++    expect(describeRuns([run('complete', 'undefined_initial_density'), run('complete', 'undefined_extinction'), { ...run('complete'), value: 0 }])).toBe('3 complete · 0 invalid · clustering unavailable: undefined_initial_density (1), undefined_extinction (1)');
++  });
++  it('keeps invalid histories distinct from valid zero and undefined complete metrics', () => {
++    expect(describeRuns([{ ...run('invalid'), democratic_peace: { ...run('invalid').democratic_peace, completed_periods: 2, attempted_period: 3, invalid_reason: 'zero denominator', invalid_phase: 'allocation' } }, { ...run('complete'), value: 0 }])).toContain('1 complete · 1 invalid');
++  });
++  it('leaves legacy results without model availability metadata unchanged', () => {
++    expect(describeRuns([{ point: 0, series: 0, x: 0, seed: 1, value: null }])).toBe('');
++  });
++});
+diff --git a/web/src/experiments/democratic-peace-export.test.ts b/web/src/experiments/democratic-peace-export.test.ts
+new file mode 100644
+index 0000000..dbee450
+--- /dev/null
++++ b/web/src/experiments/democratic-peace-export.test.ts
+@@ -0,0 +1,23 @@
++import { readFileSync } from 'node:fs';
++import { describe, expect, it } from 'vitest';
++import { initSync, sweep_csv, sweep_result } from '../wasm-pkg/sugarscape.js';
++
++initSync({ module: readFileSync(new URL('../wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
++const spec = JSON.stringify({ name: 'Saved exploratory availability', base: { config: { population: 0 } }, x: { path: 'population', values: [0] }, seeds: { from: 1, count: 1 }, ticks: 1, metric: { kind: 'final', series: 'population' } });
++const receipt = { status: 'complete', completed_periods: 14, attempted_period: 14, last_tick_periods: 2, invalid_reason: null, invalid_phase: null, clustering_reason: 'undefined_extinction' };
++const run = { point: 0, series: 0, x: 0, seed: 1, value: null };
++describe('Exploratory availability export compatibility', () => {
++  it('retains optional source-clock and undefined-reason metadata in saved JSON', () => {
++    const exported = JSON.parse(sweep_result(spec, JSON.stringify([{ ...run, democratic_peace: receipt }])));
++    expect(exported.runs[0].democratic_peace).toEqual(receipt);
++  });
++  it('exports complete-history availability and reasons in runs CSV', () => {
++    const csv = sweep_csv(spec, JSON.stringify([{ ...run, democratic_peace: receipt }]), 'runs');
++    expect(csv.split('\n')[0]).toContain('status,completed_periods,attempted_period,last_tick_periods,invalid_reason,invalid_phase,clustering_reason');
++    expect(csv).toContain('complete,14,14,2,,,undefined_extinction');
++  });
++  it('preserves older results and other models exact CSV shape', () => {
++    expect(sweep_csv(spec, JSON.stringify([{ ...run, value: 0 }]), 'runs')).toBe('series,x,seed,value\n0,0,1,0\n');
++    expect(JSON.parse(sweep_result(spec, JSON.stringify([run]))).runs[0]).not.toHaveProperty('democratic_peace');
++  });
++});

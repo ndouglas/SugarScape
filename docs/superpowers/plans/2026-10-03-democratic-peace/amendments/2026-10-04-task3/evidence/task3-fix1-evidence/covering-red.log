@@ -1,0 +1,158 @@
+
+running 5 tests
+test duplicate_manifest_fields_are_rejected_before_resolved_export ... ok
+test malformed_manifest_is_rejected_before_output_creation ... ok
+test canonical_registered_arm_and_analysis_job_drift_reject_before_outputs ... FAILED
+test analysis_cli_rejects_input_and_source_aliases_before_either_write ... FAILED
+test corrupt_scientific_rows_reject_without_touching_raw_or_resolved_outputs ... FAILED
+
+failures:
+
+failures:
+    analysis_cli_rejects_input_and_source_aliases_before_either_write
+    canonical_registered_arm_and_analysis_job_drift_reject_before_outputs
+    corrupt_scientific_rows_reject_without_touching_raw_or_resolved_outputs
+
+test result: FAILED. 2 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 30.14s
+
+   Compiling survey v0.1.0 (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.84s
+     Running tests/democratic_peace_native.rs (survey/target/debug/deps/democratic_peace_native-5941499948835038)
+
+thread 'canonical_registered_arm_and_analysis_job_drift_reject_before_outputs' (452277135) panicked at tests/democratic_peace_native.rs:218:5:
+accepted or wrote outputs: ["arm-id", "job-id", "job-state"]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'analysis_cli_rejects_input_and_source_aliases_before_either_write' (452277134) panicked at tests/democratic_peace_native.rs:274:5:
+[
+  {
+    "case": "manifest",
+    "exit": 0,
+    "unchanged": false,
+    "stderr": ""
+  },
+  {
+    "case": "source",
+    "exit": 0,
+    "unchanged": false,
+    "stderr": ""
+  },
+  {
+    "case": "resolved",
+    "exit": 0,
+    "unchanged": false,
+    "stderr": ""
+  },
+  {
+    "case": "receipt",
+    "exit": 0,
+    "unchanged": false,
+    "stderr": ""
+  },
+  {
+    "case": "sessions",
+    "exit": 0,
+    "unchanged": false,
+    "stderr": ""
+  },
+  {
+    "case": "inventory",
+    "exit": 0,
+    "unchanged": false,
+    "stderr": ""
+  },
+  {
+    "case": "symlink",
+    "exit": 0,
+    "unchanged": false,
+    "stderr": ""
+  },
+  {
+    "case": "hardlink",
+    "exit": 0,
+    "unchanged": false,
+    "stderr": ""
+  },
+  {
+    "case": "binary",
+    "exit": 0,
+    "unchanged": false,
+    "stderr": ""
+  },
+  {
+    "case": "parent-symlink",
+    "exit": 0,
+    "unchanged": false,
+    "stderr": ""
+  },
+  {
+    "case": "absent-parent",
+    "exit": 0,
+    "unchanged": false,
+    "stderr": ""
+  }
+]
+
+Traceback (most recent call last):
+  File "<string>", line 44, in <module>
+    assert not failures
+           ^^^^^^^^^^^^
+AssertionError
+
+
+thread 'corrupt_scientific_rows_reject_without_touching_raw_or_resolved_outputs' (452277136) panicked at tests/democratic_peace_native.rs:188:5:
+empty-final/existing=false: exit=Some(0), stderr=
+empty-final/existing=true: exit=Some(0), stderr=
+unknown-science-field/existing=false: exit=Some(0), stderr=
+unknown-science-field/existing=true: exit=Some(0), stderr=
+unknown-metric-field/existing=false: exit=Some(0), stderr=
+unknown-metric-field/existing=true: exit=Some(0), stderr=
+missing-metric-field/existing=false: exit=Some(0), stderr=
+missing-metric-field/existing=true: exit=Some(0), stderr=
+unknown-counter/existing=false: exit=Some(0), stderr=
+unknown-counter/existing=true: exit=Some(0), stderr=
+fractional-counter/existing=false: exit=Some(0), stderr=
+fractional-counter/existing=true: exit=Some(0), stderr=
+unknown-setup/existing=false: exit=Some(0), stderr=
+unknown-setup/existing=true: exit=Some(0), stderr=
+setup-overflow/existing=false: exit=Some(0), stderr=
+setup-overflow/existing=true: exit=Some(0), stderr=
+unknown-terminal/existing=false: exit=Some(0), stderr=
+unknown-terminal/existing=true: exit=Some(0), stderr=
+terminal-census/existing=false: exit=Some(0), stderr=
+terminal-census/existing=true: exit=Some(0), stderr=
+terminal-clock/existing=false: exit=Some(0), stderr=
+terminal-clock/existing=true: exit=Some(0), stderr=
+period-clock/existing=false: exit=Some(0), stderr=
+period-clock/existing=true: exit=Some(0), stderr=
+display-clock/existing=false: exit=Some(0), stderr=
+display-clock/existing=true: exit=Some(0), stderr=
+state-hash/existing=false: exit=Some(0), stderr=
+state-hash/existing=true: exit=Some(0), stderr=
+atomic-gap/existing=false: exit=Some(0), stderr=
+atomic-gap/existing=true: exit=Some(0), stderr=
+invalid-context/existing=false: exit=Some(0), stderr=
+invalid-context/existing=true: exit=Some(0), stderr=
+terminal-bool-type/existing=false: exit=Some(1), stderr=democratic-peace recorder: resume completion/invalidity mismatch
+
+terminal-bool-type/existing=true: exit=Some(1), stderr=democratic-peace recorder: resume completion/invalidity mismatch
+
+share-census/existing=false: exit=Some(0), stderr=
+share-census/existing=true: exit=Some(0), stderr=
+regime-census/existing=false: exit=Some(0), stderr=
+regime-census/existing=true: exit=Some(0), stderr=
+imputed-clustering/existing=false: exit=Some(0), stderr=
+imputed-clustering/existing=true: exit=Some(0), stderr=
+regime-reason/existing=false: exit=Some(0), stderr=
+regime-reason/existing=true: exit=Some(0), stderr=
+first-passage/existing=false: exit=Some(0), stderr=
+first-passage/existing=true: exit=Some(0), stderr=
+missing-endpoint/existing=false: exit=Some(0), stderr=
+missing-endpoint/existing=true: exit=Some(0), stderr=
+panic-science/existing=false: exit=Some(0), stderr=
+panic-science/existing=true: exit=Some(0), stderr=
+incomplete-science/existing=false: exit=Some(0), stderr=
+incomplete-science/existing=true: exit=Some(0), stderr=
+panic-envelope/existing=false: exit=Some(0), stderr=
+panic-envelope/existing=true: exit=Some(0), stderr=
+error: test failed, to rerun pass `--test democratic_peace_native`
