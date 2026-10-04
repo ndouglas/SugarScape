@@ -115,6 +115,8 @@ Keep the approved resource-access increment first. It separates a supplied coord
 5. **Maintenance and transmission:** distinguish repair, replacement cohorts, learned practices and inherited infrastructure.
 6. **Institutions and integration:** combine authority, rights, oversight and historical change once the component mechanisms are understood.
 
+Resource access is now merged. The [foraging/construction draft](../superpowers/specs/2026-10-04-foraging-construction-design.md) refines the next inhabitation/benefit step into a published-rule reference, fixed-world reconstruction, passage adaptation and construction coupling. Its [source audit](2026-10-04-foraging-construction-reading.md) distinguishes CPFA's private site fidelity and server-mediated waypoints from chemical signaling and unrestricted shared knowledge. The written draft awaits review; its existence does not approve runtime work or scientific execution.
+
 This is a dependency guide, not a replacement for the existing C1–C10 or A–G programme labels or approval of their implementations. Minds protection, deception and decision-engine comparisons retain their places alongside construction. Hornvale interfaces still need inspection before an integration contract is assigned.
 
 The major bridges still to cover are needs/motivation, calibration through experience, social learning, commitments/institutions and the lifecycle of constructed places. Use a shared conceptual vocabulary now; share runtime machinery when physical, information, timing, cost and evidentiary contracts have been shown compatible. A universal mind class or ontology engine is not a prerequisite.

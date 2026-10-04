@@ -37,6 +37,16 @@ Pielström and Roces (2013), PLOS ONE e57040, is the selected transport/cue anch
 (2017), Proceedings B 20162730, and Prasath et al. (version of record 2023), eLife 79638, are
 alternative/later leads. These articles were accessed online and are not yet copied into `papers/`.
 
+The [foraging/construction source audit](studies/2026-10-04-foraging-construction-reading.md)
+adds Hecker and Moses (2015), *Beyond pheromones*, as a controller-reference anchor. Its
+methods/pseudocode were inspected; a personal copy is at
+`papers/foraging/hecker-moses-2015-beyond-pheromones.pdf` with a local hash/provenance record.
+It has not been reproduced here. Michael et al. (2023), *Finding shortcuts through collective
+tunnel excavations in a subterranean termite*, is a later biological comparison target,
+inspected through accessible indexed methods/discussion and not copied locally. The
+[draft sequence and first-increment spec](superpowers/specs/2026-10-04-foraging-construction-design.md)
+record the next review gate.
+
 ## Reproduced
 
 | Milestone | Model kind | Sources | Headline |
