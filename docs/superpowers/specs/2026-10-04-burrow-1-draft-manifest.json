@@ -1,0 +1,1207 @@
+{
+  "schema": "burrow-measured-draft-v1",
+  "status": "proposed_not_registered",
+  "execution_authorized": false,
+  "protocol": "docs/superpowers/specs/2026-10-04-burrow-1-measured-protocol.md",
+  "engine_baseline": "4ef7e5794fc12138cf7f112947e34666095f6131",
+  "scientific_seeds": [
+    "10001",
+    "10002",
+    "10003",
+    "10004",
+    "10005",
+    "10006",
+    "10007",
+    "10008",
+    "10009",
+    "10010",
+    "10011",
+    "10012",
+    "10013",
+    "10014",
+    "10015",
+    "10016",
+    "10017",
+    "10018",
+    "10019",
+    "10020",
+    "10021",
+    "10022",
+    "10023",
+    "10024",
+    "10025",
+    "10026",
+    "10027",
+    "10028",
+    "10029",
+    "10030",
+    "10031",
+    "10032",
+    "10033",
+    "10034",
+    "10035",
+    "10036",
+    "10037",
+    "10038",
+    "10039",
+    "10040"
+  ],
+  "construction_seeds": [
+    "7",
+    "8"
+  ],
+  "expected_conditions": 32,
+  "expected_scientific_episodes": 1280,
+  "expected_construction_conditions": 18,
+  "expected_construction_episodes": 36,
+  "primary_outcomes": [
+    "digs_per_opportunity",
+    "disposals_per_opportunity"
+  ],
+  "primary_contrasts": [
+    {
+      "id": "relay_cue",
+      "plus": "primary.relay.responsive",
+      "minus": "primary.relay.blind"
+    },
+    {
+      "id": "blind_transport",
+      "plus": "primary.relay.blind",
+      "minus": "primary.direct.blind"
+    },
+    {
+      "id": "responsive_transport",
+      "plus": "primary.relay.responsive",
+      "minus": "primary.direct.responsive"
+    }
+  ],
+  "negative_control": {
+    "plus": "primary.direct.responsive",
+    "minus": "primary.direct.blind",
+    "comparison": "exact_action_and_choice_projection_equality"
+  },
+  "conditions": [
+    {
+      "id": "primary.direct.blind",
+      "panel": "primary",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 8
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "primary.direct.responsive",
+      "panel": "primary",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 8
+          }
+        },
+        "transport": "direct",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "primary.relay.blind",
+      "panel": "primary",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 8
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "primary.relay.responsive",
+      "panel": "primary",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 8
+          }
+        },
+        "transport": "relay",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "workforce.2.direct.blind",
+      "panel": "workforce_sensitivity",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 2
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 2048,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "workforce.2.direct.responsive",
+      "panel": "workforce_sensitivity",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 2
+          }
+        },
+        "transport": "direct",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 2048,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "workforce.2.relay.blind",
+      "panel": "workforce_sensitivity",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 2
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 2048,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "workforce.2.relay.responsive",
+      "panel": "workforce_sensitivity",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 2
+          }
+        },
+        "transport": "relay",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 2048,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "workforce.4.direct.blind",
+      "panel": "workforce_sensitivity",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 4
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1024,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "workforce.4.direct.responsive",
+      "panel": "workforce_sensitivity",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 4
+          }
+        },
+        "transport": "direct",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1024,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "workforce.4.relay.blind",
+      "panel": "workforce_sensitivity",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 4
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1024,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "workforce.4.relay.responsive",
+      "panel": "workforce_sensitivity",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 4
+          }
+        },
+        "transport": "relay",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1024,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "workforce.16.direct.blind",
+      "panel": "workforce_sensitivity",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 16
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 256,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "workforce.16.direct.responsive",
+      "panel": "workforce_sensitivity",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 16
+          }
+        },
+        "transport": "direct",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 256,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "workforce.16.relay.blind",
+      "panel": "workforce_sensitivity",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 16
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 256,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "workforce.16.relay.responsive",
+      "panel": "workforce_sensitivity",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 16
+          }
+        },
+        "transport": "relay",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 256,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "reduction.direct.blind",
+      "panel": "cue_reduction",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 8
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 1,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "reduction.direct.responsive",
+      "panel": "cue_reduction",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 8
+          }
+        },
+        "transport": "direct",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 1,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "reduction.relay.blind",
+      "panel": "cue_reduction",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 8
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 1,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "reduction.relay.responsive",
+      "panel": "cue_reduction",
+      "config": {
+        "fixture": {
+          "growing": {
+            "width": 41,
+            "height": 25,
+            "workers": 8
+          }
+        },
+        "transport": "relay",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 1,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 32
+      }
+    },
+    {
+      "id": "choice.blind.left.fresh_accumulation",
+      "panel": "choice_verification",
+      "config": {
+        "fixture": {
+          "choice": {
+            "side": "left",
+            "pile": "fresh_accumulation"
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1,
+        "sample_every": 1
+      }
+    },
+    {
+      "id": "choice.blind.left.old_accumulation",
+      "panel": "choice_verification",
+      "config": {
+        "fixture": {
+          "choice": {
+            "side": "left",
+            "pile": "old_accumulation"
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1,
+        "sample_every": 1
+      }
+    },
+    {
+      "id": "choice.blind.left.single_fresh",
+      "panel": "choice_verification",
+      "config": {
+        "fixture": {
+          "choice": {
+            "side": "left",
+            "pile": "single_fresh"
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1,
+        "sample_every": 1
+      }
+    },
+    {
+      "id": "choice.blind.right.fresh_accumulation",
+      "panel": "choice_verification",
+      "config": {
+        "fixture": {
+          "choice": {
+            "side": "right",
+            "pile": "fresh_accumulation"
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1,
+        "sample_every": 1
+      }
+    },
+    {
+      "id": "choice.blind.right.old_accumulation",
+      "panel": "choice_verification",
+      "config": {
+        "fixture": {
+          "choice": {
+            "side": "right",
+            "pile": "old_accumulation"
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1,
+        "sample_every": 1
+      }
+    },
+    {
+      "id": "choice.blind.right.single_fresh",
+      "panel": "choice_verification",
+      "config": {
+        "fixture": {
+          "choice": {
+            "side": "right",
+            "pile": "single_fresh"
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1,
+        "sample_every": 1
+      }
+    },
+    {
+      "id": "choice.responsive.left.fresh_accumulation",
+      "panel": "choice_verification",
+      "config": {
+        "fixture": {
+          "choice": {
+            "side": "left",
+            "pile": "fresh_accumulation"
+          }
+        },
+        "transport": "direct",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1,
+        "sample_every": 1
+      }
+    },
+    {
+      "id": "choice.responsive.left.old_accumulation",
+      "panel": "choice_verification",
+      "config": {
+        "fixture": {
+          "choice": {
+            "side": "left",
+            "pile": "old_accumulation"
+          }
+        },
+        "transport": "direct",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1,
+        "sample_every": 1
+      }
+    },
+    {
+      "id": "choice.responsive.left.single_fresh",
+      "panel": "choice_verification",
+      "config": {
+        "fixture": {
+          "choice": {
+            "side": "left",
+            "pile": "single_fresh"
+          }
+        },
+        "transport": "direct",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1,
+        "sample_every": 1
+      }
+    },
+    {
+      "id": "choice.responsive.right.fresh_accumulation",
+      "panel": "choice_verification",
+      "config": {
+        "fixture": {
+          "choice": {
+            "side": "right",
+            "pile": "fresh_accumulation"
+          }
+        },
+        "transport": "direct",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1,
+        "sample_every": 1
+      }
+    },
+    {
+      "id": "choice.responsive.right.old_accumulation",
+      "panel": "choice_verification",
+      "config": {
+        "fixture": {
+          "choice": {
+            "side": "right",
+            "pile": "old_accumulation"
+          }
+        },
+        "transport": "direct",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1,
+        "sample_every": 1
+      }
+    },
+    {
+      "id": "choice.responsive.right.single_fresh",
+      "panel": "choice_verification",
+      "config": {
+        "fixture": {
+          "choice": {
+            "side": "right",
+            "pile": "single_fresh"
+          }
+        },
+        "transport": "direct",
+        "cue": "responsive",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 1,
+        "sample_every": 1
+      }
+    }
+  ],
+  "construction_conditions": [
+    {
+      "id": "corridor.4.1.direct",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 4,
+            "workers": 1
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.4.1.relay",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 4,
+            "workers": 1
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.4.2.direct",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 4,
+            "workers": 2
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 256,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.4.2.relay",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 4,
+            "workers": 2
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 256,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.4.4.direct",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 4,
+            "workers": 4
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 128,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.4.4.relay",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 4,
+            "workers": 4
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 128,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.8.1.direct",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 8,
+            "workers": 1
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.8.1.relay",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 8,
+            "workers": 1
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.8.2.direct",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 8,
+            "workers": 2
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 256,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.8.2.relay",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 8,
+            "workers": 2
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 256,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.8.4.direct",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 8,
+            "workers": 4
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 128,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.8.4.relay",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 8,
+            "workers": 4
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 128,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.16.1.direct",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 16,
+            "workers": 1
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.16.1.relay",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 16,
+            "workers": 1
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 512,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.16.2.direct",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 16,
+            "workers": 2
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 256,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.16.2.relay",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 16,
+            "workers": 2
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 256,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.16.4.direct",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 16,
+            "workers": 4
+          }
+        },
+        "transport": "direct",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 128,
+        "sample_every": 16
+      }
+    },
+    {
+      "id": "corridor.16.4.relay",
+      "panel": "construction",
+      "config": {
+        "fixture": {
+          "corridor": {
+            "length": 16,
+            "workers": 4
+          }
+        },
+        "transport": "relay",
+        "cue": "blind",
+        "freshness_window": 32,
+        "relay_distance": 3,
+        "response_weight": 3,
+        "minimum_recent_units": 2
+      },
+      "options": {
+        "ticks": 128,
+        "sample_every": 16
+      }
+    }
+  ]
+}

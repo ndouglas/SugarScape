@@ -4,7 +4,10 @@ Burrow is a standalone checked replay lab for explicit excavation and spoil tran
 controllers use supplied preferences. Replay correctness does not establish biological validity,
 learning, chamber counts, coordination or comparative success. A judged campaign requires a
 separately reviewed protocol and manifest. See the [approved design](superpowers/specs/2026-10-03-burrow-1-excavation-design.md)
-and [research programme](studies/2026-10-03-cultures-construction-and-underworlds.md).
+and [research programme](studies/2026-10-03-cultures-construction-and-underworlds.md). The next proposed artifacts are the
+[measured protocol and candidate manifest](superpowers/specs/2026-10-04-burrow-1-measured-protocol.md)
+and [resource-access design](superpowers/specs/2026-10-04-burrow-2-resource-access-design.md);
+both await review and introduce no runtime changes.
 
 Run an acceptance demonstration from the repository root, using an absent or empty directory:
 
