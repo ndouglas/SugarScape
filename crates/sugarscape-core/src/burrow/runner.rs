@@ -152,13 +152,13 @@ pub(super) struct Recording {
     pub(super) spatial_work: BTreeMap<Pos, SpatialWork>,
     pub(super) travel: LoadedTravel,
     pub(super) dig_distances: Vec<DigDistance>,
-    exit_field: Vec<Option<u32>>,
+    pub(super) exit_field: Vec<Option<u32>>,
     field_excavated: Option<u64>,
     exit_stats: BfsStats,
-    observation_stats: BfsStats,
+    pub(super) observation_stats: BfsStats,
     controller_stats: BfsStats,
-    peak_observation_cells: u64,
-    peak_observation_frontier: u64,
+    pub(super) peak_observation_cells: u64,
+    pub(super) peak_observation_frontier: u64,
     pub(super) stopped: bool,
 }
 impl Recording {
@@ -176,7 +176,7 @@ impl Recording {
             ..Default::default()
         }
     }
-    fn ensure_exit_field(&mut self, world: &World) {
+    pub(super) fn ensure_exit_field(&mut self, world: &World) {
         if self.field_excavated != Some(world.excavated) {
             let (field, stats) = exit_distances_measured(world);
             self.exit_field = field;
@@ -225,7 +225,7 @@ impl Recording {
         }
         self.events.push(event.clone());
     }
-    fn snapshot(&self, world: &World) -> Snapshot {
+    pub(super) fn snapshot(&self, world: &World) -> Snapshot {
         let total = |f: fn(&WorkerWork) -> u64| self.worker_work.iter().map(f).sum();
         Snapshot {
             tick: world.tick,
@@ -356,7 +356,7 @@ pub(super) fn requested_ascii_bytes(options: &RunOptions, frame_bytes: u64) -> O
     frames.checked_mul(frame_bytes)
 }
 
-fn validate_options(world: &World, options: &RunOptions) -> Result<(), Vec<FieldError>> {
+pub(super) fn validate_options(world: &World, options: &RunOptions) -> Result<(), Vec<FieldError>> {
     let mut errors = Vec::new();
     if options.sample_every == 0 {
         errors.push(FieldError::new("sample_every", "must be positive"));

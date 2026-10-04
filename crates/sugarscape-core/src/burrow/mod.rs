@@ -8,7 +8,9 @@ mod ledger;
 mod observation;
 mod runner;
 mod state;
+mod validation;
 mod view;
+pub use validation::validate_episode;
 
 pub use actions::{Action, ActionEvent, Outcome};
 pub use config::{Cue, Fixture, LabConfig, Pile, Side, Transport};
