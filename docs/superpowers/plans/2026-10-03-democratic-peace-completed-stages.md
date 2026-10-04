@@ -1,3 +1,5 @@
+# Democratic Peace
+
 ## Stage 1: Independent engine
 **Goal**: Literal printed2001 mechanics and explicit choices.
 **Success Criteria**: Atomic motifs, clocks, discovery and unchanged old goldens pass.
@@ -20,8 +22,6 @@
 **Goal**: Fixed registered census, findings, review and deployed result.
 **Success Criteria**: Exact-head CI/Pages and scientific availability receipts retained.
 **Tests**: Outside-CI study/analysis; whole-branch review and deployed smoke.
-**Status**: In Progress
+**Status**: Complete
 
-Implementation evidence: the original-only 3,240-key census and fixed analysis are retained in `survey/out/democratic-peace-study/`; exact generated findings/provenance and milestone 38 documentation are saved. All ten required final checks passed; exact generated files, evidence hashes, frozen bindings and nine new local documentation links were verified. Task 4 remains In Progress pending controller task/whole-branch review, exact-head CI/Pages, deployed smoke and final evidence archive. Leave this ledger until those gates complete.
-
-Task4 reporting correction I1: future and derived reports distinguish unregistered precision null censuses from the fixed100-history requirement. A dated deterministic reporting amendment preserves the original study/bindings and all empirical results; code/replay/invariance and49 Python tests pass. Controller scoped amendment review and final publication gates remain pending.
+Completed against the reviewed integrated head and deployed smoke below. Final closure-head CI/Pages and served-byte receipts are kept outside Git to avoid a self-referential commit hash. Controller final archive/copy verification and owned cleanup remain separate preservation actions.

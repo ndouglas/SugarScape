@@ -440,7 +440,7 @@ git diff --check
 
 Review final source/binary bindings and docs links. Runtime-generated scientific results cannot enterCI. Mark all ledger stages Complete and remove `IMPLEMENTATION_PLAN.md` only when findings/review checks are complete. Commit passing code and reviewed findings with purpose-specific messages.
 
-- [ ] **Step6: Integrate and verify exact-head publication, then preserve evidence.**
+- [x] **Step6: Integrate and verify exact-head publication, then preserve evidence.**
 
 Follow the project's established finishing-development-branch workflow and already-authorized integration scope. Resolve aggregate conflicts against current main explicitly; preserve independent changes and existing completed-study bindings. Capture final `git rev-parse HEAD`, require CI and Pages `headSha` equality with that exact commit (`gh run list --limit 20 --json databaseId,headSha,name,conclusion,status`), and inspect failures through their logs before proceeding. No stale-head success claim.
 
@@ -449,3 +449,7 @@ After deployment, smoke democratic-peace discovery, six modes, grouped partial c
 ## Postmeasurement reporting amendment — 2026-10-04
 
 Task4 review I1 distinguishes an unregistered precision population from its fixed required sample size100. Apply the separately dated [reporting source amendment](2026-10-03-democratic-peace/amendments/2026-10-04-task4-reporting/README.md) against review base `a318d1f78fc7f0f8f13489f20d7e686737fc13d1`; preserve every approved six-checkpoint packet unchanged. Generate a deterministic reporting derivation with a distinct code/helper/output identity, correcting only24 unregistered contrast census references plus explicit sample-size metadata and amendment provenance. The complete original study/source/native/manifest/report evidence and all empirical values, source intervals, methods, jobs, draws, availability and verdicts remain unchanged. No registered history or empirical inference rerun is authorized by this correction.
+
+## Publication closure — 2026-10-04
+
+Integrated reviewed head `4bfe01073b0bfbdf0082414012f6142c63b03929` passed exact-head CI and Pages plus full deployed smoke. See the [publication receipt](../specs/2026-10-04-democratic-peace-publication.md) and [completed stage snapshot](2026-10-03-democratic-peace-completed-stages.md). Final metadata-only closure-head CI/Pages, artifact equality and focused deployed smoke receipts are retained outside Git in the controller-owned SDD publication report to avoid self-referential hashes. Original study/reporter identities remain historical, and no registered or inferential reruns occurred. Final evidence archive/copy verification and owned cleanup remain controller preservation tasks.
