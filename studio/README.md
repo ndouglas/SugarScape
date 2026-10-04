@@ -50,6 +50,43 @@ preview. The final encodes at CRF 21, so the pilot is 52 MB (Bluesky takes up to
 
 ## An episode
 
+### Planning and presentation
+
+These principles guide future storyboards and production, following the user's
+October 4 review of the retirement episode. They are creative defaults, not fixed
+duration or beat quotas. Apply them alongside each series' source and measurement rules.
+
+- Build around one central idea, one complication, and a closing thought. Roughly
+  90–100 seconds is a useful starting point; adjust the length to the subject.
+  Prefer fewer, longer scenes when viewers need time to recognize and care about
+  particular agents. Fourteen beats is not a target to fill.
+- Let a small human moment open into a larger pattern. Follow recognizable
+  individuals long enough for watching, hesitation, joining, companionship, or
+  absence to matter. The characters personify the recorded behavior; their
+  expressions must not imply motives, health effects, or outcomes the model cannot show.
+- Give each moment one main sentence and one visual question. Avoid asking the
+  viewer to read a caption, interpret a chart, follow characters, and absorb
+  methodological details simultaneously. Use brief charts when they answer the
+  current question, and protect both caption space and the characters.
+- Keep qualifications that materially change the film's meaning on screen.
+  Put detailed methods, sample sizes, selection protocols, and additional caveats
+  in the linked measurements and source documentation. Simpler presentation must
+  preserve scientific honesty and uncertainty.
+- Preserve the handmade felt stage and original music as the series' shared
+  identity. Let the tune carry emotional associations without captions naming
+  every feeling. Include moments with no explanatory text while music and action
+  continue; allow recognition to settle before the next explanation.
+- Maintain continuity of recognizable identities, gaze, movement, and supporting
+  graphics. Ease presentation changes while keeping recorded states and event
+  times exact. Verify the transition itself, not only its endpoints. A necessary
+  identity replacement should read as a departure and arrival.
+
+During storyboard review, ask what idea the viewer will understand and what small
+scene they will remember. During production review, check competing demands on
+attention, reading time, character continuity, and breathing room in actual
+composited frames and normal-speed playback. Geometry and decoded-frame checks
+support this review but cannot establish its emotional effect.
+
 `studio/episodes/<episode>/` holds:
 
 - `shots/*.json` — the runs (`sugarscape shot`); everything a Flump does comes from one.

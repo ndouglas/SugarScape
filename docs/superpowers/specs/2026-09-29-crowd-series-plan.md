@@ -51,6 +51,14 @@ The order builds from space (1–4) through opinions (5–6) and joining (7–8)
 
 ## Studio work
 
+For the finale and future series, apply the [studio's planning and presentation
+principles](../../../studio/README.md#planning-and-presentation), adopted after
+the October 4 retirement preview review. Plan around one idea, one complication,
+and a closing thought; treat 90–100 seconds as a starting point and allow fewer,
+longer scenes. Give recognizable individuals and the music room to carry the
+meaning. Review each beat for one main sentence and one visual question, retaining
+material qualifications on screen and detailed evidence in the linked records.
+
 Each episode adds its model to the frame dump (`frames.rs`), as the Cooperation series did. Boards
 the studio already has may serve: the lattice (Schelling, culture), the ring or street (opinions on
 a line), the plane (two-trait models), the grid (networks).
