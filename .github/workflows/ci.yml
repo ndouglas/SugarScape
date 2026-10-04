@@ -1,10 +1,8 @@
 name: CI
-
 on:
   push:
     branches: [main]
   pull_request:
-
 jobs:
   # The Rust checks run as parallel jobs; the run takes as long as the slowest.
   lint:
@@ -17,7 +15,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all --check
       - run: cargo clippy --all-targets -- -D warnings
-
   test:
     runs-on: ubuntu-latest
     steps:
@@ -26,7 +23,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       # Optimized with checks on: see [profile.test] in Cargo.toml.
       - run: cargo test --workspace
-
   book:
     runs-on: ubuntu-latest
     steps:
@@ -35,7 +31,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo run --release -p sugarscape-cli -- sweep --builtin fig-iv-10-11 --seeds 1 --ticks 100 --quiet > /dev/null
       - run: cargo test -p sugarscape-core --release --test book -- --ignored
-
   wasm:
     runs-on: ubuntu-latest
     steps:
@@ -51,7 +46,6 @@ jobs:
           # fails, and v0.9.1 cannot read workspace-inherited Cargo.toml fields.
           version: v0.15.0
       - run: wasm-pack test --node crates/sugarscape-wasm
-
   web:
     runs-on: ubuntu-latest
     defaults:
@@ -75,9 +69,10 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm ci
       - run: npm run build
+      - run: cargo build --release -p sugarscape-cli
+        working-directory: .
       - run: npm test
-
-  # Tiny native/estimator fixtures only; registered histories stay outside CI.
+  # Tiny GeoSim/democratic-peace fixtures only; registered histories stay outside CI.
   geosim:
     runs-on: ubuntu-latest
     env:
@@ -99,3 +94,5 @@ jobs:
       - run: python -m pip install -r survey/geosim/requirements.txt
       - run: cargo test --manifest-path survey/Cargo.toml --bin geosim --test geosim_native
       - run: python -m unittest discover -s survey/geosim -p 'test_*.py'
+      - run: cargo test --locked --manifest-path survey/Cargo.toml --bin democratic_peace --test democratic_peace_native
+      - run: python -m unittest discover -s survey/democratic_peace -p 'test_*.py'

@@ -14,10 +14,10 @@
 **Goal**: Bound recorder, audited sources and fixed offline inference.
 **Success Criteria**: Full declaration validates without worlds; bounded integrity fixtures pass.
 **Tests**: Native/Python protocol and replay suites.
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 4: Findings and publication
 **Goal**: Fixed registered census, findings, review and deployed result.
 **Success Criteria**: Exact-head CI/Pages and scientific availability receipts retained.
 **Tests**: Outside-CI study/analysis; whole-branch review and deployed smoke.
-**Status**: Not Started
+**Status**: In Progress

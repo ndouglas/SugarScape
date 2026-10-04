@@ -41,3 +41,6 @@ survey/out/polarity-*
 
 # GeoSim raw sessions, reference dependencies and execution receipts stay local
 survey/out/geosim-*
+
+# Democratic-peace scratch, runtime-only and registered evidence.
+survey/out/democratic-peace-*

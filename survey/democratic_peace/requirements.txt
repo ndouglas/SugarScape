@@ -1,0 +1,2 @@
+# Offline survey only; existing numerical environment, no new dependencies.
+numpy==2.4.6
