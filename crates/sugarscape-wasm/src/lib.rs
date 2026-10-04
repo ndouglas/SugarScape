@@ -88,6 +88,30 @@ pub fn protection_episode_json(lab_json: &str, seed: &str) -> Result<String, JsV
     Ok(serde_json::to_string(&record).expect("episode serializes"))
 }
 
+/// Checked standalone excavation replay; serializes the same core record as the native CLI.
+#[wasm_bindgen]
+pub fn burrow_replay_json(
+    config_json: &str,
+    seed: &str,
+    ticks: u32,
+    sample_every: u32,
+) -> Result<String, JsValue> {
+    let config: sugarscape_core::burrow::LabConfig = serde_json::from_str(config_json)
+        .map_err(|error| field_errors(vec![FieldError::new("burrow_config", error.to_string())]))?;
+    let seed = decimal_seed(seed)
+        .map_err(|message| field_errors(vec![FieldError::new("seed", message)]))?;
+    let episode = sugarscape_core::burrow::run_episode(
+        config,
+        seed,
+        sugarscape_core::burrow::RunOptions {
+            ticks,
+            sample_every,
+        },
+    )
+    .map_err(field_errors)?;
+    Ok(serde_json::to_string(&episode).expect("episode serializes"))
+}
+
 fn decimal_seed(seed: &str) -> Result<u64, &'static str> {
     if seed.is_empty() || !seed.bytes().all(|byte| byte.is_ascii_digit()) {
         return Err("expected unsigned decimal u64");

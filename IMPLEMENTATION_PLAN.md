@@ -24,4 +24,7 @@ Detailed plan: [Burrow 1](docs/superpowers/plans/2026-10-03-burrow-1-excavation.
 **Goal**: Expose checked CLI replay and verify native/WASM full-record agreement.
 **Success Criteria**: CLI exports and errors, four treatments, parity and repository checks pass.
 **Tests**: cargo test --workspace; focused Vitest parity; cargo fmt and clippy; web build.
-**Status**: Not Started
+**Status**: In Progress
+
+Stage 4 implementation and acceptance/regression checks are complete. Status remains In Progress
+until the controller completes per-task and whole-branch reviews; retain this tracker until then.

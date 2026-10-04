@@ -10,7 +10,7 @@
 
 **Spec:** [approved Burrow 1 design](../specs/2026-10-03-burrow-1-excavation-design.md).
 
-**Status:** plan ready for review; all four stages not started. Design approved by the user on 2026-10-03. Implementation method is subagent-driven; no scientific runs are authorized by implementation completion.
+**Status:** Stages 1–3 implemented and independently reviewed; Stage 4 adapters, acceptance and repository checks complete. Whole-branch review remains pending. Design approved by the user on 2026-10-03. Implementation method is subagent-driven; implementation completion authorizes demonstrations and correctness checks, not judged scientific runs.
 
 ## Global Constraints
 
@@ -64,7 +64,7 @@ mutations to shared core/CLI/WASM seams.
 
 **Tests:** `cargo test -p sugarscape-core burrow::tests::material`.
 
-**Status:** Not Started
+**Status:** Complete
 
 ### Task 1: configuration, fixtures, state and action resolution
 
@@ -140,7 +140,7 @@ records rather than indexing panics. Pickup selects the smallest loose ID on the
 deep end toward the exit. Growing spawns use distinct row-major non-exit cells on their first
 pass, then a second occupancy pass if needed. Choice units use the spec's initial clock.
 
-- [ ] **Step 1: write exact failing action/configuration tests.**
+- [x] **Step 1: write exact failing action/configuration tests.**
 
 ```rust
 #[test]
@@ -167,8 +167,8 @@ two successive pickups competing for one unit, non-diggable solid faces, disconn
 duplicate open/spawn constraints, empty dimensions, zero parameters, future-born spoil and overflow.
 Use `from_setup` and explicit coordinates rather than seed sweeps.
 
-- [ ] **Step 2:** run the stage test command; observe missing-module/API failures.
-- [ ] **Step 3: implement checked construction and transactions.** Validate before allocating.
+- [x] **Step 2:** run the stage test command; observe missing-module/API failures.
+- [x] **Step 3: implement checked construction and transactions.** Validate before allocating.
   Check products/additions/weight sums/timestamp arithmetic; verify open-spawn/exit connectivity by
   BFS. Proposed operational bounds for this small lab are 262,144 cells and 4,096 workers; errors
   state those limits. These bounds are implementation choices for plan review, not biological claims.
@@ -182,9 +182,9 @@ if i.initial.checked_add(i.excavated)
 }
 ```
 
-- [ ] **Step 4:** run the exact tests, core formatting and stage-relevant linting; self-review
+- [x] **Step 4:** run the exact tests, core formatting and stage-relevant linting; self-review
   occupancy, connected growth and mutation ordering. Do not introduce dummy controller hooks.
-- [ ] **Step 5:** update the tracker and commit working stage code with
+- [x] **Step 5:** update the tracker and commit working stage code with
   `feat(burrow): add checked excavation and conserved material actions`.
 
 ## Stage 2: local observations and controllers
@@ -195,7 +195,7 @@ if i.initial.checked_add(i.excavated)
 
 **Tests:** `cargo test -p sugarscape-core burrow::tests::controller`.
 
-**Status:** Not Started
+**Status:** Complete
 
 ### Task 2: observation boundaries, navigation and decisions
 
@@ -229,7 +229,7 @@ observed open approach cells. All route searches for unloaded agents use that ob
 The loaded exit BFS is a supplied global scaffold; pass only available descending neighbors to
 the controller. Count BFS calls, visited cells and peak queue size as deterministic compute proxies.
 
-- [ ] **Step 1: write failing local-decision tests.**
+- [x] **Step 1: write failing local-decision tests.**
 
 ```rust
 #[test]
@@ -252,8 +252,8 @@ Construct tests for hidden piles/targets behind solid cells, shared approach cou
 weight reduction, target removal by another worker, blind pickup retained, disposal priority,
 drop after three successful moves, no leg advance on waits, and full descending neighbor cells.
 
-- [ ] **Step 2:** run the stage command and verify missing-function/behavior failures.
-- [ ] **Step 3: implement the spec's state machine and integer weighted selection.**
+- [x] **Step 2:** run the stage command and verify missing-function/behavior failures.
+- [x] **Step 3: implement the spec's state machine and integer weighted selection.**
 
 ```rust
 fn is_recent(now: u64, born: u64, window: u64) -> bool {
@@ -271,9 +271,9 @@ uses an observed shortest path with legal occupancy; wait if a valid selected ta
 available next step. Random wandering applies only without a target. Direct transport never
 internally drops. No learned roles, private inventories of other agents or global frontier scans.
 
-- [ ] **Step 4:** run Tasks 1/2 tests together and check cue-only treatment differences; verify
+- [x] **Step 4:** run Tasks 1/2 tests together and check cue-only treatment differences; verify
   changing observation or cue flags never bypasses physical action legality.
-- [ ] **Step 5:** update tracker and commit
+- [x] **Step 5:** update tracker and commit
   `feat(burrow): add local spoil cues and direct or relay controllers`.
 
 ## Stage 3: deterministic episodes and accounting
@@ -284,7 +284,7 @@ internally drops. No learned roles, private inventories of other agents or globa
 
 **Tests:** `cargo test -p sugarscape-core burrow::tests::runner`.
 
-**Status:** Not Started
+**Status:** Complete
 
 ### Task 3: scheduling, ledger, summaries and sampled maps
 
@@ -340,7 +340,7 @@ to `Episode`; derive the other requested distributions from those records and un
 Report deterministic retained record counts and peak storage sizes alongside route-field work;
 wall-clock profiling is separate from canonical replay.
 
-- [ ] **Step 1: write failing replay/accounting tests.**
+- [x] **Step 1: write failing replay/accounting tests.**
 
 ```rust
 #[test]
@@ -371,8 +371,8 @@ when its initial decision selects immediately, despite a nonzero requested budge
 Test every worker receives one opportunity in a completed growing tick, sample cadence does not
 change events/fingerprints, terminal frames are present, and blocked opportunities count once.
 
-- [ ] **Step 2:** run stage tests; observe unavailable runner/ledger failures.
-- [ ] **Step 3: implement scheduling, complete accounting and bounded replay.**
+- [x] **Step 2:** run stage tests; observe unavailable runner/ledger failures.
+- [x] **Step 3: implement scheduling, complete accounting and bounded replay.**
 
 ```rust
 // One fresh permutation per tick; all decisions use earlier committed state.
@@ -401,9 +401,9 @@ opportunities per replay; reject larger products before reserving trace vectors.
 operational lab bound for plan review. Emit source/assumption labels and actual completion reason.
 No chamber extractor, success classification or inferred individual learning.
 
-- [ ] **Step 4:** run all core burrow tests and review the conservation equation after every
+- [x] **Step 4:** run all core burrow tests and review the conservation equation after every
   scripted transition. Verify diagnostic sampling cannot alter trajectories.
-- [ ] **Step 5:** update tracker and commit
+- [x] **Step 5:** update tracker and commit
   `feat(burrow): record deterministic excavation episodes and material histories`.
 
 ## Stage 4: CLI acceptance scene and native WASM parity
@@ -414,7 +414,10 @@ No chamber extractor, success classification or inferred individual learning.
 
 **Tests:** core/CLI workspace tests, focused Vitest native/WASM parity and repository formatting/lints.
 
-**Status:** Not Started
+**Status:** In Progress
+
+Implementation and all runtime checks are complete; per-task and whole-branch reviews remain
+pending with the controller. Step 5 and tracker removal follow those reviews.
 
 ### Task 4: checked boundaries, example configurations and final review
 
@@ -448,7 +451,7 @@ nonempty directories and paths that are files. Return existing I/O failure code 
 code 2. Report any partial output if a later write fails; do not silently present an incomplete
 directory as successful. Use structured JSON functions and fixed filenames, not shell interpolation.
 
-- [ ] **Step 1: add failing CLI and parity checks.** CLI tests use the existing binary-env and
+- [x] **Step 1: add failing CLI and parity checks.** CLI tests use the existing binary-env and
   scratch-directory conventions; construct JSON with `serde_json::to_string(LabConfig::default())`.
 
 ```rust
@@ -481,15 +484,15 @@ Define `configText` from each of the four example files, use named seeds `7` and
 arrays; `try/finally` removes temporary directories. Check strict seed rejection (`-1`, `7.0`,
 overflow) and invalid sampling through the WASM boundary. These are parity fixtures, not scientific sweeps.
 
-- [ ] **Step 2:** run CLI tests and focused Vitest after generating WASM; verify failures from
+- [x] **Step 2:** run CLI tests and focused Vitest after generating WASM; verify failures from
   the missing command/export rather than fixture setup mistakes.
-- [ ] **Step 3: implement the thin adapters and examples.** Serialize only the shared core
+- [x] **Step 3: implement the thin adapters and examples.** Serialize only the shared core
   episode. Define explicit conversion from parse errors to contextual `FieldError` records.
   Example JSON follows the tagged fixture and snake_case enum conventions chosen in Task 1:
 
 ```json
 {
-  "fixture": { "kind": "growing", "width": 41, "height": 25, "workers": 8 },
+  "fixture": { "growing": { "width": 41, "height": 25, "workers": 8 } },
   "transport": "relay", "cue": "responsive", "freshness_window": 32,
   "relay_distance": 3, "response_weight": 3, "minimum_recent_units": 2
 }
@@ -498,7 +501,7 @@ overflow) and invalid sampling through the WASM boundary. These are parity fixtu
 The other three files vary only transport/cue. Document observation limits, supplied navigation,
 spoil overlay, two-worker capacity, units/costs, censored deliveries and operational caps.
 
-- [ ] **Step 4: show the acceptance scene and complete verification.**
+- [x] **Step 4: show the acceptance scene and complete verification.**
 
 ```bash
 cargo run --release -p sugarscape-cli -- burrow --config docs/examples/burrow/relay-responsive.json --seed 7 --ticks 512 --sample-every 32 --out /tmp/sugarscape-burrow-1-review

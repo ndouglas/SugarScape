@@ -2,6 +2,8 @@
 //! line (milestone 5). Exit codes: 0 success, 1 I/O error, 2 usage or
 //! validation error (printed as `field: message`, one per line).
 
+mod burrow;
+
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
@@ -27,6 +29,8 @@ struct Cli {
 enum Command {
     /// List the presets of every model (id, source, name, title).
     Presets,
+    /// Run a checked standalone excavation replay.
+    Burrow(burrow::BurrowArgs),
     /// List the built-in sweeps (id, name).
     Sweeps,
     /// Run one world and write its statistics.
@@ -175,6 +179,7 @@ fn run(cli: Cli) -> Result<(), Failure> {
             }
             Ok(())
         }
+        Command::Burrow(args) => burrow::run(args),
         Command::Run(args) => run_world(args),
         Command::Sweep(args) => run_sweep(args),
         Command::Shot(args) => run_shot(args),

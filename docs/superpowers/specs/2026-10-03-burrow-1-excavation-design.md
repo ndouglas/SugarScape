@@ -2,9 +2,11 @@
 
 **Date:** 2026-10-03
 
-**Status:** approved by the user on 2026-10-03; implementation and judged runs have not begun.
+**Status:** approved by the user on 2026-10-03; core stages implemented and independently reviewed;
+CLI/WASM implementation, acceptance replay and repository checks complete. Whole-branch review
+is pending; no judged campaign has begun.
 
-**Implementation:** [staged plan](../plans/2026-10-03-burrow-1-excavation.md), ready for review.
+**Implementation:** [staged plan](../plans/2026-10-03-burrow-1-excavation.md); [CLI and replay guide](../../burrow.md).
 
 **Programme:** [Cultures, construction and underworlds](../../studies/2026-10-03-cultures-construction-and-underworlds.md),
 branch B, beginning with its B1/B2 questions. This is not a new Minds milestone.
