@@ -4,7 +4,8 @@
 
 **Status:** living research programme; campaign outline preserved for refinement.
 
-**Selected first direction:** collective burrow construction.
+**Selected first direction:** collective burrow construction. Burrow 1 implementation and
+independent reviews are complete; a judged scientific campaign remains future work.
 
 **Scope:** campaign families and research questions, not an approved implementation spec or run protocol.
 
@@ -225,9 +226,12 @@ be supplied and tested; learned conventions are a separate treatment.
 
 ## First branch refinement: collective burrow construction
 
-The following is a proposed sequence for refinement, not a frozen implementation plan. The user
-selected the branch, but the first mechanism, species/model target and judged claims remain open.
-Each selected study needs its own literature review, design and protocol.
+The following remains a proposed sequence for refinement, not a frozen implementation plan.
+Burrow 1 now implements B1 and the transport/cue portion of B2. Its
+[measured protocol draft](../superpowers/specs/2026-10-04-burrow-1-measured-protocol.md) proposes
+a prospective comparison; [Burrow 2 resource access](../superpowers/specs/2026-10-04-burrow-2-resource-access-design.md)
+is the first proposed B3 increment. Both await review; no new campaign or resource runtime has run.
+Later mechanisms and judged claims still need their own literature, designs and protocols.
 
 ### B1. Establish a bounded excavation world
 
@@ -365,19 +369,29 @@ Separate agent observations and beliefs from researcher ground truth. Ablate mec
 simple controllers, test changed conditions, and distinguish aesthetic diversity from functional
 benefit. Do not credit supplied roles, room purposes, protocols or beliefs as emergent.
 
-The next refinement should select one collective-excavation question and primary empirical/model
-anchor, inspect relevant SugarScape and Hornvale code, and present a bounded first-world design.
-Resolve dimensionality, material accounting, sensing, work allocation and the comparison target
-there. This document deliberately preserves those choices as open research decisions rather than
-inventing implementation commitments during archival work.
+The first-world refinement is implemented and reviewed. The next review concerns the
+Burrow 1 measured protocol, its candidate condition/seed manifest, and the Burrow 2 resource-access
+design. The protocol fixes downstream comparisons and exact negative controls; the resource design
+distinguishes structural access from actual harvesting and supplied goal information from learning.
+Their source and capability limits are recorded in the
+[study audit](2026-10-04-burrow-studies-reading.md). Implementation plans and scientific execution
+remain later gates; the rest of this programme preserves its open research choices.
 
 ## Decision record
 
+- **2026-10-04:** draft a Burrow 1 measured protocol and fully specified candidate manifest,
+  and refine Burrow 2 toward structural resource access with an explicitly known-goal benchmark.
+  These are proposed artifacts for review, not registered execution or runtime changes.
+  Direct cue response is a structural negative control because direct transport creates no loose spoil.
 - **2026-10-03:** initial [excavation research and code reading](2026-10-03-burrow-excavation-reading.md)
   selected sequential soil transport and local spoil cues as the proposed first anchor. The
   [Burrow 1 design](../superpowers/specs/2026-10-03-burrow-1-excavation-design.md) was approved
   by the user. Its [four-stage plan](../superpowers/plans/2026-10-03-burrow-1-excavation.md)
-  awaits review; controller rules remain supplied abstractions and no runtime or judged campaign exists yet.
+  is complete across all four stages, acceptance/regression checks and independent task/final
+  reviews. The final WASM numeric-boundary and stale-prose findings were resolved in one fix
+  wave and independently rereviewed. The [replay guide](../burrow.md) documents the checked lab;
+  the retained plan preserves execution rulings and verification evidence.
+  Controller rules remain supplied abstractions; no judged campaign or comparative result exists.
 - **2026-10-03:** preserve all seven campaign families as a living research programme.
 - **2026-10-03:** select collective burrow construction as the first branch to refine; retain
   rich, diverse, individual underworlds as the long-term creative target.

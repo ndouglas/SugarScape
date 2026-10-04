@@ -88,6 +88,46 @@ pub fn protection_episode_json(lab_json: &str, seed: &str) -> Result<String, JsV
     Ok(serde_json::to_string(&record).expect("episode serializes"))
 }
 
+/// Checked standalone excavation replay; serializes the same core record as the native CLI.
+#[wasm_bindgen]
+pub fn burrow_replay_json(
+    config_json: &str,
+    seed: &str,
+    ticks: f64,
+    sample_every: f64,
+) -> Result<String, JsValue> {
+    let config: sugarscape_core::burrow::LabConfig = serde_json::from_str(config_json)
+        .map_err(|error| field_errors(vec![FieldError::new("burrow_config", error.to_string())]))?;
+    let seed = decimal_seed(seed)
+        .map_err(|message| field_errors(vec![FieldError::new("seed", message)]))?;
+    let ticks = checked_burrow_u32(ticks, "ticks", 0)?;
+    let sample_every = checked_burrow_u32(sample_every, "sample_every", 1)?;
+    let episode = sugarscape_core::burrow::run_episode(
+        config,
+        seed,
+        sugarscape_core::burrow::RunOptions {
+            ticks,
+            sample_every,
+        },
+    )
+    .map_err(field_errors)?;
+    Ok(serde_json::to_string(&episode).expect("episode serializes"))
+}
+
+fn checked_burrow_u32(value: f64, field: &str, minimum: u32) -> Result<u32, JsValue> {
+    if !value.is_finite()
+        || value.fract() != 0.0
+        || value < f64::from(minimum)
+        || value > f64::from(u32::MAX)
+    {
+        return Err(field_errors(vec![FieldError::new(
+            field,
+            format!("expected finite integer in {minimum}..={}", u32::MAX),
+        )]));
+    }
+    Ok(value as u32)
+}
+
 fn decimal_seed(seed: &str) -> Result<u64, &'static str> {
     if seed.is_empty() || !seed.bytes().all(|byte| byte.is_ascii_digit()) {
         return Err("expected unsigned decimal u64");

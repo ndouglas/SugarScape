@@ -2,9 +2,11 @@
 
 **Date:** 2026-10-03
 
-**Status:** approved by the user on 2026-10-03; implementation and judged runs have not begun.
+**Status:** approved by the user on 2026-10-03; all implementation stages, acceptance replay,
+repository checks and independent reviews complete. Final review findings are resolved and
+independently rereviewed; a judged scientific campaign remains future work.
 
-**Implementation:** [staged plan](../plans/2026-10-03-burrow-1-excavation.md), ready for review.
+**Implementation:** [staged plan](../plans/2026-10-03-burrow-1-excavation.md); [CLI and replay guide](../../burrow.md).
 
 **Programme:** [Cultures, construction and underworlds](../../studies/2026-10-03-cultures-construction-and-underworlds.md),
 branch B, beginning with its B1/B2 questions. This is not a new Minds milestone.
@@ -19,7 +21,8 @@ rules; it does not claim agents invent architecture, roles or culture.
 The acceptance scene is a seeded CLI replay showing the starting substrate, successive excavated
 maps, workers, carried and deposited spoil, and an external disposal count. A JSON event trace
 and action/material summary accompany the map. Running the same configuration and seed again
-must reproduce the same trace. This command and its implementation do not exist yet.
+must reproduce the same trace. The implemented command and replay outputs are documented in the
+[CLI and replay guide](../../burrow.md).
 
 ## Scientific question and alternatives
 

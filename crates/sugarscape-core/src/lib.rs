@@ -10,6 +10,7 @@ pub mod ants;
 pub mod auctions;
 pub mod bali;
 pub mod bits;
+pub mod burrow;
 pub mod civil;
 pub mod classes;
 pub mod collusion;
