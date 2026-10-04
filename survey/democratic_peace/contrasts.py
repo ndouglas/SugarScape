@@ -30,8 +30,8 @@ def findings(histories, jobs, *, precision_registered, draws=100000):
     for definition in contrast_definitions():
         left = histories.get(definition['left'], [])
         right = histories.get(definition['right'], [])
-        left_census = population_summary(left, 100)
-        right_census = population_summary(right, 100)
+        left_census = population_summary(left, 100) if precision_registered else None
+        right_census = population_summary(right, 100) if precision_registered else None
         reason = 'precision_not_registered' if not precision_registered else None
         if reason is None and (not left_census['population_complete'] or not right_census['population_complete']):
             reason = 'incomplete_precision_history_population'
@@ -44,6 +44,7 @@ def findings(histories, jobs, *, precision_registered, draws=100000):
                 job_rng(jobs['bootstrap.' + definition['id']]), draws=draws)
         families[definition['family']].append({**definition,
             'left_census': left_census, 'right_census': right_census,
+            'required_precision_sample_size': 100,
             'estimate': None if result is None else result['estimate'],
             'p': None if result is None else result['p'], 'holm_p': None,
             'interval': None if result is None else result['interval'],
