@@ -842,7 +842,13 @@ fn census_rejects_state_key_and_generation_counter_mismatches() {
     generation.engine.states.insert(new_id, state);
     generation.engine.cells[0].owner = new_id;
     let error = generation.engine.validate().unwrap_err();
-    assert!(error.contains("generation exceeds"));
+    assert!(error.contains("does not match capital cell"));
+    assert!(error.contains("cell 0"));
+
+    let mut counter_ahead = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Predatory; 6]);
+    counter_ahead.engine.cells[0].next_generation = 1;
+    let error = counter_ahead.engine.validate().unwrap_err();
+    assert!(error.contains("generation"));
     assert!(error.contains("cell 0"));
 }
 

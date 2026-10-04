@@ -191,10 +191,13 @@ impl Engine {
                     id, id.capital_cell, self.cells[id.capital_cell].owner
                 ));
             }
-            if self.cells[id.capital_cell].next_generation < id.sovereignty_generation {
+            if self.cells[id.capital_cell].next_generation != id.sovereignty_generation {
                 return Err(format!(
-                    "state {:?} generation exceeds cell {} generation counter {}",
-                    id, id.capital_cell, self.cells[id.capital_cell].next_generation
+                    "state {:?} generation {} does not match capital cell {} generation counter {}",
+                    id,
+                    id.sovereignty_generation,
+                    id.capital_cell,
+                    self.cells[id.capital_cell].next_generation
                 ));
             }
             if state.regime != self.cells[id.capital_cell].latent_regime {
