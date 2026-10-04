@@ -49,3 +49,31 @@ class UnregisteredModeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             manifest.build_unregistered_manifest(source.fixture_table(), None,
                 configurations=[{'width': 5, 'height': 2, 'horizon_periods': 2}])
+
+
+class NativeRosterBindingTests(unittest.TestCase):
+    def test_native_registered_roster_digest_matches_independent_fixed_ids_and_seed_states(self):
+        import hashlib
+        import re
+        from pathlib import Path
+        import numpy as np
+        from survey.democratic_peace.methods import canonical_bytes
+        mechanisms = ('tagging', 'alliances', 'collective_security')
+        densities = ('0', '0_05', '0_1', '0_15', '0_2', '0_25', '0_3', '0_4', '0_5', '0_6', '0_7', '1')
+        names = [f'predictive.source.fig{figure}.{mechanism}.density{density}'
+            for figure in (9, 10, 11) for mechanism in mechanisms
+            for density in (densities[1:] if figure == 10 else densities)]
+        contrasts = [f'primary.{contrast}.density{density}' for density in ('0_1', '0_3')
+            for contrast in ('alliances_minus_tagging', 'security_minus_alliances', 'security_minus_tagging')]
+        contrasts += [f'secondary.mobile0_15_minus_0_85.{mechanism}.density{density}'
+            for density in ('0_1', '0_3') for mechanism in mechanisms]
+        names += [prefix + name for name in contrasts for prefix in ('permutation.', 'bootstrap.')]
+        independently_declared = [{'index': i, 'id': name, 'root_entropy': 2026100302,
+            'spawn_key': [i], 'state_u32': np.random.SeedSequence(2026100302,
+                spawn_key=(i,)).generate_state(4).tolist()} for i, name in enumerate(names)]
+        self.assertEqual(len(independently_declared), 129)
+        self.assertEqual(manifest.analysis_jobs(None), independently_declared)
+        rust = (Path(__file__).resolve().parents[1] / 'src/bin/democratic_peace.rs').read_text()
+        declared = re.search(r'const REGISTERED_ANALYSIS_JOBS_SHA256:\s*&str\s*=\s*"([0-9a-f]{64})"', rust)
+        self.assertIsNotNone(declared)
+        self.assertEqual(declared.group(1), hashlib.sha256(canonical_bytes(independently_declared)).hexdigest())

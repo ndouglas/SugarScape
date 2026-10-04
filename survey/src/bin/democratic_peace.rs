@@ -81,6 +81,11 @@ fn digest(bytes: &[u8]) -> String {
 
 const SPEC: &str = "docs/superpowers/specs/2026-10-03-democratic-peace-design.md";
 const TABLE: &str = "docs/superpowers/specs/2026-10-03-democratic-peace-source-table.json";
+// Canonical 129-job payload from the fixed 2026100302 analysis root and
+// NumPy 2.4.6 SeedSequence states. Independently reconstructed in Python tests.
+// SHA256 covers every ID, index, entropy, spawn key and u32 word in order.
+const REGISTERED_ANALYSIS_JOBS_SHA256: &str =
+    "f878f57ebbe0cb5ff90ea72f72db343e1bc8900e39b473ce24f4169e94f091c0";
 fn require(ok: bool, message: &str) -> Result<(), String> {
     if ok {
         Ok(())
@@ -476,6 +481,13 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
             )?;
             let expected_family = if i < 108 { "original" } else { "precision" };
             require(family == expected_family, "family order drift")?;
+            let expected_id = format!(
+                "{expected_family}.mobile{}.{}.density{}",
+                mobiles[mi].to_string().replace('.', "_"),
+                mechanisms[mech],
+                densities[di].to_string().replace('.', "_")
+            );
+            require(id == expected_id, "registered canonical arm ID drift")?;
             require(
                 sessions == if i < 108 { 30 } else { 100 },
                 "registered sample size drift",
@@ -569,6 +581,12 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
                     .iter()
                     .all(|v| v.as_u64().is_some_and(|x| x <= u32::MAX as u64)),
             "invalid analysis state",
+        )?;
+    }
+    if registered {
+        require(
+            hash_json(&m["analysis_jobs"])? == REGISTERED_ANALYSIS_JOBS_SHA256,
+            "registered analysis job payload drift",
         )?;
     }
     let resolved = Value::Array(
@@ -876,6 +894,315 @@ fn record(p: &Prepared, a: &Arm, r: u64, receipt: &Option<String>) -> Result<Val
     }
     Ok(row)
 }
+
+fn number(v: &Value, key: &str) -> Result<f64, String> {
+    v[key]
+        .as_f64()
+        .filter(|n| n.is_finite())
+        .ok_or_else(|| format!("invalid numeric metric: {key}"))
+}
+fn validate_counters(v: &Value) -> Result<(), String> {
+    exact(
+        v,
+        &[
+            "initiated_fronts",
+            "mutual_d_front_periods",
+            "completed_victory_battles",
+            "completed_stalemate_battles",
+            "opposing_claims",
+            "successful_claims",
+            "stale_claims",
+            "locked_claims",
+            "retired_states",
+            "released_states",
+        ],
+    )?;
+    require(
+        object(v)?.values().all(|n| n.as_u64().is_some()),
+        "invalid battle/structural counter",
+    )
+}
+fn validate_metrics(
+    v: &Value,
+    config: &DemocraticPeaceConfig,
+    completed: u64,
+) -> Result<(), String> {
+    exact(
+        v,
+        &[
+            "democratic_cells",
+            "total_cells",
+            "democratic_share",
+            "sovereign_count",
+            "democratic_states",
+            "predatory_states",
+            "democratic_mean_size",
+            "predatory_mean_size",
+            "democratic_max_size",
+            "predatory_max_size",
+            "democratic_size_reason",
+            "predatory_size_reason",
+            "democratic_exposure",
+            "clustering_ratio",
+            "clustering_reason",
+            "conflict_fronts",
+            "alliance_count",
+            "pariah_count",
+            "democratic_extinction",
+            "all_democratic",
+            "first_extinction_period",
+            "first_all_democratic_period",
+        ],
+    )?;
+    for key in [
+        "democratic_cells",
+        "total_cells",
+        "sovereign_count",
+        "democratic_states",
+        "predatory_states",
+        "conflict_fronts",
+        "alliance_count",
+        "pariah_count",
+    ] {
+        uint(v, key)?;
+    }
+    let total = u64::from(config.width) * u64::from(config.height);
+    let democratic = uint(v, "democratic_cells")?;
+    let sovereigns = uint(v, "sovereign_count")?;
+    require(
+        uint(v, "total_cells")? == total
+            && democratic <= total
+            && (1..=total).contains(&sovereigns),
+        "metrics grid/count mismatch",
+    )?;
+    require(
+        uint(v, "democratic_states")?.checked_add(uint(v, "predatory_states")?) == Some(sovereigns),
+        "metrics regime counts do not conserve sovereigns",
+    )?;
+    require(
+        (number(v, "democratic_share")? - democratic as f64 / total as f64).abs() <= 1e-12,
+        "metrics share differs from authoritative integer cells",
+    )?;
+    for (regime, cells) in [
+        ("democratic", democratic),
+        ("predatory", total - democratic),
+    ] {
+        let count = uint(v, &format!("{regime}_states"))?;
+        let mean = format!("{regime}_mean_size");
+        let maximum = format!("{regime}_max_size");
+        let reason = format!("{regime}_size_reason");
+        if count == 0 {
+            require(
+                cells == 0
+                    && v[&mean].is_null()
+                    && v[&maximum].is_null()
+                    && v[&reason] == json!("no_surviving_states"),
+                "missing-regime availability mismatch",
+            )?;
+        } else {
+            let mean_value = number(v, &mean)?;
+            let maximum_value = uint(v, &maximum)?;
+            require(
+                count <= cells
+                    && (mean_value - cells as f64 / count as f64).abs() <= 1e-12
+                    && mean_value <= maximum_value as f64
+                    && maximum_value <= cells
+                    && v[&reason].is_null(),
+                "invalid regime state-size census",
+            )?;
+        }
+    }
+    for (key, expected) in [
+        ("democratic_extinction", democratic == 0),
+        ("all_democratic", democratic == total),
+    ] {
+        require(
+            v[key].as_bool() == Some(expected),
+            "endpoint indicator disagrees with census",
+        )?;
+    }
+    for (time, indicator) in [
+        ("first_extinction_period", "democratic_extinction"),
+        ("first_all_democratic_period", "all_democratic"),
+    ] {
+        if !v[time].is_null() {
+            require(uint(v, time)? <= completed, "invalid first-passage clock")?;
+        }
+        // A historical extinction may precede reemergence under persistent tags.
+        require(
+            v[indicator] != json!(true) || !v[time].is_null(),
+            "reached endpoint lacks first passage",
+        )?;
+    }
+    let density = config.initial_democratic_share;
+    let reason = if density == 0.0 {
+        json!("undefined_initial_density")
+    } else if democratic == 0 {
+        json!("undefined_extinction")
+    } else {
+        Value::Null
+    };
+    require(
+        v["clustering_reason"] == reason,
+        "invalid clustering availability reason",
+    )?;
+    if democratic == 0 {
+        require(
+            v["democratic_exposure"].is_null(),
+            "extinct population has exposure",
+        )?;
+    } else {
+        require(
+            (0.0..=1.0).contains(&number(v, "democratic_exposure")?),
+            "invalid democratic exposure",
+        )?;
+    }
+    if reason.is_null() {
+        require(
+            (number(v, "clustering_ratio")? - number(v, "democratic_exposure")? / density).abs()
+                <= 1e-12,
+            "clustering ratio disagrees with exposure/configured density",
+        )?;
+    } else {
+        require(
+            v["clustering_ratio"].is_null(),
+            "undefined clustering was imputed",
+        )?;
+    }
+    Ok(())
+}
+fn validate_science(
+    v: &Value,
+    config: &DemocraticPeaceConfig,
+    allow_partial: bool,
+) -> Result<(), String> {
+    exact(
+        v,
+        &[
+            "model",
+            "config",
+            "seed",
+            "period",
+            "periods",
+            "attempted_period",
+            "completed_periods",
+            "tick",
+            "last_tick_periods",
+            "setup",
+            "current_metrics",
+            "census",
+            "outcome",
+            "final_state_hash",
+        ],
+    )?;
+    require(
+        text(v, "model")? == "democratic_peace",
+        "invalid science model",
+    )?;
+    uint(v, "seed")?;
+    for key in [
+        "period",
+        "periods",
+        "completed_periods",
+        "attempted_period",
+        "tick",
+        "last_tick_periods",
+    ] {
+        uint(v, key)?;
+    }
+    let completed = uint(v, "completed_periods")?;
+    let attempted = uint(v, "attempted_period")?;
+    require(
+        uint(v, "period")? == completed
+            && uint(v, "periods")? == completed
+            && completed <= attempted
+            && attempted <= config.horizon().min(completed.saturating_add(1)),
+        "resume source clock mismatch: atomic attempted/completed clocks disagree",
+    )?;
+    require(
+        uint(v, "last_tick_periods")? <= u64::from(config.periods_per_tick),
+        "display tick exceeds configured grouping",
+    )?;
+    let setup = &v["setup"];
+    exact(
+        setup,
+        &[
+            "initial_democratic_cells",
+            "initial_resourced_cells",
+            "total_cells",
+        ],
+    )?;
+    let total = u64::from(config.width) * u64::from(config.height);
+    require(
+        uint(setup, "total_cells")? == total
+            && uint(setup, "initial_democratic_cells")? <= total
+            && uint(setup, "initial_resourced_cells")? <= total,
+        "invalid setup census",
+    )?;
+    validate_metrics(&v["current_metrics"], config, completed)?;
+    validate_counters(&v["census"])?;
+    let state_hash = text(v, "final_state_hash")?;
+    require(
+        state_hash.len() == 16
+            && state_hash
+                .bytes()
+                .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c)),
+        "invalid committed state hash",
+    )?;
+    let terminal = &v["outcome"];
+    if terminal.is_null() && allow_partial {
+        return Ok(());
+    }
+    exact(
+        terminal,
+        &[
+            "valid",
+            "finish_reason",
+            "invalid_reason",
+            "invalid_phase",
+            "attempted_period",
+            "completed_periods",
+            "final_metrics",
+            "census",
+        ],
+    )?;
+    let valid = terminal["valid"]
+        .as_bool()
+        .ok_or("invalid terminal availability type")?;
+    require(
+        uint(terminal, "completed_periods")? == completed
+            && uint(terminal, "attempted_period")? == attempted,
+        "terminal/science availability clocks disagree",
+    )?;
+    require(
+        terminal["census"] == v["census"],
+        "terminal/science census differs",
+    )?;
+    if valid {
+        require(
+            text(terminal, "finish_reason")? == "complete"
+                && completed == config.horizon()
+                && attempted == config.horizon()
+                && terminal["invalid_reason"].is_null()
+                && terminal["invalid_phase"].is_null(),
+            "complete outcome is not a valid full horizon",
+        )?;
+        require(
+            terminal["final_metrics"] == v["current_metrics"],
+            "complete final metrics differ from committed census",
+        )?;
+    } else {
+        require(
+            text(terminal, "finish_reason")? == "invalid"
+                && !text(terminal, "invalid_reason")?.is_empty()
+                && !text(terminal, "invalid_phase")?.is_empty()
+                && terminal["final_metrics"].is_null(),
+            "invalid outcome must retain context and unavailable final metrics",
+        )?;
+    }
+    Ok(())
+}
+
 fn validate_existing(
     row: &Value,
     p: &Prepared,
@@ -954,33 +1281,25 @@ fn validate_existing(
         "unknown attempted outcome",
     )?;
     validate_attempt_context(&row["attempt"], &row["outcome"])?;
-    if status == "completed" || status == "invalid" {
-        let science = &row["outcome"];
+    let science = &row["outcome"];
+    if !science.is_null() {
         require(
             science["model"] == json!("democratic_peace")
                 && science["config"] == row["config"]
                 && science["seed"] == row["seed"],
             "resume engine evidence mismatch",
         )?;
-        let completed = uint(science, "completed_periods")?;
-        let attempted = uint(science, "attempted_period")?;
-        require(
-            completed <= a.config.horizon()
-                && attempted >= completed
-                && attempted <= a.config.horizon(),
-            "resume source clock mismatch",
+        validate_science(
+            science,
+            &a.config,
+            matches!(status, "implementation_panic" | "incomplete"),
         )?;
-        require(
-            if status == "completed" {
-                science["outcome"]["valid"] == json!(true)
-                    && completed == a.config.horizon()
-                    && science["outcome"]["final_metrics"].is_object()
-            } else {
-                science["outcome"]["valid"] == json!(false)
-                    && science["outcome"]["final_metrics"].is_null()
-            },
-            "resume completion/invalidity mismatch",
-        )?;
+        if status == "completed" || status == "invalid" {
+            require(
+                science["outcome"]["valid"] == json!(status == "completed"),
+                "resume completion/invalidity mismatch",
+            )?;
+        }
     }
     Ok((id.into(), uint(row, "seed")?))
 }
@@ -1058,11 +1377,11 @@ fn run() -> Result<(), String> {
         "resolved_configs_json".into(),
         json!(String::from_utf8(p.payload.clone()).map_err(|e| e.to_string())?),
     );
-    atomic_write(
-        &resolved,
-        &serde_json::to_vec(&export).map_err(|e| e.to_string())?,
-    )?;
     if validate {
+        atomic_write(
+            &resolved,
+            &serde_json::to_vec(&export).map_err(|e| e.to_string())?,
+        )?;
         println!(
             "validated {} arms/{} keys without world construction; provenance={}",
             p.arms.len(),
@@ -1087,6 +1406,12 @@ fn run() -> Result<(), String> {
             require(seen.insert(key), "duplicate attempted key in resume")?;
         }
     }
+    // Existing rows must pass every identity/science check before either
+    // execution output is created or changed, including the resolved export.
+    atomic_write(
+        &resolved,
+        &serde_json::to_vec(&export).map_err(|e| e.to_string())?,
+    )?;
     let mut writer = OpenOptions::new()
         .create(true)
         .append(true)

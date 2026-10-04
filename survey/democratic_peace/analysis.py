@@ -8,6 +8,20 @@ from .methods import canonical_bytes, method_contract, contract_sha256
 from .records import history_metrics, validate_record, validate_science, resolved_payload
 
 
+def validate_output_destinations(inputs, outputs):
+    """Reject both derived destinations before directory creation or writes."""
+    protected = [Path(path).resolve() for path in inputs]
+    seen = []
+    for output in outputs:
+        path = Path(output).resolve()
+        if path.is_dir():
+            raise ValueError('output is a directory')
+        for other in protected + seen:
+            if path == other or (path.exists() and other.exists() and path.samefile(other)):
+                raise ValueError('output aliases input or another output')
+        seen.append(path)
+
+
 def report(manifest, table, records, resolved=None, binding=None, *, fixture_draws=None, data_sha256=None):
     mode = manifest['execution_mode']
     fixture = mode == 'fixture'
@@ -106,6 +120,13 @@ def main():
     args = parser.parse_args()
     manifest_bytes = args.manifest.read_bytes()
     value = strict_json(manifest_bytes)
+    from .provenance import safe_source_path
+    protected = [args.manifest, args.source, args.sessions, args.resolved,
+        args.build_receipt, args.binary]
+    protected += [safe_source_path(args.source_root, entry['path'])
+        for entry in value.get('source_inventory') or []]
+    destinations = [args.output.with_suffix('.json'), args.output.with_suffix('.md')]
+    validate_output_destinations(protected, destinations)
     actual = {'python': platform.python_version(), 'numpy': np.__version__}
     if actual != method_contract()['runtime']:
         raise ValueError(f'analysis runtime differs from pinned contract: {actual}')
@@ -134,8 +155,8 @@ def main():
     if verify_source_inventory(args.source_root, value['source_inventory']) != inventory:
         raise ValueError('scientific source changed during analysis')
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.with_suffix('.json').write_text(serialize_report(result))
-    args.output.with_suffix('.md').write_text(markdown_report(result))
+    destinations[0].write_text(serialize_report(result))
+    destinations[1].write_text(markdown_report(result))
 
 
 if __name__ == '__main__':

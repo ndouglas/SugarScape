@@ -33,3 +33,21 @@ class AnalysisTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class OutputProtectionTests(unittest.TestCase):
+    def test_both_output_destinations_are_checked_without_creating_directories(self):
+        import os
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root/'input.json'; source.write_bytes(b'input sentinel')
+            alias = root/'alias.json'; os.link(source, alias)
+            untouched = root/'uncreated/report.md'
+            with self.assertRaisesRegex(ValueError, 'output aliases'):
+                analysis.validate_output_destinations([source], [untouched, alias])
+            self.assertEqual(source.read_bytes(), b'input sentinel')
+            self.assertFalse(untouched.parent.exists())
+            analysis.validate_output_destinations([source], [root/'new/report.json', root/'new/report.md'])
+            self.assertFalse((root/'new').exists())
