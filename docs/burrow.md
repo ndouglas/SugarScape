@@ -142,9 +142,32 @@ sample interval. These are lab resource limits, not physical calibration.
 
 ## Approved designs and implementation sequence
 
-The measured-study protocol and resource-access design were approved on 2026-10-04. Their separate implementation plans await review:
+The measured-study protocol and resource-access design were approved on 2026-10-04. Their separate implementation plans were approved on 2026-10-04:
 
 1. [Measured archive and analysis harness](superpowers/plans/2026-10-04-burrow-1-measured-harness.md): physical transaction validation, complete manifest, immutable raw archives and saved-only descriptive analysis. Engineering acceptance uses construction seeds; scientific registration and execution remain separate.
 2. [Resource access](superpowers/plans/2026-10-04-burrow-2-resource-access.md): private local goal guidance, event-time structural access and checked CLI/WASM exports, preserving ordinary excavation replay bytes.
 
 Implement and review the harness first, then resource access in a separate branch. Neither implementation depends on inspecting scientific treatment outcomes.
+
+
+## Measured archive and saved analysis
+
+The engineering harness is implemented on the measured-harness branch; fresh branch review remains the next gate. The candidate stays unregistered and scientific execution is not authorized. `survey --burrow` prints the pinned full manifest without simulating. The construction route uses only seeds 7 and 8, all 18 declared corridor conditions and 512 opportunities per episode. Saved analysis never steps the engine.
+
+The following commands were exercised from a clean committed tree. They create new directories exclusively; use different destinations when repeating them:
+
+```bash
+cargo run --manifest-path survey/Cargo.toml --bin survey -- --burrow --run --construction --protocol-revision a4e0effd0532194621afbdd5672bc21cd0594235 --approval-context 'docs/superpowers/specs/2026-10-04-burrow-1-measured-protocol.md: design approval 2026-10-04; Task4 engineering construction acceptance' --out /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-construction
+cargo run --manifest-path survey/Cargo.toml --bin survey -- --burrow --analyze /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-construction/index.json --out /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-analysis-a
+cargo run --manifest-path survey/Cargo.toml --bin survey -- --burrow --analyze /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-construction/index.json --out /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-analysis-b
+cmp /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-analysis-a/analysis.json /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-analysis-b/analysis.json
+cmp /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-analysis-a/results.md /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-analysis-b/results.md
+```
+
+All commands above exited zero and both files were byte-identical. The construction report retains 36 seed rows, action/inventory/search/work/travel/storage/material diagnostics and carried/loose censoring; it contains no growing scientific contrasts or condition means. A tampered raw-file acceptance check exited 2 with a condition/seed SHA-256 error and created no results directory. Full commands and hashes are recorded in the [implementation closure](superpowers/plans/2026-10-04-burrow-1-measured-harness.md#engineering-closure).
+
+Archives use `burrow-archive-v1`: `index.incomplete.json` records the entire expected canonical key set before execution; complete `index.json` binds manifest/config/options, full code/protocol revisions, approval provenance, relative raw paths and SHA-256 bytes. Complete Episode envelopes are saved under `raw/`; exclusive per-record receipts remain under `progress/`. Failures retain an incomplete archive and `failure.json`; there is no silent resume. Analysis requires all canonical keys and validates raw paths, hashes, identities, setup, horizon and physical consistency before creating any output. It writes deterministic pretty `burrow-analysis-v1` JSON and Markdown, with no absolute input paths or generation time. `--analyze` rejects run, seed and panel overrides.
+
+`validate_episode` reconstructs checked physical transitions, round schedules, material ownership/conservation, histories, physical snapshots and derived work. It consumes no controller decisions or RNG continuation. Fingerprints are format-checked state identifiers; controller BFS counts are bounded consistent diagnostics, not independently authenticated policy replay. Code provenance and unchanged engine regression tests support policy fidelity separately. A report cannot turn connected-open area, supplied global exit navigation or a one-cell corridor into evidence of emergent coordination or production throughput.
+
+Scientific readiness still requires a separately reviewed, committed executable-registration amendment preserving the prespecified matrix and explicitly recording its status/authorization, then separate user authorization for the scientific run. The current pinned unregistered candidate rejects scientific execution before I/O. Full revisions and a nonblank `--approval-context` document provenance; those flags do not grant approval. No scientific campaign or scientific-seed demonstration was run for engineering acceptance.
