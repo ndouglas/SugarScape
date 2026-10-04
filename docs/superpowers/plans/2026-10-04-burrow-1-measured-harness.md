@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Status: implementation plan approved 2026-10-04; engineering implementation, acceptance and independent task/whole-branch reviews complete; integration decision pending. Protocol design approved 2026-10-04. Scientific execution and executable registration remain separately gated.
+- Status: implementation plan approved 2026-10-04; engineering implementation, acceptance and independent task/whole-branch reviews complete; merged into main at `88e2fa0`. Protocol design approved 2026-10-04. Scientific execution and executable registration remain separately gated.
 - Scientific seeds: decimal strings 10001–10040; construction seeds: 7 and 8. Never execute scientific seeds during implementation, tests or acceptance.
 - Exactly 32 scientific conditions / 1280 episodes; 18 construction conditions / 36 episodes. Growing scientific denominator 4096; corridor construction denominator 512; choice denominator zero.
 - Exactly six primary estimates: three signed contrasts × two rates. No overall Holds/Fails verdict, tuning, selected subset, sample-fit band or animal calibration claim.
@@ -389,3 +389,7 @@ Tasks 1–4 passed fresh spec-compliance and code-quality reviews. The whole imp
 Ruling: Leave the nonblocking table phrase “Ruling below” as a recorded documentation nit — the actual build-attestation ruling is immediately above and uniquely named — if wrong, readers may experience minor navigation ambiguity; no runtime or evidence behavior depends on the pointer.
 
 All rulings remain recorded here. The root implementation tracker is removed. The engineering branch awaits the user's integration decision; no merge, push, scientific registration or scientific seed execution has occurred. Resource-access implementation remains the next separately approved plan.
+
+## Local integration
+
+User authorized merge on 2026-10-04. `main` fast-forwarded from `4ef7e57` to `88e2fa0`. Merged-checkout verification passed 2111 workspace tests (102 preexisting ignored), 234 survey tests and both formatting checks. Logs: `/tmp/burrow-measured-merge-workspace.log`, `/tmp/burrow-measured-merge-survey.log`. Scientific registration and execution remain unapproved; resource-access implementation remains the next approved plan.
