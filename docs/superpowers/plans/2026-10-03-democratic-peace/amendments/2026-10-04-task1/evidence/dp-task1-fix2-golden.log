@@ -1,0 +1,19 @@
+   Compiling sugarscape-core v0.1.0 (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/crates/sugarscape-core)
+    Finished `test` profile [optimized + debuginfo] target(s) in 12.06s
+     Running tests/golden.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/golden-ee919839023bf9a6)
+
+running 11 tests
+test print_democratic_peace_golden ... ignored
+test print_geosim_golden ... ignored
+test print_golden ... ignored
+test every_preset_has_a_golden_entry ... ok
+test every_model_preset_has_a_golden_entry ... ok
+test geosim_presets_are_reproducible ... ok
+test democratic_peace_presets_are_reproducible ... ok
+test image_presets_are_unchanged ... ok
+test big_boards_are_unchanged ... ok
+test other_models_are_unchanged ... ok
+test earlier_presets_are_unchanged ... ok
+
+test result: ok. 8 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 33.91s
+

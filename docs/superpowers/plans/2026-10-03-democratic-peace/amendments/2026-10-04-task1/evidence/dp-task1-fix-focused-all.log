@@ -1,0 +1,204 @@
+   Compiling sugarscape-core v0.1.0 (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/crates/sugarscape-core)
+    Finished `test` profile [optimized + debuginfo] target(s) in 23.47s
+     Running unittests src/lib.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/sugarscape_core-18cae01689039055)
+
+running 53 tests
+test democratic_peace::resources::overflow_tests::finite_denominator_overflow_is_invalid ... ok
+test democratic_peace::resources::tests::printed_probability_declines_with_superiority ... ok
+test democratic_peace::resources::tests::inactive_front_uses_own_opponent ... ok
+test democratic_peace::resources::tests::prose_probability_increases_with_superiority ... ok
+test democratic_peace::resources::tests::fixed_allocation_uses_distinct_eligible_fronts ... ok
+test democratic_peace::resources::tests::zero_fronts_never_divide ... ok
+test democratic_peace::resources::tests::strict_zero_policy_rejects_denominator ... ok
+test democratic_peace::resources::tests::zero_limits_are_direction_sensitive ... ok
+test democratic_peace::tests::border_exposure_counts_edges_not_distinct_states ... ok
+test democratic_peace::tests::all_front_enemy_total_changes_active_commitment ... ok
+test democratic_peace::tests::census_rejects_same_length_wrong_state_membership ... ok
+test democratic_peace::tests::census_rejects_missing_owner_and_mismatched_cell_index_with_context ... ok
+test democratic_peace::tests::capturing_bridge_releases_disconnected_cells ... ok
+test democratic_peace::tests::capture_and_fragment_absorbs_compound_capital ... ok
+test democratic_peace::tests::census_rejects_front_endpoint_identity_and_missing_topology ... ok
+test democratic_peace::tests::capital_collapse_releases_each_primitive_cell ... ok
+test democratic_peace::tests::cell_locks_allow_disjoint_claims_against_same_state ... ok
+test democratic_peace::tests::census_rejects_state_key_and_generation_counter_mismatches ... ok
+test democratic_peace::tests::collective_security_scope_changes_unaligned_democratic_obligation ... ok
+test democratic_peace::tests::conquest_yield_is_delayed_until_next_resource_update ... ok
+test democratic_peace::tests::current_plan_obligations_do_not_read_previous_buffer ... ok
+test democratic_peace::tests::democracies_allocate_only_against_predatory_neighbors ... ok
+test democratic_peace::tests::census_corruption_invalidates_candidate_without_advancing_world ... ok
+test democratic_peace::tests::extraction_uses_preclaim_territory ... ok
+test democratic_peace::tests::equal_state_weights_change_exposure_average ... ok
+test democratic_peace::tests::initial_all_democratic_first_passage_is_zero ... ok
+test democratic_peace::tests::independent_victories_can_record_opposing_claims ... ok
+test democratic_peace::tests::exact_threshold_does_not_count_as_threat ... ok
+test democratic_peace::tests::isolated_democracy_has_exposure_one ... ok
+test democratic_peace::tests::grouped_periods_have_identical_state_and_rng ... ok
+test democratic_peace::tests::lowest_id_breaks_equal_threat_tie ... ok
+test democratic_peace::tests::late_generation_failure_rolls_back_prior_mutations_and_rng ... ok
+test democratic_peace::tests::overwrite_on_conquest_changes_released_latent_tag ... ok
+test democratic_peace::tests::failed_period_preserves_engine_and_rng ... ok
+test democratic_peace::tests::latent_democracy_can_return_after_extinction ... ok
+test democratic_peace::tests::probability_denominator_overflow_is_invalid ... ok
+test democratic_peace::tests::persistent_alliance_keeps_old_threat_when_new_threat_is_stronger ... ok
+test democratic_peace::tests::legitimate_undefined_clustering_is_blank_csv_and_nan_series ... ok
+test democratic_peace::tests::probability_zero_boundaries_have_all_literal_limits ... ok
+test democratic_peace::tests::internal_candidate_panic_is_terminal_and_preserves_committed_state ... ok
+test democratic_peace::tests::rounded_quota_assigns_exact_counts ... ok
+test democratic_peace::tests::random_threat_ties_are_reproducible_and_consume_stream ... ok
+test democratic_peace::tests::repeated_first_inactive_term_changes_other_inactive_front ... ok
+test democratic_peace::tests::prospective_release_footprint_honors_prior_locked_cells ... ok
+test democratic_peace::tests::stalemate_ends_mutual_battle_without_claims ... ok
+test democratic_peace::tests::single_draw_victory_records_only_one_claim ... ok
+test democratic_peace::tests::structural_pruning_recomputes_surviving_alliance_pool ... ok
+test democratic_peace::tests::shared_primary_threat_forms_one_defensive_alliance ... ok
+test democratic_peace::tests::threshold_probability_is_half_in_both_directions ... ok
+test democratic_peace::tests::simultaneous_proposals_count_one_initiated_front ... ok
+test democratic_peace::tests::territory_path_distance_follows_owned_cells ... ok
+test democratic_peace::tests::unilateral_defection_has_no_combat_consequence ... ok
+test democratic_peace::tests::schema_paths_roundtrip_and_all_changes_require_reset ... ok
+
+test result: ok. 53 passed; 0 failed; 0 ignored; 0 measured; 1930 filtered out; finished in 0.00s
+
+     Running tests/astar.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/astar-2028f336e4238d30)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/auctions_discovery.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/auctions_discovery-39015e3ca569911f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/book.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/book-776a8145f8f7dc69)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 33 filtered out; finished in 0.00s
+
+     Running tests/caching_lab.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/caching_lab-7af945130e1464e7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+     Running tests/checkpoint.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/checkpoint-e41f1380df281d4c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/civil.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/civil-d5ad244967ee45d8)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+     Running tests/collusion.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/collusion-bce9838854622acf)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/democratic_peace_discovery.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/democratic_peace_discovery-7ac609865a46fcf6)
+
+running 3 tests
+test democratic_peace_invalid_zero_policy_retains_committed_clock ... ok
+test democratic_peace_t0_census_and_inspection_are_read_only ... ok
+test democratic_peace_discovery_resolves_source_horizon_and_preset ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/dpd.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/dpd-672052a23843b706)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.00s
+
+     Running tests/ethno.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/ethno-9298d0ce9828d5a7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.00s
+
+     Running tests/geosim_discovery.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/geosim_discovery-a4303f18428ba473)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/geosim_host_sweep.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/geosim_host_sweep-3763cfa595883bfd)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/geosim_invalid_sweep.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/geosim_invalid_sweep-b8673a428e15a5e3)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/goap.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/goap-90354a44d0a7b776)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+     Running tests/golden.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/golden-ee919839023bf9a6)
+
+running 2 tests
+test print_democratic_peace_golden ... ignored
+test democratic_peace_presets_are_reproducible ... ok
+
+test result: ok. 1 passed; 0 failed; 1 ignored; 0 measured; 9 filtered out; finished in 0.10s
+
+     Running tests/image.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/image-e49350d5938631b6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.00s
+
+     Running tests/invariants.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/invariants-b7e79c0852453747)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/legacy.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/legacy-f46698c827efc4c3)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/minds.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/minds-47e4604f22903af4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/polarity_discovery.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/polarity_discovery-5b57f5925c2d7a38)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/protection.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/protection-ae2200ca14364cbe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/spatial.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/spatial-ba0a4dc1f811262b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests/tags.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/tags-2bc938852ec0102b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+

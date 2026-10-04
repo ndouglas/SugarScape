@@ -1,0 +1,3 @@
+# Preserve normal unified-diff empty context records and exact witness transcripts.
+02-core.patch whitespace=-blank-at-eol
+evidence/*.log whitespace=-blank-at-eof

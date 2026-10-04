@@ -1,0 +1,2400 @@
+{
+  "binary_sha256": "054d67b10c8ee394d06fdf23cc29a9447273487073c8f83987572cb4635820c1",
+  "checks": {
+    "browser_smoke": "passed_actual_receipts_retained",
+    "native_final_tests": {
+      "failed": 0,
+      "ignored": 0,
+      "passed": 10,
+      "suites": 2
+    },
+    "production_cli_wasm_vite_build": "passed",
+    "python_final_tests": {
+      "elapsed_seconds": 0.204,
+      "passed": 36
+    },
+    "replay_security": {
+      "passed": 18
+    },
+    "survey_all_tests": {
+      "failed": 0,
+      "ignored": 0,
+      "passed": 211,
+      "suites": 6
+    },
+    "survey_clippy_fmt": "passed",
+    "typescript": "passed",
+    "wasm_browser": {
+      "passed": 1
+    },
+    "wasm_node": {
+      "passed": 79
+    },
+    "web_final_actual_parity": {
+      "passed": 8
+    },
+    "web_full": {
+      "files": 68,
+      "passed": 972,
+      "scope": "before_equivalent_core_is_multiple_of_lint_refresh"
+    },
+    "workspace_clippy_fmt": "passed",
+    "workspace_mechanical_refresh": "core_47_and_host_actual8_parity_passed",
+    "workspace_tests": {
+      "failed": 0,
+      "ignored": 103,
+      "passed": 2079,
+      "suites": 33
+    }
+  },
+  "classification": "verified_plan_preparation_only",
+  "evidence": [
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-preparation/fixture-build-receipt.json",
+      "sha256": "23b5e66055c0f34abd2c24b06ad11c40e9607991a1e9a756dfb3a195ee4bab2e"
+    },
+    {
+      "bytes": 237056,
+      "path": "survey/out/democratic-peace-preparation/fixture-findings.json",
+      "sha256": "5b633db817731d0e166ebb79f291609f49c887a1d92d14d7f782f2fa56d30be3"
+    },
+    {
+      "bytes": 22400,
+      "path": "survey/out/democratic-peace-preparation/fixture-findings.md",
+      "sha256": "37d77cb029ff8aec1fc7ba7a72c337890b774968b2de654c7f979d267a6d78b5"
+    },
+    {
+      "bytes": 102191,
+      "path": "survey/out/democratic-peace-preparation/fixture-manifest.json",
+      "sha256": "d365b903e0e180a835dd2504fc1e79bd3ee4e5b9473c150b80c98ebfaa7bca57"
+    },
+    {
+      "bytes": 7148,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-duplicate-resolved.json",
+      "sha256": "9502f036c9e8d47014f92ba85c2f76ac63fb68f53335453a185e78aab426026a"
+    },
+    {
+      "bytes": 32793,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-duplicate.jsonl",
+      "sha256": "e479837a2e77438c12b949a5293c8b02b242c036020c6f9ce8f21f48fcafa2d1"
+    },
+    {
+      "bytes": 61,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-duplicate.stderr.log",
+      "sha256": "336a7a07d86acedab29013442d502bc3a0d179340b5bedc965493c961a12e80c"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-duplicate.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 7148,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-tampered_clock-resolved.json",
+      "sha256": "9502f036c9e8d47014f92ba85c2f76ac63fb68f53335453a185e78aab426026a"
+    },
+    {
+      "bytes": 28279,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-tampered_clock.jsonl",
+      "sha256": "3bfbe6e113d9e7080ba8e67d04c434807b1b8894b4668261fb0f9e4473557cad"
+    },
+    {
+      "bytes": 56,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-tampered_clock.stderr.log",
+      "sha256": "67e3c9654bc7f4546e229d6ea2f8556eedb374fa6ec5a396d0997263f2287531"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-tampered_clock.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 7148,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-tampered_config-resolved.json",
+      "sha256": "9502f036c9e8d47014f92ba85c2f76ac63fb68f53335453a185e78aab426026a"
+    },
+    {
+      "bytes": 28279,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-tampered_config.jsonl",
+      "sha256": "418427d5432277efb2f09bc8ee4d1895ea4eef7a474934930533059036337d6e"
+    },
+    {
+      "bytes": 57,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-tampered_config.stderr.log",
+      "sha256": "e402b82963f5a33b9dd40efc98bbca5102bb5a8cab8180c9213756597e4debfd"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-tampered_config.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 7148,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-tampered_provenance-resolved.json",
+      "sha256": "9502f036c9e8d47014f92ba85c2f76ac63fb68f53335453a185e78aab426026a"
+    },
+    {
+      "bytes": 28279,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-tampered_provenance.jsonl",
+      "sha256": "9e06a7cf63b245d568310ec06fa4669659b5b42796f91ef27eba3193dd84a0d1"
+    },
+    {
+      "bytes": 61,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-tampered_provenance.stderr.log",
+      "sha256": "cd9ee10d0b79fd48e292b64d3b0338abb621ebd1087be1e4164a8ea4c0e1cb30"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-tampered_provenance.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 7148,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-truncated-resolved.json",
+      "sha256": "9502f036c9e8d47014f92ba85c2f76ac63fb68f53335453a185e78aab426026a"
+    },
+    {
+      "bytes": 27933,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-truncated.jsonl",
+      "sha256": "3c05cc21ce6214628b8edc3f085565bebeb2cf71323e3cd82a8d5c1f59296d89"
+    },
+    {
+      "bytes": 56,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-truncated.stderr.log",
+      "sha256": "af4e54a533eb04436dfc9639fea8d45728aca8c1cb88c70594c8fbdc88e6ff99"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-preparation/fixture-reject-truncated.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 6124,
+      "path": "survey/out/democratic-peace-preparation/fixture-rejections.json",
+      "sha256": "99872f8371703be2ab2352d54a6aad710b9d06f9b0e46b11390ce8fc736a2b92"
+    },
+    {
+      "bytes": 7148,
+      "path": "survey/out/democratic-peace-preparation/fixture-resolved.json",
+      "sha256": "9502f036c9e8d47014f92ba85c2f76ac63fb68f53335453a185e78aab426026a"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-preparation/fixture-resume.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-preparation/fixture-resume.stdout.log",
+      "sha256": "e945fc0c00fcf09165acda48d2727014ea39bd47f1cd5bf00a36ec88eabc5d1c"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-preparation/fixture-run.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-preparation/fixture-run.stdout.log",
+      "sha256": "e945fc0c00fcf09165acda48d2727014ea39bd47f1cd5bf00a36ec88eabc5d1c"
+    },
+    {
+      "bytes": 27934,
+      "path": "survey/out/democratic-peace-preparation/fixture-sessions.jsonl",
+      "sha256": "da33581a0b0d5985334b0ab48463653aff4c6d7dcaac9088f448bdf7e4217458"
+    },
+    {
+      "bytes": 2533,
+      "path": "survey/out/democratic-peace-preparation/integration-summary.md",
+      "sha256": "4e28ac4f6fb56143d7219cbd1c874bb3d24e9fa5f06d6d89e4c15e467c7639fc"
+    },
+    {
+      "bytes": 65,
+      "path": "survey/out/democratic-peace-preparation/native-prebuild-inventory-sha.txt",
+      "sha256": "62d7859f06d52ced916871421c50e6b7a9346a081e45db481f740a9d83db57a8"
+    },
+    {
+      "bytes": 180757,
+      "path": "survey/out/democratic-peace-preparation/page-17.png",
+      "sha256": "b2b22e44405aa6df4267ab110577d9180ba68c6c2ae210a582d106c9cbff85c1"
+    },
+    {
+      "bytes": 203589,
+      "path": "survey/out/democratic-peace-preparation/page-19.png",
+      "sha256": "a3fcec8687f1414b7eca9e1b3a8a0a6fb857e78b372b1dd77df5460660a90002"
+    },
+    {
+      "bytes": 216565,
+      "path": "survey/out/democratic-peace-preparation/page-20.png",
+      "sha256": "1aaa6b48ddd3a6437116be4e901b7c54dd45d2d5025d89f268fe9f692873dd8a"
+    },
+    {
+      "bytes": 101296,
+      "path": "survey/out/democratic-peace-preparation/probe-0-manifest.json",
+      "sha256": "2616a6422cc0ef3adf09ab203095e1cadd9a4b43417d4313043725ad5662b9f1"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-preparation/probe-0-receipt.json",
+      "sha256": "80af7f9a9329fe835e4d25aedbc070a28ae07d96567c637549d36d553f2754ab"
+    },
+    {
+      "bytes": 2762,
+      "path": "survey/out/democratic-peace-preparation/probe-0-resolved.json",
+      "sha256": "ba5a70e3d588fb27358e72164f5cb1eaed2d11356365b779e9e93cce07754870"
+    },
+    {
+      "bytes": 4976,
+      "path": "survey/out/democratic-peace-preparation/probe-0-sessions.jsonl",
+      "sha256": "d08edacd785434038a6a7a05c5ac5847610fabb037c660e187c5f723ffc9cd4f"
+    },
+    {
+      "bytes": 777,
+      "path": "survey/out/democratic-peace-preparation/probe-0.stderr.log",
+      "sha256": "f6af03881f753578b6c28374e2b56ff7ea4dffc9c810c41e76dd382850f123d5"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-preparation/probe-0.stdout.log",
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "bytes": 101294,
+      "path": "survey/out/democratic-peace-preparation/probe-1-manifest.json",
+      "sha256": "a6c7831ed5f501f69c2909162b0b9a1d097f7dbf0c98ef5e5e8fed1fc83e76cc"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-preparation/probe-1-receipt.json",
+      "sha256": "c1318c0f3cf05debb3ef2906d9f78e46f90909eb869a9db9512c3d67194487d5"
+    },
+    {
+      "bytes": 2758,
+      "path": "survey/out/democratic-peace-preparation/probe-1-resolved.json",
+      "sha256": "b96219908910f51f7eb9e7523311574258fd49bfa5fcf0f7d58d825af845c13b"
+    },
+    {
+      "bytes": 5057,
+      "path": "survey/out/democratic-peace-preparation/probe-1-sessions.jsonl",
+      "sha256": "ad15f6a5f8190c2dd757107b733f6dd6c4bdf2724df492ee079fed6567e6eec5"
+    },
+    {
+      "bytes": 777,
+      "path": "survey/out/democratic-peace-preparation/probe-1.stderr.log",
+      "sha256": "4ea3a2117d7179fddcb8379f301bfe2d502450d6e1cd59389235972742e5b8ec"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-preparation/probe-1.stdout.log",
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "bytes": 101295,
+      "path": "survey/out/democratic-peace-preparation/probe-2-manifest.json",
+      "sha256": "809652226d6c57ecd4647cdf14530b5e63216536e396ef303e3f9c88f5ee3a6e"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-preparation/probe-2-receipt.json",
+      "sha256": "cef1ccf593cb66ccec4d5180b85e02d1600277616f9483c7403abb0e8a9cfca5"
+    },
+    {
+      "bytes": 2760,
+      "path": "survey/out/democratic-peace-preparation/probe-2-resolved.json",
+      "sha256": "8553a25369f63a130c6245ba12917a8747049a54ba6217b7a90c1bab67fe1576"
+    },
+    {
+      "bytes": 5058,
+      "path": "survey/out/democratic-peace-preparation/probe-2-sessions.jsonl",
+      "sha256": "1d1ead5ef6b2bd67c61d2fcdb58ce0911944d3f3815411556cc8a7257a631381"
+    },
+    {
+      "bytes": 777,
+      "path": "survey/out/democratic-peace-preparation/probe-2.stderr.log",
+      "sha256": "65f252ae34203c9b8bfec6f8317c6e4b7451400cb73097f1bc4718f97e488a56"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-preparation/probe-2.stdout.log",
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "bytes": 101301,
+      "path": "survey/out/democratic-peace-preparation/probe-3-manifest.json",
+      "sha256": "2f9117a495a8daeaaedf4294f95dec897dd162fa37e01fd85306909fbb9d6b6d"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-preparation/probe-3-receipt.json",
+      "sha256": "a34f0d614d3251282d6b49c0d21f675e6e6390301b55ae431111aa240f68a1ea"
+    },
+    {
+      "bytes": 2758,
+      "path": "survey/out/democratic-peace-preparation/probe-3-resolved.json",
+      "sha256": "97bcf8532c41664f1e26f7817c214add6b9a08a609f78640166fd0de10228336"
+    },
+    {
+      "bytes": 4977,
+      "path": "survey/out/democratic-peace-preparation/probe-3-sessions.jsonl",
+      "sha256": "9c0ca576cc9c27dda02b91b36d75809437a4f8f3f61e891432eb72bee8a921a5"
+    },
+    {
+      "bytes": 777,
+      "path": "survey/out/democratic-peace-preparation/probe-3.stderr.log",
+      "sha256": "22794966e72001813ff63793ae71aa1e80791e88a351099b6c135242645b7742"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-preparation/probe-3.stdout.log",
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "bytes": 101299,
+      "path": "survey/out/democratic-peace-preparation/probe-4-manifest.json",
+      "sha256": "97af98c76c45b467bb36da13f98093d798fcf342dedb402ba46775e0d40eaef1"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-preparation/probe-4-receipt.json",
+      "sha256": "438ef48624974c3e073b1730f7c904c7577ec766551a6b6b4b9ab410ef414e2e"
+    },
+    {
+      "bytes": 2754,
+      "path": "survey/out/democratic-peace-preparation/probe-4-resolved.json",
+      "sha256": "d91b6f43b250c2c4168f43c6063683091023a82ec621bc214e4d1cd5445cff3a"
+    },
+    {
+      "bytes": 4928,
+      "path": "survey/out/democratic-peace-preparation/probe-4-sessions.jsonl",
+      "sha256": "725d179f155c9561edb9df13b2f55257e87cca9ec2ec305ecc05648303fa6420"
+    },
+    {
+      "bytes": 777,
+      "path": "survey/out/democratic-peace-preparation/probe-4.stderr.log",
+      "sha256": "78a0bbeae6b9ec7f6c64fc40d4b9e877914d2060d391380ae57e6ed0296b2fca"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-preparation/probe-4.stdout.log",
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "bytes": 101300,
+      "path": "survey/out/democratic-peace-preparation/probe-5-manifest.json",
+      "sha256": "0f8be12c627beae4f6552a3c95e86d5b539e6cb6d5ee8f0adb8e6e510ad208fb"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-preparation/probe-5-receipt.json",
+      "sha256": "7121302504526c4893953c099e43b7d91859f99e7292aefff113e6a5d8a965ce"
+    },
+    {
+      "bytes": 2756,
+      "path": "survey/out/democratic-peace-preparation/probe-5-resolved.json",
+      "sha256": "17c377d64bec2ec642bcd5e48a3176fa0b82128bef6de745685be4930dfb3950"
+    },
+    {
+      "bytes": 4981,
+      "path": "survey/out/democratic-peace-preparation/probe-5-sessions.jsonl",
+      "sha256": "94704f4cfa1156ac8d76165c3011818f05528432e1f6859026aff6f9888f523d"
+    },
+    {
+      "bytes": 777,
+      "path": "survey/out/democratic-peace-preparation/probe-5.stderr.log",
+      "sha256": "4a2a76941a339f8ef68fb6df10e39514ef765f951ccb1ee709348d21d0285fdd"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-preparation/probe-5.stdout.log",
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "bytes": 145368,
+      "path": "survey/out/democratic-peace-preparation/provisional-full-manifest.json",
+      "sha256": "8f6f58fd1484b12568a91cfc2b31195e21858c67e2af01588b191d03ed4e9ea4"
+    },
+    {
+      "bytes": 489572,
+      "path": "survey/out/democratic-peace-preparation/provisional-full-resolved.json",
+      "sha256": "d649154fee12170fc4973db61c9e46f4d0d3009db48a3cdd013022a0184661d2"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-preparation/provisional-full-validation.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 90,
+      "path": "survey/out/democratic-peace-preparation/provisional-full-validation.stdout.log",
+      "sha256": "f0dc79c7a22f4be044a452c70df7272b7eb86c9faa7fd6866d202d07dced02d1"
+    },
+    {
+      "bytes": 134,
+      "path": "survey/out/democratic-peace-preparation/python-tests.stderr.log",
+      "sha256": "e0617b891ac5d41eb1b9fb855f92b9af593e0a0b21dd5305a2e8925731fbeddb"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-preparation/python-tests.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1146,
+      "path": "survey/out/democratic-peace-preparation/python-verification-receipt.json",
+      "sha256": "9e7dae01ce3e12a174163fa86ce6976b01ca6a18f90f9924f1b050519de35669"
+    },
+    {
+      "bytes": 180591,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-baseline-cargo.log",
+      "sha256": "b39fa31a79b2340c3178628e37204417c9fea575a8617d6b74e2df1a53d614e3"
+    },
+    {
+      "bytes": 141,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-baseline-npm.log",
+      "sha256": "b9e89e48397fa3a00dfca39c744f20107d73c4d4338b6c9da83f052f33c98974"
+    },
+    {
+      "bytes": 2029,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-baseline-wasm.log",
+      "sha256": "7804523ac5375158a485733ddf372b9d8b2534a06a5deead46cb87a6e53cd353"
+    },
+    {
+      "bytes": 504,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-baseline-web-green.log",
+      "sha256": "17636a3c63aedb986b10d708f8f70c6cf2da7533c2efe9fcb995b929597f7969"
+    },
+    {
+      "bytes": 4578,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-baseline-web.log",
+      "sha256": "a238bce8270da399a17b5efe5f58ab7835fa7b4adf8975180b4f168821f977be"
+    },
+    {
+      "bytes": 4680,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-counter-red.log",
+      "sha256": "b2f0756c3d3b59e52d6b7bd603d92b08fa26dbf77d5183ed3ae2fd3b04360ba4"
+    },
+    {
+      "bytes": 3674,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-deep-green.log",
+      "sha256": "bfcd2675e94bd0ddcc0518056eb8182c2e68e20043c8f18e9fa43c8e6937f2e1"
+    },
+    {
+      "bytes": 4508,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-deep-red.log",
+      "sha256": "506795acab5f8bbdf8f84ddb0f62605d0ae5c1b30cd66a24bb1a7d72d864eee4"
+    },
+    {
+      "bytes": 654,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-discovery-green.log",
+      "sha256": "b3c41ae8a3ccf64a971ce229d6a5d1f4f0de26ab9a4a8314a7e0cd8ed8c2a8cd"
+    },
+    {
+      "bytes": 3216,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-discovery-red.log",
+      "sha256": "5ef8c79497227ffcd01d08510c05ecde0bd586d44af756591ccef9d31f98d52b"
+    },
+    {
+      "bytes": 2425,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-engine-green-attempt1.log",
+      "sha256": "47a8e9408f24ef470281464f07a1898cef3a8c1044d0b15c326aaf01d6b4dd41"
+    },
+    {
+      "bytes": 11154,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-engine-red.log",
+      "sha256": "3f3e7e5f6c63dcee26cb2df1dfe8d52bb12b40c4a1c4e07327d6b57e96f9c774"
+    },
+    {
+      "bytes": 4470,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-final-focused.log",
+      "sha256": "efd65e30c04fe364615688e2226a14cddea775e164792b6456647bd7eb0e35cf"
+    },
+    {
+      "bytes": 634,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-golden-characterization.log",
+      "sha256": "a6d376fee5b29d412a9665cd0517233aa63582bc3c6352fd39caed45c8554669"
+    },
+    {
+      "bytes": 864,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-golden-green.log",
+      "sha256": "1a9022841e1178f329611079eb6ce21d752c3d32c745ceddaa0bb792f522e005"
+    },
+    {
+      "bytes": 976,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-golden-red.log",
+      "sha256": "65129b7f5e49a048331d426416b84b1e574418144672bb029e77efb2a8955a25"
+    },
+    {
+      "bytes": 5265,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-overflow-red.log",
+      "sha256": "be709758db7df41d856882f9cc75e8be14d0f6cf054d04ce4ad296dfeacc8dde"
+    },
+    {
+      "bytes": 5806,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-preparation-report.md",
+      "sha256": "fd887ddb7cdf61b99795b465575e5553a6b129a68d3b95e1272dfb915620b1c2"
+    },
+    {
+      "bytes": 2123,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-red/democratic_peace_discovery.rs",
+      "sha256": "2387dc37a3e85e03f58a43f9ed7d28ef4e8232249d619d71e699373042c65dbf"
+    },
+    {
+      "bytes": 3917,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-red/engine-tests.rs",
+      "sha256": "44925717abc805c466ebd1c48fef81cb2028ea3be855ba44e4fa112941736ffc"
+    },
+    {
+      "bytes": 1375,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-red/resources.rs",
+      "sha256": "6d64fdcead134e6bebdfecc57b264478e8e693418c4b219a9b6b1326e0f5c8ac"
+    },
+    {
+      "bytes": 3932,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-core-resources-red.log",
+      "sha256": "eded11ec11a63d87e791d00f4bc6a29a708b29a5c64b692c32a7d92297530ce3"
+    },
+    {
+      "bytes": 494,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-final-clippy.log",
+      "sha256": "bbae252cb660575a3dac76919747277009778b8f4412e5cb310612e7a49a6237"
+    },
+    {
+      "bytes": 9469,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-final-core-lintchange.log",
+      "sha256": "15ed57df24d162b4d2de92ec1032cb51460258f7c628ce5bddecc78b18bc25e2"
+    },
+    {
+      "bytes": 135,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-final-python-tests.log",
+      "sha256": "3497cb6f7f2b00fbb39051f84fa3fa309ca023ace9d6923ae8193c76b599f455"
+    },
+    {
+      "bytes": 117,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-final-replay-helper-tests.log",
+      "sha256": "bde8e8d7298ccdc84647ba9d771b8ba57f72ff5d38c7f002b06bf15cb6097ecb"
+    },
+    {
+      "bytes": 188,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-final-survey-clippy.log",
+      "sha256": "7019119ba908096d86be4c9742cb894becfd5ffcda5a23674ac2e5f6ab2720cc"
+    },
+    {
+      "bytes": 19767,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-final-survey-tests.log",
+      "sha256": "4e4e526e51fe61f10c13d56f354a47727c46596b311abace9223fe99d1debeea"
+    },
+    {
+      "bytes": 183738,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-final-workspace.log",
+      "sha256": "f60eb668cce340d4951be44c59845377ba36c3a7adfa6173c4c09df03a6eed3a"
+    },
+    {
+      "bytes": 243,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-actual-final.log",
+      "sha256": "6ddb93bbb443c6b74c7bad5c65525dcf5a3ccb9ce006d44a2567b1070b682d4d"
+    },
+    {
+      "bytes": 246,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-actual-web.log",
+      "sha256": "c635fd4598e25eaa807cd82802ecd258d300a774073ff49fec5b95a354a23b95"
+    },
+    {
+      "bytes": 1923,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-build-final.log",
+      "sha256": "9a53491eaeee4b924601a013719d8c345f77bc796fae6ccc00f71060461c5275"
+    },
+    {
+      "bytes": 1923,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-build.log",
+      "sha256": "78de2611f1f421f7e5d71706467ae0636f0c4456ace0e49ee3e0e8c2165ecacf"
+    },
+    {
+      "bytes": 504,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-cli-green.log",
+      "sha256": "e846720b794119fdf799c106ab14f0968be537df44c2aaa33697241774d3e616"
+    },
+    {
+      "bytes": 245,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-green-web.log",
+      "sha256": "6a6e66729ef3728f960669837ea382a7cecf87a4ce4cb02f3ccd3370f6a4b2b9"
+    },
+    {
+      "bytes": 245,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-pure-final.log",
+      "sha256": "a7cd7c8e14662506c1ce69387a293ed4e95be6a5ab6fd32c246d82c196940634"
+    },
+    {
+      "bytes": 3021,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/availability.log",
+      "sha256": "ecaf3ad118d8effdf08013da981cbc898c404729237da91745b9701a221f9638"
+    },
+    {
+      "bytes": 390,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/cli-baseline.log",
+      "sha256": "78fe3f7840efed04e5fc03426bc349d7a90ae69c14a9d79e761af828df4ec9ff"
+    },
+    {
+      "bytes": 1632,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/democratic-peace-availability.test.ts",
+      "sha256": "2a851997d3e5dfd141e8c2e49051d8fc4ad98769fe6b37df962373a4b3cc4b59"
+    },
+    {
+      "bytes": 7615,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/democratic-peace-engine.test.ts",
+      "sha256": "744ef571603815ff596e7a8c1073df8a5d7ffcccfb02031b55a7eaf7c5a0f3e4"
+    },
+    {
+      "bytes": 1813,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/democratic-peace-export.test.ts",
+      "sha256": "6ef86d6bc6c3abd1c50c749f7408791732fbb1d3bf5003590e50d4b8f886a72c"
+    },
+    {
+      "bytes": 2676,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/democratic-peace-host.test.ts",
+      "sha256": "02be2f15079a30039db50b88232067cc8c0a7578f0540eb8d2633f834f51297b"
+    },
+    {
+      "bytes": 4264,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/democratic-peace-inspection.test.ts",
+      "sha256": "57b8323a020403802956ca163ccab5d7a5a3d73c0a6077df8b99f740a5bb08ac"
+    },
+    {
+      "bytes": 1878,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/democratic-peace-presentation.test.ts",
+      "sha256": "a5ab36b1ac5561eaca3daaf196ecf7b8847f9689b6becbc8f4e550bba9b8cc03"
+    },
+    {
+      "bytes": 1937,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/democratic_peace.rs",
+      "sha256": "8b2b02bdca736a5f275f2ed6fd52ae4736a6b7b65af2f78b29eeecc1e26d0f52"
+    },
+    {
+      "bytes": 2317,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/democratic_peace_host.rs",
+      "sha256": "f7cfa4a085da74216f30c700f9f667babb12747b21d9bda5085af007067c295a"
+    },
+    {
+      "bytes": 2539,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/democratic_peace_host_sweep.rs",
+      "sha256": "402e063b7382f1e30be3cd3719dc3c413180893c847f9c5935cbb202d6cfea6d"
+    },
+    {
+      "bytes": 2600,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/export.log",
+      "sha256": "c254707aac9b1c514baaeb8d585f245194f698c1f0edfdb0407d2a2b67c88440"
+    },
+    {
+      "bytes": 2829,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/inspection.log",
+      "sha256": "609c26a05279ce5d1e4b417ccb559ca77ebee306669e63ddd2d22ab2ce541535"
+    },
+    {
+      "bytes": 1842,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/presentation.log",
+      "sha256": "076c78481c9b6ea7efb40a69b9a75255a5196744fda1a0216ce9c45fdec33f8b"
+    },
+    {
+      "bytes": 4988,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/wasm-browser-skipped.log",
+      "sha256": "ab830bc8c84b4508e27a047b7b9bdb84c67e3f6c93e9ed3b0693c72274cd87a0"
+    },
+    {
+      "bytes": 4055,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/wasm-integration.log",
+      "sha256": "14c36a350ea487b6af915c88c4f2a008759f7a3acebb9da9e083399db2b44a46"
+    },
+    {
+      "bytes": 4822,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-red/web.log",
+      "sha256": "05ef0dcd50123a148f56f1d67d3b99750b5cc592b79086eec63e0e34e8d5dbde"
+    },
+    {
+      "bytes": 343,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-release-cli.log",
+      "sha256": "1e7e61c4f4cdbf6a87b9b50e91c9f159caeeaab0a29bbbfcc3f3d75180ec452b"
+    },
+    {
+      "bytes": 343,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-release-final.log",
+      "sha256": "b92cd91c53b3d3b83c515330eb4cc620c8a295e7daa16e53ad8cd5a67c0ba059"
+    },
+    {
+      "bytes": 8870,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-report.md",
+      "sha256": "b9f3bfaa7bd9e0856847ad976b3b9489cceeab2783647da49dfc4277bdcabcdf"
+    },
+    {
+      "bytes": 668,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-sweep-green.log",
+      "sha256": "9f16f928b3611f793dbcab89aaa4242fc3bc7f4bdb7abd980e820474f1f11bd6"
+    },
+    {
+      "bytes": 50,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-typecheck-final.log",
+      "sha256": "d384a23e4913258ec22eba6c459f4d92d586d15d34468dd44713031b46833de1"
+    },
+    {
+      "bytes": 50,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-typecheck.log",
+      "sha256": "d384a23e4913258ec22eba6c459f4d92d586d15d34468dd44713031b46833de1"
+    },
+    {
+      "bytes": 983,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-vite.log",
+      "sha256": "850c2064453ac2b9d2e1e0c773a4af42ee28da4a21ec1cce43db18b6e943aa56"
+    },
+    {
+      "bytes": 2248,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-wasm-browser-final.log",
+      "sha256": "117e1362c339b9e37c991d83ae48df4c18fc34fae29d967be0a334600d672c4c"
+    },
+    {
+      "bytes": 6040,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-wasm-node-final.log",
+      "sha256": "70f67db07f25aa779457e93c53a681e207d14b019f20aa8fb22a49dcf2c7dcc0"
+    },
+    {
+      "bytes": 714,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-host-web-full-final.log",
+      "sha256": "4bb566940e32e6aa5a5960d2106c83ccee28e62a46e5402ec3756bd452cd6a1b"
+    },
+    {
+      "bytes": 970,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-native-alias-red.log",
+      "sha256": "d9b805d8f0abac9254f34fcaef666716efda27cf4b4d071588a24965f5ef0df8"
+    },
+    {
+      "bytes": 1405,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-native-context-green.log",
+      "sha256": "684870570bcdd9cea46551f436be5e3de1e0a9d00ce0661b6be87e7c077f637f"
+    },
+    {
+      "bytes": 1896,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-native-context-red.log",
+      "sha256": "61d78ad0217adda9b08a9aff1d01879cf6fcc457433f870f70a57e997130eb26"
+    },
+    {
+      "bytes": 134,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-native-discovery-red.log",
+      "sha256": "6332e8b64e9072d3c3f1215cbdafd75cc85a7b6ca05301a435a690a2545da9b5"
+    },
+    {
+      "bytes": 1328,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-native-final-tests.log",
+      "sha256": "8186906249248df7f134525e4d64155365d78c70684dcafaba851c316c9cee39"
+    },
+    {
+      "bytes": 1918,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-native-first-test.log",
+      "sha256": "de1f1c9cd889bbd558f285c04fbd3677755526fa17731c46f7cf604cd6581c74"
+    },
+    {
+      "bytes": 1065,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-native-release-build.log",
+      "sha256": "15c16ada000e679ba23ea8847875a198f45a359051f18d3d41064944c10e7e25"
+    },
+    {
+      "bytes": 579,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-registration-negative.log",
+      "sha256": "598718586aa5d4669ec8963773fa93fab72a2fff1ba885fe2cb9c8b046e6ef20"
+    },
+    {
+      "bytes": 117,
+      "path": "survey/out/democratic-peace-preparation/root-logs/democratic-peace-replay-tests.log",
+      "sha256": "b2e31722c588757cc7a0cfebce3973f93d7216f1f95764a322de4164669a5192"
+    },
+    {
+      "bytes": 532,
+      "path": "survey/out/democratic-peace-preparation/runtime-probe-summary.json",
+      "sha256": "c88f1452bb2f74eed249e89bcf7a5b1ab98dd7b27afdde6d07a0581cb2931aeb"
+    },
+    {
+      "bytes": 10344,
+      "path": "survey/out/democratic-peace-preparation/runtime-probes.json",
+      "sha256": "8cc11feb69650e73507d60d04fbbfdf1edce754a62f4b883dddd9988732dccbb"
+    },
+    {
+      "bytes": 4924,
+      "path": "survey/out/democratic-peace-preparation/runtime-probes.py",
+      "sha256": "d98c3925ae85eb8388e79b144e1000147194a9f2de082ad085e0172f93927a11"
+    },
+    {
+      "bytes": 346,
+      "path": "survey/out/democratic-peace-final-preparation-v3/build.command.json",
+      "sha256": "ae76343462500709d28eb6dc19d0da3e84102f7cf959a43d94fbd521606bbf35"
+    },
+    {
+      "bytes": 62,
+      "path": "survey/out/democratic-peace-final-preparation-v3/build.stderr.log",
+      "sha256": "222a02ed477d249a21359df8cae975864a62d848f4739cadc5b00b6190a963c6"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/build.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 403,
+      "path": "survey/out/democratic-peace-final-preparation-v3/cargo-configuration.json",
+      "sha256": "8484f59c66ac22d0c6620483ad8cfe86ec90cead4846db480923bf3c7eacd968"
+    },
+    {
+      "bytes": 233,
+      "path": "survey/out/democratic-peace-final-preparation-v3/cargo-version.command.json",
+      "sha256": "3f64e02d0c74643e77579d67a625a8ebc34603735e9675754dc17ebd383b5080"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/cargo-version.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36,
+      "path": "survey/out/democratic-peace-final-preparation-v3/cargo-version.stdout.log",
+      "sha256": "9950bbb2d5c3417b1a068f0e81f6d3cac991a363193bdf2a22d447f5acf8b503"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-final-preparation-v3/fixture-build-receipt.json",
+      "sha256": "568633a73d88b438d2f6dcd9f3d089f12f79bdc5107684c3e0b1919e2b90a935"
+    },
+    {
+      "bytes": 102191,
+      "path": "survey/out/democratic-peace-final-preparation-v3/fixture-manifest.json",
+      "sha256": "99874e7cdcb4e55e65f5a394c606e99d0854e043315accbaf93957c8a0fe895f"
+    },
+    {
+      "bytes": 224,
+      "path": "survey/out/democratic-peace-final-preparation-v3/fixture-receipt.json",
+      "sha256": "67f39361bbc4ffd177e4f9923ae5c268c13cc29bc352498e459523933436d4d0"
+    },
+    {
+      "bytes": 7148,
+      "path": "survey/out/democratic-peace-final-preparation-v3/fixture-resolved.json",
+      "sha256": "265da960f228dde9acf78ee2391409f52faf9cf1d72dfa8c6b5fa993bc6f7dcf"
+    },
+    {
+      "bytes": 1133,
+      "path": "survey/out/democratic-peace-final-preparation-v3/fixture-resume.command.json",
+      "sha256": "7c59ee720b36bf410474fdf94f5a1799bf785878170036c2d001c0807f2475d7"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/fixture-resume.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-final-preparation-v3/fixture-resume.stdout.log",
+      "sha256": "e945fc0c00fcf09165acda48d2727014ea39bd47f1cd5bf00a36ec88eabc5d1c"
+    },
+    {
+      "bytes": 1133,
+      "path": "survey/out/democratic-peace-final-preparation-v3/fixture-run.command.json",
+      "sha256": "a7868b0f74904e585f2b11fb1b654ed35b1036bf2f812ccfe44b3655ccc6d4cf"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/fixture-run.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-final-preparation-v3/fixture-run.stdout.log",
+      "sha256": "e945fc0c00fcf09165acda48d2727014ea39bd47f1cd5bf00a36ec88eabc5d1c"
+    },
+    {
+      "bytes": 27934,
+      "path": "survey/out/democratic-peace-final-preparation-v3/fixture-sessions.jsonl",
+      "sha256": "d3fa48c6712bfd83f11083ea5ac8dab38333dbea005cd42b6a79f30e87e2e9f4"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-final-preparation-v3/forged-lock-receipt.json",
+      "sha256": "7d9450fc30de177c71fd82fe58fe426b7460c5fc0ec333bbcf907f8ac0d22781"
+    },
+    {
+      "bytes": 57518,
+      "path": "survey/out/democratic-peace-final-preparation-v3/prebuild-inventory.json",
+      "sha256": "3388421b46da75b3b575adb91285c58280079cbd6b2ebc2477fa6b42566b0440"
+    },
+    {
+      "bytes": 12153,
+      "path": "survey/out/democratic-peace-final-preparation-v3/preparation-receipt.json",
+      "sha256": "5779ecded2204f7b73ad0607cfe812843baecb5ceefba0ba358f7e316e45485b"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-0-build-receipt.json",
+      "sha256": "21e0d3f7a363c1f743b2e86b4680ea4c75f02598cbbb92c67364241610cda693"
+    },
+    {
+      "bytes": 101296,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-0-manifest.json",
+      "sha256": "661db07decb2976edf1c6fb581217d90345c93e675690984e5a5db61e8634cd1"
+    },
+    {
+      "bytes": 2762,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-0-resolved.json",
+      "sha256": "f0de39fbfbdc30c2b099f810da7507cd60b5e4592022a6ec991770bfee922365"
+    },
+    {
+      "bytes": 4976,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-0-sessions.jsonl",
+      "sha256": "a7378a1ec173ace561ea559c82f1c28062205ec4746614a8f78efc3ccfa0baae"
+    },
+    {
+      "bytes": 1163,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-0.command.json",
+      "sha256": "a177ee61fea58757e29e51ccafadbc79ef3af1f2d68e822a80be943ed3ce2fb5"
+    },
+    {
+      "bytes": 777,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-0.stderr.log",
+      "sha256": "2edc1a1ed3f3ecd2dc863df1e119979dcaceb37a7a7a7979d1a24ecf915bd1d6"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-0.stdout.log",
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-1-build-receipt.json",
+      "sha256": "00ac5c83b3cfb2ac5b5ea821d27c66117c60170fb89fe2e09e834e207310dc3a"
+    },
+    {
+      "bytes": 101294,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-1-manifest.json",
+      "sha256": "a8d69fad36ff3d6a1ea41dff33bdc9e047788cc3fbe6a81cb7f84f1007b2c540"
+    },
+    {
+      "bytes": 2758,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-1-resolved.json",
+      "sha256": "67066c87ac399a998e868ef12466ce78184e28307113b3c045bf1e48ebd81f2d"
+    },
+    {
+      "bytes": 5057,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-1-sessions.jsonl",
+      "sha256": "c5726357fabddc77f026b5fc0c715c2ef73f7de90deacde3794fb5500d58ba28"
+    },
+    {
+      "bytes": 1163,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-1.command.json",
+      "sha256": "4c92482adb2c0f81366009372f49bfb0ba73973a27f01a8b8bfc3cb8b2397e94"
+    },
+    {
+      "bytes": 777,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-1.stderr.log",
+      "sha256": "8c8462f20262139c3a3a5b95ade8885a643149d06edd3b45fb7255b13420aacf"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-1.stdout.log",
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-2-build-receipt.json",
+      "sha256": "138af7b4a9fcfe0b96008ed8d033675854c59257a784c638d9b6bf237d77dbc4"
+    },
+    {
+      "bytes": 101295,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-2-manifest.json",
+      "sha256": "67565b3f6d87bbd48e676104d28cb1ac4cad08ec58a6b32aa408c28f87292e68"
+    },
+    {
+      "bytes": 2760,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-2-resolved.json",
+      "sha256": "5b95ba2d8a2ca355475deae11c14dd6071ec1846e003629c4d802500a7a9f7f7"
+    },
+    {
+      "bytes": 5058,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-2-sessions.jsonl",
+      "sha256": "9948f6fa002150ac48c6424f673067fe796fe258905a9d2be416492aa55355a8"
+    },
+    {
+      "bytes": 1163,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-2.command.json",
+      "sha256": "f506d18cd81960f8eea9acf75bd7ec9bbb4e2af104dda3d082c08df161f24a58"
+    },
+    {
+      "bytes": 777,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-2.stderr.log",
+      "sha256": "1601d68b0e842b9fa7f38f4213d866246f4463c5dfccfeff1f02afd09ebc8ecd"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-2.stdout.log",
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-3-build-receipt.json",
+      "sha256": "6bc5be054a2ce1da8a424a88d04ad92a7788a8c27dcb0a67f3b858b704b6d850"
+    },
+    {
+      "bytes": 101301,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-3-manifest.json",
+      "sha256": "32663e474949adad86e9f353821a660d034db71099655eed6ec1a691abe3efd1"
+    },
+    {
+      "bytes": 2758,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-3-resolved.json",
+      "sha256": "e4310db66e325391b0b42258c3f08056f664c729a787be2e75b4dfd063d0192b"
+    },
+    {
+      "bytes": 4977,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-3-sessions.jsonl",
+      "sha256": "c21ccc910a0b8752ba534b7c3c6ebe9b513976ae6527a98add2a51ad05b8ec5b"
+    },
+    {
+      "bytes": 1163,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-3.command.json",
+      "sha256": "9456ffe90a6db4451f49b5d8c6e235dba04499715bf8191e132a47791b9922f5"
+    },
+    {
+      "bytes": 777,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-3.stderr.log",
+      "sha256": "da83f80da604fb8aef4742416d28d9b77ea7367a1157a77f459279a9b0755eb3"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-3.stdout.log",
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-4-build-receipt.json",
+      "sha256": "220c6b424f85260ea27eeac8f6f19191b82c31f753f634ffaa970cc705575ff3"
+    },
+    {
+      "bytes": 101299,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-4-manifest.json",
+      "sha256": "864bab0f05ead0237af6a4afdae73902260f926f0380ec434d9bc647c7a5a8d2"
+    },
+    {
+      "bytes": 2754,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-4-resolved.json",
+      "sha256": "b25db92ade93c6db3a206e08d36454542404f84769183c2e614e314c2607da98"
+    },
+    {
+      "bytes": 4928,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-4-sessions.jsonl",
+      "sha256": "3bcfbcdee4f20b25d5f896810507ad8ab0232cc423b7f0bd544605bc45bbd67b"
+    },
+    {
+      "bytes": 1163,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-4.command.json",
+      "sha256": "84774c1a6b5e67b44ff80783bd540234efe047c3496e9bf644c273763aadf7d4"
+    },
+    {
+      "bytes": 777,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-4.stderr.log",
+      "sha256": "d3bb546647a464cca4013622d7025de68ca51e79e786208543a596199dea6ec9"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-4.stdout.log",
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "bytes": 1386,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-5-build-receipt.json",
+      "sha256": "13a1044249b729fb5537d10620f950985ae047065b3f8150267e272f1743d5f9"
+    },
+    {
+      "bytes": 101300,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-5-manifest.json",
+      "sha256": "69e1e697ffab70392347090118d56b9e5a3aaa83c18b8fa39b891c218c138ecb"
+    },
+    {
+      "bytes": 2756,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-5-resolved.json",
+      "sha256": "2c2c08da03fcb9d04f53ebedbabba8e32d6c23d5f0cb966b1ea3c885058d5e95"
+    },
+    {
+      "bytes": 4981,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-5-sessions.jsonl",
+      "sha256": "9eb0b42c16ec89397a39b2139b203ac62a85ab623bbd288fec074d05dfaf9212"
+    },
+    {
+      "bytes": 1162,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-5.command.json",
+      "sha256": "bfee4afdad449d87cb0eff78ace98e3a4479dc5ba304c1d9a53733c8e8f740b4"
+    },
+    {
+      "bytes": 777,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-5.stderr.log",
+      "sha256": "db0ef804e390ce9239b12590aef5b1932520b8fee5dc810ce4dcbab3e47a9a81"
+    },
+    {
+      "bytes": 31,
+      "path": "survey/out/democratic-peace-final-preparation-v3/probe-5.stdout.log",
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "bytes": 145368,
+      "path": "survey/out/democratic-peace-final-preparation-v3/provisional-full-manifest.json",
+      "sha256": "c46780c5e6523e72f4e655826cd090acdbbb83f46f7c58aa5c6fa9d788dec43c"
+    },
+    {
+      "bytes": 489572,
+      "path": "survey/out/democratic-peace-final-preparation-v3/provisional-full-resolved.json",
+      "sha256": "9244df36781d5be4034d46587dbef62652cb98e053945b782eff0f78941ef278"
+    },
+    {
+      "bytes": 823,
+      "path": "survey/out/democratic-peace-final-preparation-v3/provisional-full-validate.command.json",
+      "sha256": "24db08186914b2b86ec742386b34b4825a99ed05e2b8889b5ad52d7ae267f97d"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/provisional-full-validate.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 90,
+      "path": "survey/out/democratic-peace-final-preparation-v3/provisional-full-validate.stdout.log",
+      "sha256": "f0dc79c7a22f4be044a452c70df7272b7eb86c9faa7fd6866d202d07dced02d1"
+    },
+    {
+      "bytes": 1132,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-alias-out-resolved.command.json",
+      "sha256": "d078a30ee43a1528b6d5af4c3ab7a05ba93d01438d3d0e55699f8c2b738422fd"
+    },
+    {
+      "bytes": 66,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-alias-out-resolved.stderr.log",
+      "sha256": "411f01c3fd34279a8fdeda52821a7c5c617786a9ff04001e9db527ba073be980"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-alias-out-resolved.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1135,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-alias-resolved-manifest.command.json",
+      "sha256": "073d64e8f912aa75778f5261bc45e284cf2b9e18889963b02d7843d7f8eef3d4"
+    },
+    {
+      "bytes": 66,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-alias-resolved-manifest.stderr.log",
+      "sha256": "411f01c3fd34279a8fdeda52821a7c5c617786a9ff04001e9db527ba073be980"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-alias-resolved-manifest.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1139,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-alias-resolved-receipt.command.json",
+      "sha256": "3e4c9f75607199ea32d83cf1ed60fe5d6f590f6164d937078f922bdd93e69360"
+    },
+    {
+      "bytes": 66,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-alias-resolved-receipt.stderr.log",
+      "sha256": "411f01c3fd34279a8fdeda52821a7c5c617786a9ff04001e9db527ba073be980"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-alias-resolved-receipt.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1130,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-alias-resolved-source-table.command.json",
+      "sha256": "1f528169c6bd8e6a7e0d6dca6b44f736a6b33a328e8f7bee9ba312877d28a5b9"
+    },
+    {
+      "bytes": 66,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-alias-resolved-source-table.stderr.log",
+      "sha256": "411f01c3fd34279a8fdeda52821a7c5c617786a9ff04001e9db527ba073be980"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-alias-resolved-source-table.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 7148,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-clock-resolved.json",
+      "sha256": "265da960f228dde9acf78ee2391409f52faf9cf1d72dfa8c6b5fa993bc6f7dcf"
+    },
+    {
+      "bytes": 1133,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-clock.command.json",
+      "sha256": "87957bd1fa2140c219632e8c3cf9bbee638b338312cbe30549df7cab5d7ba555"
+    },
+    {
+      "bytes": 29918,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-clock.jsonl",
+      "sha256": "46a8aa74ddeb7777347548ef01074f85520c43eb592bc1b09d6d8d5ae9e710ef"
+    },
+    {
+      "bytes": 56,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-clock.stderr.log",
+      "sha256": "67e3c9654bc7f4546e229d6ea2f8556eedb374fa6ec5a396d0997263f2287531"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-clock.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 7148,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-config-resolved.json",
+      "sha256": "265da960f228dde9acf78ee2391409f52faf9cf1d72dfa8c6b5fa993bc6f7dcf"
+    },
+    {
+      "bytes": 1136,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-config.command.json",
+      "sha256": "00ed94efff0bc9d01814c5502689368606ad7ae78fc3a0b03ca30edd417c6958"
+    },
+    {
+      "bytes": 29918,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-config.jsonl",
+      "sha256": "569051300e85b043400a56c6f72a73fd324273bea290a866d2909886aad566b1"
+    },
+    {
+      "bytes": 57,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-config.stderr.log",
+      "sha256": "e402b82963f5a33b9dd40efc98bbca5102bb5a8cab8180c9213756597e4debfd"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-config.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 7148,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-duplicate-resolved.json",
+      "sha256": "265da960f228dde9acf78ee2391409f52faf9cf1d72dfa8c6b5fa993bc6f7dcf"
+    },
+    {
+      "bytes": 1142,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-duplicate.command.json",
+      "sha256": "f1611a0db3f51a357f9a45aef8a9676c0b421e8cf416fe6ef153ff038c4ab470"
+    },
+    {
+      "bytes": 32793,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-duplicate.jsonl",
+      "sha256": "77c6bc811fac8cabdee361345fb2547810389d7d9b39e924ccaee463e5ea41d9"
+    },
+    {
+      "bytes": 61,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-duplicate.stderr.log",
+      "sha256": "336a7a07d86acedab29013442d502bc3a0d179340b5bedc965493c961a12e80c"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-duplicate.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1137,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-forged-lock.command.json",
+      "sha256": "a10af1edba67b083957c27395b1d389da4a08194852e6d611de0a4308a128c37"
+    },
+    {
+      "bytes": 27934,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-forged-lock.jsonl",
+      "sha256": "d3fa48c6712bfd83f11083ea5ac8dab38333dbea005cd42b6a79f30e87e2e9f4"
+    },
+    {
+      "bytes": 60,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-forged-lock.stderr.log",
+      "sha256": "aa62f47cb382904dbac871a94d4136b7ce5a62e0ff21eff1ac462b823d543d10"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-forged-lock.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 7148,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-panic-context-resolved.json",
+      "sha256": "265da960f228dde9acf78ee2391409f52faf9cf1d72dfa8c6b5fa993bc6f7dcf"
+    },
+    {
+      "bytes": 1150,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-panic-context.command.json",
+      "sha256": "21aa49b5e9cacb548507a4035344b0070fce73b7522c9bf717a6071c8081d0ac"
+    },
+    {
+      "bytes": 29929,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-panic-context.jsonl",
+      "sha256": "5af64e908a29f0868392a1b2804ab98ccd5bdf4b26fac91585d200d06ed93a6d"
+    },
+    {
+      "bytes": 47,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-panic-context.stderr.log",
+      "sha256": "a9c9c74f8c8f6560fb05fac5e41ebfce333e22c513ce60b7c7b8f72965fce300"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-panic-context.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 7148,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-provenance-resolved.json",
+      "sha256": "265da960f228dde9acf78ee2391409f52faf9cf1d72dfa8c6b5fa993bc6f7dcf"
+    },
+    {
+      "bytes": 1144,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-provenance.command.json",
+      "sha256": "fbafb0f48cb069fbe175a772a52470e98853786668b2790b749a53f70359b137"
+    },
+    {
+      "bytes": 29918,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-provenance.jsonl",
+      "sha256": "e7ae98f41332c72f7ac879a100b07d79e62efca7b1be5cedc559168644119ef3"
+    },
+    {
+      "bytes": 61,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-provenance.stderr.log",
+      "sha256": "cd9ee10d0b79fd48e292b64d3b0338abb621ebd1087be1e4164a8ea4c0e1cb30"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-provenance.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 7148,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-truncated-resolved.json",
+      "sha256": "265da960f228dde9acf78ee2391409f52faf9cf1d72dfa8c6b5fa993bc6f7dcf"
+    },
+    {
+      "bytes": 1142,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-truncated.command.json",
+      "sha256": "9ef25fa60ee3d4c0d1b676d53ee94d7943ab62b28fd20d4239acc0edc9351bde"
+    },
+    {
+      "bytes": 27933,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-truncated.jsonl",
+      "sha256": "7c6fe868d419b696d9380f174476fe7f71f2258d64d21ddc1bc2e457dac16041"
+    },
+    {
+      "bytes": 56,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-truncated.stderr.log",
+      "sha256": "af4e54a533eb04436dfc9639fea8d45728aca8c1cb88c70594c8fbdc88e6ff99"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/reject-truncated.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 14879,
+      "path": "survey/out/democratic-peace-final-preparation-v3/rejections.json",
+      "sha256": "c58fafbcea0a645ac150d75a3df571897fffd59fe8efc339280c5abe9070aac1"
+    },
+    {
+      "bytes": 10746,
+      "path": "survey/out/democratic-peace-final-preparation-v3/runtime-probes.json",
+      "sha256": "30ad4b042cad7a4a36a29be1baf65f64b4c3081e6af96efcc791d31f50be46b9"
+    },
+    {
+      "bytes": 11214,
+      "path": "survey/out/democratic-peace-final-preparation-v3/runtime-receipt.json",
+      "sha256": "95a6db1a808bea4f64d8f9bad9813832e83c1f8fc0d39b92859a0ece6555ce49"
+    },
+    {
+      "bytes": 227,
+      "path": "survey/out/democratic-peace-final-preparation-v3/rustc.command.json",
+      "sha256": "01d9def89272aebbe7e7b0043ab5856e427dc3f9f21d5023b28b820a564fa88d"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-final-preparation-v3/rustc.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 192,
+      "path": "survey/out/democratic-peace-final-preparation-v3/rustc.stdout.log",
+      "sha256": "e2211d4c0760a2a3b03eab88e42f8848952b7aa2ed649277a8fdbf3ce1838fd4"
+    },
+    {
+      "bytes": 235,
+      "path": "survey/out/democratic-peace-final-preparation-v3/source-audit.json",
+      "sha256": "83c24ed6fdf6ee508837e3a982670fe5fea5a646bb7688d771c58231e79fc4f0"
+    },
+    {
+      "bytes": 291,
+      "path": "survey/out/democratic-peace-host/artifact-sha256.txt",
+      "sha256": "cff9f562fdcccf3582e944d33ca6902ae8bcb75e98b8704704ba80361ffe2412"
+    },
+    {
+      "bytes": 71073,
+      "path": "survey/out/democratic-peace-host/browser-receipt-final.txt",
+      "sha256": "4927146c561ac4cea28ab9991e920de2fd24b034cdfe5bc646755ce35852d01e"
+    },
+    {
+      "bytes": 26190,
+      "path": "survey/out/democratic-peace-host/browser-receipt-mechanical-refresh.txt",
+      "sha256": "08db2a4d72a6907d0d1159070c3f73c20fdf70f1f2ee927949dbf46ce688c797"
+    },
+    {
+      "bytes": 38347,
+      "path": "survey/out/democratic-peace-host/browser-receipt.txt",
+      "sha256": "1b2a24ec07edd80ce7c200b6cdf1c3f1faf53570730d76cc2c07054b57387fd8"
+    },
+    {
+      "bytes": 243,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-actual-final.log",
+      "sha256": "6ddb93bbb443c6b74c7bad5c65525dcf5a3ccb9ce006d44a2567b1070b682d4d"
+    },
+    {
+      "bytes": 246,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-actual-web.log",
+      "sha256": "c635fd4598e25eaa807cd82802ecd258d300a774073ff49fec5b95a354a23b95"
+    },
+    {
+      "bytes": 1923,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-build-final.log",
+      "sha256": "9a53491eaeee4b924601a013719d8c345f77bc796fae6ccc00f71060461c5275"
+    },
+    {
+      "bytes": 1923,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-build.log",
+      "sha256": "78de2611f1f421f7e5d71706467ae0636f0c4456ace0e49ee3e0e8c2165ecacf"
+    },
+    {
+      "bytes": 504,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-cli-green.log",
+      "sha256": "e846720b794119fdf799c106ab14f0968be537df44c2aaa33697241774d3e616"
+    },
+    {
+      "bytes": 245,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-green-web.log",
+      "sha256": "6a6e66729ef3728f960669837ea382a7cecf87a4ce4cb02f3ccd3370f6a4b2b9"
+    },
+    {
+      "bytes": 245,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-pure-final.log",
+      "sha256": "a7cd7c8e14662506c1ce69387a293ed4e95be6a5ab6fd32c246d82c196940634"
+    },
+    {
+      "bytes": 343,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-release-cli.log",
+      "sha256": "1e7e61c4f4cdbf6a87b9b50e91c9f159caeeaab0a29bbbfcc3f3d75180ec452b"
+    },
+    {
+      "bytes": 343,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-release-final.log",
+      "sha256": "b92cd91c53b3d3b83c515330eb4cc620c8a295e7daa16e53ad8cd5a67c0ba059"
+    },
+    {
+      "bytes": 668,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-sweep-green.log",
+      "sha256": "9f16f928b3611f793dbcab89aaa4242fc3bc7f4bdb7abd980e820474f1f11bd6"
+    },
+    {
+      "bytes": 50,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-typecheck-final.log",
+      "sha256": "d384a23e4913258ec22eba6c459f4d92d586d15d34468dd44713031b46833de1"
+    },
+    {
+      "bytes": 50,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-typecheck.log",
+      "sha256": "d384a23e4913258ec22eba6c459f4d92d586d15d34468dd44713031b46833de1"
+    },
+    {
+      "bytes": 983,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-vite.log",
+      "sha256": "850c2064453ac2b9d2e1e0c773a4af42ee28da4a21ec1cce43db18b6e943aa56"
+    },
+    {
+      "bytes": 2248,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-wasm-browser-final.log",
+      "sha256": "117e1362c339b9e37c991d83ae48df4c18fc34fae29d967be0a334600d672c4c"
+    },
+    {
+      "bytes": 6040,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-wasm-node-final.log",
+      "sha256": "70f67db07f25aa779457e93c53a681e207d14b019f20aa8fb22a49dcf2c7dcc0"
+    },
+    {
+      "bytes": 714,
+      "path": "survey/out/democratic-peace-host/democratic-peace-host-web-full-final.log",
+      "sha256": "4bb566940e32e6aa5a5960d2106c83ccee28e62a46e5402ec3756bd452cd6a1b"
+    },
+    {
+      "bytes": 64104,
+      "path": "survey/out/democratic-peace-host/experiments-final.png",
+      "sha256": "089231c1961bad0991d62c576a7f431e23e920412ba4ba759ef3600e5008d18a"
+    },
+    {
+      "bytes": 70129,
+      "path": "survey/out/democratic-peace-host/experiments-invalid-final.png",
+      "sha256": "ac529f9713860f3646b3afccab70eedcf115a782e700121edf9b00c570edc310"
+    },
+    {
+      "bytes": 64104,
+      "path": "survey/out/democratic-peace-host/experiments-pre-refresh.png",
+      "sha256": "089231c1961bad0991d62c576a7f431e23e920412ba4ba759ef3600e5008d18a"
+    },
+    {
+      "bytes": 8870,
+      "path": "survey/out/democratic-peace-host/host-report.md",
+      "sha256": "b9f3bfaa7bd9e0856847ad976b3b9489cceeab2783647da49dfc4277bdcabcdf"
+    },
+    {
+      "bytes": 87289,
+      "path": "survey/out/democratic-peace-host/mechanical-refresh-inspect.png",
+      "sha256": "3306265587844873c865f8266ca64bef4cacb4525573d6cd720b558ef141c358"
+    },
+    {
+      "bytes": 3021,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/availability.log",
+      "sha256": "ecaf3ad118d8effdf08013da981cbc898c404729237da91745b9701a221f9638"
+    },
+    {
+      "bytes": 390,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/cli-baseline.log",
+      "sha256": "78fe3f7840efed04e5fc03426bc349d7a90ae69c14a9d79e761af828df4ec9ff"
+    },
+    {
+      "bytes": 1632,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/democratic-peace-availability.test.ts",
+      "sha256": "2a851997d3e5dfd141e8c2e49051d8fc4ad98769fe6b37df962373a4b3cc4b59"
+    },
+    {
+      "bytes": 7615,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/democratic-peace-engine.test.ts",
+      "sha256": "744ef571603815ff596e7a8c1073df8a5d7ffcccfb02031b55a7eaf7c5a0f3e4"
+    },
+    {
+      "bytes": 1813,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/democratic-peace-export.test.ts",
+      "sha256": "6ef86d6bc6c3abd1c50c749f7408791732fbb1d3bf5003590e50d4b8f886a72c"
+    },
+    {
+      "bytes": 2676,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/democratic-peace-host.test.ts",
+      "sha256": "02be2f15079a30039db50b88232067cc8c0a7578f0540eb8d2633f834f51297b"
+    },
+    {
+      "bytes": 4264,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/democratic-peace-inspection.test.ts",
+      "sha256": "57b8323a020403802956ca163ccab5d7a5a3d73c0a6077df8b99f740a5bb08ac"
+    },
+    {
+      "bytes": 1878,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/democratic-peace-presentation.test.ts",
+      "sha256": "a5ab36b1ac5561eaca3daaf196ecf7b8847f9689b6becbc8f4e550bba9b8cc03"
+    },
+    {
+      "bytes": 1937,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/democratic_peace.rs",
+      "sha256": "8b2b02bdca736a5f275f2ed6fd52ae4736a6b7b65af2f78b29eeecc1e26d0f52"
+    },
+    {
+      "bytes": 2317,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/democratic_peace_host.rs",
+      "sha256": "f7cfa4a085da74216f30c700f9f667babb12747b21d9bda5085af007067c295a"
+    },
+    {
+      "bytes": 2539,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/democratic_peace_host_sweep.rs",
+      "sha256": "402e063b7382f1e30be3cd3719dc3c413180893c847f9c5935cbb202d6cfea6d"
+    },
+    {
+      "bytes": 2600,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/export.log",
+      "sha256": "c254707aac9b1c514baaeb8d585f245194f698c1f0edfdb0407d2a2b67c88440"
+    },
+    {
+      "bytes": 2829,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/inspection.log",
+      "sha256": "609c26a05279ce5d1e4b417ccb559ca77ebee306669e63ddd2d22ab2ce541535"
+    },
+    {
+      "bytes": 1842,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/presentation.log",
+      "sha256": "076c78481c9b6ea7efb40a69b9a75255a5196744fda1a0216ce9c45fdec33f8b"
+    },
+    {
+      "bytes": 4988,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/wasm-browser-skipped.log",
+      "sha256": "ab830bc8c84b4508e27a047b7b9bdb84c67e3f6c93e9ed3b0693c72274cd87a0"
+    },
+    {
+      "bytes": 4055,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/wasm-integration.log",
+      "sha256": "14c36a350ea487b6af915c88c4f2a008759f7a3acebb9da9e083399db2b44a46"
+    },
+    {
+      "bytes": 4822,
+      "path": "survey/out/democratic-peace-host/red-checkpoint/web.log",
+      "sha256": "05ef0dcd50123a148f56f1d67d3b99750b5cc592b79086eec63e0e34e8d5dbde"
+    },
+    {
+      "bytes": 211,
+      "path": "survey/out/democratic-peace-host/vite-stopped.txt",
+      "sha256": "25913d6f5923e9dc162b73cfbe827421b6d054c3112ccd60688cd93fe7303fcf"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/apply-1.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 89,
+      "path": "survey/out/democratic-peace-replay/apply-1.stdout.log",
+      "sha256": "dc57222b5ab8470dba5aa4542ea99c1f7ac7a6ce34fec780ed4187b8c4ccc6d3"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/apply-2.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 89,
+      "path": "survey/out/democratic-peace-replay/apply-2.stdout.log",
+      "sha256": "6f214e478e618b631e14c67af7616d55f5a97f86f401bf2ab42294fca54da179"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/apply-3.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 89,
+      "path": "survey/out/democratic-peace-replay/apply-3.stdout.log",
+      "sha256": "dd787b35e5727c2cb7f747beb901e666683d17569e4c6412e796703ae68fb470"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/apply-4.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 89,
+      "path": "survey/out/democratic-peace-replay/apply-4.stdout.log",
+      "sha256": "65ced019d7756df9f6cb0de312839448811948d71c8408fa1be975b3273b4800"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/apply-5.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 89,
+      "path": "survey/out/democratic-peace-replay/apply-5.stdout.log",
+      "sha256": "799df7077c83c54fdc82a8dc656e440e71dd7c393062cb9d5d8a874adc001e08"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/apply-6.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 89,
+      "path": "survey/out/democratic-peace-replay/apply-6.stdout.log",
+      "sha256": "d769d6b9099819aa5ef3596d0bbf07df74b2d04764a742f87d78be5ba8307091"
+    },
+    {
+      "bytes": 494,
+      "path": "survey/out/democratic-peace-replay/core-discovery-red.stderr.log",
+      "sha256": "1b4baf54456a0841ca6e0c04b9fa51c3c4d095b8d632a0f80c8d5fd1777e7176"
+    },
+    {
+      "bytes": 2499,
+      "path": "survey/out/democratic-peace-replay/core-discovery-red.stdout.log",
+      "sha256": "d6d8cf738d18cd6e4a56b994b0ce4ee16d9f607e9a826f6dd964b72a55538d5f"
+    },
+    {
+      "bytes": 4070,
+      "path": "survey/out/democratic-peace-replay/core-green.stderr.log",
+      "sha256": "87da92bd7ca33c88be8a5bb690e0e14777c59b950a2672f14b08f2f058f1e9ea"
+    },
+    {
+      "bytes": 7090,
+      "path": "survey/out/democratic-peace-replay/core-green.stdout.log",
+      "sha256": "1e153e7c4195fe448219a0e623d5afef7d4620d3501baa589690de5423f48951"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/final-replay-verify.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 89,
+      "path": "survey/out/democratic-peace-replay/final-replay-verify.stdout.log",
+      "sha256": "d769d6b9099819aa5ef3596d0bbf07df74b2d04764a742f87d78be5ba8307091"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/fmt-green.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/fmt-green.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 224,
+      "path": "survey/out/democratic-peace-replay/golden-green.stderr.log",
+      "sha256": "3b78e71d1c858f96a73b464d7e5097499e380af8486eeb84ea3d4d9c48a08678"
+    },
+    {
+      "bytes": 579,
+      "path": "survey/out/democratic-peace-replay/golden-green.stdout.log",
+      "sha256": "6562b0e8cc6bbc3645d0a162ed1bee7aa1348575d970b9ac286d9db3ae7e856f"
+    },
+    {
+      "bytes": 533,
+      "path": "survey/out/democratic-peace-replay/host-cli-green.stderr.log",
+      "sha256": "1ed0c02946e0e0513f8602dadba6345036dfa0477296cf449af2a68ddee6a869"
+    },
+    {
+      "bytes": 191,
+      "path": "survey/out/democratic-peace-replay/host-cli-green.stdout.log",
+      "sha256": "d228029a9f1caf497c8b52ed4d45de106975fad05ff16e0d55becb0c903f020d"
+    },
+    {
+      "bytes": 616,
+      "path": "survey/out/democratic-peace-replay/host-cli-red.stderr.log",
+      "sha256": "b1fe29773d3a86ab6f7e7e1360a53ab50aa785e2dc625b7bc97fa0c3d5575f1b"
+    },
+    {
+      "bytes": 788,
+      "path": "survey/out/democratic-peace-replay/host-cli-red.stdout.log",
+      "sha256": "97c6fe6700841ffadd289effefecbcbd84f5f7a48d60c5ead2045ce1777cdc42"
+    },
+    {
+      "bytes": 407,
+      "path": "survey/out/democratic-peace-replay/host-sweep-green.stderr.log",
+      "sha256": "19fe2e5163c6f36dc535d8d2c207bdc21ddd34dca834c58c04b0e88f11c67b19"
+    },
+    {
+      "bytes": 341,
+      "path": "survey/out/democratic-peace-replay/host-sweep-green.stdout.log",
+      "sha256": "759f1e7b78202622e25a4c6473609d2330347e749c755063a984b9bccbc795bb"
+    },
+    {
+      "bytes": 496,
+      "path": "survey/out/democratic-peace-replay/host-sweep-red.stderr.log",
+      "sha256": "52ee3f727e1626288574ed8126b486f0a234a88c430dbfff9b008c683a32bd51"
+    },
+    {
+      "bytes": 1214,
+      "path": "survey/out/democratic-peace-replay/host-sweep-red.stdout.log",
+      "sha256": "f5c0cc860e38f4d4578070f0a921cd7b569759f2c01fe87975bff8a98ea84f16"
+    },
+    {
+      "bytes": 134,
+      "path": "survey/out/democratic-peace-replay/native-discovery-red.stderr.log",
+      "sha256": "6332e8b64e9072d3c3f1215cbdafd75cc85a7b6ca05301a435a690a2545da9b5"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/native-discovery-red.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1291,
+      "path": "survey/out/democratic-peace-replay/native-green.stderr.log",
+      "sha256": "21373b08d9e85152af91acc43df0da98ef73a29ebe10211c8e75f3e61c40e880"
+    },
+    {
+      "bytes": 913,
+      "path": "survey/out/democratic-peace-replay/native-green.stdout.log",
+      "sha256": "aa22d9fe7c6f8ca90f68a75553b3e2cfc3fbe82c689dee25e50dbbdf941d4d57"
+    },
+    {
+      "bytes": 7146,
+      "path": "survey/out/democratic-peace-replay/python-discovery-red.stderr.log",
+      "sha256": "82eda71ed5b4fa65ee8ffd10a07bd3e3978981acc581ec22809d0a820797318b"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/python-discovery-red.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 135,
+      "path": "survey/out/democratic-peace-replay/python-green.stderr.log",
+      "sha256": "5eb28c38d961685fa289af493b206faf29a128ee9ce818580843d54accc7e401"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/python-green.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/scratch-final-verify.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 89,
+      "path": "survey/out/democratic-peace-replay/scratch-final-verify.stdout.log",
+      "sha256": "d769d6b9099819aa5ef3596d0bbf07df74b2d04764a742f87d78be5ba8307091"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/survey-fmt-green.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "survey/out/democratic-peace-replay/survey-fmt-green.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "frozen_registered_manifest": false,
+  "limits": [
+    "unregistered_runtime_forecast_excludes_analysis_and_is_not_a_population_guarantee",
+    "original2001_executable_rng_statistic_identity_unresolved",
+    "all_readable_source_values_inferred_from_curves_not_original_history_data",
+    "no_measured_scientific_findings_yet",
+    "register_and_publish_metadata_cli_parse_and_negative_gate_verified_without_registered_activation"
+  ],
+  "proposed_registration": "original_only",
+  "provisional_full_validation": {
+    "arm_count": 216,
+    "key_count": 14040,
+    "stdout": "validated 216 arms/14040 keys without world construction; provenance=provisional_unfrozen\n",
+    "worlds_constructed": false
+  },
+  "recorder_rejection_cases": [
+    {
+      "case": "duplicate",
+      "command": [
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+        "--manifest",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-manifest.json",
+        "--resolved",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-duplicate-resolved.json",
+        "--repo",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "--out",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-duplicate.jsonl",
+        "--receipt",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-build-receipt.json"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+      "elapsed_wall_seconds": 0.04800162464380264,
+      "native_error": "democratic-peace recorder: duplicate attempted key in resume",
+      "python_error": "raw line 7: duplicate registered key",
+      "returncode": 1,
+      "timed_out": false,
+      "unchanged": true
+    },
+    {
+      "case": "truncated",
+      "command": [
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+        "--manifest",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-manifest.json",
+        "--resolved",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-truncated-resolved.json",
+        "--repo",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "--out",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-truncated.jsonl",
+        "--receipt",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-build-receipt.json"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+      "elapsed_wall_seconds": 0.05211045779287815,
+      "native_error": "democratic-peace recorder: truncated final JSONL record",
+      "python_error": "raw line 6: interrupted append: missing final newline",
+      "returncode": 1,
+      "timed_out": false,
+      "unchanged": true
+    },
+    {
+      "case": "provenance",
+      "command": [
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+        "--manifest",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-manifest.json",
+        "--resolved",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-provenance-resolved.json",
+        "--repo",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "--out",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-provenance.jsonl",
+        "--receipt",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-build-receipt.json"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+      "elapsed_wall_seconds": 0.05147887486964464,
+      "native_error": "democratic-peace recorder: resume evidence identity mismatch",
+      "python_error": "raw line 1: record provenance mismatch",
+      "returncode": 1,
+      "timed_out": false,
+      "unchanged": true
+    },
+    {
+      "case": "config",
+      "command": [
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+        "--manifest",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-manifest.json",
+        "--resolved",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-config-resolved.json",
+        "--repo",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "--out",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-config.jsonl",
+        "--receipt",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-build-receipt.json"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+      "elapsed_wall_seconds": 0.05106374993920326,
+      "native_error": "democratic-peace recorder: resume config/family mismatch",
+      "python_error": "raw line 1: record config differs from authoritative native config",
+      "returncode": 1,
+      "timed_out": false,
+      "unchanged": true
+    },
+    {
+      "case": "clock",
+      "command": [
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+        "--manifest",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-manifest.json",
+        "--resolved",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-clock-resolved.json",
+        "--repo",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "--out",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-clock.jsonl",
+        "--receipt",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-build-receipt.json"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+      "elapsed_wall_seconds": 0.0483839176595211,
+      "native_error": "democratic-peace recorder: resume source clock mismatch",
+      "python_error": "raw line 1: atomic attempted/completed clocks disagree",
+      "returncode": 1,
+      "timed_out": false,
+      "unchanged": true
+    },
+    {
+      "case": "panic-context",
+      "command": [
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+        "--manifest",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-manifest.json",
+        "--resolved",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-panic-context-resolved.json",
+        "--repo",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "--out",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-panic-context.jsonl",
+        "--receipt",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-build-receipt.json"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+      "elapsed_wall_seconds": 0.06689533405005932,
+      "native_error": "democratic-peace recorder: panic lacks context",
+      "python_error": "raw line 1: panic lacks context",
+      "returncode": 1,
+      "timed_out": false,
+      "unchanged": true
+    },
+    {
+      "case": "forged-lock-receipt",
+      "command": [
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+        "--manifest",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-manifest.json",
+        "--resolved",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/forged-lock-resolved.json",
+        "--repo",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "--out",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-forged-lock.jsonl",
+        "--receipt",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/forged-lock-receipt.json"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+      "elapsed_wall_seconds": 0.03339079115539789,
+      "native_error": "democratic-peace recorder: receipt lockfile SHA256 mismatch",
+      "returncode": 1,
+      "timed_out": false,
+      "unchanged": true
+    },
+    {
+      "case": "alias-resolved-manifest",
+      "command": [
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+        "--manifest",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-manifest.json",
+        "--resolved",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-manifest.json",
+        "--repo",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "--out",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/alias-manifest-raw.jsonl",
+        "--receipt",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-build-receipt.json"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+      "elapsed_wall_seconds": 0.03971291519701481,
+      "native_error": "democratic-peace recorder: output aliases input or another output",
+      "returncode": 1,
+      "timed_out": false,
+      "unchanged": true
+    },
+    {
+      "case": "alias-resolved-source-table",
+      "command": [
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+        "--manifest",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-manifest.json",
+        "--resolved",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/docs/superpowers/specs/2026-10-03-democratic-peace-source-table.json",
+        "--repo",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "--out",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/alias-table-raw.jsonl",
+        "--receipt",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-build-receipt.json"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+      "elapsed_wall_seconds": 0.04288274981081486,
+      "native_error": "democratic-peace recorder: output aliases input or another output",
+      "returncode": 1,
+      "timed_out": false,
+      "unchanged": true
+    },
+    {
+      "case": "alias-out-resolved",
+      "command": [
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+        "--manifest",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-manifest.json",
+        "--resolved",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-resolved.json",
+        "--repo",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "--out",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-resolved.json",
+        "--receipt",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-build-receipt.json"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+      "elapsed_wall_seconds": 0.04282329045236111,
+      "native_error": "democratic-peace recorder: output aliases input or another output",
+      "returncode": 1,
+      "timed_out": false,
+      "unchanged": true
+    },
+    {
+      "case": "alias-resolved-receipt",
+      "command": [
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+        "--manifest",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-manifest.json",
+        "--resolved",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-build-receipt.json",
+        "--repo",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "--out",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/alias-receipt-raw.jsonl",
+        "--receipt",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-build-receipt.json"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+      "elapsed_wall_seconds": 0.04210925009101629,
+      "native_error": "democratic-peace recorder: output aliases input or another output",
+      "returncode": 1,
+      "timed_out": false,
+      "unchanged": true
+    }
+  ],
+  "red_evidence": {
+    "behavioral": "resource6, engine10 constructor-stub failures, finite probability/threat overflow, escaping candidate panic, double-counted front initiation, native failure contexts/locks/alias gaps and predictive undefined-mass gate",
+    "characterization": "additional named-choice fixtures and new golden hashes were not all independently observed RED",
+    "discovery": "core3 unknown-model failures; native absent-bin and Python missing-import failures",
+    "numerical_tolerance": "allocation example tolerance1e-12 independently chosen, no favorable fitting"
+  },
+  "registered_history_rows": 0,
+  "registered_resampling_jobs": 0,
+  "runtime_only": {
+    "all_six_completed": true,
+    "classification": "unregistered_runtime_probe",
+    "full_14040_cpu_hours": 9.437999999999999,
+    "full_scheduling_gate_passed": false,
+    "limitation": "Six collective-security cases; not a runtime guarantee. Forecast excludes unbenchmarked fixed-100000-draw analysis. Gate does not authorize registered execution.",
+    "maximum_rss_bytes": 18530304,
+    "original_3240_cpu_hours": 2.178,
+    "probes": [
+      {
+        "attempted_period": 1000,
+        "case": 0,
+        "command": [
+          "/usr/bin/time",
+          "-l",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+          "--manifest",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-0-manifest.json",
+          "--resolved",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-0-resolved.json",
+          "--repo",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+          "--out",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-0-sessions.jsonl",
+          "--receipt",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-0-build-receipt.json"
+        ],
+        "completed_periods": 1000,
+        "config": {
+          "height": 15,
+          "horizon_periods": 1000,
+          "initial_democratic_share": 0.05,
+          "mechanism": "collective_security",
+          "mobile_share": 0.15,
+          "periods_per_tick": 100,
+          "width": 15
+        },
+        "cpu_seconds": 0.97,
+        "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "elapsed_wall_seconds": 1.0092820832505822,
+        "invalid_reason": null,
+        "maximum_rss_bytes": 17825792,
+        "preset": "printed_2001",
+        "returncode": 0,
+        "seed": 400100001,
+        "status": "completed",
+        "timed_out": false
+      },
+      {
+        "attempted_period": 1000,
+        "case": 1,
+        "command": [
+          "/usr/bin/time",
+          "-l",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+          "--manifest",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-1-manifest.json",
+          "--resolved",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-1-resolved.json",
+          "--repo",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+          "--out",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-1-sessions.jsonl",
+          "--receipt",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-1-build-receipt.json"
+        ],
+        "completed_periods": 1000,
+        "config": {
+          "height": 15,
+          "horizon_periods": 1000,
+          "initial_democratic_share": 0.3,
+          "mechanism": "collective_security",
+          "mobile_share": 0.5,
+          "periods_per_tick": 100,
+          "width": 15
+        },
+        "cpu_seconds": 1.04,
+        "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "elapsed_wall_seconds": 1.0692212078720331,
+        "invalid_reason": null,
+        "maximum_rss_bytes": 17645568,
+        "preset": "printed_2001",
+        "returncode": 0,
+        "seed": 400110001,
+        "status": "completed",
+        "timed_out": false
+      },
+      {
+        "attempted_period": 1000,
+        "case": 2,
+        "command": [
+          "/usr/bin/time",
+          "-l",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+          "--manifest",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-2-manifest.json",
+          "--resolved",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-2-resolved.json",
+          "--repo",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+          "--out",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-2-sessions.jsonl",
+          "--receipt",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-2-build-receipt.json"
+        ],
+        "completed_periods": 1000,
+        "config": {
+          "height": 15,
+          "horizon_periods": 1000,
+          "initial_democratic_share": 0.7,
+          "mechanism": "collective_security",
+          "mobile_share": 0.85,
+          "periods_per_tick": 100,
+          "width": 15
+        },
+        "cpu_seconds": 0.97,
+        "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "elapsed_wall_seconds": 1.0061308331787586,
+        "invalid_reason": null,
+        "maximum_rss_bytes": 17350656,
+        "preset": "printed_2001",
+        "returncode": 0,
+        "seed": 400120001,
+        "status": "completed",
+        "timed_out": false
+      },
+      {
+        "attempted_period": 1000,
+        "case": 3,
+        "command": [
+          "/usr/bin/time",
+          "-l",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+          "--manifest",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-3-manifest.json",
+          "--resolved",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-3-resolved.json",
+          "--repo",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+          "--out",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-3-sessions.jsonl",
+          "--receipt",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-3-build-receipt.json"
+        ],
+        "completed_periods": 1000,
+        "config": {
+          "height": 15,
+          "horizon_periods": 1000,
+          "initial_democratic_share": 0.05,
+          "mechanism": "collective_security",
+          "mobile_share": 0.15,
+          "periods_per_tick": 100,
+          "width": 15
+        },
+        "cpu_seconds": 1.21,
+        "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "elapsed_wall_seconds": 1.2574465414509177,
+        "invalid_reason": null,
+        "maximum_rss_bytes": 18530304,
+        "preset": "prose_probability",
+        "returncode": 0,
+        "seed": 400130001,
+        "status": "completed",
+        "timed_out": false
+      },
+      {
+        "attempted_period": 1000,
+        "case": 4,
+        "command": [
+          "/usr/bin/time",
+          "-l",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+          "--manifest",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-4-manifest.json",
+          "--resolved",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-4-resolved.json",
+          "--repo",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+          "--out",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-4-sessions.jsonl",
+          "--receipt",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-4-build-receipt.json"
+        ],
+        "completed_periods": 1000,
+        "config": {
+          "height": 15,
+          "horizon_periods": 1000,
+          "initial_democratic_share": 0.3,
+          "mechanism": "collective_security",
+          "mobile_share": 0.5,
+          "periods_per_tick": 100,
+          "width": 15
+        },
+        "cpu_seconds": 0.28,
+        "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "elapsed_wall_seconds": 0.3041668748483062,
+        "invalid_reason": null,
+        "maximum_rss_bytes": 12435456,
+        "preset": "prose_probability",
+        "returncode": 0,
+        "seed": 400140001,
+        "status": "completed",
+        "timed_out": false
+      },
+      {
+        "attempted_period": 1000,
+        "case": 5,
+        "command": [
+          "/usr/bin/time",
+          "-l",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/target/release/democratic_peace",
+          "--manifest",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-5-manifest.json",
+          "--resolved",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-5-resolved.json",
+          "--repo",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+          "--out",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-5-sessions.jsonl",
+          "--receipt",
+          "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-5-build-receipt.json"
+        ],
+        "completed_periods": 1000,
+        "config": {
+          "height": 15,
+          "horizon_periods": 1000,
+          "initial_democratic_share": 0.7,
+          "mechanism": "collective_security",
+          "mobile_share": 0.85,
+          "periods_per_tick": 100,
+          "width": 15
+        },
+        "cpu_seconds": 1.0,
+        "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "elapsed_wall_seconds": 1.032783541828394,
+        "invalid_reason": null,
+        "maximum_rss_bytes": 16203776,
+        "preset": "prose_probability",
+        "returncode": 0,
+        "seed": 400150001,
+        "status": "completed",
+        "timed_out": false
+      }
+    ],
+    "probes_completed": 6,
+    "prospective_gate": {
+      "forecast_multiplier": 2,
+      "maximum_cpu_hours": 8,
+      "maximum_rss_bytes": 2147483648
+    },
+    "registered_histories": 0,
+    "worst_cpu_seconds": 1.21
+  },
+  "scratch_git_head": "e70bbc1",
+  "scratch_product_state": "uncommitted_prototype_bound_by_packet_images",
+  "source_equivalence": "Unresolved",
+  "source_inventory_count": 341,
+  "source_inventory_sha256": "34124f2bcded77164a4be53290eb3e2cc073f74da0f8745c8f24fb6ff7ab7e61",
+  "source_only_base": "4cf60ebf47e9e6585aa366ac1f2cca1d8b2456e9",
+  "source_slots": {
+    "absent_source_point": 1,
+    "readable": 78,
+    "unreadable_overlap": 26
+  },
+  "source_table_sha256": "221e944eefc22b166ce907c7bafc5acda95a76e3dbd84b2db240b5eb92366ed0",
+  "unregistered_fixture": {
+    "completed": 4,
+    "histories": 6,
+    "invalid": 2,
+    "raw_bytes": 27934,
+    "raw_sha256": "d3fa48c6712bfd83f11083ea5ac8dab38333dbea005cd42b6a79f30e87e2e9f4",
+    "registered_histories": 0,
+    "resume_bytes_unchanged": true
+  }
+}

@@ -1,0 +1,31 @@
+**Recompute surviving alliance pools after structural pruning — ADDRESSED.** `crates/sugarscape-core/src/democratic_peace/claims.rs:147` sums current member-side front commitments after membership pruning and rejects a nonfinite sum. `crates/sugarscape-core/src/democratic_peace/tests.rs:731` conquers one of three members, retains the two valid survivors, and asserts pool 2. The new census pool check at `territory.rs:317` independently rejects a disagreement.
+
+Finding under verification (copied verbatim):
+
+1. **Recompute surviving alliance pools after structural pruning.** `crates/sugarscape-core/src/democratic_peace/claims.rs:143` removes dead/nonadjacent members and retains groups of at least two, but never updates `pooled_resources`. For example, a three-member alliance with directional commitments 1/1/1 retains a pool of 3 after one member is conquered, even though its surviving commitments sum to 2. `alliances.rs:96` establishes the sum correctly during alignment, but structural changes invalidate it before the committed state is exported. Inspection, state JSON, and final-state hashing then describe an internally inconsistent alliance. The next alignment recomputes the pool, so this finding does **not** claim that the stale number is reused for next-period attack decisions. Recompute the pool from the retained membership/fronts after pruning, and add a fixture that conquers one member of a three-member alliance while leaving the other two valid.
+
+**Implement the promised complete census invariant gate — NOT ADDRESSED.** The former ownership, fixed cell-ID, state-map-key, exact membership, capital membership/connectivity, front endpoint, and territorial topology gaps are corrected at `crates/sugarscape-core/src/democratic_peace/territory.rs:158`, `:173`, `:217`, and `:233`. The corruption fixtures cover the former holes and candidate rollback (`tests.rs:770`, `:781`, `:802`, `:820`, `:850`). One live-capital generation identity defect remains: `territory.rs:194` rejects only a capital counter **below** the state's generation, permitting a counter above it. The release contract checked-increments the capital's counter and assigns that exact value to the new state ID (`claims.rs:10`, `:16`); that counter cannot advance while the old capital's sovereign remains alive. A valid six-singleton fixture whose cell 0 counter changes from 0 to 1 while its live state remains generation 0 passes every added check. This invalid identity must be rejected at the live state's capital. The new generation fixture (`tests.rs:836`) covers only the inverse mismatch (ID generation 1/counter 0), leaving this case untested. Require equality at live capital cells and cover a higher-counter/lower-live-generation corruption, including census rejection without commit.
+
+Finding under verification (copied verbatim):
+
+2. **Implement the promised complete census invariant gate.** `crates/sugarscape-core/src/democratic_peace/territory.rs:151` checks capital ownership/regime, resource finiteness, and only the *length* of reachable territory versus `members`; it does not check that each cell has a live owner, that cell IDs match their fixed indices, that each state's ID matches its map key/generation, that the actual sorted member set equals owned cells, or that fronts exactly match territorial adjacency with matching live endpoint identities. A wrong same-length membership list, a mismatched `State.id`, or a missing territorial front can pass this gate. `world.rs:368` relies on it immediately before committing a successful scientific period, and the approved census requirement explicitly names ownership, IDs, fronts, and capital membership. Add direct set/identity/topology checks with descriptive entity context and focused corruption fixtures proving invalid candidates cannot commit. This is a missing validation requirement; I have not established that normal current transitions generate these corruptions.
+
+### New Breakage in the Fix Diff
+
+None identified. The open generation-counter issue is a residual gap in Finding 2, not a separate fix-introduced defect. Pool summation and validation use the same deterministic sorted membership order. The four changed democratic-peace golden constants agree with the implementer report; no other-model constants change in this diff.
+
+### Out-of-Scope Observations
+
+None. The prior JSON formatting Minor remains deferred and was not re-reviewed.
+
+### Verification Evidence and Limits
+
+Read the supplied `review-64636d7..39d4164.diff` once, the task brief, original findings, appended fix report, and re-review template. Targeted source context was limited to adjacency/reachability, release generation assignment, and the existing generation-overflow fixture; mechanical line-number lookups supplied report locations. No broader source review, test reruns, Git mutations, or subagents.
+
+All six named fix logs exist. `/tmp/dp-task1-fix-red.log` records the three named new failures and a 47-passed/3-failed result. Its additional internal-panic message belongs to the existing intentional panic fixture, which is not one of the failed tests. `/tmp/dp-task1-fix-focused-all.log` shows all six added fixture names passing, 53 domain tests passing, 3 discovery tests passing, and the democratic-peace preset reproducibility test passing. `/tmp/dp-task1-fix-discovery.log` reports 3 passed. `/tmp/dp-task1-fix-golden.log` reports 8 passed and 3 ignored. `/tmp/dp-task1-fix-clippy.log` records successful completion without warning/error diagnostics. `/tmp/dp-task1-fix-fmt.log` is empty, consistent with a successful format check, but does not independently retain the command exit status. The report's `git diff --check` claim has no named retained log and was not repeated.
+
+No existing run exercises a live capital counter above its state generation. The remaining finding follows directly from the validator comparison and release contract; no focused execution was necessary to establish it. Product files, index, HEAD, and branch state were kept read-only; only this requested review artifact was written.
+
+### Verdict
+
+**Fix round: Findings remain open — Finding 2, complete census invariant gate (live-capital generation counter equality).** Finding 1 is addressed. No new Critical/Important breakage was identified in the fix diff.

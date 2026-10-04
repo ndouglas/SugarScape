@@ -1,0 +1,10 @@
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.03s
+     Running tests/democratic_peace_discovery.rs (/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch/target/debug/deps/democratic_peace_discovery-7ac609865a46fcf6)
+
+running 3 tests
+test democratic_peace_invalid_zero_policy_retains_committed_clock ... ok
+test democratic_peace_t0_census_and_inspection_are_read_only ... ok
+test democratic_peace_discovery_resolves_source_horizon_and_preset ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
