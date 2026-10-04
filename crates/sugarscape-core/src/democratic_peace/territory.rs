@@ -149,41 +149,176 @@ impl Engine {
         })
     }
     pub(crate) fn validate(&self) -> Result<(), String> {
-        for (id, s) in &self.states {
-            if s.members.is_empty()
-                || self.cells[id.capital_cell].owner != *id
-                || s.regime != self.cells[id.capital_cell].latent_regime
-            {
-                return Err("invalid capital/member/regime invariant".into());
+        if self.width == 0 || !self.cells.len().is_multiple_of(self.width as usize) {
+            return Err(format!(
+                "grid width {} does not divide {} cells",
+                self.width,
+                self.cells.len()
+            ));
+        }
+        for (index, cell) in self.cells.iter().enumerate() {
+            if cell.id != index {
+                return Err(format!(
+                    "cell at vector index {index} has mismatched cell id {}",
+                    cell.id
+                ));
             }
-            if !s.resources.is_finite() || s.resources < 0. {
-                return Err("invalid sovereign resources".into());
-            }
-            if self.reached(*id, None).len() != s.members.len() {
-                return Err("disconnected sovereign territory".into());
+            if !self.states.contains_key(&cell.owner) {
+                return Err(format!(
+                    "cell {index} is owned by missing state {:?}",
+                    cell.owner
+                ));
             }
         }
-        for f in self.fronts.values() {
-            if f.commitments
+        for (id, state) in &self.states {
+            if state.id != *id {
+                return Err(format!(
+                    "state map key {:?} disagrees with stored state id {:?}",
+                    id, state.id
+                ));
+            }
+            if id.capital_cell >= self.cells.len() {
+                return Err(format!(
+                    "state {:?} capital cell {} is outside {} cells",
+                    id,
+                    id.capital_cell,
+                    self.cells.len()
+                ));
+            }
+            if self.cells[id.capital_cell].owner != *id {
+                return Err(format!(
+                    "state {:?} capital cell {} is owned by {:?}",
+                    id, id.capital_cell, self.cells[id.capital_cell].owner
+                ));
+            }
+            if self.cells[id.capital_cell].next_generation < id.sovereignty_generation {
+                return Err(format!(
+                    "state {:?} generation exceeds cell {} generation counter {}",
+                    id, id.capital_cell, self.cells[id.capital_cell].next_generation
+                ));
+            }
+            if state.regime != self.cells[id.capital_cell].latent_regime {
+                return Err(format!(
+                    "state {:?} regime disagrees with capital cell {} latent regime",
+                    id, id.capital_cell
+                ));
+            }
+            if !state.resources.is_finite() || state.resources < 0. {
+                return Err(format!("state {:?} has invalid resources", id));
+            }
+            let owned: Vec<_> = self
+                .cells
                 .iter()
-                .chain(f.old_commitments.iter())
+                .enumerate()
+                .filter_map(|(index, cell)| (cell.owner == *id).then_some(index))
+                .collect();
+            if owned.is_empty() {
+                return Err(format!("state {:?} owns no cells", id));
+            }
+            if state.members != owned {
+                return Err(format!(
+                    "state {:?} member list {:?} does not equal owned cells {:?}",
+                    id, state.members, owned
+                ));
+            }
+            let reached = self.reached(*id, None);
+            if reached.iter().copied().collect::<Vec<_>>() != owned {
+                return Err(format!(
+                    "state {:?} owned cells {:?} are not connected from capital {}",
+                    id, owned, id.capital_cell
+                ));
+            }
+        }
+
+        let mut expected_fronts = BTreeSet::new();
+        for cell in 0..self.cells.len() {
+            let owner = self.cells[cell].owner;
+            for neighbor in self.adjacent(cell) {
+                let other = self.cells[neighbor].owner;
+                if owner != other {
+                    expected_fronts.insert(key(owner, other));
+                }
+            }
+        }
+        for (front_key, front) in &self.fronts {
+            if front.states != *front_key || key(front.states[0], front.states[1]) != *front_key {
+                return Err(format!(
+                    "front map key {:?} disagrees with front endpoint ids {:?}",
+                    front_key, front.states
+                ));
+            }
+            for state in front.states {
+                if !self.states.contains_key(&state) {
+                    return Err(format!(
+                        "front {:?} references missing endpoint state {:?}",
+                        front_key, state
+                    ));
+                }
+            }
+            if front
+                .commitments
+                .iter()
+                .chain(front.old_commitments.iter())
                 .any(|r| !r.is_finite() || *r < 0.)
             {
-                return Err("invalid front commitment".into());
+                return Err(format!("front {:?} has invalid commitment", front_key));
             }
         }
+        let actual_fronts: BTreeSet<_> = self.fronts.keys().copied().collect();
+        if let Some(missing) = expected_fronts.difference(&actual_fronts).next() {
+            return Err(format!(
+                "front topology is missing territorial front {:?}",
+                missing
+            ));
+        }
+        if let Some(extra) = actual_fronts.difference(&expected_fronts).next() {
+            return Err(format!(
+                "front topology has nonterritorial front {:?}",
+                extra
+            ));
+        }
+
         let mut membership = BTreeSet::new();
-        for a in &self.alliances {
-            if a.members.len() < 2
-                || !self.states.contains_key(&a.threat_id)
-                || !a.pooled_resources.is_finite()
+        for alliance in &self.alliances {
+            if alliance.members.len() < 2
+                || !self.states.contains_key(&alliance.threat_id)
+                || !alliance.pooled_resources.is_finite()
+                || alliance.pooled_resources < 0.
             {
-                return Err("invalid alliance".into());
+                return Err(format!(
+                    "alliance against {:?} has invalid identity or pool",
+                    alliance.threat_id
+                ));
             }
-            for m in &a.members {
-                if !membership.insert(*m) || !self.fronts.contains_key(&key(*m, a.threat_id)) {
-                    return Err("invalid alliance member".into());
+            if alliance.members.windows(2).any(|pair| pair[0] >= pair[1]) {
+                return Err(format!(
+                    "alliance against {:?} has unsorted or duplicate members {:?}",
+                    alliance.threat_id, alliance.members
+                ));
+            }
+            let mut expected_pool = 0.;
+            for member in &alliance.members {
+                if *member == alliance.threat_id
+                    || !self.states.contains_key(member)
+                    || !self.fronts.contains_key(&key(*member, alliance.threat_id))
+                {
+                    return Err(format!(
+                        "alliance against {:?} has invalid member {:?}",
+                        alliance.threat_id, member
+                    ));
                 }
+                if !membership.insert(*member) {
+                    return Err(format!("state {:?} belongs to multiple alliances", member));
+                }
+                let front_key = key(*member, alliance.threat_id);
+                let member_side = side(front_key, *member);
+                expected_pool += self.fronts[&front_key].commitments[member_side];
+            }
+            if !expected_pool.is_finite() || alliance.pooled_resources != expected_pool {
+                return Err(format!(
+                    "alliance against {:?} pool {} does not equal surviving member commitments {}",
+                    alliance.threat_id, alliance.pooled_resources, expected_pool
+                ));
             }
         }
         Ok(())

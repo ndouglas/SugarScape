@@ -144,6 +144,18 @@ impl Engine {
             a.members.retain(|m| {
                 alive.contains(m) && fronts.contains_key(&super::territory::key(*m, a.threat_id))
             });
+            a.pooled_resources = a
+                .members
+                .iter()
+                .map(|member| {
+                    let k = super::territory::key(*member, a.threat_id);
+                    let i = super::territory::side(k, *member);
+                    self.fronts[&k].commitments[i]
+                })
+                .sum();
+            if !a.pooled_resources.is_finite() {
+                return Err("nonfinite surviving alliance pool".into());
+            }
         }
         self.alliances
             .retain(|a| alive.contains(&a.threat_id) && a.members.len() >= 2);

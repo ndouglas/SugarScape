@@ -559,12 +559,12 @@ fn print_geosim_golden() {
 
 // Compact deterministic fixtures only; no registered source study.
 const DEMOCRATIC_PEACE_GOLDEN: &[(&str, u64)] = &[
-    ("democratic-peace-printed-2001", 0x51c87aa05ae89971),
+    ("democratic-peace-printed-2001", 0x3388ec029f1bf609),
     ("democratic-peace-prose-probability", 0x10578253f9fff482),
     ("democratic-peace-tagging", 0x3c0c1a219cbe94cc),
-    ("democratic-peace-alliances", 0x20e6355f23f1e9c4),
-    ("democratic-peace-collective-security", 0x51c87aa05ae89971),
-    ("democratic-peace-nondemocratic", 0x444b1ebb87249f09),
+    ("democratic-peace-alliances", 0x4da0cabf985c6040),
+    ("democratic-peace-collective-security", 0x3388ec029f1bf609),
+    ("democratic-peace-nondemocratic", 0xc68d58478b6b238d),
 ];
 #[test]
 fn democratic_peace_presets_are_reproducible() {

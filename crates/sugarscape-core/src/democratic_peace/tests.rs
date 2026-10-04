@@ -726,6 +726,148 @@ fn prospective_release_footprint_honors_prior_locked_cells() {
     }
     assert!(saw_locked);
 }
+
+#[test]
+fn structural_pruning_recomputes_surviving_alliance_pool() {
+    let mut w = fixture(&[0, 1, 2, 3, 4, 3], &[Regime::Predatory; 6]);
+    let threat = w.engine.cells[1].owner;
+    let members = [
+        w.engine.cells[0].owner,
+        w.engine.cells[2].owner,
+        w.engine.cells[4].owner,
+    ];
+    for member in members {
+        let k = territory::key(member, threat);
+        let i = territory::side(k, member);
+        w.engine.fronts.get_mut(&k).unwrap().commitments[i] = 1.;
+    }
+    w.engine.alliances.push(Alliance {
+        threat_id: threat,
+        creation_period: 0,
+        serial: 0,
+        members: members.to_vec(),
+        pooled_resources: 3.,
+    });
+    let attacker = w.engine.cells[3].owner;
+    let conquered_member = members[2];
+    w.engine
+        .apply_claims(
+            &w.config,
+            vec![types::Claim {
+                states: [attacker, conquered_member],
+                side: 0,
+                path: [3, 4],
+            }],
+        )
+        .unwrap();
+
+    assert_eq!(w.engine.alliances.len(), 1);
+    assert_eq!(w.engine.alliances[0].members, members[..2]);
+    assert_eq!(w.engine.alliances[0].pooled_resources, 2.);
+}
+
+#[test]
+fn census_rejects_same_length_wrong_state_membership() {
+    let mut w = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Predatory; 6]);
+    let state = w.engine.cells[0].owner;
+    w.engine.states.get_mut(&state).unwrap().members = vec![1];
+
+    let error = w.engine.validate().unwrap_err();
+    assert!(error.contains("state"));
+    assert!(error.contains("member list"));
+}
+
+#[test]
+fn census_corruption_invalidates_candidate_without_advancing_world() {
+    let mut w = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Democratic; 6]);
+    let id = w.engine.cells[0].owner;
+    w.engine
+        .states
+        .get_mut(&id)
+        .unwrap()
+        .id
+        .sovereignty_generation = 1;
+    let before = w.engine.canonical();
+
+    w.run(1);
+
+    assert_eq!(w.engine.canonical(), before);
+    assert_eq!(w.completed_periods(), 0);
+    let outcome = w.outcome().unwrap();
+    assert_eq!(outcome.invalid_phase.as_deref(), Some("census"));
+    assert!(outcome.invalid_reason.as_deref().unwrap().contains("state"));
+}
+
+#[test]
+fn census_rejects_missing_owner_and_mismatched_cell_index_with_context() {
+    let mut missing_owner = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Predatory; 6]);
+    missing_owner.engine.cells[0].owner = StateId {
+        capital_cell: 99,
+        sovereignty_generation: 0,
+    };
+    let error = missing_owner.engine.validate().unwrap_err();
+    assert!(error.contains("cell 0"));
+    assert!(error.contains("missing state"));
+
+    let mut wrong_index = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Predatory; 6]);
+    wrong_index.engine.cells[0].id = 5;
+    let error = wrong_index.engine.validate().unwrap_err();
+    assert!(error.contains("vector index 0"));
+    assert!(error.contains("cell id 5"));
+}
+
+#[test]
+fn census_rejects_state_key_and_generation_counter_mismatches() {
+    let mut wrong_key = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Predatory; 6]);
+    let id = wrong_key.engine.cells[0].owner;
+    wrong_key
+        .engine
+        .states
+        .get_mut(&id)
+        .unwrap()
+        .id
+        .sovereignty_generation = 1;
+    let error = wrong_key.engine.validate().unwrap_err();
+    assert!(error.contains("state map key"));
+    assert!(error.contains("stored state id"));
+
+    let mut generation = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Predatory; 6]);
+    let old_id = generation.engine.cells[0].owner;
+    let new_id = StateId {
+        capital_cell: old_id.capital_cell,
+        sovereignty_generation: 1,
+    };
+    let mut state = generation.engine.states.remove(&old_id).unwrap();
+    state.id = new_id;
+    generation.engine.states.insert(new_id, state);
+    generation.engine.cells[0].owner = new_id;
+    let error = generation.engine.validate().unwrap_err();
+    assert!(error.contains("generation exceeds"));
+    assert!(error.contains("cell 0"));
+}
+
+#[test]
+fn census_rejects_front_endpoint_identity_and_missing_topology() {
+    let mut wrong_identity = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Predatory; 6]);
+    wrong_identity
+        .engine
+        .fronts
+        .values_mut()
+        .next()
+        .unwrap()
+        .states
+        .reverse();
+    let error = wrong_identity.engine.validate().unwrap_err();
+    assert!(error.contains("front map key"));
+    assert!(error.contains("endpoint ids"));
+
+    let mut missing = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Predatory; 6]);
+    let key = *missing.engine.fronts.keys().next().unwrap();
+    missing.engine.fronts.remove(&key);
+    let error = missing.engine.validate().unwrap_err();
+    assert!(error.contains("front topology"));
+    assert!(error.contains("missing territorial front"));
+}
 #[test]
 fn random_threat_ties_are_reproducible_and_consume_stream() {
     use rand::RngCore;
