@@ -21,3 +21,5 @@
 **Success Criteria**: Exact-head CI/Pages and scientific availability receipts retained.
 **Tests**: Outside-CI study/analysis; whole-branch review and deployed smoke.
 **Status**: In Progress
+
+Implementation evidence: the original-only 3,240-key census and fixed analysis are retained in `survey/out/democratic-peace-study/`; exact generated findings/provenance and milestone 38 documentation are saved. All ten required final checks passed; exact generated files, evidence hashes, frozen bindings and nine new local documentation links were verified. Task 4 remains In Progress pending controller task/whole-branch review, exact-head CI/Pages, deployed smoke and final evidence archive. Leave this ledger until those gates complete.

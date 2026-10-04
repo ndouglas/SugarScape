@@ -1,0 +1,2046 @@
+{
+  "classification": "registered_democratic_peace_evidence",
+  "bindings": {
+    "manifest_sha256": "8a2f365365ae1b5b5f71d8319225c6e565fb60ffe52e7d1008e5e04f296bb10a",
+    "binary_sha256": "8bfac59be856cd68cf22186eff69c2f070026622fc7f81cfc2d0520f031461a5",
+    "source_inventory_sha256": "fad57148ae9ca5f29d99df7777c235bd03b44187d9254d9d45d7dbd01bd856e2",
+    "build_receipt_sha256": "239c1b10ac022564d9c2a86f7cbe13f63c17c24e47f548942124a170fe86f965",
+    "resolved_configs_sha256": "ffb684d35cc0bfe0630c63aeef1e53306a0bdccdb0133a9ae08090338a228455"
+  },
+  "runtime_decision": {
+    "classification": "prospective_registration_no_periods",
+    "population": "original_only",
+    "runtime_receipt_sha256": "1c13e3af26abd68fe4dc3bf4a427cf1163d0f0e63919674c35e275e0a0064817",
+    "runtime_receipt": {
+      "classification": "unregistered_runtime_probe",
+      "probes": [
+        {
+          "case": 0,
+          "preset": "printed_2001",
+          "config": {
+            "width": 15,
+            "height": 15,
+            "horizon_periods": 1000,
+            "periods_per_tick": 100,
+            "initial_democratic_share": 0.05,
+            "mobile_share": 0.15,
+            "mechanism": "collective_security"
+          },
+          "seed": 400100001,
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/target/release/democratic_peace",
+            "--manifest",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-0-manifest.json",
+            "--resolved",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-0-resolved.json",
+            "--repo",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+            "--out",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-0-sessions.jsonl",
+            "--receipt",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-0-build-receipt.json"
+          ],
+          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+          "returncode": 0,
+          "elapsed_wall_seconds": 1.4489347506314516,
+          "timed_out": false,
+          "status": "completed",
+          "completed_periods": 1000,
+          "attempted_period": 1000,
+          "invalid_reason": null,
+          "cpu_seconds": 1.23,
+          "maximum_rss_bytes": 18792448
+        },
+        {
+          "case": 1,
+          "preset": "printed_2001",
+          "config": {
+            "width": 15,
+            "height": 15,
+            "horizon_periods": 1000,
+            "periods_per_tick": 100,
+            "initial_democratic_share": 0.3,
+            "mobile_share": 0.5,
+            "mechanism": "collective_security"
+          },
+          "seed": 400110001,
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/target/release/democratic_peace",
+            "--manifest",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-1-manifest.json",
+            "--resolved",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-1-resolved.json",
+            "--repo",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+            "--out",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-1-sessions.jsonl",
+            "--receipt",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-1-build-receipt.json"
+          ],
+          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+          "returncode": 0,
+          "elapsed_wall_seconds": 1.4281593337655067,
+          "timed_out": false,
+          "status": "completed",
+          "completed_periods": 1000,
+          "attempted_period": 1000,
+          "invalid_reason": null,
+          "cpu_seconds": 1.3,
+          "maximum_rss_bytes": 19103744
+        },
+        {
+          "case": 2,
+          "preset": "printed_2001",
+          "config": {
+            "width": 15,
+            "height": 15,
+            "horizon_periods": 1000,
+            "periods_per_tick": 100,
+            "initial_democratic_share": 0.7,
+            "mobile_share": 0.85,
+            "mechanism": "collective_security"
+          },
+          "seed": 400120001,
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/target/release/democratic_peace",
+            "--manifest",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-2-manifest.json",
+            "--resolved",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-2-resolved.json",
+            "--repo",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+            "--out",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-2-sessions.jsonl",
+            "--receipt",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-2-build-receipt.json"
+          ],
+          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+          "returncode": 0,
+          "elapsed_wall_seconds": 1.3977660834789276,
+          "timed_out": false,
+          "status": "completed",
+          "completed_periods": 1000,
+          "attempted_period": 1000,
+          "invalid_reason": null,
+          "cpu_seconds": 1.25,
+          "maximum_rss_bytes": 18169856
+        },
+        {
+          "case": 3,
+          "preset": "prose_probability",
+          "config": {
+            "width": 15,
+            "height": 15,
+            "horizon_periods": 1000,
+            "periods_per_tick": 100,
+            "initial_democratic_share": 0.05,
+            "mobile_share": 0.15,
+            "mechanism": "collective_security"
+          },
+          "seed": 400130001,
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/target/release/democratic_peace",
+            "--manifest",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-3-manifest.json",
+            "--resolved",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-3-resolved.json",
+            "--repo",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+            "--out",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-3-sessions.jsonl",
+            "--receipt",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-3-build-receipt.json"
+          ],
+          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+          "returncode": 0,
+          "elapsed_wall_seconds": 1.6531375423073769,
+          "timed_out": false,
+          "status": "completed",
+          "completed_periods": 1000,
+          "attempted_period": 1000,
+          "invalid_reason": null,
+          "cpu_seconds": 1.56,
+          "maximum_rss_bytes": 17301504
+        },
+        {
+          "case": 4,
+          "preset": "prose_probability",
+          "config": {
+            "width": 15,
+            "height": 15,
+            "horizon_periods": 1000,
+            "periods_per_tick": 100,
+            "initial_democratic_share": 0.3,
+            "mobile_share": 0.5,
+            "mechanism": "collective_security"
+          },
+          "seed": 400140001,
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/target/release/democratic_peace",
+            "--manifest",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-4-manifest.json",
+            "--resolved",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-4-resolved.json",
+            "--repo",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+            "--out",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-4-sessions.jsonl",
+            "--receipt",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-4-build-receipt.json"
+          ],
+          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+          "returncode": 0,
+          "elapsed_wall_seconds": 0.399834000505507,
+          "timed_out": false,
+          "status": "completed",
+          "completed_periods": 1000,
+          "attempted_period": 1000,
+          "invalid_reason": null,
+          "cpu_seconds": 0.38,
+          "maximum_rss_bytes": 14008320
+        },
+        {
+          "case": 5,
+          "preset": "prose_probability",
+          "config": {
+            "width": 15,
+            "height": 15,
+            "horizon_periods": 1000,
+            "periods_per_tick": 100,
+            "initial_democratic_share": 0.7,
+            "mobile_share": 0.85,
+            "mechanism": "collective_security"
+          },
+          "seed": 400150001,
+          "command": [
+            "/usr/bin/time",
+            "-l",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/target/release/democratic_peace",
+            "--manifest",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-5-manifest.json",
+            "--resolved",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-5-resolved.json",
+            "--repo",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+            "--out",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-5-sessions.jsonl",
+            "--receipt",
+            "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-preparation-task3-fix1/probe-5-build-receipt.json"
+          ],
+          "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+          "returncode": 0,
+          "elapsed_wall_seconds": 1.3883203342556953,
+          "timed_out": false,
+          "status": "completed",
+          "completed_periods": 1000,
+          "attempted_period": 1000,
+          "invalid_reason": null,
+          "cpu_seconds": 1.32,
+          "maximum_rss_bytes": 16302080
+        }
+      ],
+      "prospective_gate": {
+        "maximum_cpu_hours": 8,
+        "maximum_rss_bytes": 2147483648,
+        "forecast_multiplier": 2
+      },
+      "probes_completed": 6,
+      "all_six_completed": true,
+      "worst_cpu_seconds": 1.56,
+      "maximum_rss_bytes": 19103744,
+      "registered_histories": 0,
+      "original_3240_cpu_hours": 2.8080000000000003,
+      "full_14040_cpu_hours": 12.168000000000001,
+      "full_scheduling_gate_passed": false,
+      "limitation": "Six collective-security cases; not a runtime guarantee. Forecast excludes unbenchmarked fixed-100000-draw analysis. Gate does not authorize registered execution."
+    },
+    "registered_attempts": 3240,
+    "git_source_head": "f0c0fdc3b04484dea3ec027153af767b889a7f60"
+  },
+  "attempted_keys": 3240,
+  "source_equivalence": "Unresolved",
+  "source_inventory": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 22042,
+      "sha256": "58141f9ff3fa5cb5dc2a6dbb7e41b75ce12ccffa3dbb66c6bdd1e9d14bc16754"
+    },
+    {
+      "path": "Cargo.toml",
+      "bytes": 812,
+      "sha256": "7fb254110e779b6c45d4bf96fbae5f382529ea0493dc82a587e6717c71baa6cd"
+    },
+    {
+      "path": "crates/sugarscape-core/Cargo.toml",
+      "bytes": 548,
+      "sha256": "9f36b17597f0a97f8ca9bbb14d13961c9f9c11ff9ad644965a16692c803ddc04"
+    },
+    {
+      "path": "crates/sugarscape-core/assets/sugar-map.txt",
+      "bytes": 5000,
+      "sha256": "cd9b4661c8813d3e268995676d5ba84394ee813986adb0d657dc9be4a1fab675"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agent.rs",
+      "bytes": 25883,
+      "sha256": "85258d658454a1c822dab919be1a9d0b9bae8ce736b24386df3a036a1019fb9b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/config.rs",
+      "bytes": 22912,
+      "sha256": "51056a033e6ce26655919998477a5d6490e8ba4852cb459a6c4af4ec0e18bd6e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/mod.rs",
+      "bytes": 1057,
+      "sha256": "c66dbbdc868eeec27ac877386af0323e726611fc5125cb1a65d5ebcf21bad7a0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/network.rs",
+      "bytes": 6389,
+      "sha256": "e959cf60491b60ebbc2e48f48acffe43952a68f3e486d6b800708b8715ca0956"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/presets.rs",
+      "bytes": 16389,
+      "sha256": "97d523988a490e71692e33136afb76746b35b0adb22cbb98a65115b2011bc8f5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/stats.rs",
+      "bytes": 5741,
+      "sha256": "553995ece39e55b8f8e066bbb32a172eccc67e9e6140ddc9aae61bc068caffb2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/view.rs",
+      "bytes": 2749,
+      "sha256": "f0a369da1cd1dfe7c803cbb930e7dd3fc2fd397ba8320c2c1c416c4b099225c7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/world.rs",
+      "bytes": 43010,
+      "sha256": "3dd62261457afae350b907631ea4bf6d28d1e2493a8ff2839a7ce74cdae9170b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/config.rs",
+      "bytes": 25249,
+      "sha256": "34fba071eeff23cbe0308611d20723a1142c46161baf503de79af690dfce27d1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/household.rs",
+      "bytes": 4771,
+      "sha256": "e322e778f1a68e48a65ce875156fd497f988190cdd65a465926fc0b19b3fbda8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/mod.rs",
+      "bytes": 791,
+      "sha256": "7857324ab1f77ca7ae71882859f95ab8035762f48e784b47a732f52834af65a6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/random.rs",
+      "bytes": 2096,
+      "sha256": "7c8033829d3d8cebeac011028eb47b1ac5e4ef583fba677f34818e45b44f963d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/valley.rs",
+      "bytes": 25806,
+      "sha256": "7c73ef1402fdf4b509b3a94402346e2b973ddba6e53ddfee6409ada8b933b1cc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/world.rs",
+      "bytes": 56040,
+      "sha256": "0f06dce79600533367372dbd975679dfcf2edb399698433e1fb086c33b39081a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/config.rs",
+      "bytes": 15707,
+      "sha256": "2bd2c3e1c2d4ca538114fcc989155870eb2679509b91480136d7ab4b652d4eef"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/mod.rs",
+      "bytes": 847,
+      "sha256": "cbc2a55835f583d5496f00b9ca781c4ee4288e172ec51fec1d9f3f8d2c5debdb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/presets.rs",
+      "bytes": 10135,
+      "sha256": "8926f8a8546ed7e4e6fb0f724e5fb917f97958713dd08f644facd2d248397fc5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/stats.rs",
+      "bytes": 4597,
+      "sha256": "e0950539698185893ed7570b1d4966ed2f1f6a262ba02acf175b7fb0c2072486"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/theory.rs",
+      "bytes": 7859,
+      "sha256": "a1265cc6feb2948a41928361185c7d746d9f881b30d9d86751d4c505dfe25c91"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/view.rs",
+      "bytes": 2343,
+      "sha256": "f7a7792a8523d24391b53530c0978b6b0dad4b32d5f96f160cff017309714f3a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/world.rs",
+      "bytes": 35204,
+      "sha256": "3734879efaeae67548dd846d50141fc18d608862f01c8f7a65da85c15cbf0030"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/analysis.rs",
+      "bytes": 3088,
+      "sha256": "c09a758cd9ea3d204954688f1e991068233c72d27257884dcc1968e9b3056dc3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/config.rs",
+      "bytes": 20910,
+      "sha256": "f5242edca83cebf1f8a5e7c68a7eeff9c632bf14870ec6e1c36f48eaa10c46d2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/learner.rs",
+      "bytes": 7375,
+      "sha256": "ba70bb1c0cdbe0823cd676f188255d88d143f6aec9ac99562b0ecf56fe9a9185"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/mechanism.rs",
+      "bytes": 5219,
+      "sha256": "4ca6cbb440b89dfb184b0d615ee057fcbc929ea35a59cd5a7f089d4d414d64bb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/mod.rs",
+      "bytes": 419,
+      "sha256": "ea0ac3d08184b29339419f5fcd721688f5cda6f442e542ae6229c71516cc23e9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/presets.rs",
+      "bytes": 11001,
+      "sha256": "f7575064b2bc4e0c8edcf7e803cb43b65b6746ff0d3d5845fb0e44843847bea9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/stats.rs",
+      "bytes": 3209,
+      "sha256": "00fe77119abc2fc4296d46e53359aa854927f0e10963a2781c288e0e93d1a697"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/view.rs",
+      "bytes": 147,
+      "sha256": "e45e46444f24bdbc89874d4bd3980266f24d7d69a84096ad1ea68ed7952cbb78"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/world.rs",
+      "bytes": 32659,
+      "sha256": "b971b77313834c47e2e7cf0ae2910790fe8e19fa4098de14c8518463190e54d5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/config.rs",
+      "bytes": 17515,
+      "sha256": "b2bd9d59fe591aa2c6344958128e16d424dbbb67931ab814ff0b20a714fd4c61"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/data.rs",
+      "bytes": 6821,
+      "sha256": "0761c87b61a5627514827ede8fdc5dbd3039629089c3ad4f134dfd490be3b8cf"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/engine.rs",
+      "bytes": 17804,
+      "sha256": "61c5c467df85b789367d608f1828d7d1c1021fb6031cb89e08d8ef89ba29b482"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/mod.rs",
+      "bytes": 1062,
+      "sha256": "19617a5fc7a2c3c74df52f77234b737b9f34b160894103ca774a5758662fc1ec"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/presets.rs",
+      "bytes": 7596,
+      "sha256": "cbd361afa3e0a53733eb04e84f96b2e55f1583bc3797fc7c7403d3e3a1f4b503"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/search.rs",
+      "bytes": 8065,
+      "sha256": "cc096a88ace806d62721f3371005dc2490a4d5ebc39e593dfbb5ee1b0b8d2cf8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/stats.rs",
+      "bytes": 4028,
+      "sha256": "dc52793c92db0c454ec666c1eb9db147c9727527cb8520c9aff632c8c7c2150f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/two_node.rs",
+      "bytes": 7044,
+      "sha256": "6759ee3b0c7967757bd43dc4ca2a99b8629aa84f1c98d3ead748100de28ffa52"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/view.rs",
+      "bytes": 2963,
+      "sha256": "8cd0b01db10420bb6d09930d46e3d7c63ea315e00793291b1077cc896fd21f65"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/world.rs",
+      "bytes": 41657,
+      "sha256": "c583a88e34dcd12705f93dae03ea1edc59764597978c06bc0fdb2568cca7d680"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bits.rs",
+      "bytes": 7651,
+      "sha256": "f2431954d38177779d4c2834d6b95890f6f8eaa7f89f3d173866ff5ff200bd43"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/config.rs",
+      "bytes": 20781,
+      "sha256": "eff0d4cb09a65931cae4f11650a8359cef59f48525328e58771798317b3f16a4"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/mod.rs",
+      "bytes": 898,
+      "sha256": "c7bb814664c0ce135b5c37b3505f093e4ae98d6957d95181fff398db8a98c955"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/presets.rs",
+      "bytes": 9333,
+      "sha256": "10f4ba225ed35d73378370e6fb0467a14f2b1d2ec2c15843aae54730a32e76ee"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/stats.rs",
+      "bytes": 5651,
+      "sha256": "177a8c5092e1eaacf26198c7a4c56f544e903a9e81389b757adb6da14e07ee09"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/world.rs",
+      "bytes": 52113,
+      "sha256": "d000d4e411ac53f2c35389099fc222a8950d8d5952c12c227604ba584226e33d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/config.rs",
+      "bytes": 11031,
+      "sha256": "311c5471d6e92edffee374a04aa5a2c44b7967eb8ddc96e014fe47d373158bf1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/mod.rs",
+      "bytes": 856,
+      "sha256": "d3cdf36807738822a77ee8a4e8c96c84d537b5474ff93306e4ba4923d48ad1fd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/presets.rs",
+      "bytes": 8727,
+      "sha256": "514cec2d0d97d01932570ec8a554b809421a0f5b455f7987c90e1062d6ad6104"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/simplex.rs",
+      "bytes": 4170,
+      "sha256": "f3ebcdb94ddd7ef63643ce773bdeaae8c8bb86c16f3965655430a11936335154"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/stats.rs",
+      "bytes": 9453,
+      "sha256": "67fadb94707ec0a287553b764d61d4f033a2bf894365a5fa512d502c5b3506f1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/world.rs",
+      "bytes": 38076,
+      "sha256": "6154472acc27695fa47ee0308d088909a0a5be61614b7bd5731746167a0e9048"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/analysis.rs",
+      "bytes": 22141,
+      "sha256": "af41f3decd7e3f7d9b61cb18068a544774c2199cba0982be5a95fc91ec50a538"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/config.rs",
+      "bytes": 23181,
+      "sha256": "d8b1cfcb300bb66ff43c86e2765ed50eb2dbe11cc4accf30a4f55e64530bb25e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/demand.rs",
+      "bytes": 12188,
+      "sha256": "18c49d2a1f3f7f30fb46e1ae30688a0a88071c6eb33e9a54f1ef7039122eecc9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/learner.rs",
+      "bytes": 11241,
+      "sha256": "da9dff8766deed4480aa5afad5245ab2798edec8bcf9f5cc66b4272f2c557062"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/mod.rs",
+      "bytes": 911,
+      "sha256": "f477b4e2d9cf4bb8c940f74168993c06a80b1f75e169eb63684e071331b018eb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/presets.rs",
+      "bytes": 9754,
+      "sha256": "2ef1736c9474559e6dd18d75c354868795f09a5aba87c29a5f3fb6c4cd2e2ec2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/ran2.rs",
+      "bytes": 3315,
+      "sha256": "178ce1704341478cde4809a12f662ae9b91a7b46a3358980eedae77329874c58"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/stats.rs",
+      "bytes": 3984,
+      "sha256": "d986194e3e298ddedc65bcfae52788053706de733909af86b58a9c3be08715f5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/view.rs",
+      "bytes": 2551,
+      "sha256": "69347e394541707738a671770cc01c4b9e5eb8b5d8cb4ced604be66bcd57c711"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/world.rs",
+      "bytes": 42691,
+      "sha256": "13f9f1685f7b959a94ad986403da4059c28d52cbf74777306dfcac90544060b7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/config.rs",
+      "bytes": 189833,
+      "sha256": "09ac45cf0e7ac0f9787837b5a7409d77007466fda2d5eb7ef4a0241cacd1474b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/config.rs",
+      "bytes": 10165,
+      "sha256": "8a62cd3e9ea4e937045b4a47a4652f653bb43721fe327e38b0afa933ca8c6a96"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/mod.rs",
+      "bytes": 730,
+      "sha256": "2ffa0c34f141cae7e28b623b648ab74b42463967643f96d4c34543982617b98c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/presets.rs",
+      "bytes": 8688,
+      "sha256": "b6573c58f5c9e1f7925bb664e5a9ad7a665c65960afa65cd7bdac5fc92a698b4"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/stats.rs",
+      "bytes": 4668,
+      "sha256": "af1e0ad4cf28395d853d23f01e540644baba037bc24092f969ed4a1c4d5ee31b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/world.rs",
+      "bytes": 40797,
+      "sha256": "ed48c832c8edfb9bcfc9345535ee5e09cd5c66f9b15e0541280d69d591d8ab8e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/alliances.rs",
+      "bytes": 6820,
+      "sha256": "6b91ffdbe73a83b85882585682d6a48d4cd412cf4277cff07b8dc74cef91fc2c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/claims.rs",
+      "bytes": 6689,
+      "sha256": "cb7d11abea36b3a260ec3d878b0f6534e6fb4ee95c45d3ed6372b20182e795fc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/combat.rs",
+      "bytes": 3711,
+      "sha256": "e5cd7e614be3ea7232b0c22e1d9f3eab95e6a1dfdee094b089213fc69280af10"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/config.rs",
+      "bytes": 18517,
+      "sha256": "5ebf92c1630d0672aa6e6c949bbb68a6df6e9a2fd417cc1f272c3f5ee3be208a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/decisions.rs",
+      "bytes": 6232,
+      "sha256": "8ed1a1d6bec0d748f2e588b538119c2f356fb72f7a3ec11c9e950e7c1d28c3ce"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/mod.rs",
+      "bytes": 406,
+      "sha256": "d210c9458a894c9648de41ee48ccf737ce2331177c7f49b02c673207d4eec157"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/presets.rs",
+      "bytes": 1237,
+      "sha256": "fcd19c765009ebe4be8df52e2f45fdf9a43a7f3b13ad7a6a265e874705717b76"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/resources.rs",
+      "bytes": 5061,
+      "sha256": "b8aeb01eaad71b648e7ecc4e5563475d835d90f15536d177bfac407e5178bc8c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/stats.rs",
+      "bytes": 2099,
+      "sha256": "4a77e5c61d468533225eefcdc5a34cea46fd6f39477c49b739268e6e0f2a1a8d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/territory.rs",
+      "bytes": 12485,
+      "sha256": "0116ce9f1c5184b8b386a102641a42285c8f8e4f1ee8ddb8b9e5f13409b04c63"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/tests.rs",
+      "bytes": 29301,
+      "sha256": "341a8808dac8871acb6226d789ec4a0cc346584eaea431664439e89cc3bb3892"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/types.rs",
+      "bytes": 5743,
+      "sha256": "f9abe4a8d79894177056d604f65e5e4f1ba033797c365b1f44c3d0e30f11db9a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/view.rs",
+      "bytes": 8616,
+      "sha256": "87fbd5f2eebd572f809803abd0b42ffee2c24d8f5a817c3a328a1ddbb421ad01"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/world.rs",
+      "bytes": 19418,
+      "sha256": "62a8b517cef73ddac3b989fde9d720b7865f7321573acda764593aed640b6861"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/config.rs",
+      "bytes": 22027,
+      "sha256": "cc15306415e69e785c4dd93f182e552a3a0fdc96988b1f53d5a3beffac3add05"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/mod.rs",
+      "bytes": 866,
+      "sha256": "7beb01c3173c2c12fc0bf9c3ae892cc7744323b83f7e0486cb83f9627a7917dd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/presets.rs",
+      "bytes": 10627,
+      "sha256": "d9c9d692af3ca28ab1d50fdba9952fc2e7bced146e0c2b685eb4a99efebc11d1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/stats.rs",
+      "bytes": 1846,
+      "sha256": "e07f373fcf9caecfe78eb2fcad76d617c7196fb0f998c2602f57fb5833a60593"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/world.rs",
+      "bytes": 53841,
+      "sha256": "085b55e56bcf8a19a7d96241b4fccd211182b453f210eadc613dcc1ce9e79e7e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/econ.rs",
+      "bytes": 7309,
+      "sha256": "12be1920cae7cfa2fdc249216f3dfaeb31d6d790619a4c95731edf9467c53b46"
+    },
+    {
+      "path": "crates/sugarscape-core/src/edit.rs",
+      "bytes": 65380,
+      "sha256": "4d64496ebdadc37ea7767daf51f85ec2cfe951c4a217c93875cd9da1954633a0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/config.rs",
+      "bytes": 21926,
+      "sha256": "9baf267bceaacd029e82c6b62d577c14c5cef9ab6855283c681deb83f1991e49"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/mod.rs",
+      "bytes": 798,
+      "sha256": "e5ecd986860dbaad0bc80381da786ae014386a5ace08027c219a7aacb5b31818"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/presets.rs",
+      "bytes": 10616,
+      "sha256": "535a5b0dd139346b47062091cd3e5e4502cc3b4562b309d3c893c0908d2b2c41"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/stats.rs",
+      "bytes": 3089,
+      "sha256": "19596fa23d07f23a016b1bae3f6aaf14b89f1df9676cf136d9f016f84bbe9f45"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/world.rs",
+      "bytes": 49454,
+      "sha256": "baa9a702ff1ffd8e364572a948fa0673c0f88e52a29e78b90b6036885d71442e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/export.rs",
+      "bytes": 5588,
+      "sha256": "2dcab618df2c981f25c2474c7b83d812c977d38235e06b1a5860dfb2aa06f954"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/config.rs",
+      "bytes": 21459,
+      "sha256": "4fcfe23cf775d3e8c11681ad85a2dd6d2c5864c85710be7f67dc32d72293652c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/mod.rs",
+      "bytes": 1035,
+      "sha256": "c72eecf634e36da263b2ed7fdd5515f475db9ca698be51474a25487810dfa497"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/predictors.rs",
+      "bytes": 6022,
+      "sha256": "b158186288997dbd7d8ad99de4704ab03235e8cee4ce2fe23b2f633afb343540"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/presets.rs",
+      "bytes": 12183,
+      "sha256": "fa0df569958c56ada05d8f2549f1de273fd12ba42690935fc23f44f021b94fe8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/stats.rs",
+      "bytes": 2901,
+      "sha256": "80e1bb9603ef703199ba69bf6e939e1fe45d81a54ee90e7229dbd0b15813ad0a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/view.rs",
+      "bytes": 2627,
+      "sha256": "20e37b9436149e214a011cfffaa889aa05d3dea894abc5a8c8a0ca6d6b37ad43"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/world.rs",
+      "bytes": 44544,
+      "sha256": "44f4634c833e87ff520b0616dbf5ebd06fd94d6050b13d3214830891ab2041a6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/config.rs",
+      "bytes": 26239,
+      "sha256": "fd13b293e5d42b6599ca14d4f8f73e3ff0b76e935f76796f989d1c1865db7103"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/effort.rs",
+      "bytes": 31779,
+      "sha256": "608252daddb3f7950852aa21548256298c43e0e921fbb75399533029a4d4f587"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/fit.rs",
+      "bytes": 15713,
+      "sha256": "1b66ba7c35377e637ba898637306c55720b8958fcaffcba9f532a4d17e96c4b7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/mod.rs",
+      "bytes": 858,
+      "sha256": "7eaf779c003a9212b68bccab00cd27f5c06841758da76a70642ee5b4b4ba1a58"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/presets.rs",
+      "bytes": 10330,
+      "sha256": "a39002179908918083f2e73f3699476cbe00c718729aea4e18bc670f1c9fe3f6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/stats.rs",
+      "bytes": 2458,
+      "sha256": "90ce3cd4d043c068510e2d2cecc1ca74bb10d13a72c05b96715606d72fd92bd9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/view.rs",
+      "bytes": 2112,
+      "sha256": "c65994dd7178c2bfab7bae17bb4618cfc820159832285dc67ef50590043decf7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/world.rs",
+      "bytes": 61183,
+      "sha256": "708c23c67eef902a122d6ecd6b3084870740c169a44ee0d046c6a79c86803e24"
+    },
+    {
+      "path": "crates/sugarscape-core/src/frames.rs",
+      "bytes": 94256,
+      "sha256": "6242953ed111497342d03ce5ef9e9e143ae3ba84731d41edfb8f5936fae4d1ed"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geometry.rs",
+      "bytes": 4892,
+      "sha256": "32ad1397076da50a8dadc943e6e6528671eee5aad711ec237bc452e0ed32a558"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/analysis.rs",
+      "bytes": 2220,
+      "sha256": "f12c274a054551bc5724020e4dc34191c99c70805cd361dd10747f9dda06a85f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/claims.rs",
+      "bytes": 13047,
+      "sha256": "134147e2572ccde8d010f39fc23bc7f032a9ac7bc563dad3f8226d7104cf522d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/combat.rs",
+      "bytes": 14347,
+      "sha256": "6e1e811031e455065c64c67d9cebac535d35c0beb84a0f36445da0cacee3af5f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/config.rs",
+      "bytes": 28314,
+      "sha256": "4d88163ac1702cee05b8c7d359cb64f8b9d7759aedc5d8ec5b632c6f854c7fbe"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/decision.rs",
+      "bytes": 15538,
+      "sha256": "2a20983dce167d8d46629861f38b7d39e0f75d8339cd69000bdcbc9437d67806"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/mod.rs",
+      "bytes": 686,
+      "sha256": "fb562bbb40a0254fd708b843c974f72404ad3ae82b3a9e2af99deab5bda27b31"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/presets.rs",
+      "bytes": 1124,
+      "sha256": "6ba9bc8eb37c0c9334eea881471def4c5528aa9bca6629c4ab69598d9909b299"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/resources.rs",
+      "bytes": 1536,
+      "sha256": "516d17e62165ebb81d5d340575b242bee957c2d982d4ac80341ffa382a5944b0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/stats.rs",
+      "bytes": 2106,
+      "sha256": "8134cdaec9b1403468b6b05afa186ad8232828ed57b1b1abdf49374849c4cf6c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/territory.rs",
+      "bytes": 2655,
+      "sha256": "2f7356a3c5e2de9d9bb52130e16a7177da53b5324f8f4db8c71ac3911e9a31a7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/tests.rs",
+      "bytes": 2605,
+      "sha256": "4d074b08a666302590e523f09c53834935d4d37883e2128e804a1444bbf87033"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/view.rs",
+      "bytes": 6957,
+      "sha256": "77b9584f079c9da138a21c8345845fab264d2cf0e944523cd2f82e607e05ba22"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/wars.rs",
+      "bytes": 12719,
+      "sha256": "ad01f67295f55892d3e6abf240766a80d1aa9c7744c6d56ef0c36582c60fd34a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/world.rs",
+      "bytes": 31872,
+      "sha256": "342c3d6129747abd8b0f2f5b3cdcff8ade9fefcc7c52bb64d87dd6ef420c4564"
+    },
+    {
+      "path": "crates/sugarscape-core/src/graph.rs",
+      "bytes": 9974,
+      "sha256": "8ac66dbf0a4f7d2abb1bfc33da635fe338e4e1af3789ab5eb8d907ecd48c0fd1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/config.rs",
+      "bytes": 20660,
+      "sha256": "c07d63e74a3e6abb3038fcc7f8486fedef151e6f7fa284865c17f22895a2a6d6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/mod.rs",
+      "bytes": 907,
+      "sha256": "19003ab1170695ea75fa909958271dcf181800c8e84b565f39b824314507e1cb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/presets.rs",
+      "bytes": 9642,
+      "sha256": "18549481175703384688927bf9df588b7e03ea9ae3fa8b360729d65842702eb1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/stats.rs",
+      "bytes": 4566,
+      "sha256": "d52d367378d256ce6c83efec2f09a4a00f94eafdde21b4820f038aca2a065109"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/view.rs",
+      "bytes": 2137,
+      "sha256": "8a9a53391a89bade48c75133cce1f3114887537b02d5c573f932a50445f14fbc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/world.rs",
+      "bytes": 111194,
+      "sha256": "0b6c6edf16194b54448115e668dafb9b13d987ad029d0a0f878d405880f92c5e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/analytic.rs",
+      "bytes": 18343,
+      "sha256": "018a0002013ef1cfd08b19729f6ed9670c9ae80df1a31c3da2d7adf76e920849"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/config.rs",
+      "bytes": 26667,
+      "sha256": "f92dcb2c47a894ff62f0079e4e72c1b6d9420968e502812904b3000f001aef4c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/mod.rs",
+      "bytes": 789,
+      "sha256": "c4d7f9736a943231a07c6978c4b03c0c7f6f5328a4348de4183d4286d4bc9b5b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/presets.rs",
+      "bytes": 15719,
+      "sha256": "ee89d1fcf7c27e4476b5cb746963e8a95880460847e84d35b16394ad7f9f778a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/stats.rs",
+      "bytes": 2631,
+      "sha256": "6c7bd8994f116212fc9ed1b3fd3f4cfcc5708f0bcfe1c0db0d00d12670c0e103"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/strategy.rs",
+      "bytes": 14171,
+      "sha256": "3789a13869554f30ff4dced3a7b4e168b5e0178fd1a6026296a3b59702e8afc5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/world.rs",
+      "bytes": 56521,
+      "sha256": "84ebc19e43164ae78422e1e960ea895051299642b2c577caf541f4944974aebd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/landscape.rs",
+      "bytes": 18133,
+      "sha256": "fb86f769517dcee118f1b47faffe1c7a280db3f3dd5485c6e3a01aaf0de69920"
+    },
+    {
+      "path": "crates/sugarscape-core/src/legacy.rs",
+      "bytes": 8605,
+      "sha256": "1a9b62c8c1ea9bee87deb2324b5986b9fe4db9ab52e6ac6bb27cbe681013ce5d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/lib.rs",
+      "bytes": 1144,
+      "sha256": "ab1f10adc6aabbb64754dfb1e56d08d25079dffdffdfd96603c033eddc861109"
+    },
+    {
+      "path": "crates/sugarscape-core/src/line.rs",
+      "bytes": 36131,
+      "sha256": "8af725de6e3253fba40a13178f7e63395cc4f994cebaf167762d05d07cc3fe31"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/astar.rs",
+      "bytes": 6275,
+      "sha256": "d806d47ce51574192f30a96bc238e0d3ae3a6a9942814453772bc5845d81cff0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/episodes.rs",
+      "bytes": 9347,
+      "sha256": "651897bdbcbf0bfea5e84224a4dab13485dc98ed31c625fca1a0f192f15f782b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/fates.rs",
+      "bytes": 26310,
+      "sha256": "f59a7b2eeb90c5cc41fe455de80068e9f2f9c6b06048f7b1d881642323e9b01a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/lab.rs",
+      "bytes": 30269,
+      "sha256": "25f6eadeec86cedd6270c03f009748eb6a6d43f65a49a2c5e338cb0c79a4e725"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/mod.rs",
+      "bytes": 39121,
+      "sha256": "5273b4d38e89634740f7a9dd5a61db5a636c50b98c187825218529e982dd37ee"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/rules.rs",
+      "bytes": 36984,
+      "sha256": "2dfbf6876f5081ec032d81efbce4863b0f4f5201a95b499eb572b367a07b3ca0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/theft.rs",
+      "bytes": 43512,
+      "sha256": "25a7a804dbaada913e7dd8223bf085c4b79ad0be810f1c71a24fb0684dd66126"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/watching.rs",
+      "bytes": 86062,
+      "sha256": "0b2b4a604d3eddd0da0bb4eae18d9e35b6e2ce0e5716cbfcb622a1a61d71295c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/central.rs",
+      "bytes": 44556,
+      "sha256": "7a6e9b3abf8f7a36e07df9098bfdb53b3cc6d84c791f9062bdb89add4fc0991c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/goap/forage.rs",
+      "bytes": 30823,
+      "sha256": "993ce759124e0d15c90d4a41804cbd6251e09bd1bb17d306fe3bce759a30ca9f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/goap/mod.rs",
+      "bytes": 7837,
+      "sha256": "6ff718d88ab52724581d76128a09ce7b1f9938e8da894baf1701c14d98ed6551"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/goap/strips.rs",
+      "bytes": 12951,
+      "sha256": "e85daae220858f25ed89f5fb1e7aff6b618ea4afc99c77fe127dbe0a518f5aaf"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/grid.rs",
+      "bytes": 4408,
+      "sha256": "c40ceb2bf17647c5996985e556a890c757b63a255e662390de7c079aa2bdaae2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/memory.rs",
+      "bytes": 27455,
+      "sha256": "67d7c5024a621986075fa70123a4e914085c5fdef9e25affc0ec50d60a8c20a0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/mod.rs",
+      "bytes": 1956,
+      "sha256": "66928e151b131975bd997f2c9d1f770ceaa870d5c8c0514cecf7da4f3ea0c84e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/mvt.rs",
+      "bytes": 12609,
+      "sha256": "fbc73520ed33dbed835a512b0c52e1626c94b88542a43135c5684cd74b5e64f2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/controller.rs",
+      "bytes": 27704,
+      "sha256": "7acc5feb472621fc11ce7fac1edab7c24efac1fc1cc557cbb8468c85b0b4faba"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/lab.rs",
+      "bytes": 16894,
+      "sha256": "ae96c8c39c5fef0d5b8cedf77e53a67f21724388729805932a4df0b3d75a4a38"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/ledger.rs",
+      "bytes": 14400,
+      "sha256": "21cfaaa3b509927be2f1c992f856b481b3d26591863e4f9856b066e435b49069"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/mod.rs",
+      "bytes": 143,
+      "sha256": "77980a954730d2903f01c1b2896a8ad8fd79017ad253e4200fb2439ad63c9391"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/runner.rs",
+      "bytes": 26097,
+      "sha256": "dd223e7294b417f42e9116594c4a1f9233cfa1b9c7be2d8baf0a9477e1857c48"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/state.rs",
+      "bytes": 3769,
+      "sha256": "6c4103dabaf35613b9f73501dc020a28407c4b277beab007a09f5c3b0f210c73"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/tests.rs",
+      "bytes": 14881,
+      "sha256": "5d9364046f8272ebeb87e1a55b5b3b0dd5100c72e985be19b144fdd8496fc41e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/tests_support.rs",
+      "bytes": 396,
+      "sha256": "815cd99d85fdd8ebd2a9b9771d77bca03f8fd43d86d6c3b80ef3b5f7a599d68a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/access.rs",
+      "bytes": 4429,
+      "sha256": "ecd0eee15bb7cbb366c91de03a70c36d205c60e17ac4e4a0faff5e6a3cb77549"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/controller_tests.rs",
+      "bytes": 12863,
+      "sha256": "30508f8989a24dcb6ef7532f627332bcd865e0fd30f9727549766fa1042f5726"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/delivery.rs",
+      "bytes": 3842,
+      "sha256": "32ce7ddcb6e70c75406a7f4df6d79eabfb6985b314d31987c983d0d4aa00a27f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/guard.rs",
+      "bytes": 2894,
+      "sha256": "19067bbd32cb26c8fe8f14244f8fff6e56c924ecd6a49f49783167313d24d9a2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/inheritance.rs",
+      "bytes": 6697,
+      "sha256": "8f1e73dbb5e12a52f91c4ea5a5231d9444bda29394dc1435af075113afc543b9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/mod.rs",
+      "bytes": 7337,
+      "sha256": "8dc31434a4efbaea8bb6193d5c75c401d2264b6f3364d04443178c6524041276"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/runner.rs",
+      "bytes": 29979,
+      "sha256": "32c69d8b363be954c0b89533c1cc4634450decd87fcf130cc66110bab8438a77"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/state.rs",
+      "bytes": 1648,
+      "sha256": "4730e91e480b063d412ebda2e6ef9eeec0dff48de619b92b22d55a3190f22474"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/stores.rs",
+      "bytes": 18699,
+      "sha256": "cf084a6d830396adcb7c64ff80032077dd1db602790e75672c9b3deaf56bf358"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/watching.rs",
+      "bytes": 26482,
+      "sha256": "f2dd5d1171dda614647202d1fe413ccdea01e86cf867d0fee3bf3fff7d5cb41e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/utility.rs",
+      "bytes": 10241,
+      "sha256": "6d48db4613158ac220d0422cc8db5f8f2943e793d83751d01e5e12eeaa17a572"
+    },
+    {
+      "path": "crates/sugarscape-core/src/model.rs",
+      "bytes": 86101,
+      "sha256": "f2fdeebd1de5cb53db3e749b6a8329a4514275792fb8ab5b9808be0a19d2df66"
+    },
+    {
+      "path": "crates/sugarscape-core/src/network.rs",
+      "bytes": 6787,
+      "sha256": "4c5c0740b3d09a4977d6abe2ee8ce03a850cfab6737928dfc99b19d91ec0e512"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/config.rs",
+      "bytes": 14186,
+      "sha256": "a70d935f04cde03644939013c6ea56e6d49333cf5da6216982588c7bf1983671"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/mod.rs",
+      "bytes": 760,
+      "sha256": "e6162a75108f0eec5679b53ad36667d5f4aae27b5d37363dd3773384258caaed"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/presets.rs",
+      "bytes": 8164,
+      "sha256": "5edecd7fb31f91878e7ad40beab018cdc483013633f1a48b54fbf0c8af4c529c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/stats.rs",
+      "bytes": 3140,
+      "sha256": "fec463645e822208773a09b92bd1918d425ef0ab25599e9a4ab1d3ab2a9dde4f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/view.rs",
+      "bytes": 4928,
+      "sha256": "b54cfb4330a8635fe1549ccdcaa66bca326ac89b6780e853541b8ff199edbbf0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/world.rs",
+      "bytes": 41833,
+      "sha256": "f91be21038d83846f753d514a670aa94e4e441391b67964e7e3db640a08647af"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/config.rs",
+      "bytes": 13283,
+      "sha256": "dd508e445b18b1b17a3586fa8de0712db8a93128b65b1efe8f0a839aade36552"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/mod.rs",
+      "bytes": 813,
+      "sha256": "7825d3baaa63c8bd8a6a863981990643c4a4a6cfde248f8359e4e5bf53cfc522"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/presets.rs",
+      "bytes": 8523,
+      "sha256": "d8d84ab5b721707a05fd96b13108e818355cb2022d900a09ca436eacb82f99b5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/stats.rs",
+      "bytes": 4702,
+      "sha256": "1cd7cad45e85337a75f6ed438aae3f73a7541dda04389ae9b0f265ed08ee1475"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/view.rs",
+      "bytes": 3441,
+      "sha256": "a3e656ef268a5be899c1dc6398fa6d4be6be60a9612cacb81eab764f59608e16"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/world.rs",
+      "bytes": 31482,
+      "sha256": "75348ca05c680a97e466e7151263a8616acde03b707f01d0149baec55d164a24"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/alliance.rs",
+      "bytes": 7336,
+      "sha256": "435b9a87a4cc6a19c29dacba050ea908f4dd0090f1d0bd1a9f95e886d0e8c99b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/analysis.rs",
+      "bytes": 4028,
+      "sha256": "e07253726bedddc60ffa66444dd76878d24c5512bb33ebc778e99854e01f02d7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/combat.rs",
+      "bytes": 13636,
+      "sha256": "b861f8bc43ba09082cadcecc34bf9c5c24de8aaff9782e8a001fc429dd77acfc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/config.rs",
+      "bytes": 37979,
+      "sha256": "b3444b63e436b2d3f6cd560e4ee6e2d5b46ced222f3cb84540693b505c93f387"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/decision.rs",
+      "bytes": 12198,
+      "sha256": "a12b659649df1ef954de2db8bfa8192dfd5366f26623a9721d9cd9b7a7bef624"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/mod.rs",
+      "bytes": 430,
+      "sha256": "87a6032e6c080f55d7d1df11dd00c2f6eb4ba4ce7a18025ec457bfe3f4bcceb3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/presets.rs",
+      "bytes": 1493,
+      "sha256": "6b2e6303ea3f684af3f0fe5a9decb05c55232c36d4c819558f28e61d2c9fb379"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/resources.rs",
+      "bytes": 10079,
+      "sha256": "c59615803e4fbf7edb34be3ca1e6d91d905264588b5c3813f68b5057eab23dd1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/stats.rs",
+      "bytes": 4345,
+      "sha256": "eb43fbf64c1453be52208d4d612559f718891b0ca1b95a964cb64712bbee8cde"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/territory.rs",
+      "bytes": 15270,
+      "sha256": "d7c7334bb2daa2c26509eb4819cb0b118eeb5fbc4ba0a1ceb957de55d0025b07"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/tests.rs",
+      "bytes": 40449,
+      "sha256": "4d5cea5d2e68c022837b46e97bd42b965ef865cecf12a57362b086ccc0e0b2dd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/view.rs",
+      "bytes": 8377,
+      "sha256": "da10a726b824d58e4dd7388d490106b05bea9e5a10fad96f607e83727d61e345"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/world.rs",
+      "bytes": 22311,
+      "sha256": "9fedf8b4c2035a8a9f5e69a2e0f9ede07fe21d78ac93683737a6cbd0706a0951"
+    },
+    {
+      "path": "crates/sugarscape-core/src/portable.rs",
+      "bytes": 3989,
+      "sha256": "f6fc3e202b2ed0463b6957eb28597d95f6e8b0670a174ce743790d570661cc23"
+    },
+    {
+      "path": "crates/sugarscape-core/src/presets.rs",
+      "bytes": 166260,
+      "sha256": "c3acff9f960c66e3b78807010ccc2188048d5192b8528c974e29e61c8a2205f0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/config.rs",
+      "bytes": 17802,
+      "sha256": "57dea31048062453b7fe0b2d144451b8ccac22ac95e3349ac5e7eec1d71c4c83"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/mod.rs",
+      "bytes": 760,
+      "sha256": "86973e9ac8b2e2f67017c4027129d697784e8929ac9c84c6de258f3823e63365"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/presets.rs",
+      "bytes": 8796,
+      "sha256": "6780c497298377d566dbcbac61f2fd555c64f00149444732e007a1de74bb66f3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/stats.rs",
+      "bytes": 2181,
+      "sha256": "66b72d06ef6a0f582b3c8fb437aec0af557908145a5993dd54899bc9fcb14167"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/view.rs",
+      "bytes": 3873,
+      "sha256": "1a89b2651fe570cffc525a9aac2559b6c36addeabc898e17486efc06903f6b22"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/world.rs",
+      "bytes": 46590,
+      "sha256": "821339aee3c674446ecfc50b5501164f18165ba672ffd90764d9fb3a7bcdfb74"
+    },
+    {
+      "path": "crates/sugarscape-core/src/render.rs",
+      "bytes": 24778,
+      "sha256": "4f411007d2f0865100ee2e8e4fb35843d37b165c0270f91a1e6f2c02eaea4c84"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/config.rs",
+      "bytes": 14909,
+      "sha256": "8585d0e4659898b77374c1d6135302f887b6f7d6c808f5ebd5175faa553a0b8d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/mod.rs",
+      "bytes": 840,
+      "sha256": "50fa54612798e45a0fc745c4e694e9c9ad0b8aa4a7bba3df924513b3fad9f0d7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/presets.rs",
+      "bytes": 7592,
+      "sha256": "9170c50524b734e67b575ba9d2c8864c63bf7ba9a5485c190ceba00dbc7d5652"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/stats.rs",
+      "bytes": 2407,
+      "sha256": "f4da0f5d7c74dabbad00cb6674f24fca2956ff10362fcc45453aa1c42026305d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/view.rs",
+      "bytes": 1954,
+      "sha256": "f7ad9d74c6f16d030dcd084a15129bc6071820d21591fb2516322739542a907f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/world.rs",
+      "bytes": 44808,
+      "sha256": "c4c3c44c67128b023b60e56f50b38ece1953c323d99ee7b974c4d6065514d9b6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ring.rs",
+      "bytes": 27278,
+      "sha256": "c3631094c2f102d97a22bc6fe8629c95a97f5a84150601740baa0389e23553d6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rng.rs",
+      "bytes": 178,
+      "sha256": "af425707764621e3e11eed48574498671d3ba52927ab266a660295b51b9e2d1d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/combat.rs",
+      "bytes": 10021,
+      "sha256": "75ecbfc1957dbac790f4d901247fd553a816c54b16c76fb0a170c4cff9dccb41"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/credit.rs",
+      "bytes": 16849,
+      "sha256": "43e826845e5cdf5039dc516ef22a22a9ed4c780ca48f75538f4c32f92224e7d1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/culture.rs",
+      "bytes": 4940,
+      "sha256": "2113dcce3122f2f586f156135971d3e480bca4dfbd1cf6d8f5c55a3630a71b86"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/disease.rs",
+      "bytes": 20608,
+      "sha256": "6bcd0ce5970c82f7a203982888cdaefb01bc42755d9f199d0a27486af1bcc207"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/growback.rs",
+      "bytes": 6005,
+      "sha256": "8377cb3bdda25e1da0d6c7542665a0a4195bfb48bd968c949e6d5a808d91561f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/lifecycle.rs",
+      "bytes": 12616,
+      "sha256": "8af09427c53ffeaa0032d91ce52ebe2472f740d3d357a6442b045d2868852148"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/mod.rs",
+      "bytes": 3972,
+      "sha256": "7ad48ca7273e1b651703294737cd838f7982052df29976c31c6c089ed2a33221"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/movement.rs",
+      "bytes": 57885,
+      "sha256": "fe8dd16ef7aafef041d17daca89db394fe4ca324bec60a59fbdd20eecf7b9ecf"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/pollution.rs",
+      "bytes": 3999,
+      "sha256": "92512a110030af7e7495ac5b7c19bdf3f5d02964baca44e57ff0585d2d66b0be"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/replacement.rs",
+      "bytes": 3510,
+      "sha256": "db91df25518f2166d4b0ab9547783dcd111d11415c35ccd2fac3db203b48de3f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/sex.rs",
+      "bytes": 15899,
+      "sha256": "94a7a6f10ea1feb30c3e9ab82d2fb32624271fc7055ae0fb9a14216286fb9d02"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/trade.rs",
+      "bytes": 16775,
+      "sha256": "b8a6e006e8208278ce46783e7ec6ea2e62d8135dc25118d681be41c9fe169a87"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/truffles.rs",
+      "bytes": 2252,
+      "sha256": "4ae84e990ad3312f3a85df9869e8dbfd7615b2f46e88c43f48c9cf8a1bba97a3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/schelling.rs",
+      "bytes": 118129,
+      "sha256": "17395b9fe8cb2c7f5186b9176c3700da583c373b83cc149e68b2c7d11eb1a387"
+    },
+    {
+      "path": "crates/sugarscape-core/src/schema.rs",
+      "bytes": 9004,
+      "sha256": "725cbedf40a17694d6afdb1792d7efefc33922ede7992510df5980e4cdc595bf"
+    },
+    {
+      "path": "crates/sugarscape-core/src/social.rs",
+      "bytes": 19059,
+      "sha256": "8ba9fb3986f6e54cf0ab095414f1b66bf952c84e12c3f95780c98b0212bcb42f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/config.rs",
+      "bytes": 18582,
+      "sha256": "14d0a9a956aa159110093cf22355286b911dda744cd96a07336aa75d883e2cb9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/geometry.rs",
+      "bytes": 9079,
+      "sha256": "cee656ad640d6e2d0ce05cb325752460ab0a1f3bd17792580ef1766de4c8c9b3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/mod.rs",
+      "bytes": 848,
+      "sha256": "4f2434164682d386da239075f13d953379129b923bcf7741235cefaf605e9e86"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/presets.rs",
+      "bytes": 8558,
+      "sha256": "389f07ee571bbd594cb370766a4a869c36755eee2ae770631ace2f325659c3f6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/stats.rs",
+      "bytes": 1467,
+      "sha256": "09535e57b7513d48bf0015d562cfdf354deadfad51f3bfa17ef60441e12dc34b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/world.rs",
+      "bytes": 30713,
+      "sha256": "fea3a86c8c70e16cf1ac4949682260fbbcc87adf4b2c9cc69de0ffad540dd937"
+    },
+    {
+      "path": "crates/sugarscape-core/src/stats.rs",
+      "bytes": 119496,
+      "sha256": "50148ec3e03cc148011f53199daea129d9056af28a989195a38767029dcac736"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/config.rs",
+      "bytes": 11246,
+      "sha256": "117a038eee82caba408909e1bba83244645f6f844fcfaf337c8c71648f26b7c0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/graph.rs",
+      "bytes": 8070,
+      "sha256": "d82bdaf59162b1f81ca78a22495a1f87e359d6b7bf92c01302da127da5d7c7c9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/mod.rs",
+      "bytes": 810,
+      "sha256": "7e6a906bd81fb65cfcd81cfaf9ef5338453cbddb71e248c64ab241380c8b6804"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/presets.rs",
+      "bytes": 6292,
+      "sha256": "1128bba8bac3dfa955d11892d2a06e5073229f2094a4e1d11d8abcc94e3cb336"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/stats.rs",
+      "bytes": 4153,
+      "sha256": "8245c25d27398c10573f6063f17608322c3f9c8269fb0ccb4319fb45191ebe14"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/view.rs",
+      "bytes": 4126,
+      "sha256": "6bb67134560cccaa0a16e6ced2b29120cae62e1a04da7bf027935c134273c9d6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/world.rs",
+      "bytes": 32372,
+      "sha256": "f5e42bbf4fdac8c2138f36c61f3feaf0277ea90f9a06ed65840706b9527e62ca"
+    },
+    {
+      "path": "crates/sugarscape-core/src/sweep.rs",
+      "bytes": 101941,
+      "sha256": "3d79b0c4037095efb03a135a03a4f710598c0c0a93259319f5781346eeb8cbd3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/config.rs",
+      "bytes": 11538,
+      "sha256": "5f7968b2b170ab2e4f584b9774acc6a396889ef8f2eb42f4da0f3bbb1a4ebce9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/mod.rs",
+      "bytes": 687,
+      "sha256": "9623e7855629474eacadc8a0099554db5a673de8272f05b4f0cfc1b8be9f5cac"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/presets.rs",
+      "bytes": 8787,
+      "sha256": "400e86b41bab90a7c0ba8182b1c7f7d87f502b39756aeb8b6876ca9615b83d86"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/stats.rs",
+      "bytes": 5442,
+      "sha256": "0c506f9022a1ce2720428d592db4397f38c3006e8803eedcd3e08eb57768bc50"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/world.rs",
+      "bytes": 32579,
+      "sha256": "48fa765a287962b91d7eea5213a16c6b9f5a198db4ba619fc6fe6de72c6b300f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/testkit.rs",
+      "bytes": 4337,
+      "sha256": "3f7687a4fbbed9f3b8c093637b7cfca7e56adaca37e3b7059349e8a5b2dd1784"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/config.rs",
+      "bytes": 20602,
+      "sha256": "c200fec28d52118f999e905d13b2da355067f379eee20f40b67299bdb4b47477"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/crowd.rs",
+      "bytes": 10300,
+      "sha256": "cd6e54cb9bff52594bd38fbb7b98f491c41051df6e0d5e9236bf75cb300c440e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/mod.rs",
+      "bytes": 1111,
+      "sha256": "05021d6f52edb660e7c15a7a7c4d423e73185418fefd1da6409a912117050c8c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/presets.rs",
+      "bytes": 14067,
+      "sha256": "40780f89acb9e682646c3a7b2b94dc621fa88d90e0caf8979311830815750dfe"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/stats.rs",
+      "bytes": 2039,
+      "sha256": "cd1665508a2f3a754390b1d3fc3de1077faffacff68e536ba3d10694a6aae503"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/theory.rs",
+      "bytes": 5547,
+      "sha256": "aa20eca4dfa383fef871d4201a25002459f461ce7f994babae12fabfbb3b360a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/view.rs",
+      "bytes": 2525,
+      "sha256": "d99b1fc1f1adcf5c5e0a1197b06816eb390aa4d4e010cc672838332631b8da81"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/world.rs",
+      "bytes": 44964,
+      "sha256": "8e297613a34d862bf6e6a41eed97f2f18a9aec40fca591cb0eeb05e173e869d1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tipping.rs",
+      "bytes": 37335,
+      "sha256": "1a8fcb5610be30683d82cc73283fd176ecb6a4d3d9308b93999dc6259dc3b6fc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/titles.rs",
+      "bytes": 47614,
+      "sha256": "5fc5dbe25543b23728bc1a40ee2cc7cb8abc61b95e9b2913e94b103f861fa914"
+    },
+    {
+      "path": "crates/sugarscape-core/src/world.rs",
+      "bytes": 69364,
+      "sha256": "1f862c8add3fb6417616918d6f70217d0cf394a6cac2149712710b7ee011c8eb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/config.rs",
+      "bytes": 14808,
+      "sha256": "76fb4c606fd66de09c9fa483b0fafe1acbcde119c22fb6aea555cd05db27c05d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/market.rs",
+      "bytes": 8171,
+      "sha256": "d6528ec094dd90980eaf823a66a45a76fac7069ee7115ab61f1408eb3ceb8618"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/mod.rs",
+      "bytes": 897,
+      "sha256": "e170e389adf1e53f7e0149a442a78681d028ca5765a5f671524604dab1e0e23b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/presets.rs",
+      "bytes": 11142,
+      "sha256": "23db1228a268182f37df372b21929fb7d2d229889da9710a00f2f4a5eb372e0c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/stats.rs",
+      "bytes": 2690,
+      "sha256": "22ea07dbff98808943cc0aad54e3ea09073a1596901669476c49e2c9de0a7093"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/view.rs",
+      "bytes": 1589,
+      "sha256": "23351b8ee3e9e9a31b3ad87c947fff21f65bbc748514295b9cc8aeb713f48dec"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/world.rs",
+      "bytes": 45506,
+      "sha256": "03380114d85f206688c51e0ffddb6ca0b1f48b8c3752543fb6ca6e39f90e91c2"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/astar.rs",
+      "bytes": 6213,
+      "sha256": "e969eaf373f549ef278416d912110c91aa0f5c9af52770b5bddf873fbfaabbe5"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/auctions_discovery.rs",
+      "bytes": 598,
+      "sha256": "0f5595fd5b9b6db65ff71520ad649292921c356a2cfe7cdf6c0bd3490bcb8a03"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/book.rs",
+      "bytes": 39333,
+      "sha256": "5dea74be27c27ba57ae32919edd824cfeef862341820a5d7233c68e80a3f3259"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/caching_lab.rs",
+      "bytes": 7719,
+      "sha256": "7e9ee0ec95e7bdc0dffcc192898fd2c05691c8dff997d84f9d07a5a3ddc53dfa"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/checkpoint.rs",
+      "bytes": 20508,
+      "sha256": "528bed067eee831df00df17620ad00d858afce4deaabf838e6b67b86e453719c"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/civil.rs",
+      "bytes": 6908,
+      "sha256": "566c452148da78610849c0fad9530d9014aebfe37d0fc362b6882e7b9753afa9"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/collusion.rs",
+      "bytes": 2012,
+      "sha256": "6b234453aabe03ff4f3ff269c699aedfa971809d2cae006e724d19ea2a92db4b"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/democratic_peace_discovery.rs",
+      "bytes": 2234,
+      "sha256": "15c72d0320b66dca4dac7317e2e7a0df6fa946fffd272837dd0265ba484f7d8f"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/democratic_peace_host_sweep.rs",
+      "bytes": 2539,
+      "sha256": "402e063b7382f1e30be3cd3719dc3c413180893c847f9c5935cbb202d6cfea6d"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/dpd.rs",
+      "bytes": 21478,
+      "sha256": "bd7bb7eb5d2bedd6a2af8d68adff1987ed31aaf90f52d6e6cd7868ebf5c575ed"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/ethno.rs",
+      "bytes": 20971,
+      "sha256": "eea330225e8f15a6edd3cc871571a372a548771502b9867b0b89674d1cd82e3b"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/geosim_discovery.rs",
+      "bytes": 2516,
+      "sha256": "5fb794348c56b82d2d83650e79b865b2088dd08d7e1f7c05c01139e0045d2a6e"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/geosim_host_sweep.rs",
+      "bytes": 768,
+      "sha256": "a8069b791443cb8642f20e518ed9c6a4a055407d00479a175adab437c82903be"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/geosim_invalid_sweep.rs",
+      "bytes": 2847,
+      "sha256": "14325f2bae98f83a7c9a70d8b5e96e83693deecb35fc17656975c530502302c0"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/goap.rs",
+      "bytes": 6115,
+      "sha256": "296f62f4504efed0dcd5f0f8832bd75eb8351bbbbcbcd3827c67a3f30f17bdb0"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/golden.rs",
+      "bytes": 27197,
+      "sha256": "9bfb68a4165d4e1dbf65ff9f4660774e5ccaaf05fbf0611343219d0a6f6c231f"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/image.rs",
+      "bytes": 21947,
+      "sha256": "92206e7836e466f5d8c0395347aa2283bd99fed36d1a1bbfe49a87c975536543"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/invariants.rs",
+      "bytes": 8562,
+      "sha256": "a4a25ec6748223c83af9956c62ea409e0c7aeb86f9d5c412bd91fb0905884775"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/legacy.rs",
+      "bytes": 3163,
+      "sha256": "685a9d13e715e9107c9795942ca96a3af331a8c7874825ad048a43b33f0e77fc"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/minds.rs",
+      "bytes": 4925,
+      "sha256": "e37a84facee23f77cb37bcf0889d6d18e7e3da218835516e985d15cd58eb1d14"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/polarity_discovery.rs",
+      "bytes": 755,
+      "sha256": "526e1fd5c73e40f4622b98c540da2ea5b45b38a4762f60625762eab04b6fc031"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/protection.rs",
+      "bytes": 5240,
+      "sha256": "dee77dacaf002977e904724ede2d73b38a312fb1887fa1e3216aeb42ffd6c9a5"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/spatial.rs",
+      "bytes": 8025,
+      "sha256": "aa02a416c68925e72f64e90d0fdc7375524b09d7ccaae6b775572adbc580aad2"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/tags.rs",
+      "bytes": 1431,
+      "sha256": "744af0930062d2ebc5b36f8434e70756b47f80bb3c709f1619cd9fdacc4e72a9"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-democratic-peace-author-and-followup-reading-notes.md",
+      "bytes": 10542,
+      "sha256": "355aaa71f6eb9219b30e1c5b0220f31b7e0d55d08a1deda9e391fb5d10321371"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-democratic-peace-design.md",
+      "bytes": 37732,
+      "sha256": "5a636fea911df0e331189cee17b28fe7273588fe26dd7d94a01b2bcc37f4a4a9"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-democratic-peace-mechanics-reading-notes.md",
+      "bytes": 14201,
+      "sha256": "4c7b4a72afd0f13252e384f901cf6c88a1d8601875b2a507584bd11dc8775f98"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-democratic-peace-reading-notes.md",
+      "bytes": 7255,
+      "sha256": "350da1d6ce741a854a4d28080a4139c2afd6cbe6eba9142c992a7d221c01a254"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-democratic-peace-source-extraction.md",
+      "bytes": 14486,
+      "sha256": "d6c25b0e6c5bc9cad4c8e8471f01fdaa70de8876f6df71c572a4b4cb9ff78096"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-democratic-peace-source-review.json",
+      "bytes": 2366,
+      "sha256": "2bf79b8aaffda1ef4307aee52e7383a513feac114b7d76a899067d99db360dc0"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-democratic-peace-source-table.json",
+      "bytes": 94748,
+      "sha256": "221e944eefc22b166ce907c7bafc5acda95a76e3dbd84b2db240b5eb92366ed0"
+    },
+    {
+      "path": "survey/Cargo.lock",
+      "bytes": 5884,
+      "sha256": "1ebf300527d73c5fab50afe7451d8d41b7cce9d5aca13d62adbaeae58df88c81"
+    },
+    {
+      "path": "survey/Cargo.toml",
+      "bytes": 537,
+      "sha256": "e8a720a196e6e097cc2806801893793147ebd0f8943f0b3e5c7e2017bc11c337"
+    },
+    {
+      "path": "survey/democratic_peace/.python-version",
+      "bytes": 7,
+      "sha256": "e72b03ed5b70312f2782f2b05055c55b24670e126d50e24c4f2c559bf288f810"
+    },
+    {
+      "path": "survey/democratic_peace/NUMERICAL_METHODS.md",
+      "bytes": 3243,
+      "sha256": "a61a77150c89334d50024fd33281bd663852b94f1c47e60f0060d9ea7c19e404"
+    },
+    {
+      "path": "survey/democratic_peace/README.md",
+      "bytes": 3126,
+      "sha256": "ecd25f06c949f96e49c3cc9bade0b6b81544803da5ce4d023f6aa06bd22c3790"
+    },
+    {
+      "path": "survey/democratic_peace/analysis.py",
+      "bytes": 9578,
+      "sha256": "588e50612fa220c6d53226b7134a381f295064cc3dd8aaddd82fa7a30cb54676"
+    },
+    {
+      "path": "survey/democratic_peace/contrasts.py",
+      "bytes": 2741,
+      "sha256": "f668fb0865035ecd3b5b20f1efedb0a9852673503ad58aab91d398671e852b57"
+    },
+    {
+      "path": "survey/democratic_peace/extraction.py",
+      "bytes": 8089,
+      "sha256": "136d01fdf1b037e2c270a1b17fb171dbe24923388cbb51d8a821b19101930200"
+    },
+    {
+      "path": "survey/democratic_peace/manifest.py",
+      "bytes": 11427,
+      "sha256": "82fdc07a1b447170fdb60c1c841088f4db404ce2e74c3a964214b1082c0f587d"
+    },
+    {
+      "path": "survey/democratic_peace/methods.json",
+      "bytes": 1273,
+      "sha256": "15b3da5153bf09b775dd1e62cf935dffce7678fa0dfc82bd6840c15e2ad4de34"
+    },
+    {
+      "path": "survey/democratic_peace/methods.py",
+      "bytes": 569,
+      "sha256": "f50ef1b47ae2ab74b1bf59f110996a284482356c66784c2eed7c5ad1534e329f"
+    },
+    {
+      "path": "survey/democratic_peace/numerics.py",
+      "bytes": 5988,
+      "sha256": "55c321c6f2c245f05cbf20d3a82faed350dccb5f85601bcb05d6309a09e656e4"
+    },
+    {
+      "path": "survey/democratic_peace/provenance.py",
+      "bytes": 6991,
+      "sha256": "3d6499dcd85b2af890c89462cc4b3b2f20164727d29008b83f94ecb2dbed4222"
+    },
+    {
+      "path": "survey/democratic_peace/records.py",
+      "bytes": 20035,
+      "sha256": "eabebdc9ac5684b76792f250d9fcc8edc90a8146b060eadf29f8242b57ce3667"
+    },
+    {
+      "path": "survey/democratic_peace/reporting.py",
+      "bytes": 3287,
+      "sha256": "d5fa2102507dbd93095dbd300b8742ef9cc9d272a59ec6a22e25718940cec9d7"
+    },
+    {
+      "path": "survey/democratic_peace/requirements.txt",
+      "bytes": 89,
+      "sha256": "cfc1e9cde0f1c35b35da7a9f2c19a16a39ef114c7a2ea088fcb7ac7993d30eba"
+    },
+    {
+      "path": "survey/democratic_peace/run.py",
+      "bytes": 3824,
+      "sha256": "b69ce049588a372263c161e8ff405319558619508f262f575e0275e765bb8e13"
+    },
+    {
+      "path": "survey/democratic_peace/source.py",
+      "bytes": 11088,
+      "sha256": "b3cc05131b0497f5a740b2ef0b92ff91ad24a5dc48f914db92d4d1a2721ab1ed"
+    },
+    {
+      "path": "survey/democratic_peace/test_analysis.py",
+      "bytes": 2690,
+      "sha256": "009271ae179759f2c8e2f49aa7b136cbaf1c9f52d714c4649d0459c2db21d89d"
+    },
+    {
+      "path": "survey/democratic_peace/test_manifest.py",
+      "bytes": 4409,
+      "sha256": "213dd1fd969854a9735e20777a71912405c79b5c2c0c81f2b69d357b08327152"
+    },
+    {
+      "path": "survey/democratic_peace/test_numerics.py",
+      "bytes": 2726,
+      "sha256": "4043d3e18c5a09cdf3cd48f470a57750fb9fdd98ff092f257fbfbb2c6d74afc3"
+    },
+    {
+      "path": "survey/democratic_peace/test_provenance.py",
+      "bytes": 2796,
+      "sha256": "1649883d6dace4b5fe9e964bebfd70ea1d0196b87bbb6d5964075266356f2cd4"
+    },
+    {
+      "path": "survey/democratic_peace/test_records.py",
+      "bytes": 8976,
+      "sha256": "9a0df763e340191809fecb87fe1b50c309546d13ac32d0138becf203113fea09"
+    },
+    {
+      "path": "survey/democratic_peace/test_run.py",
+      "bytes": 1874,
+      "sha256": "206e248a5a9c4961e6aec2f80120f94748baf669b6943772bcbc4ed5c4f5926e"
+    },
+    {
+      "path": "survey/democratic_peace/test_source.py",
+      "bytes": 3439,
+      "sha256": "3a277a3a0408906d99f8cc375d42fc5908b150fc0fa6c507d5f839dcd8d533da"
+    },
+    {
+      "path": "survey/src/bin/democratic_peace.rs",
+      "bytes": 53511,
+      "sha256": "038107d11108e17afb6a9cf8ff1f79dfd29c30ed0b4610488cfc28a6beb9d881"
+    },
+    {
+      "path": "survey/tests/democratic_peace_native.rs",
+      "bytes": 20852,
+      "sha256": "1c294d609a0cc93528268874e653340e8d9ee9bb00c4bc9c0409c571de51f37c"
+    },
+    {
+      "path": "survey/tests/geosim_native.rs",
+      "bytes": 25248,
+      "sha256": "2317f665769244194131e8ccf638c82996b4f2cd9f4eee7a636c8a4c3ecd8f1c"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "survey/out/democratic-peace-study/analysis-runtime.json",
+      "bytes": 957,
+      "sha256": "69bb74f0385bdb4c919dc1c8a68e104d887cfeb851d96dcdbe6796d7ea1572a8"
+    },
+    {
+      "path": "survey/out/democratic-peace-study/build-receipt.json",
+      "bytes": 1380,
+      "sha256": "239c1b10ac022564d9c2a86f7cbe13f63c17c24e47f548942124a170fe86f965"
+    },
+    {
+      "path": "survey/out/democratic-peace-study/build.log",
+      "bytes": 62,
+      "sha256": "92434e198f27984c035c376ec77a7cf9e6ebdde782f8ccb1336ae3329b66ddb7"
+    },
+    {
+      "path": "survey/out/democratic-peace-study/cargo-configuration.json",
+      "bytes": 403,
+      "sha256": "8484f59c66ac22d0c6620483ad8cfe86ec90cead4846db480923bf3c7eacd968"
+    },
+    {
+      "path": "survey/out/democratic-peace-study/execution-runtime.json",
+      "bytes": 1469,
+      "sha256": "f7ce1fd45ebc78f45e6ab63e097340714e16dc22ab2fb029548a3f4b1070f63f"
+    },
+    {
+      "path": "survey/out/democratic-peace-study/findings.json",
+      "bytes": 5841531,
+      "sha256": "558b0f8c482503dba1afd3b2a0b97cf49567871eb323c6c0a8a66f7f60e0e08b"
+    },
+    {
+      "path": "survey/out/democratic-peace-study/findings.md",
+      "bytes": 23163,
+      "sha256": "8edf17545207d2eb2ea9492252428297a9ed6043fb0931075782dd7881c47975"
+    },
+    {
+      "path": "survey/out/democratic-peace-study/manifest.json",
+      "bytes": 153317,
+      "sha256": "8a2f365365ae1b5b5f71d8319225c6e565fb60ffe52e7d1008e5e04f296bb10a"
+    },
+    {
+      "path": "survey/out/democratic-peace-study/registration-decision.json",
+      "bytes": 11753,
+      "sha256": "3e8c98ea5a029e863e664ddd333fb48339c507684016d7d555561c3e87d28a5f"
+    },
+    {
+      "path": "survey/out/democratic-peace-study/resolved.json",
+      "bytes": 245004,
+      "sha256": "4465ac0fe518e6da09b821ec626c8975b13624edb2d71f67fb884470a995533f"
+    },
+    {
+      "path": "survey/out/democratic-peace-study/sessions.jsonl",
+      "bytes": 16299010,
+      "sha256": "753a1d5ff6236ba4720e0c52e46ab061643a5d27ef5c5d00175e0ff3f6d6c492"
+    },
+    {
+      "path": "survey/out/democratic-peace-study/validation.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/democratic-peace-study/validation.stdout.log",
+      "bytes": 75,
+      "sha256": "3d8cee2fdc36690a149bac0b29767e7cad5f103297542be2bc7515a736856926"
+    }
+  ]
+}

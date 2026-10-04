@@ -3838,3 +3838,73 @@ Measurements remain bound to the preserved original source/binary; the
 and integrated builds have separate identities.
 
 Integration and deployment evidence is retained in the [publication receipt](docs/superpowers/specs/2026-10-03-geosim-publication.md).
+
+### Democratic peace as selection (Cederman 2001; milestone 38)
+
+`democratic_peace` reconstructs tagging, defensive alliances and collective
+security as a separate model kind. Its bounded 15×15 lattice runs 1,000 source
+periods, including extinction, all-democratic and quiet states. Initial resources
+are 10 or 0, with a resourced share of 0.05; mobile commitment defaults to 0.5.
+There is no learning rule or historical validation. Democratic–democratic
+nonattack is stipulated, so its absence alone is not evidence that cooperation
+survives or expands.
+
+Six presets expose the printed 2001 reading, its named prose-probability
+alternative, tagging, alliances, collective security and a predatory reference.
+The registered primary probability is `printed_decreasing`: it decreases with
+own advantage, despite the paper's conflicting prose. `prose_increasing` remains
+an unmeasured scientific alternative. Assignment, zero ratios, exposure,
+resource timing, territorial release and other reconstruction choices are
+explicit in the [design](docs/superpowers/specs/2026-10-03-democratic-peace-design.md)
+and [prospective reading handoff](docs/superpowers/specs/2026-10-03-democratic-peace-reading-notes.md).
+
+The playground offers sovereign territory, governing regime, latent cell tags,
+resources, alliances and pariahs. Inspect explains front decisions, obligations,
+resource accounting, structural events and complete counters. Compare keeps
+independent source clocks. One display tick normally advances one source period;
+grouping executes the final partial tick through the horizon. Experiments exports
+the resolved configuration, terminal census and reasons for unavailable metrics.
+These interactive experiments are exploratory. To export defaults without
+advancing the world:
+
+```sh
+cargo run --release -p sugarscape-cli -- run --preset democratic-peace-printed-2001 --ticks 0 --config-out democratic-peace.json
+```
+
+The prospectively registered offline study retains **108 original arms × 30
+histories = 3,240 attempts**, all completed for 1,000 periods, with no invalid,
+missing or replaced keys. It covers three mobile shares, three mechanisms and
+12 initial democratic shares. The fixed runtime gate selected the whole original
+family; the independent 100-history precision arms were not registered. All 105
+source slots remain in the report: 78 readable inferred curve values, 26
+unreadable overlaps and one absent trace; three density-zero clustering exclusions
+remain outside that family. All source comparison scopes and the separate six
+primary and six secondary positive-direction contrast components are
+**Unresolved**. Their intervals and raw/adjusted p values remain unavailable;
+30-history descriptive means do not replace precision inference. The fixed
+100,000-draw contract and all 129 child-job identities are preserved.
+
+For example, final democratic territory at mobile share 0.5 is descriptive:
+
+| Initial democratic share | Tagging mean | Alliances mean | Collective-security mean |
+|---|---:|---:|---:|
+| 10% | 9.67% | 9.35% | 10.30% |
+| 30% | 29.04% | 30.30% | 30.16% |
+
+Each cell averages its own 30 complete histories; none of these six arms ended
+all-democratic. Across the full registered grid, 341 histories record a first
+extinction and 271 end extinct, including all 270 histories assigned density
+zero. First extinction and final survival stay separate because latent tags can
+reappear after territorial release. Clustering is undefined for those 270
+zero-density histories and one additional final extinction; their territory
+values remain valid rather than being discarded.
+
+See the exact generated [findings](docs/superpowers/specs/2026-10-03-democratic-peace-findings.md),
+[machine-readable census](docs/superpowers/specs/2026-10-03-democratic-peace-findings.json)
+and [execution provenance](docs/superpowers/specs/2026-10-03-democratic-peace-provenance.json).
+Conditional reconstruction compatibility, independent mechanism contrasts and
+original executable/RNG/statistic identity are separate claims; exact source
+equivalence remains Unresolved. Inferred exposure and curve readings limit source
+comparison, and these lattice histories do not establish historical causality,
+human political intent or AI intent. Cederman/Rao 2001 and Cederman/Gleditsch 2004
+remain attributed context and later challenges rather than added dynamics.
