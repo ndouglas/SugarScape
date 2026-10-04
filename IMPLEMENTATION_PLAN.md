@@ -23,3 +23,5 @@
 **Status**: In Progress
 
 Implementation evidence: the original-only 3,240-key census and fixed analysis are retained in `survey/out/democratic-peace-study/`; exact generated findings/provenance and milestone 38 documentation are saved. All ten required final checks passed; exact generated files, evidence hashes, frozen bindings and nine new local documentation links were verified. Task 4 remains In Progress pending controller task/whole-branch review, exact-head CI/Pages, deployed smoke and final evidence archive. Leave this ledger until those gates complete.
+
+Task4 reporting correction I1: future and derived reports distinguish unregistered precision null censuses from the fixed100-history requirement. A dated deterministic reporting amendment preserves the original study/bindings and all empirical results; code/replay/invariance and49 Python tests pass. Controller scoped amendment review and final publication gates remain pending.

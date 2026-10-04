@@ -3902,6 +3902,14 @@ values remain valid rather than being discarded.
 See the exact generated [findings](docs/superpowers/specs/2026-10-03-democratic-peace-findings.md),
 [machine-readable census](docs/superpowers/specs/2026-10-03-democratic-peace-findings.json)
 and [execution provenance](docs/superpowers/specs/2026-10-03-democratic-peace-provenance.json).
+The [2026-10-04 reporting amendment](docs/superpowers/specs/2026-10-04-democratic-peace-reporting-amendment.md)
+corrects 24 contrast arm references that previously mislabeled unregistered
+precision histories as registered and missing. Their censuses are now null;
+the required sample size of 100 is stated separately. The complete original
+study and every empirical value/verdict remain preserved. Corrected findings
+carry a distinct reporting-code identity; original measurement bindings certify
+the preserved original source/native, with no world or inferential rerun.
+
 Conditional reconstruction compatibility, independent mechanism contrasts and
 original executable/RNG/statistic identity are separate claims; exact source
 equivalence remains Unresolved. Inferred exposure and curve readings limit source

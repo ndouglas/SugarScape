@@ -144,3 +144,7 @@ secondary_contrasts: separate six-test family; aggregate Unresolved.
 | secondary.mobile0_15_minus_0_85.collective_security.density0_3 | Unresolved | Unavailable | Unavailable | Unavailable | Unavailable | precision_not_registered |
 
 Missing, invalid and legitimately undefined histories remain in their censuses. Clustering predictions condition on defined resamples and preserve extinction draws. Original and precision histories are never pooled or seed-paired. Bootstrap support does not establish impossible model events; these lattice results do not establish historical causal democratic peace.
+
+## Reporting amendment — 2026-10-04
+
+The 24 unregistered precision contrast references now have null censuses with `precision_not_registered`. The fixed required sample size is 100 per precision arm, separately recorded as `required_precision_sample_size`; it does not assert registration. This is a deterministic reporting derivation of the preserved original findings. All empirical histories, source censuses/intervals, methods, jobs, availability, p values and verdicts are unchanged. No worlds or inferential analysis were rerun. Original measurement bindings and amended reporting-code identities are separately retained in the provenance.
