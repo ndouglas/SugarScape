@@ -3,6 +3,7 @@ mod ants;
 mod auctions;
 mod bali;
 pub(crate) mod burrow;
+pub(crate) mod burrow_archive;
 mod ch2;
 mod ch3;
 mod ch4;

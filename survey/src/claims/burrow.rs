@@ -66,7 +66,9 @@ fn explicit_config<'de, D: serde::Deserializer<'de>>(d: D) -> Result<LabConfig, 
     }
     serde_json::from_value(value).map_err(serde::de::Error::custom)
 }
-fn strict_options<'de, D: serde::Deserializer<'de>>(d: D) -> Result<RunOptions, D::Error> {
+pub(super) fn strict_options<'de, D: serde::Deserializer<'de>>(
+    d: D,
+) -> Result<RunOptions, D::Error> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
     struct Options {
@@ -146,20 +148,60 @@ pub(super) fn expected_keys(m: &Manifest, panel: Panel) -> Vec<RunKey> {
         .collect()
 }
 pub(crate) fn cli(args: &[String]) -> Result<(), String> {
-    const UNAVAILABLE: &str = "burrow route unavailable: archive execution and saved analysis are not installed; scientific execution requires separate approval";
+    const UNAVAILABLE: &str =
+        "burrow saved analysis unavailable: saved analysis is not installed at this task boundary";
+    if args.first().is_some_and(|a| a == "--run") {
+        let mut panel = Panel::Scientific;
+        let mut construction = false;
+        let mut revision = None;
+        let mut approval = None;
+        let mut out = None;
+        let mut i = 1;
+        while i < args.len() {
+            match args[i].as_str() {
+                "--construction" if !construction => {
+                    construction = true;
+                    panel = Panel::Construction;
+                    i += 1;
+                }
+                "--protocol-revision" | "--approval-context" | "--out" => {
+                    let value = args
+                        .get(i + 1)
+                        .filter(|v| !v.starts_with("--"))
+                        .ok_or("burrow run flag requires a value")?;
+                    let slot = match args[i].as_str() {
+                        "--protocol-revision" => &mut revision,
+                        "--approval-context" => &mut approval,
+                        _ => &mut out,
+                    };
+                    if slot.replace(value.as_str()).is_some() {
+                        return Err("burrow duplicate run flag".into());
+                    }
+                    i += 2;
+                }
+                _ => return Err("burrow: unknown, duplicate or conflicting run flags".into()),
+            }
+        }
+        return super::burrow_archive::run(
+            panel,
+            revision.ok_or("burrow run requires --protocol-revision")?,
+            approval.ok_or("burrow run requires --approval-context")?,
+            std::path::Path::new(out.ok_or("burrow run requires --out")?),
+        );
+    }
     match args {
         [] => {}
         [flag] if flag == "--manifest" => {}
         [flag] if flag == "--help" => {
             println!(concat!(
                 "survey --burrow [--manifest|--help]\n",
-                "Default prints the reviewed candidate only. Scientific execution and ",
-                "executable registration require separate approval. --run archive execution ",
-                "and --analyze saved analysis are unavailable at this task boundary."
+                "--run [--construction] --protocol-revision COMMIT --approval-context TEXT --out NEW_DIR\n",
+                "Default prints the reviewed candidate only. Scientific execution requires a ",
+                "separately reviewed committed registration. --analyze is unavailable."
             ));
             return Ok(());
         }
-        [flag] if flag == "--run" || flag == "--analyze" => return Err(UNAVAILABLE.into()),
+        [flag] if flag == "--analyze" => return Err(UNAVAILABLE.into()),
         [flag, index] if flag == "--analyze" && !index.starts_with("--") => {
             return Err(UNAVAILABLE.into())
         }

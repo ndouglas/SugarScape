@@ -18,7 +18,7 @@ Plan: docs/superpowers/plans/2026-10-04-burrow-1-measured-harness.md
 **Goal**: Exclusive provenance/hash-bound writes and strict complete-archive loading.
 **Success Criteria**: Construction archives complete; missing/duplicate/extra/tampered/escaping raw records reject.
 **Tests**: `cargo test --manifest-path survey/Cargo.toml burrow_archive`
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 4: Analyze saved evidence
 **Goal**: Deterministic paired reports with exact reductions and censoring.
