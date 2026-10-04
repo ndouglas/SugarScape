@@ -161,10 +161,10 @@ preset's source (the book's figure or animation, or the paper) and its rules sit
 Choosing a preset of another model rebuilds the world as that model; the toolbar, every speed
 (Max included), Share, Export, Record, Compare, Experiments and the CLI work the same for every
 model. **Minds** runs on the sugarscape model but is its own entry: it holds the Minds experiments'
-presets (grouped Minds 1–5), and its Rules panel adds the Decision, Movement, Memory, Truffles and
-Caching sections, which the book's Sugarscape entry leaves out. A world counts as Minds if it came from a Minds
+presets (grouped by milestone, Minds 1–8), and its Rules panel adds the Decision, Movement, Memory, Truffles,
+Caching, Theft and Watching sections, which the book's Sugarscape entry leaves out. A world counts as Minds if it came from a Minds
 preset or uses any Minds rule (a decision other than rule M, walking, memory, walls, truffles,
-caching, a carrying limit, central-place foraging or a winter everywhere at once), so
+caching, a carrying limit, central-place foraging, a winter everywhere at once, theft or watching), so
 a Minds share link opens under Minds. A config without a `model` key is a sugarscape config, so every older config, link, session
 file and sweep reads as before. The other models' Rules panels are built from their parameter
 schemas (each section says whether its fields rebuild the world or apply as it runs, and live
@@ -2813,6 +2813,170 @@ Credit: S. B. Vander Wall and S. H. Jenkins, "Reciprocal pilferage and the evolu
 food-hoarding behavior," *Behavioral Ecology* 14 (2003), 656–667. See
 `docs/superpowers/specs/2026-09-30-minds-7-hoarding-evolution-design.md`.
 
+### Minds 8: watching
+
+This is our own experiment, not a reproduction: the eighth step of the Minds program
+(`docs/studies/2026-09-27-minds.md`) and P2 of its pilfering campaign. Minds 6's thieves only
+stumble on caches. Ravens do better by watching. Bugnyar and Kotrschal (2002) found that of 29
+caches made in front of observers and not taken back at once, "all were found during retrieval
+sessions by conspecifics that had been in the pathway during caching", against one of 13 made
+unobserved. Heinrich and Pepper (1998) found that ravens "recovered none of 40 artificial caches",
+and that observers raided seen caches the next day but none at 14 days. Minds 8 gives agents that
+observational memory: an agent who sees another bury remembers the cache, and goes to take it on
+purpose. It asks whether watching takes fresh caches faster than stumbling, whether it breaks
+Andersson and Krebs's condition where that condition held, and whether scrounging on what others
+bury is worth less as it becomes common (Barnard and Sibly 1981).
+
+Minds 8 ran in two rounds before merging. Four audits found that three of the first design's five
+judged results were foreseeable from Minds 6's numbers, so they weren't tests. The second round
+(`docs/superpowers/specs/2026-10-01-minds-8-second-round-design.md`) replaced them, after a
+pre-mortem of what each hypothesis predicts. Its results are the milestone's.
+
+**What was built.**
+
+- **Watching** (`watching.on`, off by default). With it off nothing is observed, allocated or drawn,
+  and every world is its Minds 7 self (the goldens are unchanged).
+  - **Who watches** (`watching.watchers`, a share of the founders, default 1). Agent i watches iff
+    ⌊i·s⌋ > ⌊(i − 1)·s⌋, Minds 6's cheater rule, so at equal shares the watchers and the cheaters
+    are the same agents. A child born to parents doesn't watch. `watching.who` (reset-only) can
+    instead make every hoarder (`hoarders`) or every cheater (`cheaters`) a watcher.
+  - **Seeing a burial.** When an agent buries, every living watcher other than the owner whose sight
+    covers the site remembers the cache: the site is on one of the four lattice lines from it,
+    within its vision, and not behind an opaque wall. The owner never knows it was seen.
+  - **Memory** (`watching.span`, default 7 ticks). Heinrich and Pepper give recovery the next day
+    and none at 14 days. Bednekoff and Balda's pinyon jays relocated exact sites at 2 days but only
+    general areas at 7 (1996a, p. 823), and Bugnyar and Kotrschal summarize observational memory as
+    "a few days" (p. 189). So 7 is at the generous end of what's known. Every claim is reported at
+    span 1, 2, 3, 7 and 13. An entry is forgotten when it is older than the span, when its watcher
+    arrives on the site, or when its watcher dies.
+  - **Going to a seen cache.** Remembered caches join the watcher's candidates like its own caches,
+    valued at the amount it saw buried (`value: amount`, the default), or at that capped by its room
+    under the carrying limit (`value: room`). A cache emptied since still looks full. A walk that
+    finds no path to a seen cache gives it up.
+  - **A raid.** On arrival, after an owner's dig and before Minds 6's stumbling, a watcher takes
+    from the first remembered cache still there, in owner-id order, with no draw, by Minds 6's
+    `loot` and carrying-limit rules. A raid is a pilfer, and it replaces that tick's harvest. Under
+    `raid_if: better` (the default) it raids only when the remembered amount there is at least what
+    the site would give it, and otherwise harvests and keeps the memory. `raid_if: always` was the
+    first design's rule. If every remembered cache there is gone, the raid is wasted.
+  - **When to raid** (`watching.raid_when`). `always` (the default), or `hungry`: only while the
+    watcher holds less than R / 2, on the owners' terms.
+  - **Scroungers who forgo** (`watching.scrounge: forgo`; default `harvest`). A scrounger (a watcher
+    who is a cheater, so never caches) holding a fresh memory chooses only between its seen caches
+    and staying put, and harvests nothing on any tick it doesn't raid. This is Barnard and Sibly's
+    assumption that scrounging excludes producing.
+  - **Digging earlier** (`caching.dig_below: reserve`; default `half`). Owners dig when they hold
+    less than their whole reserve R, not R / 2. Claim 2's calibrated world needed it.
+- **The counts:** burials seen, sightings, raids, sugar raided and wasted raids, pilfers split into
+  seen and stumbled, and watcher against non-watcher survival and wealth per founder. Sugar is
+  conserved through raids under every switch.
+- **A survey-only probe.** A raid that took something also harvests the site that tick. It is not a
+  setting; it measures what replacing the harvest costs.
+
+**The survey** (`survey/out/minds8b-results.md`; claims, thresholds and a calibration rule committed
+before any run; causes "likely" unless isolated). It covers ticks 1–200, a summer and the first
+winter. Seeds 1–20 for claims 1 and 2, and 1–60 for claim 3. Span 7 is judged. Fitness is
+agent-ticks alive per founder over ticks 1–200 ÷ 200.
+
+- **1. Watching takes fresh caches faster than stumbling (Holds).** Of the caches buried in ticks
+  1–90 of `watch-winter` (everyone watching, no stumbling), 6.6 % are taken within a day and 36 %
+  within a week: a hazard of 6.1 % a day, against 3.0 % for Minds 6's stumbling, higher in 20 of 20
+  seeds. Watchers see 88 % of burials and raid 54 % of the caches they see, so the limit is acting
+  on what they see, not seeing it: action-bound by the rule fixed before the run, in every world and
+  setting. Watching costs lives. 59 % of the founders survive the first winter, against 70 % without
+  watching. About two thirds of that cost is the harvest a raid replaces (the probe lifts it to
+  66 %).
+- **2. Andersson and Krebs.** A calibration, its rule committed first, found the first world on a
+  fixed list where p_s > p_o held without watching: `theft-winter-half` at `find` 0.02 with owners
+  digging below their whole reserve (20 of 20 seeds). With everyone watching (`watch-ak`), the
+  condition **flips (Holds)**: p_s ÷ p_o falls from 3.57 to 0.67, below 1 in 20 of 20 seeds. But
+  **fitness doesn't follow (Fails)**: across watching off and spans 1, 3, 7 and 13, the sign of the
+  hoarders' advantage matches the condition's in 62 of 100 runs. Neither **being watched (Fails)**
+  nor **the hoarders' own raiding (Fails)** costs them 0.05 in any seed. Watching only by the
+  cheaters costs the hoarders 0.012 of advantage (95 % interval 0.008 to 0.017), and watching only
+  by the hoarders changes their fitness by no detectable amount.
+- **3. Producers and scroungers.** Where scrounging excludes producing (`watch-scroungers-forgo`),
+  the scroungers trail, and **trail further as they become common (Holds)**: the mean per-seed slope
+  on their share is −0.20 (95 % CI −0.23 to −0.17). But **no stable mix forms (Fails)**: they are
+  ahead at a share of 0.1 in only 13 of 60 seeds. Never caching costs a little on its own: with
+  watching off (a baseline added after the run, reported only) the same agents trail by about 0.02
+  at every share, a median 0.015 at 0.1. Per seed, watching adds a median 0.034 to the shortfall at
+  0.1 (in 47 of 60 seeds) and 0.204 at 0.8, so the shortfall when rare is mostly scrounging's, and
+  its growth with share entirely so. Within scrounging, forgoing is the cost, since letting them
+  harvest too raises their fitness by 0.13 (at half, seeds 1–20). Among watchers who also bury,
+  **no fall in their lead
+  was detected (Fails, flat)**: slope 0.011, 90 % CI −0.004 to 0.027. Instead it is **a mild social
+  dilemma (Holds)**: watchers are ahead by 0.009 (95 % CI 0.003 to 0.016) while everyone's fitness
+  falls as more watch.
+- **The switches.** `raid_if: always` costs 6 points of survival in `watch-winter` and changes no
+  verdict. `value: room` pays where agents carry close to their limit (+6 to +7 points in
+  `watch-half` and `watch-ak`) and changes no verdict.
+- **An upper bound, sensitive to the span.** Watchers here see every burial in sight and remember it
+  exactly, cachers never hide and owners never defend (both P3), and a 7-tick memory is at the
+  generous end of what's known. With a memory of 1 or 2 ticks, three results reverse and the dilemma
+  goes undetected (through span 3). Watching's hazard falls below stumbling's (0.85 % and 2.49 % a
+  day), the condition doesn't flip (1.72 and 1.10), the forgoing scroungers' shortfall shrinks as
+  they become common, and the burying watchers' lead isn't detected (pooled 0.0007 and −0.0015; also
+  −0.0027 at span 3), so 3c holds only at spans 7 and 13. Bednekoff and Balda's pinyon jays
+  relocated exact sites after two days and only the general areas after seven (1996a, p. 823).
+
+Judged at span 7; the span notes are from the reported spans 1, 2, 3, 7 and 13.
+
+| Claim | Verdict |
+|---|---|
+| 1a. Watching takes fresh caches faster than stumbling | Holds (6.1 % against 3.0 % a day; 20 of 20 seeds). Holds at 3–13; reverses at 1–2 |
+| 2a. Watching flips Andersson and Krebs's condition (`watch-ak`) | Holds (p_s ÷ p_o 0.67 against 3.57; 20 of 20). Reverses at 1–2 |
+| 2b. Fitness follows the condition | Fails (62 of 100 runs) |
+| 2c. Being watched costs hoarders 0.05 | Fails (0 of 20; mean 0.012) |
+| 2d. Their own raiding costs hoarders 0.05 | Fails (0 of 20; mean 0.003, not detected) |
+| 3a. Scroungers who forgo: shortfall grows with share | Holds (slope −0.20). Reverses at 1–2 |
+| 3a. Watchers who bury: lead falls with share | Fails, flat (0.011; no fall detected) |
+| 3b. A stable mix | Fails (ahead when rare in 13 of 60 seeds; at 0.1 the mean shortfall, 0.056, is 0.021 without watching plus 0.035 that watching adds) |
+| 3c. A social dilemma | Holds (lead 0.009; world slope −0.008). Holds at 7 and 13; not detected at 1–3 |
+
+**The first design, superseded.** Its verdicts (the field band, Andersson and Krebs in `watch-half`,
+and producers and scroungers in two variants, all Fails; usage Holds) are kept in the program
+document with the audits' explanation. The band was a strawman, the ratio sat at a floor, and its
+"pure scroungers" still produced their own food. Its write-up over-stated four things, now
+withdrawn. Watching wasn't shown unable to reach field rates, and it was action-bound, not
+knowledge-bound. Frequency dependence among watchers who bury was not detected, which doesn't make
+it absent. And the never-caching agents' shortfall predates watching (48 % against the hoarders'
+70 % with watching off), so it isn't a fact about scrounging.
+
+**The sweeps** (built in; observations, not judged). `watch-span` is the first winter's pilferage
+rate against the span in `watch-winter`'s world. `watch-scroungers` is the watcher advantage at the
+end of the first winter against the share of watchers.
+
+**Cost** (µs per agent-tick; not re-timed in the second round; the table, measured under the first
+design's rule, is in the program document). `watch-winter` cost 37.0, about 2.2 times `theft-winter`
+(17.1 re-timed), likely from walking the lines out from each burial, ranking seen caches and the
+walks to them (not isolated). `watch-scroungers-forgo` and `watch-ak` weren't timed.
+
+Switches: the Rules panel's **Watching (Minds 8)** group has **Watching**, **Span**, **Raid when**,
+**Raid if**, **Seen cache value** and **Scroungers**, all live, and **Share of watchers** and **Who
+watches**, which rebuild the world. The Caching group has **Dig below**, live. Watchers who bury and
+scroungers who never bury are told apart by the Theft group's share of cheaters. The **Watching**
+color mode (the default when watching is on) shows watchers who bury, scroungers and agents who
+don't watch. Inspect shows whether an agent watches (and is a scrounger) and each cache it remembers
+seeing buried: site, owner, amount and how long ago. Charts: **Pilfers by source** (seen, then
+raided, against stumbled on) and **Wasted raids** while watching is on; **Watcher survival
+advantage** and **Watcher and other wealth per founder** when some founders watch and some don't.
+Presets: `watch-winter`, `watch-winter-stumble`, `watch-half`, `watch-scroungers`,
+`watch-scroungers-only`, `watch-scroungers-forgo`, `watch-ak` and `watch-arena`. Built-in sweeps:
+`watch-span`, `watch-scroungers`.
+
+Credit: T. Bugnyar and K. Kotrschal, "Observational learning and the raiding of food caches in
+ravens, *Corvus corax*: is it 'tactical' deception?", *Animal Behaviour* 64 (2002), 185–195; B.
+Heinrich and J. W. Pepper, "Influence of competitors on caching behaviour in the common raven,
+*Corvus corax*", *Animal Behaviour* 56 (1998), 1083–1090; M. Andersson and J. Krebs, "On the
+evolution of hoarding behaviour," *Animal Behaviour* 26 (1978), 707–711; C. J. Barnard and R. M.
+Sibly, "Producers and scroungers: a general model and its application to captive flocks of house
+sparrows", *Animal Behaviour* 29 (1981), 543–550; W. L. Vickery, L.-A. Giraldeau, J. J. Templeton,
+D. L. Kramer and C. A. Chapman, "Producers, scroungers, and group foraging", *American Naturalist*
+137 (1991), 847–863; P. A. Bednekoff and R. P. Balda (1996a, b), *Behaviour* 133, 807–826 and
+*Animal Behaviour* 52, 833–839. See `docs/superpowers/specs/2026-10-01-minds-8-watching-design.md`
+and `docs/superpowers/specs/2026-10-01-minds-8-second-round-design.md`.
+
 ### Threshold Models (Granovetter 1978; Watts 2002)
 
 **The crowd.** Each person has a threshold: the share of the crowd he must see join before he joins
@@ -3317,6 +3481,82 @@ Working Paper 3 (1999); Robert L. Axtell, "Endogenous Dynamics of Firms and Labo
 of Simple Agents" (working paper, 2013). See
 `docs/superpowers/specs/2026-09-30-emergence-of-firms-design.md`.
 
+### Algorithmic Collusion (Calvano, Calzolari, Denicolò & Pastorello 2020; and its critics)
+
+**The model.** Can pricing algorithms learn to collude without being told to and without talking?
+Two firms sell differentiated goods (logit demand) and each picks one of 15 prices a period, a grid
+from a little below the competitive (Bertrand–Nash) price to a little above the joint-monopoly
+price. Each firm learns by Q-learning on the state "both firms' prices last period": it keeps a
+value for every price in every state, updates the value of the price it charged toward the profit
+it earned plus the discounted value of the best price next period, and picks the best price —
+except, with a probability that falls over time (ε = e^(−βt)), a price at random. A session ends
+when neither firm's strategy has changed for 100 000 periods. The paper reports that the firms
+settle far above the competitive price (profit gain Δ = 0.849 of the way from the Nash profit to
+the monopoly profit) and punish a rival's price cut, then return: a reward–punishment scheme
+learned from scratch. A tick is 1 000 periods; a session takes about 1 800 ticks.
+
+**How the paper was read, and its code.** The paper comes with its authors' Fortran (MIT). Built
+here with gfortran, it reproduces Table I; and under the code's own readings — ties broken at
+random, its RAN2 generator seeded by session number (the seed), its cap, its tests — this model
+reproduces the code's sessions exactly: the same strategies in the same period, 100 of 100. Where
+the paper's text and its code differ, the text is the default and the code's choice a switch
+(`collusion-code` turns them all on): ties to the lowest price; a cap of 10⁹ periods, not
+1.25 × 10⁹; an equilibrium is a best response against the rival's strategy (the paper's
+description) rather than "no one-period deviation pays" (the code's test); and the deviation in
+Fig. 4 answers the rival's price at the state itself — the code's impulse-response routine passes
+the cycle position where it means the state. The critics' tests are switches too: no memory
+(Lambin), no future (δ = 0), synchronous updates of every price (Asker, Fershtman & Pakes),
+exploration that decays more slowly, stays constant, or stops after a random phase (Lambin), a grid
+below the Nash price and deviations up as well as down (Epivent & Lambin), RP-completeness and the
+first periods' discounted gain (den Boer, Meylahn & Schinkel), and firms re-paired across sessions
+(Eschenbaum, Mellgren & Zahn).
+
+Measured (the survey — 20 claims, 15 hold and 5 fail — and the presets' and sweeps' descriptions):
+
+- **The paper reproduces, exactly.** Under the code's readings, sessions 1–1 000 are the authors'
+  own: Table I to the digit (Δ 0.849, 50.5 % in equilibrium on path; one-price cycles 64.3 %,
+  two 23.8 %, longer 11.9 %) and Table A5's responses to a deviation (the rival's price −12.7 %,
+  deviations unprofitable 93.6 %, punishment 5.7 periods). The paper's own readings give the same
+  Δ (0.851). The α × β heat map (mean gap 0.008) and Δ against δ (minimum near δ = 0.34) match.
+- **The text overstates its tables.** "In more than 95 % of the cases the punishment makes the
+  deviation unprofitable" is 93.6 % in its own Table A5. And the equilibrium the paper describes —
+  each firm's strategy a best response to the other's — holds on the path in 0.2 % of sessions;
+  the code's test, which checks only one-period deviations, passes 49.7 %. A firm that re-optimizes
+  against its rival's learned strategy gains 5–41 % of its value: the strategies punish a single
+  deviation but can be exploited by longer ones.
+- **High prices without strategies.** Firms with no memory, which cannot punish anything, price
+  higher still (Δ 0.958 against 0.851; Lambin's test holds — the authors' code cannot run it, as
+  it sets δ = 0 whenever memory is 0). Firms that value only the present (δ = 0) reach Δ 0.212, as
+  the paper's own Fig. 3 shows: a quarter of the baseline needs no future at all.
+- **The "punishment" is not specific to cuts.** A rival's price *increase* is answered by a price
+  cut too, in all 25 cells Epivent & Lambin's Table 1 covers (9.9 % against 13.0 % after a cut); an
+  invitation to raise prices is met by a cut in 84 % of sessions; in 91 % of the sessions that
+  punish a cut, some other deviation goes unpunished (den Boer et al.'s RP-completeness).
+- **It does not transfer, and it does not start early.** A firm paired with a rival trained in
+  another session earns Δ 0.125, not 0.851. Over the first 165 periods — the horizon that matters
+  at δ = 0.95 — the algorithms earn exactly what uniform random pricing earns (Δ̃ 0.498 against
+  0.497).
+- **How firms learn matters most.** Updating every price toward what it would have earned
+  (synchronous learning) halves Δ (0.345). Exploration decaying ten times more slowly barely lowers
+  it (0.727); a constant ε = 0.05 never settles.
+- **Lambin's Theorem 1 does not predict the simulations.** After a random phase and none after,
+  the theorem says the firms settle at 1.6990 (δ = 0) or 1.7377 (δ = 0.95); at the paper's α they
+  do in 27 %, 13 %, 0.4 % and 3.6 % of sessions across memory and δ — the theorem is a mean-field
+  limit and the Q-values stay noisy.
+
+Presets: `collusion-calvano`, `collusion-code`, `collusion-no-memory`, `collusion-myopic`,
+`collusion-two-phase`, `collusion-synchronous`, `collusion-explore-more`, `collusion-every-price`,
+`collusion-invitation`, `collusion-below-nash`. Sweeps: `collusion-table-i`,
+`collusion-alpha-beta`, `collusion-delta`, `collusion-memory`, `collusion-myopic`,
+`collusion-two-phase`, `collusion-every-price`, `collusion-below-nash`, `collusion-invitation`,
+`collusion-synchronous`, `collusion-exploration`, `collusion-timescale`, `collusion-rp-complete`.
+Compare: **Learning from the price charged vs every price**. The view: each firm's strategy as a
+map (its own last price across, the rival's down, the price it would charge as the color — or how
+often each state was visited), the last 240 periods' prices between the Nash (green) and monopoly
+(red) lines, and, once the session has finished, the response to a deviation. Inspect a map cell
+for both firms' Q-values there, and any cell for the session's results.
+See `docs/superpowers/specs/2026-10-01-algorithmic-collusion-design.md`.
+
 ## Experiments
 
 The header's **Experiments** switch replaces the grid with a sweep runner (the playground's
@@ -3510,3 +3750,242 @@ The A* test fixtures (`crates/sugarscape-core/tests/fixtures/movingai/`) are a s
 Sturtevant's Moving AI grid benchmarks (movingai.com/benchmarks), under the Open Data Commons
 Attribution License; the README there gives the source and what was kept. They are used only by
 the tests.
+
+
+### Q-learning Auctions (Banchio & Skrzypacz 2022)
+
+Two or three bidders learn bids on a discrete grid. Each bidder values the item at 1;
+first price charges the winning bid, second price charges the highest competing bid,
+and a mixture interpolates between them. The source claims low first-price bids,
+high second-price bids, and higher seller revenue when rival bids support updating
+every action. This reconstruction exposes those claims as experiments with fixed
+rules; it does not assume their conclusions.
+
+`auctions-first-price` uses the paper's 19 bids (.05–.95), learning rate .05,
+discount .99, and exploration `.025 * exp(-.0002 * t)` for one million auctions.
+One tick runs 1,000 auctions. A session always completes its horizon; its final
+1,000 greedy policies determine stability. Terminal survey comparisons select
+stable sessions and also report all sessions and discarded seeds. The default
+numerical optimistic initialization (100), sampled auction ties, and lowest-bid greedy-tie
+choice are explicit reconstruction choices: the paper does not specify them.
+No original simulator was located in the checked public author sources.
+
+The Bids canvas shows one session's **played-pair occupancy**, with a final-20%
+view. It is a different statistic from Figure 1's ensemble of **terminal greedy
+policies**. Three-bidder occupancy projects onto the first two bidders. Values
+and Inspect show each Q vector, chosen/update counts, competing-bid hypothetical
+rewards, payment, stability, and completed periods. Tick-mean played bids and
+rewards are distinguished from end-of-tick greedy bids in the charts.
+
+Feedback and learning are separate switches: `auctions-unused-feedback` receives
+rival bids but keeps chosen-action updates; `auctions-feedback` uses that information
+to update every action against the same old continuation value. Other presets
+cover local exploration, biased initial values, a downward nudge, nonparticipation,
+a .20 reserve, three bidders, a uniform fringe bidder, and persistent exploration.
+The biased values and downward trigger/clock are named readings of unspecified
+source details. Twelve `auctions-*` sweeps expose initialization, ties, information,
+market variants, and duration. The persistent preset runs 100 million auctions;
+long surveys are separate from CI.
+Native chart/CSV history beyond one million ticks retains the initial prefix and
+latest snapshot; actual tick stamps show the gap. Full economic outcomes and both
+occupancy histograms still count every auction.
+
+The complete registered native studies give 14 Holds, four Fails, one Inconclusive
+and five descriptive Untestable controls. Baseline terminal revenue is .232500 FPA
+(1,000/1,000 stable) and .945295 SPA (999/1,000 stable); all-action feedback raises
+FPA revenue to .906800 but misses Figure 5's .90-profile concentration rule.
+The primary downward, fringe-concentration and persistent-occupancy checks fail;
+three-bidder discount .999 has insufficient stable coverage. Initialization can
+remove the baseline format distinction. All workloads and primary choices remain
+fixed; [the full findings](docs/superpowers/specs/2026-10-02-q-learning-auctions-findings.md)
+include conditional/unconditional outcomes, every sensitivity arm and provenance.
+
+Source comparisons retain documentary differences: Figure 1's FPA counts imply
+revenue .2265 whereas the text says .24; SPA includes six exceptions to the
+(.95,.95) profile, including an off-diagonal pair. Full feedback's Figure 5 targets
+(.90,.90), which is a weak first-price Nash equilibrium on this grid. Below-top
+bids alone do not imply a profitable deviation. The survey separately judges the
+figure, prose, source readings and protocol controls, using the preregistered
+coverage and tolerance rules.
+
+Low bids measure seller revenue loss and bidder benefit. They do not establish
+communication, intent or punishment. Follow-ups show that information, updates,
+participation, memory and pricing constraints can change coordination; the scalar
+second-price result is therefore a statement about this model and protocol.
+
+See [the design](docs/superpowers/specs/2026-10-02-q-learning-auctions-design.md)
+and [reading notes](docs/superpowers/specs/2026-10-02-q-learning-auctions-reading-notes.md).
+
+
+### Emergent polarity (Cederman 1994; 1997 chapters 4–5)
+
+`polarity` reconstructs sovereign capitals and provinces on a bounded cardinal
+lattice, with predator/status-quo types, signed normal resource stocks and
+harvests, strict superiority/victory thresholds, conquest, collapse and behavioral
+alliances. Inspect shows the government, members, fronts, commitments, paths,
+trust, coalition and retained events. Territory, resources, strategy and coalition
+views work through the shared native/WASM engine, Compare and Experiments.
+
+Six presets expose the reconstruction: `polarity-original`, `polarity-defense`,
+`polarity-alliances`, `polarity-pra`, `polarity-two-level` and
+`polarity-overextension`. The original/defense/alliance presets use chapter 4;
+PRA and the provincial variants use chapter 5's damage convention. Predator share
+.2 is a playground choice; provincial presets use all predators. The predator-share
+sweep is exploratory and does not execute the complete source studies. One economic
+period is one full model iteration; batched ticks retain actual completed periods
+and stop at the horizon or the configured hegemonic endpoint.
+
+The complete frozen native workload retains **28,520 sessions across 572 arms**,
+with the original 640 and separate 6,400 precision sessions, all named alternative
+readings, allocation/support controls and provincial extensions. Registered judges
+use 100,000 draws and seed 2026100202. Source mean/category judgments give
+45 Compatible, 24 Incompatible and 3 Unresolved rows. The positive defense P2
+and alliance P3 aggregate hypotheses fail.
+28,281 sessions are valid; 239 invalid outcomes remain in raw and registered
+denominators. No replacement seeds or fitted defaults were used.
+
+[The complete findings](docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md)
+retain source digitization uncertainty, incompatible/unresolved strata, positive
+hypotheses and negative source counterexamples separately. The uniform nonzero-share
+defense/alliance contrasts in the probability of 2–10 sovereigns reproduce negative
+source directions while the positive P2/P3 stabilization hypotheses fail; mean
+polarity and hegemony are different measures. Compatibility is not
+equivalence. No original EPM executable was recovered. Störmer's attributed
+adaptation uses 110 configuration means over ten repeats, with a committed scatter;
+no exact 75% inertness cutoff is claimed. The source overextension illustration
+uses a 10×10 grid (100 primitive units) and an unknown seed; no trajectory fit is claimed.
+
+Direct initial/terminal nonpositive-stock frequencies have explicit stock and
+session denominators; period-exposure frequency was not measured. Signed resource
+creation, positive destruction and episode durations/end causes/censoring are
+separate. Abstract resources do not measure casualties. Dated telemetry, strict
+JSON export, sequential stale-front and domestic decision corrections retain original data/verdicts,
+exact hashes, every affected before/after result and full same-seed rerun evidence.
+See the [design](docs/superpowers/specs/2026-10-02-emergent-polarity-design.md),
+[reading notes](docs/superpowers/specs/2026-10-02-emergent-polarity-reading-notes.md)
+and [native protocol](survey/polarity/README.md).
+The [dated domestic amendment](docs/superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md)
+reruns all 1,180 provincial sessions with the original seeds; all 27,340
+nonprovincial raw lines and the reviewed pre-domestic findings remain preserved.
+
+
+### GeoSim war sizes (Cederman 2003)
+
+`geosim` reconstructs sovereign states, mobile resource commitments, conquest,
+technological shocks and connected war episodes on a bounded cardinal lattice.
+Five presets expose the paper reconstruction, the separately attributed 2017
+artifact readings, no technology, no context and smaller shocks. The artifact
+preset is an uncertified reading bundle; it does not establish identity with the
+archived executable or reproduce the APSR study.
+
+The web offers territory, capacity, technology, alert and war views. Inspect
+retains front decisions, resource accounting, the latest structural event and a
+complete terminal census of completed and censored episodes. Exported episodes
+and completed episodes awaiting export remain separate. Severity measures abstract
+resource damage, not battle deaths. Compare presents each world's source clock;
+Experiments captures the resolved configuration and defaults to its full source
+horizon. These experiments are exploratory, not registered study execution.
+
+One display tick can group several source periods. The paper preset starts with
+500 initialization periods and 10,000 observation periods; the default grouping
+is one period per tick. To inspect a resolved configuration without advancing it:
+
+```sh
+cargo run --release -p sugarscape-cli -- run --preset geosim-paper --ticks 0 --config-out geosim.json
+```
+
+Named controls expose source ambiguities independently, including reciprocal
+versus same defender thresholds and attacked-party versus acting-party damage.
+See the [approved design](docs/superpowers/specs/2026-10-03-geosim-design.md),
+[source readings](docs/superpowers/specs/2026-10-03-geosim-author-code-reading-notes.md)
+and [artifact certification audit](docs/superpowers/specs/2026-10-03-geosim-artifact-audit.md).
+The offline study retains 37 arms / 1,490 attempts (1,486 complete, 4 invalid).
+Ten conditional source comparisons remain Unresolved; the 75×75 grid is
+Incompatible. Exact source equivalence and all six fixed technology/context
+contrasts remain Unresolved. Modern pooled iid checks yield 15 rejections,
+5 nonrejections and 2 inconclusive results; these do not establish historical
+reproduction. See the [findings](docs/superpowers/specs/2026-10-03-geosim-findings.md)
+and [execution provenance](docs/superpowers/specs/2026-10-03-geosim-provenance.json).
+Measurements remain bound to the preserved original source/binary; the
+[recorder amendment](docs/superpowers/specs/2026-10-03-geosim-postmeasurement-recorder-amendment.md)
+and integrated builds have separate identities.
+
+Integration and deployment evidence is retained in the [publication receipt](docs/superpowers/specs/2026-10-03-geosim-publication.md).
+
+### Democratic peace as selection (Cederman 2001; milestone 38)
+
+`democratic_peace` reconstructs tagging, defensive alliances and collective
+security as a separate model kind. Its bounded 15×15 lattice runs 1,000 source
+periods, including extinction, all-democratic and quiet states. Initial resources
+are 10 or 0, with a resourced share of 0.05; mobile commitment defaults to 0.5.
+There is no learning rule or historical validation. Democratic–democratic
+nonattack is stipulated, so its absence alone is not evidence that cooperation
+survives or expands.
+
+Six presets expose the printed 2001 reading, its named prose-probability
+alternative, tagging, alliances, collective security and a predatory reference.
+The registered primary probability is `printed_decreasing`: it decreases with
+own advantage, despite the paper's conflicting prose. `prose_increasing` remains
+an unmeasured scientific alternative. Assignment, zero ratios, exposure,
+resource timing, territorial release and other reconstruction choices are
+explicit in the [design](docs/superpowers/specs/2026-10-03-democratic-peace-design.md)
+and [prospective reading handoff](docs/superpowers/specs/2026-10-03-democratic-peace-reading-notes.md).
+
+The playground offers sovereign territory, governing regime, latent cell tags,
+resources, alliances and pariahs. Inspect explains front decisions, obligations,
+resource accounting, structural events and complete counters. Compare keeps
+independent source clocks. One display tick normally advances one source period;
+grouping executes the final partial tick through the horizon. Experiments exports
+the resolved configuration, terminal census and reasons for unavailable metrics.
+These interactive experiments are exploratory. To export defaults without
+advancing the world:
+
+```sh
+cargo run --release -p sugarscape-cli -- run --preset democratic-peace-printed-2001 --ticks 0 --config-out democratic-peace.json
+```
+
+The prospectively registered offline study retains **108 original arms × 30
+histories = 3,240 attempts**, all completed for 1,000 periods, with no invalid,
+missing or replaced keys. It covers three mobile shares, three mechanisms and
+12 initial democratic shares. The fixed runtime gate selected the whole original
+family; the independent 100-history precision arms were not registered. All 105
+source slots remain in the report: 78 readable inferred curve values, 26
+unreadable overlaps and one absent trace; three density-zero clustering exclusions
+remain outside that family. All source comparison scopes and the separate six
+primary and six secondary positive-direction contrast components are
+**Unresolved**. Their intervals and raw/adjusted p values remain unavailable;
+30-history descriptive means do not replace precision inference. The fixed
+100,000-draw contract and all 129 child-job identities are preserved.
+
+For example, final democratic territory at mobile share 0.5 is descriptive:
+
+| Initial democratic share | Tagging mean | Alliances mean | Collective-security mean |
+|---|---:|---:|---:|
+| 10% | 9.67% | 9.35% | 10.30% |
+| 30% | 29.04% | 30.30% | 30.16% |
+
+Each cell averages its own 30 complete histories; none of these six arms ended
+all-democratic. Across the full registered grid, 341 histories record a first
+extinction and 271 end extinct, including all 270 histories assigned density
+zero. First extinction and final survival stay separate because latent tags can
+reappear after territorial release. Clustering is undefined for those 270
+zero-density histories and one additional final extinction; their territory
+values remain valid rather than being discarded.
+
+See the exact generated [findings](docs/superpowers/specs/2026-10-03-democratic-peace-findings.md),
+[machine-readable census](docs/superpowers/specs/2026-10-03-democratic-peace-findings.json)
+and [execution provenance](docs/superpowers/specs/2026-10-03-democratic-peace-provenance.json).
+The [2026-10-04 reporting amendment](docs/superpowers/specs/2026-10-04-democratic-peace-reporting-amendment.md)
+corrects 24 contrast arm references that previously mislabeled unregistered
+precision histories as registered and missing. Their censuses are now null;
+the required sample size of 100 is stated separately. The complete original
+study and every empirical value/verdict remain preserved. Corrected findings
+carry a distinct reporting-code identity; original measurement bindings certify
+the preserved original source/native, with no world or inferential rerun.
+
+Conditional reconstruction compatibility, independent mechanism contrasts and
+original executable/RNG/statistic identity are separate claims; exact source
+equivalence remains Unresolved. Inferred exposure and curve readings limit source
+comparison, and these lattice histories do not establish historical causality,
+human political intent or AI intent. Cederman/Rao 2001 and Cederman/Gleditsch 2004
+remain attributed context and later challenges rather than added dynamics.

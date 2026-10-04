@@ -305,6 +305,89 @@ and who covers a base-pay shortfall — decide whole tables; and his 2013 parame
 Zipf's law, though the largest firm peaks at 3 000–5 800 of the 10 000 agents after the burn-in (5 seeds), though most of the time it stays under about 1 000 (median 780–955).
 See `docs/superpowers/specs/2026-09-30-emergence-of-firms-design.md`.
 
+## Milestone 34: Algorithmic Collusion (done)
+
+Calvano, Calzolari, Denicolò and Pastorello's Q-learning pricing algorithms (AER 2020) as a model
+kind, checked against the authors' own Fortran: under the code's readings the sessions are theirs,
+period for period, and Table I and Table A5 reproduce to the digit. The paper's text overstates its
+tables (deviations unprofitable 93.6 %, not "more than 95 %"), and its equilibrium — a best response
+— holds in 0.2 % of sessions where the code's one-period test passes half. The critics' tests are
+switches, and most hold: memoryless firms price higher, myopic firms reach a quarter of the profit
+gain, price increases draw the same "punishments" as cuts, synchronous learning halves the gain,
+collusion does not survive a new rival, and the first 165 periods look like random pricing. Slower
+exploration and Lambin's Theorem 1 do not hold up.
+See `docs/superpowers/specs/2026-10-01-algorithmic-collusion-design.md`.
+
+## Milestone 35: Q-learning Auctions (done)
+
+Banchio & Skrzypacz (2022) is a separate `auctions` kind: fixed-value bidders,
+first/second-price and mixture payments, disclosure versus counterfactual learning,
+and the paper's market and exploration extensions. Initialization, ties and
+underspecified source protocols are named reconstruction switches. The design
+fixes histogram comparisons, coverage gates and decision rules before measuring;
+full ensembles and long duration controls stay outside CI. See
+`docs/superpowers/specs/2026-10-02-q-learning-auctions-design.md`.
+
+The full registered native studies are measured: 11 source/reading checks hold,
+four fail and the patient three-bidder check is inconclusive. Protocol/documentary
+controls hold; initialization, ties, hindsight and duration remain descriptive.
+[Findings and provenance](superpowers/specs/2026-10-02-q-learning-auctions-findings.md)
+retain failed criteria and every declared arm. Fresh review, CI and deployed
+Inspect/Compare/Experiments checks passed.
+
+## Milestone 36: Emergent Polarity (published)
+
+Cederman's 1994 EPM and chapter 5 provincial variants are the `polarity` kind,
+with six inspectable presets and an exploratory predator-share sweep on the shared
+native/WASM engine. Numerical policy, action memory, scheduling, paths, ties,
+capital capture, transfer and provincial tax defaults are explicit reconstruction
+choices. No original executable was recovered.
+
+All 572 registered arms / 28,520 sessions and 100,000-draw judges are measured;
+28,281 valid and 239 invalid outcomes remain retained. Source mean/category
+judgments: 45 Compatible, 24 Incompatible, 3 Unresolved. Defense P2 aggregate: Fails; Alliance P3 aggregate: Fails. Original and precision populations,
+source uncertainty, direct endpoint stocks and signed accounting remain separate.
+Störmer's scatter has 110 configuration means × ten repeats. The source
+overextension illustration uses a 10×10 grid (100 primitive units) with unknown
+seed and remains descriptive. Approved diagnostics/export/obsolete-front/domestic decision
+repairs preserve original bytes/verdicts and every affected before/after result.
+[Findings and provenance](superpowers/specs/2026-10-02-emergent-polarity-findings.md) and
+[war-study handoff](studies/2026-09-26-war-and-society.md) document the limits.
+Fresh local Rust/native/Python/release WASM/web/typecheck gates, independent
+whole-branch review and rereview, integrated CI and deployed Pages smoke checks passed.
+See the [publication receipt](superpowers/specs/2026-10-03-emergent-polarity-publication.md).
+
+## Milestone 37: GeoSim war sizes (published)
+
+`geosim` reconstructs technological shocks, territorial conquest, contingent front
+commitments and connected war clusters in the shared native/WASM engine. Five
+presets and Inspect/Compare/Experiments retain resolved readings, source clocks
+and complete/censored/queued censuses. Severity is abstract resource damage,
+not battle deaths. The later artifact preset is an uncertified reading bundle.
+
+All 37 arms / 1,490 registered attempts are retained: 1,486 complete and 4 invalid.
+Ten of 11 conditional source-arm comparisons remain Unresolved because the
+predeclared joint source-fit population is incomplete; the 75×75 arm is
+Incompatible. Eight of 88 source targets are available,80 unavailable; all six
+fixed technology/context source contrasts are Unresolved. Printed severity,
+range and count uncertainties keep exact source equivalence Unresolved throughout.
+
+Modern fits are available in 1,478 histories, with 8 insufficient tails and 4 invalid
+histories. All 22 pools have 1,000 successful refitted KS draws: 15 reject,5 do not
+reject,2 are inconclusive under the declared iid diagnostic. Thirty-six of 37
+whole-history parameter summaries are available. The two descriptive modern
+technology/context contrasts are separate from the six source mechanism tests.
+Nested cutoff-Pareto calibration remains declared but unvalidated; pooled iid
+nonrejection does not validate dependent histories or historical war data.
+
+[Findings](superpowers/specs/2026-10-03-geosim-findings.md),
+[execution provenance](superpowers/specs/2026-10-03-geosim-provenance.json) and the
+[war-study handoff](studies/2026-09-26-war-and-society.md) retain every unavailable
+slot and source limit. The [postmeasurement recorder amendment](superpowers/specs/2026-10-03-geosim-postmeasurement-recorder-amendment.md)
+preserves the original measured source/binary, raw data and verdicts separately
+from corrected and integrated executables. Original and amended plan packets are
+retained in history. Final-head CI/Pages and deployed smoke remain publication gates.
+
 ## Experiments and science
 
 - **Parameter sweeps / batch runs**: done (Milestone 5).
@@ -331,6 +414,10 @@ See `docs/superpowers/specs/2026-09-30-emergence-of-firms-design.md`.
 - **Gode and Sunder's zero-intelligence traders** (and Cliff's critique and ZIP traders): done (Milestone 28).
 - **Lansing and Kremer's Balinese water temples** (and Janssen's reanalysis): done (Milestone 29).
 - **Axtell's emergence of firms** (and his 2013 parameterization): done (Milestone 33).
+- **Calvano, Calzolari, Denicolò and Pastorello's algorithmic collusion** (and its critics: Asker, Fershtman & Pakes; Lambin; Epivent & Lambin; den Boer, Meylahn & Schinkel; Eschenbaum, Mellgren & Zahn): done (Milestone 34).
+- **Banchio & Skrzypacz’s Q-learning auctions**: done (Milestone 35); baseline and feedback direction hold, four extension/endpoint criteria fail, and patient three-bidder coverage is inconclusive.
+- **Cederman emergent polarity and provincial variants**: measured (Milestone 36; published). 572 arms / 28,520 sessions retained; 45 Compatible, 24 Incompatible, 3 Unresolved; Defense P2 aggregate: Fails; Alliance P3 aggregate: Fails. See [findings](superpowers/specs/2026-10-02-emergent-polarity-findings.md). GeoSim war-size findings are measured separately (Milestone 37).
+- **Cederman GeoSim war sizes**: published (Milestone 37). 37 arms / 1,490 attempts: 1,486 complete, 4 invalid; 10 conditional Unresolved, 1 Incompatible, all source-equivalence and six mechanism slots Unresolved. [Findings](superpowers/specs/2026-10-03-geosim-findings.md).
 - **Minds 1: the utility mind and the ideal free distribution** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 2: A\* and walking; which of the book's results need the jump** (our experiment; docs/studies/2026-09-27-minds.md): done.
 - **Minds 3: memory, belief and truffles; memory's value as an information asymmetry** (our experiment; docs/studies/2026-09-27-minds.md): done. Memory mostly hurts under rule M, which prices no travel; the marginal value theorem moves to Minds 4.
@@ -338,7 +425,10 @@ See `docs/superpowers/specs/2026-09-30-emergence-of-firms-design.md`.
 - **Minds 5: caching for the future; which hypothesis the jays' caches resemble, winter, and central-place foraging** (our experiment; docs/studies/2026-09-27-minds.md): done. Each caching rule caches as derived in Raby's and Amodio's protocols (a planner looking a day ahead caches nothing when tomorrow has food, so Raby's planner claim is Weak), and the paper's Bayesian comparison reproduces; the jays' pattern looks like the even splitters'. Caching gets agents through winter, planning best (88 % against 49 %). Loads rise with distance, but Lima's equal near and far loads fail, and the analytic optimum is a cancellation.
 - **Minds 6: theft; the first step of the pilfering campaign** (our experiment; docs/studies/2026-09-27-minds.md): done. Agents stumble on each other's caches; the chance to find one is a free parameter (0.25 an anchor), and stumbling can't reach the field's median pilferage (7.0 % a day even finding every cache stood on). Theft pools stores (winter survival 74 % → 90 %); cheaters win by transfer, and the owner's advantage goes nearly unused (with half cheaters, owners dig back 1.5 % of the sugar dug or pilfered). Andersson and Krebs's threshold is Weak and turns on valuing still-buried caches; equal recovery holds (as an equal chance per draw: owners still cross their own caches far more often); reciprocity splits; Vander Wall and Jenkins's 18 % is untestable. Next: P1b, the evolution of larder hoarding (Minds 7); then watching, protection and deception; behavior trees after.
 - **Minds 7: the evolution of hoarding; Vander Wall and Jenkins's genetic algorithm (P1b of the pilfering campaign)** (our experiment, a reproduction first; docs/studies/2026-09-27-minds.md): done. A non-spatial `hoard` model built from the paper's Appendix, gaps filled as stated choices. Larders were first weighted per item and never took over in 15 diagnostic runs; the text (pp. 662, 664) supports per burrow, which became the default, a change prompted by that result and disclosed (the survey later ran per item too: 0 of 1 350 runs took over). Per burrow, the threshold is Weak (50 % point 0.235 against 0.219), runs end low or high (98.6 %) but rise slower than "within 10 generations" (as does the paper's own Fig. 2A example), larder loss exceeds scatter loss in 93.8 % of runs, and the best-early-larder predictor holds but barely beats the ratio alone: a partial reproduction. Per item reproduces the loss statistics but not the outcome, so neither reading reproduces both, and the match is contingent on three unprinted choices (per burrow, defense slope, V_seg); the paper's sensitivity analysis is unfound. New ground: under the paper's fitness a non-hoarding cheater is gone in one generation; owner recovery shows no clear effect. Next: P2, watching, or a spatial P1b (not yet chosen); then protection and deception; behavior trees after.
+- **Minds 8: watching; observational spatial memory and deliberate raids (P2 of the pilfering campaign)** (our experiment; docs/studies/2026-09-27-minds.md): done, in two rounds. Agents who see another bury remember the cache for a span (7 ticks, a gap choice between Heinrich and Pepper's next day and 14 days) and go to take it, with no draw; by default they raid only when the cache is worth at least the site (`raid_if: better`). Four audits found three of the first design's five results foreseeable (a strawman field band, a ratio at its floor, "pure scroungers" who still produced), so a second round, with a pre-mortem, replaced them. With a 7-tick memory, watching takes fresh caches twice as fast as stumbling (a hazard of 6.1 % a day against 3.0 %, 20 of 20 seeds), action-bound (watchers see 88 % of burials and raid 54 % of what they see), and costs lives (59 % survive the first winter against 70 %; about two thirds of that is the harvest a raid replaces). In a calibrated world where Andersson and Krebs's condition held (`watch-ak`), watching flips it (p_s ÷ p_o 3.57 → 0.67), but the hoarders' fitness hardly follows (signs agree in 62 of 100 runs; neither being watched nor their own raiding costs 0.05 in any seed). Scroungers who forgo producing fall further behind as they become common (slope −0.20) but trail even when rare (at a share of 0.1 the mean shortfall of 0.056 is 0.021 without watching, from never caching, plus 0.035 that watching adds), so no stable mix forms; among watchers who also bury, no fall in their lead was detected, and the world loses as more watch (a mild social dilemma). An upper bound (no hiding, no defense, generous memory): at spans 1–2, the fresh-cache, flip and scrounger results reverse, and the watchers' lead in 3c isn't detected at spans 1–3. Next: Minds 9, a spatial P1b (heritable larder hoarding in the Sugarscape world); then protection and deception; behavior trees after.
+- **Minds 9: spatial hoarding, paid defense and seasonal inheritance (spatial P1b)** (our experiment; [study](studies/2026-09-27-minds.md), [complete results](../survey/out/minds9-results.md), [approved protocol](superpowers/specs/2026-10-02-minds-9-judge-amendment.md)): done. All 81×40 comparison runs and 21×5 serial timing runs completed; no terminal runs. Unguarded L=1 minus L=0 changes survival by −10.24/−4.50/+18.64 points at watching off/2/7; paid guarding lowers survival in every paired seed (−30.50/−45.26/−46.69 points), despite improved recovery. Neutral/inheritance controls separate drift from selection, and Stores selection lowers L without uniformly improving survival. Frozen rare/common scrounger and burying-watcher directions depend on span; seed heterogeneity and missing groups remain visible, with no stable-mixture or calibrated-apparency verdict. Exact overlap after reviewed scheduling optimization and byte-identical saved-data reanalysis preserve reproducibility. Next: [P3 costly re-caching design](superpowers/specs/2026-10-02-minds-protection-design.md), approved; its [implementation plan](superpowers/plans/2026-10-02-minds-protection.md) is complete; verification and independent task/whole-branch reviews passed. Scientific execution of the [protocol](superpowers/specs/2026-10-02-minds-protection-protocol.md) awaits separate manifest/opportunity review; no P3 campaign has run. P4 deception and behavior trees follow.
 - **Credit hierarchy view**: done (Milestone 6).
+- **Minds and collective agency, long-term campaigns:** [program design](superpowers/specs/2026-10-02-minds-collective-agency-program-design.md), proposed for review. Affordances and environmental controls; persistent messages and private networks; learning and information-seeking; social knowledge; shared minds; costly helping; distributed research; safety/oversight; culture and environmental inheritance. Protection and deception remain next; these later features are not implemented by Minds 9. The first new integration target is a gate, transferable key and message board, followed by collective research and incident-shaped intervention experiments with cheap, inspectable agents.
 
 ## Model extensions
 

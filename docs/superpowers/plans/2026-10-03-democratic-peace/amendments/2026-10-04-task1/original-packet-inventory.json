@@ -1,0 +1,82 @@
+{
+  "01-core-tests.patch": {
+    "bytes": 2433,
+    "mode": "100644",
+    "sha256": "9540a8bdfee9c82773b90580c7534987cb6332c474878fb383d536840f346869"
+  },
+  "02-core.patch": {
+    "bytes": 137305,
+    "mode": "100644",
+    "sha256": "d5f2662a7ce9d3630ddb8063e55b90c3dfb0a6d3a1342ddbddf3c41646614bfb"
+  },
+  "03-host-tests.patch": {
+    "bytes": 29264,
+    "mode": "100644",
+    "sha256": "7b496c6429af1d66e5c315865f146f70d93b21c7acdd28b7e358204c62f95b52"
+  },
+  "04-hosts.patch": {
+    "bytes": 65298,
+    "mode": "100644",
+    "sha256": "758dd3dbe3753e2fc3e4d0a3c2867c7b493e1cb18dfbda8eba63ecd3ca6e62ea"
+  },
+  "05-protocol-tests.patch": {
+    "bytes": 28278,
+    "mode": "100644",
+    "sha256": "a9e041d2996d123051ac29b7814a2907cbacf629407cb25cd8ac06f8ffc35dae"
+  },
+  "06-protocol.patch": {
+    "bytes": 142417,
+    "mode": "100644",
+    "sha256": "26fbb856c5baf491716a4366e8095cbeff85305e79ca27278e88a1ee1f988c18"
+  },
+  "README.md": {
+    "bytes": 3325,
+    "mode": "100644",
+    "sha256": "215646aa92d0d50b43391b6fe596fbf01766ec02b0a70adaba423f9277f2de3c"
+  },
+  "manifest.json": {
+    "bytes": 856988,
+    "mode": "100644",
+    "sha256": "186c47a9b489bc14f511b28a7b31f2ad0eb0f4dfea38b51ba19c89181d0cb9de"
+  },
+  "plan-self-review.json": {
+    "bytes": 1377,
+    "mode": "100644",
+    "sha256": "b8affac4903b71de654e1a2a886aef846c6d1a7b42015617255fd7f5a4d5856e"
+  },
+  "preparation-verification.json": {
+    "bytes": 105202,
+    "mode": "100644",
+    "sha256": "107fe7df61fc8fac4e33592e436f11dd2be429d8ed2ef177758c1f8eb70dce7a"
+  },
+  "prepare_checks.py": {
+    "bytes": 16939,
+    "mode": "100644",
+    "sha256": "114c244176e8a24887e1276c998f69a1857aa591e989c32a5b3ca64ea27764fd"
+  },
+  "publish_findings.py": {
+    "bytes": 3564,
+    "mode": "100644",
+    "sha256": "92e9ade15df95b99c208017a8eefaebc33563b520613981c8cc54637cba696d0"
+  },
+  "register_study.py": {
+    "bytes": 5770,
+    "mode": "100644",
+    "sha256": "cd8ad2a98e5fb05c9cdbb450ea80babf9cf1fb067421924a2a079230ed5532d8"
+  },
+  "replay-verification.json": {
+    "bytes": 17176,
+    "mode": "100644",
+    "sha256": "7664c10d41a7d34dff58083f9685ee7ac2185178b45f30152aa3db8e048c8b1e"
+  },
+  "replay.py": {
+    "bytes": 8489,
+    "mode": "100644",
+    "sha256": "41be413116708e2ab3aec4d3f14e96fd220c31223779cdb650e50539ac8fc06a"
+  },
+  "test_replay.py": {
+    "bytes": 7990,
+    "mode": "100644",
+    "sha256": "075d11adce8d15ec1d1cf1027d5a717c52ebc7b56c2b7642fa8fbd70ce52c9be"
+  }
+}

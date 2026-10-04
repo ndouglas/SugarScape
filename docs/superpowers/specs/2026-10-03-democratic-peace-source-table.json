@@ -1,0 +1,3407 @@
+{
+  "extraction": {
+    "classification": "visually_audited_premeasurement",
+    "date": "2026-10-03",
+    "endpoint_policy": "shared_visually_traceable_endpoints_read_as_curve_values_with_pixel_envelopes",
+    "measurement_used": false,
+    "method": "manual_curve_trace_with_conservative_pixel_envelope",
+    "missing_policy": "null_target_when_scan_trace_absent_no_interpolation_imputed",
+    "overlap_policy": "null_target_when_individual_curve_not_separable",
+    "sampling_identity": "inferred_curve_value_not_raw_original_mean"
+  },
+  "figures": [
+    {
+      "axis_landmarks": {
+        "x_pixels": [
+          326,
+          884
+        ],
+        "x_values": [
+          0.0,
+          1.0
+        ],
+        "y_pixels": [
+          892,
+          310
+        ],
+        "y_values": [
+          0.0,
+          1.0
+        ]
+      },
+      "axis_uncertainty_pixels": 2,
+      "curve_identity": {
+        "alliances": "thick dashed",
+        "collective_security": "upper thin solid",
+        "neutral_response": "reference diagonal excluded",
+        "tagging": "thin solid"
+      },
+      "id": "fig9",
+      "image_path": "survey/out/democratic-peace-preparation/page-17.png",
+      "image_sha256": "b2b22e44405aa6df4267ab110577d9180ba68c6c2ae210a582d106c9cbff85c1",
+      "image_size": [
+        1120,
+        1800
+      ],
+      "independent_visual_check": {
+        "first_reader_audit": "full original render plus enlarged chart and local dark-pixel neighborhoods; 2026-10-03",
+        "review_receipt": "docs/superpowers/specs/2026-10-03-democratic-peace-source-review.json",
+        "review_receipt_sha256": "2bf79b8aaffda1ef4307aee52e7383a513feac114b7d76a899067d99db360dc0",
+        "second_reader": "root",
+        "second_reader_status": "reviewed"
+      },
+      "minimum_line_envelope_pixels": 4,
+      "pdf_page_1based": 17,
+      "printed_page": 486,
+      "render_command": [
+        "pdftoppm",
+        "-f",
+        "17",
+        "-l",
+        "17",
+        "-scale-to",
+        "1800",
+        "-png",
+        "/Users/nathan/Projects/ndouglas/SugarScape/papers/geopolitics/cederman-2001-jcr-democratic-peace-kantian-selection-process.pdf",
+        "survey/out/democratic-peace-preparation/page"
+      ],
+      "traces": {
+        "alliances": [
+          [
+            326.0,
+            892
+          ],
+          [
+            381.8,
+            714
+          ],
+          [
+            409.7,
+            585
+          ],
+          [
+            437.6,
+            393
+          ],
+          [
+            465.5,
+            377
+          ],
+          [
+            493.4,
+            324
+          ],
+          [
+            549.2,
+            327
+          ],
+          [
+            605.0,
+            327
+          ],
+          [
+            660.8,
+            320
+          ],
+          [
+            884.0,
+            310
+          ]
+        ],
+        "collective_security": [
+          [
+            326.0,
+            892
+          ],
+          [
+            353.9,
+            797
+          ],
+          [
+            381.8,
+            506
+          ],
+          [
+            409.7,
+            367
+          ],
+          [
+            437.6,
+            319
+          ],
+          [
+            465.5,
+            317
+          ],
+          [
+            493.4,
+            314
+          ],
+          [
+            549.2,
+            314
+          ],
+          [
+            605.0,
+            313
+          ],
+          [
+            660.8,
+            312
+          ],
+          [
+            884.0,
+            310
+          ]
+        ],
+        "tagging": [
+          [
+            326.0,
+            892
+          ],
+          [
+            381.8,
+            800
+          ],
+          [
+            409.7,
+            746
+          ],
+          [
+            437.6,
+            751
+          ],
+          [
+            465.5,
+            806
+          ],
+          [
+            493.4,
+            795
+          ],
+          [
+            549.2,
+            638
+          ],
+          [
+            605.0,
+            466
+          ],
+          [
+            660.8,
+            388
+          ],
+          [
+            884.0,
+            310
+          ]
+        ]
+      }
+    },
+    {
+      "axis_landmarks": {
+        "x_pixels": [
+          329,
+          798
+        ],
+        "x_values": [
+          0.0,
+          1.0
+        ],
+        "y_pixels": [
+          852,
+          337
+        ],
+        "y_values": [
+          0.0,
+          15.0
+        ]
+      },
+      "axis_uncertainty_pixels": 2,
+      "curve_identity": {
+        "alliances": "thick dashed before merge",
+        "collective_security": "upper solid before merge",
+        "same_as_initial": "horizontal reference excluded",
+        "tagging": "lower thin solid before merge"
+      },
+      "id": "fig10",
+      "image_path": "survey/out/democratic-peace-preparation/page-19.png",
+      "image_sha256": "a3fcec8687f1414b7eca9e1b3a8a0a6fb857e78b372b1dd77df5460660a90002",
+      "image_size": [
+        1120,
+        1800
+      ],
+      "independent_visual_check": {
+        "first_reader_audit": "full original render plus enlarged chart and local dark-pixel neighborhoods; 2026-10-03",
+        "review_receipt": "docs/superpowers/specs/2026-10-03-democratic-peace-source-review.json",
+        "review_receipt_sha256": "2bf79b8aaffda1ef4307aee52e7383a513feac114b7d76a899067d99db360dc0",
+        "second_reader": "root",
+        "second_reader_status": "reviewed"
+      },
+      "minimum_line_envelope_pixels": 4,
+      "pdf_page_1based": 19,
+      "printed_page": 488,
+      "render_command": [
+        "pdftoppm",
+        "-f",
+        "19",
+        "-l",
+        "19",
+        "-scale-to",
+        "1800",
+        "-png",
+        "/Users/nathan/Projects/ndouglas/SugarScape/papers/geopolitics/cederman-2001-jcr-democratic-peace-kantian-selection-process.pdf",
+        "survey/out/democratic-peace-preparation/page"
+      ],
+      "traces": {
+        "alliances": [
+          [
+            352.45,
+            619
+          ],
+          [
+            375.9,
+            628
+          ],
+          [
+            399.35,
+            689
+          ],
+          [
+            798.0,
+            817
+          ]
+        ],
+        "collective_security": [
+          [
+            352.45,
+            490
+          ],
+          [
+            375.9,
+            552
+          ],
+          [
+            399.35,
+            639
+          ],
+          [
+            798.0,
+            817
+          ]
+        ],
+        "tagging": [
+          [
+            352.45,
+            658
+          ],
+          [
+            375.9,
+            692
+          ],
+          [
+            399.35,
+            712
+          ],
+          [
+            422.8,
+            725
+          ],
+          [
+            446.25,
+            758
+          ],
+          [
+            469.7,
+            750
+          ],
+          [
+            798.0,
+            817
+          ]
+        ]
+      }
+    },
+    {
+      "axis_landmarks": {
+        "x_pixels": [
+          317,
+          759
+        ],
+        "x_values": [
+          0.0,
+          1.0
+        ],
+        "y_pixels": [
+          793,
+          300
+        ],
+        "y_values": [
+          0.0,
+          1.0
+        ]
+      },
+      "axis_uncertainty_pixels": 2,
+      "curve_identity": {
+        "alliances": "thick dashed",
+        "collective_security": "upper thin solid",
+        "neutral_response": "reference diagonal excluded",
+        "tagging": "thin solid"
+      },
+      "id": "fig11",
+      "image_path": "survey/out/democratic-peace-preparation/page-20.png",
+      "image_sha256": "1aaa6b48ddd3a6437116be4e901b7c54dd45d2d5025d89f268fe9f692873dd8a",
+      "image_size": [
+        1120,
+        1800
+      ],
+      "independent_visual_check": {
+        "first_reader_audit": "full original render plus enlarged chart and local dark-pixel neighborhoods; 2026-10-03",
+        "review_receipt": "docs/superpowers/specs/2026-10-03-democratic-peace-source-review.json",
+        "review_receipt_sha256": "2bf79b8aaffda1ef4307aee52e7383a513feac114b7d76a899067d99db360dc0",
+        "second_reader": "root",
+        "second_reader_status": "reviewed"
+      },
+      "minimum_line_envelope_pixels": 4,
+      "pdf_page_1based": 20,
+      "printed_page": 489,
+      "render_command": [
+        "pdftoppm",
+        "-f",
+        "20",
+        "-l",
+        "20",
+        "-scale-to",
+        "1800",
+        "-png",
+        "/Users/nathan/Projects/ndouglas/SugarScape/papers/geopolitics/cederman-2001-jcr-democratic-peace-kantian-selection-process.pdf",
+        "survey/out/democratic-peace-preparation/page"
+      ],
+      "traces": {
+        "alliances": [
+          [
+            317.0,
+            793
+          ],
+          [
+            339.1,
+            767
+          ],
+          [
+            361.2,
+            735
+          ],
+          [
+            383.3,
+            704
+          ],
+          [
+            405.4,
+            673
+          ],
+          [
+            427.5,
+            666
+          ],
+          [
+            449.6,
+            641
+          ],
+          [
+            493.8,
+            550
+          ],
+          [
+            538.0,
+            439
+          ],
+          [
+            582.2,
+            373
+          ],
+          [
+            626.4,
+            320
+          ],
+          [
+            759.0,
+            300
+          ]
+        ],
+        "collective_security": [
+          [
+            317.0,
+            793
+          ],
+          [
+            339.1,
+            740
+          ],
+          [
+            361.2,
+            657
+          ],
+          [
+            383.3,
+            530
+          ],
+          [
+            405.4,
+            431
+          ],
+          [
+            427.5,
+            331
+          ],
+          [
+            449.6,
+            340
+          ],
+          [
+            493.8,
+            315
+          ],
+          [
+            538.0,
+            319
+          ],
+          [
+            582.2,
+            328
+          ],
+          [
+            626.4,
+            306
+          ],
+          [
+            759.0,
+            300
+          ]
+        ],
+        "tagging": [
+          [
+            317.0,
+            793
+          ],
+          [
+            339.1,
+            777
+          ],
+          [
+            361.2,
+            763
+          ],
+          [
+            405.4,
+            766
+          ],
+          [
+            427.5,
+            775
+          ],
+          [
+            582.2,
+            730
+          ],
+          [
+            626.4,
+            570
+          ],
+          [
+            759.0,
+            300
+          ]
+        ]
+      }
+    }
+  ],
+  "model": "democratic_peace",
+  "paper": "papers/geopolitics/cederman-2001-jcr-democratic-peace-kantian-selection-process.pdf",
+  "paper_sha256": "069ad22da938727b2020c5d2c3a52aa383687c74085f5bc0af8cea74817b5215",
+  "schema_version": 1,
+  "slots": [
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.tagging.density0",
+      "initial_democratic_share": 0.0,
+      "interval": [
+        0.0,
+        0.015463917525773196
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 326.0,
+        "x_envelope": [
+          324.0,
+          328.0
+        ],
+        "y_center": 892,
+        "y_envelope": [
+          885,
+          899
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.tagging.density0_05",
+      "initial_democratic_share": 0.05,
+      "interval": null,
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 17,
+      "pixel_reading": null,
+      "printed_page": 486,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.tagging.density0_1",
+      "initial_democratic_share": 0.1,
+      "interval": [
+        0.14261168384879724,
+        0.17353951890034364
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 381.8,
+        "x_envelope": [
+          379.8,
+          383.8
+        ],
+        "y_center": 800,
+        "y_envelope": [
+          793,
+          807
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.tagging.density0_15",
+      "initial_democratic_share": 0.15,
+      "interval": [
+        0.23539518900343642,
+        0.2663230240549828
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 409.7,
+        "x_envelope": [
+          407.7,
+          411.7
+        ],
+        "y_center": 746,
+        "y_envelope": [
+          739,
+          753
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.tagging.density0_2",
+      "initial_democratic_share": 0.2,
+      "interval": [
+        0.2268041237113402,
+        0.25773195876288657
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 437.6,
+        "x_envelope": [
+          435.6,
+          439.6
+        ],
+        "y_center": 751,
+        "y_envelope": [
+          744,
+          758
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.tagging.density0_25",
+      "initial_democratic_share": 0.25,
+      "interval": [
+        0.1323024054982818,
+        0.16323024054982818
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 465.5,
+        "x_envelope": [
+          463.5,
+          467.5
+        ],
+        "y_center": 806,
+        "y_envelope": [
+          799,
+          813
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.tagging.density0_3",
+      "initial_democratic_share": 0.3,
+      "interval": [
+        0.15120274914089346,
+        0.18213058419243985
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 493.4,
+        "x_envelope": [
+          491.4,
+          495.4
+        ],
+        "y_center": 795,
+        "y_envelope": [
+          788,
+          802
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.tagging.density0_4",
+      "initial_democratic_share": 0.4,
+      "interval": [
+        0.4209621993127148,
+        0.4518900343642612
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 549.2,
+        "x_envelope": [
+          547.2,
+          551.2
+        ],
+        "y_center": 638,
+        "y_envelope": [
+          631,
+          645
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.tagging.density0_5",
+      "initial_democratic_share": 0.5,
+      "interval": [
+        0.7164948453608248,
+        0.7474226804123711
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 605.0,
+        "x_envelope": [
+          603.0,
+          607.0
+        ],
+        "y_center": 466,
+        "y_envelope": [
+          459,
+          473
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.tagging.density0_6",
+      "initial_democratic_share": 0.6,
+      "interval": [
+        0.8505154639175257,
+        0.8814432989690721
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 660.8,
+        "x_envelope": [
+          658.8,
+          662.8
+        ],
+        "y_center": 388,
+        "y_envelope": [
+          381,
+          395
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.tagging.density0_7",
+      "initial_democratic_share": 0.7,
+      "interval": null,
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 17,
+      "pixel_reading": null,
+      "printed_page": 486,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.tagging.density1",
+      "initial_democratic_share": 1.0,
+      "interval": [
+        0.9845360824742269,
+        1.0
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 884.0,
+        "x_envelope": [
+          882.0,
+          886.0
+        ],
+        "y_center": 310,
+        "y_envelope": [
+          303,
+          317
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.alliances.density0",
+      "initial_democratic_share": 0.0,
+      "interval": [
+        0.0,
+        0.01718213058419244
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 326.0,
+        "x_envelope": [
+          324.0,
+          328.0
+        ],
+        "y_center": 892,
+        "y_envelope": [
+          884,
+          900
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.alliances.density0_05",
+      "initial_democratic_share": 0.05,
+      "interval": null,
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 17,
+      "pixel_reading": null,
+      "printed_page": 486,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.alliances.density0_1",
+      "initial_democratic_share": 0.1,
+      "interval": [
+        0.28865979381443296,
+        0.3230240549828179
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 381.8,
+        "x_envelope": [
+          379.8,
+          383.8
+        ],
+        "y_center": 714,
+        "y_envelope": [
+          706,
+          722
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.alliances.density0_15",
+      "initial_democratic_share": 0.15,
+      "interval": [
+        0.4690721649484536,
+        0.5859106529209622
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 32,
+        "x_center": 409.7,
+        "x_envelope": [
+          407.7,
+          411.7
+        ],
+        "y_center": 585,
+        "y_envelope": [
+          553,
+          617
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.alliances.density0_2",
+      "initial_democratic_share": 0.2,
+      "interval": [
+        0.8402061855670103,
+        0.8745704467353952
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 437.6,
+        "x_envelope": [
+          435.6,
+          439.6
+        ],
+        "y_center": 393,
+        "y_envelope": [
+          385,
+          401
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.alliances.density0_25",
+      "initial_democratic_share": 0.25,
+      "interval": [
+        0.8676975945017182,
+        0.9020618556701031
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 465.5,
+        "x_envelope": [
+          463.5,
+          467.5
+        ],
+        "y_center": 377,
+        "y_envelope": [
+          369,
+          385
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.alliances.density0_3",
+      "initial_democratic_share": 0.3,
+      "interval": [
+        0.9587628865979382,
+        0.993127147766323
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 493.4,
+        "x_envelope": [
+          491.4,
+          495.4
+        ],
+        "y_center": 324,
+        "y_envelope": [
+          316,
+          332
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.alliances.density0_4",
+      "initial_democratic_share": 0.4,
+      "interval": [
+        0.9536082474226805,
+        0.9879725085910653
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 549.2,
+        "x_envelope": [
+          547.2,
+          551.2
+        ],
+        "y_center": 327,
+        "y_envelope": [
+          319,
+          335
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.alliances.density0_5",
+      "initial_democratic_share": 0.5,
+      "interval": [
+        0.9536082474226805,
+        0.9879725085910653
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 605.0,
+        "x_envelope": [
+          603.0,
+          607.0
+        ],
+        "y_center": 327,
+        "y_envelope": [
+          319,
+          335
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.alliances.density0_6",
+      "initial_democratic_share": 0.6,
+      "interval": [
+        0.9656357388316151,
+        1.0
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 660.8,
+        "x_envelope": [
+          658.8,
+          662.8
+        ],
+        "y_center": 320,
+        "y_envelope": [
+          312,
+          328
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.alliances.density0_7",
+      "initial_democratic_share": 0.7,
+      "interval": null,
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 17,
+      "pixel_reading": null,
+      "printed_page": 486,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.alliances.density1",
+      "initial_democratic_share": 1.0,
+      "interval": [
+        0.9828178694158075,
+        1.0
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 884.0,
+        "x_envelope": [
+          882.0,
+          886.0
+        ],
+        "y_center": 310,
+        "y_envelope": [
+          302,
+          318
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.collective_security.density0",
+      "initial_democratic_share": 0.0,
+      "interval": [
+        0.0,
+        0.015463917525773196
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 326.0,
+        "x_envelope": [
+          324.0,
+          328.0
+        ],
+        "y_center": 892,
+        "y_envelope": [
+          885,
+          899
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.collective_security.density0_05",
+      "initial_democratic_share": 0.05,
+      "interval": [
+        0.14776632302405499,
+        0.17869415807560138
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 353.9,
+        "x_envelope": [
+          351.9,
+          355.9
+        ],
+        "y_center": 797,
+        "y_envelope": [
+          790,
+          804
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.collective_security.density0_1",
+      "initial_democratic_share": 0.1,
+      "interval": [
+        0.6219931271477663,
+        0.7044673539518901
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 22,
+        "x_center": 381.8,
+        "x_envelope": [
+          379.8,
+          383.8
+        ],
+        "y_center": 506,
+        "y_envelope": [
+          484,
+          528
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.collective_security.density0_15",
+      "initial_democratic_share": 0.15,
+      "interval": [
+        0.8780068728522337,
+        0.9261168384879725
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 12,
+        "x_center": 409.7,
+        "x_envelope": [
+          407.7,
+          411.7
+        ],
+        "y_center": 367,
+        "y_envelope": [
+          355,
+          379
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.collective_security.density0_2",
+      "initial_democratic_share": 0.2,
+      "interval": [
+        0.9690721649484536,
+        1.0
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 437.6,
+        "x_envelope": [
+          435.6,
+          439.6
+        ],
+        "y_center": 319,
+        "y_envelope": [
+          312,
+          326
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.collective_security.density0_25",
+      "initial_democratic_share": 0.25,
+      "interval": [
+        0.9725085910652921,
+        1.0
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 465.5,
+        "x_envelope": [
+          463.5,
+          467.5
+        ],
+        "y_center": 317,
+        "y_envelope": [
+          310,
+          324
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.collective_security.density0_3",
+      "initial_democratic_share": 0.3,
+      "interval": [
+        0.9776632302405498,
+        1.0
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 493.4,
+        "x_envelope": [
+          491.4,
+          495.4
+        ],
+        "y_center": 314,
+        "y_envelope": [
+          307,
+          321
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.collective_security.density0_4",
+      "initial_democratic_share": 0.4,
+      "interval": [
+        0.9776632302405498,
+        1.0
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 549.2,
+        "x_envelope": [
+          547.2,
+          551.2
+        ],
+        "y_center": 314,
+        "y_envelope": [
+          307,
+          321
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.collective_security.density0_5",
+      "initial_democratic_share": 0.5,
+      "interval": [
+        0.979381443298969,
+        1.0
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 605.0,
+        "x_envelope": [
+          603.0,
+          607.0
+        ],
+        "y_center": 313,
+        "y_envelope": [
+          306,
+          320
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.collective_security.density0_6",
+      "initial_democratic_share": 0.6,
+      "interval": [
+        0.9810996563573883,
+        1.0
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 660.8,
+        "x_envelope": [
+          658.8,
+          662.8
+        ],
+        "y_center": 312,
+        "y_envelope": [
+          305,
+          319
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.collective_security.density0_7",
+      "initial_democratic_share": 0.7,
+      "interval": null,
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 17,
+      "pixel_reading": null,
+      "printed_page": 486,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig9",
+      "figure": 9,
+      "id": "fig9.collective_security.density1",
+      "initial_democratic_share": 1.0,
+      "interval": [
+        0.9845360824742269,
+        1.0
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.5,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 17,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 884.0,
+        "x_envelope": [
+          882.0,
+          886.0
+        ],
+        "y_center": 310,
+        "y_envelope": [
+          303,
+          317
+        ]
+      },
+      "printed_page": 486,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.tagging.density0_05",
+      "initial_democratic_share": 0.05,
+      "interval": [
+        5.388349514563107,
+        5.912621359223301
+      ],
+      "mechanism": "tagging",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 352.45,
+        "x_envelope": [
+          350.45,
+          354.45
+        ],
+        "y_center": 658,
+        "y_envelope": [
+          651,
+          665
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.tagging.density0_1",
+      "initial_democratic_share": 0.1,
+      "interval": [
+        4.398058252427185,
+        4.922330097087379
+      ],
+      "mechanism": "tagging",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 375.9,
+        "x_envelope": [
+          373.9,
+          377.9
+        ],
+        "y_center": 692,
+        "y_envelope": [
+          685,
+          699
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.tagging.density0_15",
+      "initial_democratic_share": 0.15,
+      "interval": [
+        3.815533980582524,
+        4.339805825242719
+      ],
+      "mechanism": "tagging",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 399.35,
+        "x_envelope": [
+          397.35,
+          401.35
+        ],
+        "y_center": 712,
+        "y_envelope": [
+          705,
+          719
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.tagging.density0_2",
+      "initial_democratic_share": 0.2,
+      "interval": [
+        3.436893203883495,
+        3.96116504854369
+      ],
+      "mechanism": "tagging",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 422.8,
+        "x_envelope": [
+          420.8,
+          424.8
+        ],
+        "y_center": 725,
+        "y_envelope": [
+          718,
+          732
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.tagging.density0_25",
+      "initial_democratic_share": 0.25,
+      "interval": [
+        2.475728155339806,
+        3.0
+      ],
+      "mechanism": "tagging",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 446.25,
+        "x_envelope": [
+          444.25,
+          448.25
+        ],
+        "y_center": 758,
+        "y_envelope": [
+          751,
+          765
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.tagging.density0_3",
+      "initial_democratic_share": 0.3,
+      "interval": [
+        2.7087378640776696,
+        3.233009708737864
+      ],
+      "mechanism": "tagging",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 469.7,
+        "x_envelope": [
+          467.7,
+          471.7
+        ],
+        "y_center": 750,
+        "y_envelope": [
+          743,
+          757
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.tagging.density0_4",
+      "initial_democratic_share": 0.4,
+      "interval": null,
+      "mechanism": "tagging",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.tagging.density0_5",
+      "initial_democratic_share": 0.5,
+      "interval": null,
+      "mechanism": "tagging",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.tagging.density0_6",
+      "initial_democratic_share": 0.6,
+      "interval": null,
+      "mechanism": "tagging",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.tagging.density0_7",
+      "initial_democratic_share": 0.7,
+      "interval": null,
+      "mechanism": "tagging",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.tagging.density1",
+      "initial_democratic_share": 1.0,
+      "interval": [
+        0.7572815533980582,
+        1.0
+      ],
+      "mechanism": "tagging",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 798.0,
+        "x_envelope": [
+          796.0,
+          800.0
+        ],
+        "y_center": 817,
+        "y_envelope": [
+          810,
+          824
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.alliances.density0_05",
+      "initial_democratic_share": 0.05,
+      "interval": [
+        6.495145631067961,
+        7.077669902912621
+      ],
+      "mechanism": "alliances",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 352.45,
+        "x_envelope": [
+          350.45,
+          354.45
+        ],
+        "y_center": 619,
+        "y_envelope": [
+          611,
+          627
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.alliances.density0_1",
+      "initial_democratic_share": 0.1,
+      "interval": [
+        6.233009708737864,
+        6.815533980582524
+      ],
+      "mechanism": "alliances",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 375.9,
+        "x_envelope": [
+          373.9,
+          377.9
+        ],
+        "y_center": 628,
+        "y_envelope": [
+          620,
+          636
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.alliances.density0_15",
+      "initial_democratic_share": 0.15,
+      "interval": [
+        4.456310679611651,
+        5.038834951456311
+      ],
+      "mechanism": "alliances",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 399.35,
+        "x_envelope": [
+          397.35,
+          401.35
+        ],
+        "y_center": 689,
+        "y_envelope": [
+          681,
+          697
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.alliances.density0_2",
+      "initial_democratic_share": 0.2,
+      "interval": null,
+      "mechanism": "alliances",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.alliances.density0_25",
+      "initial_democratic_share": 0.25,
+      "interval": null,
+      "mechanism": "alliances",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.alliances.density0_3",
+      "initial_democratic_share": 0.3,
+      "interval": null,
+      "mechanism": "alliances",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.alliances.density0_4",
+      "initial_democratic_share": 0.4,
+      "interval": null,
+      "mechanism": "alliances",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.alliances.density0_5",
+      "initial_democratic_share": 0.5,
+      "interval": null,
+      "mechanism": "alliances",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.alliances.density0_6",
+      "initial_democratic_share": 0.6,
+      "interval": null,
+      "mechanism": "alliances",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.alliances.density0_7",
+      "initial_democratic_share": 0.7,
+      "interval": null,
+      "mechanism": "alliances",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.alliances.density1",
+      "initial_democratic_share": 1.0,
+      "interval": [
+        0.7281553398058253,
+        1.0
+      ],
+      "mechanism": "alliances",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 798.0,
+        "x_envelope": [
+          796.0,
+          800.0
+        ],
+        "y_center": 817,
+        "y_envelope": [
+          809,
+          825
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.collective_security.density0_05",
+      "initial_democratic_share": 0.05,
+      "interval": [
+        10.281553398058252,
+        10.805825242718447
+      ],
+      "mechanism": "collective_security",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 352.45,
+        "x_envelope": [
+          350.45,
+          354.45
+        ],
+        "y_center": 490,
+        "y_envelope": [
+          483,
+          497
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.collective_security.density0_1",
+      "initial_democratic_share": 0.1,
+      "interval": [
+        8.097087378640778,
+        9.37864077669903
+      ],
+      "mechanism": "collective_security",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 20,
+        "x_center": 375.9,
+        "x_envelope": [
+          373.9,
+          377.9
+        ],
+        "y_center": 552,
+        "y_envelope": [
+          532,
+          572
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.collective_security.density0_15",
+      "initial_democratic_share": 0.15,
+      "interval": [
+        5.737864077669903,
+        6.666666666666667
+      ],
+      "mechanism": "collective_security",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 14,
+        "x_center": 399.35,
+        "x_envelope": [
+          397.35,
+          401.35
+        ],
+        "y_center": 639,
+        "y_envelope": [
+          625,
+          653
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.collective_security.density0_2",
+      "initial_democratic_share": 0.2,
+      "interval": null,
+      "mechanism": "collective_security",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.collective_security.density0_25",
+      "initial_democratic_share": 0.25,
+      "interval": null,
+      "mechanism": "collective_security",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.collective_security.density0_3",
+      "initial_democratic_share": 0.3,
+      "interval": null,
+      "mechanism": "collective_security",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.collective_security.density0_4",
+      "initial_democratic_share": 0.4,
+      "interval": null,
+      "mechanism": "collective_security",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.collective_security.density0_5",
+      "initial_democratic_share": 0.5,
+      "interval": null,
+      "mechanism": "collective_security",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.collective_security.density0_6",
+      "initial_democratic_share": 0.6,
+      "interval": null,
+      "mechanism": "collective_security",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.collective_security.density0_7",
+      "initial_democratic_share": 0.7,
+      "interval": null,
+      "mechanism": "collective_security",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 19,
+      "pixel_reading": null,
+      "printed_page": 488,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig10",
+      "figure": 10,
+      "id": "fig10.collective_security.density1",
+      "initial_democratic_share": 1.0,
+      "interval": [
+        0.7572815533980582,
+        1.0
+      ],
+      "mechanism": "collective_security",
+      "metric": "clustering_ratio",
+      "mobile_share": 0.5,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 19,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 798.0,
+        "x_envelope": [
+          796.0,
+          800.0
+        ],
+        "y_center": 817,
+        "y_envelope": [
+          810,
+          824
+        ]
+      },
+      "printed_page": 488,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.tagging.density0",
+      "initial_democratic_share": 0.0,
+      "interval": [
+        0.0,
+        0.018255578093306288
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 317.0,
+        "x_envelope": [
+          315.0,
+          319.0
+        ],
+        "y_center": 793,
+        "y_envelope": [
+          786,
+          800
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.tagging.density0_05",
+      "initial_democratic_share": 0.05,
+      "interval": [
+        0.014198782961460446,
+        0.05070993914807302
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 339.1,
+        "x_envelope": [
+          337.1,
+          341.1
+        ],
+        "y_center": 777,
+        "y_envelope": [
+          770,
+          784
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.tagging.density0_1",
+      "initial_democratic_share": 0.1,
+      "interval": [
+        0.038539553752535496,
+        0.08316430020283976
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 9,
+        "x_center": 361.2,
+        "x_envelope": [
+          359.2,
+          363.2
+        ],
+        "y_center": 763,
+        "y_envelope": [
+          754,
+          772
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.tagging.density0_15",
+      "initial_democratic_share": 0.15,
+      "interval": null,
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Faint scan gap at target; no independently visible point and no interpolated target imputed.",
+      "pdf_page_1based": 20,
+      "pixel_reading": null,
+      "printed_page": 489,
+      "read_status": "absent_source_point"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.tagging.density0_2",
+      "initial_democratic_share": 0.2,
+      "interval": [
+        0.032454361054766734,
+        0.07707910750507099
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 9,
+        "x_center": 405.4,
+        "x_envelope": [
+          403.4,
+          407.4
+        ],
+        "y_center": 766,
+        "y_envelope": [
+          757,
+          775
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.tagging.density0_25",
+      "initial_democratic_share": 0.25,
+      "interval": [
+        0.014198782961460446,
+        0.058823529411764705
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 9,
+        "x_center": 427.5,
+        "x_envelope": [
+          425.5,
+          429.5
+        ],
+        "y_center": 775,
+        "y_envelope": [
+          766,
+          784
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.tagging.density0_3",
+      "initial_democratic_share": 0.3,
+      "interval": null,
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 20,
+      "pixel_reading": null,
+      "printed_page": 489,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.tagging.density0_4",
+      "initial_democratic_share": 0.4,
+      "interval": null,
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 20,
+      "pixel_reading": null,
+      "printed_page": 489,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.tagging.density0_5",
+      "initial_democratic_share": 0.5,
+      "interval": null,
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.",
+      "pdf_page_1based": 20,
+      "pixel_reading": null,
+      "printed_page": 489,
+      "read_status": "unreadable_overlap"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.tagging.density0_6",
+      "initial_democratic_share": 0.6,
+      "interval": [
+        0.10953346855983773,
+        0.1460446247464503
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 582.2,
+        "x_envelope": [
+          580.2,
+          584.2
+        ],
+        "y_center": 730,
+        "y_envelope": [
+          723,
+          737
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.tagging.density0_7",
+      "initial_democratic_share": 0.7,
+      "interval": [
+        0.4340770791075051,
+        0.47058823529411764
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 626.4,
+        "x_envelope": [
+          624.4,
+          628.4
+        ],
+        "y_center": 570,
+        "y_envelope": [
+          563,
+          577
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.tagging.density1",
+      "initial_democratic_share": 1.0,
+      "interval": [
+        0.9817444219066938,
+        1.0
+      ],
+      "mechanism": "tagging",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 759.0,
+        "x_envelope": [
+          757.0,
+          761.0
+        ],
+        "y_center": 300,
+        "y_envelope": [
+          293,
+          307
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.alliances.density0",
+      "initial_democratic_share": 0.0,
+      "interval": [
+        0.0,
+        0.02028397565922921
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 317.0,
+        "x_envelope": [
+          315.0,
+          319.0
+        ],
+        "y_center": 793,
+        "y_envelope": [
+          785,
+          801
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.alliances.density0_05",
+      "initial_democratic_share": 0.05,
+      "interval": [
+        0.032454361054766734,
+        0.07302231237322515
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 339.1,
+        "x_envelope": [
+          337.1,
+          341.1
+        ],
+        "y_center": 767,
+        "y_envelope": [
+          759,
+          775
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.alliances.density0_1",
+      "initial_democratic_share": 0.1,
+      "interval": [
+        0.0973630831643002,
+        0.13793103448275862
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 361.2,
+        "x_envelope": [
+          359.2,
+          363.2
+        ],
+        "y_center": 735,
+        "y_envelope": [
+          727,
+          743
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.alliances.density0_15",
+      "initial_democratic_share": 0.15,
+      "interval": [
+        0.16024340770791076,
+        0.20081135902636918
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 383.3,
+        "x_envelope": [
+          381.3,
+          385.3
+        ],
+        "y_center": 704,
+        "y_envelope": [
+          696,
+          712
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.alliances.density0_2",
+      "initial_democratic_share": 0.2,
+      "interval": [
+        0.2231237322515213,
+        0.26369168356997974
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 405.4,
+        "x_envelope": [
+          403.4,
+          407.4
+        ],
+        "y_center": 673,
+        "y_envelope": [
+          665,
+          681
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.alliances.density0_25",
+      "initial_democratic_share": 0.25,
+      "interval": [
+        0.23732251521298176,
+        0.2778904665314402
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 427.5,
+        "x_envelope": [
+          425.5,
+          429.5
+        ],
+        "y_center": 666,
+        "y_envelope": [
+          658,
+          674
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.alliances.density0_3",
+      "initial_democratic_share": 0.3,
+      "interval": [
+        0.2880324543610548,
+        0.3286004056795132
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 449.6,
+        "x_envelope": [
+          447.6,
+          451.6
+        ],
+        "y_center": 641,
+        "y_envelope": [
+          633,
+          649
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.alliances.density0_4",
+      "initial_democratic_share": 0.4,
+      "interval": [
+        0.4726166328600406,
+        0.513184584178499
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 493.8,
+        "x_envelope": [
+          491.8,
+          495.8
+        ],
+        "y_center": 550,
+        "y_envelope": [
+          542,
+          558
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.alliances.density0_5",
+      "initial_democratic_share": 0.5,
+      "interval": [
+        0.6977687626774848,
+        0.7383367139959433
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 538.0,
+        "x_envelope": [
+          536.0,
+          540.0
+        ],
+        "y_center": 439,
+        "y_envelope": [
+          431,
+          447
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.alliances.density0_6",
+      "initial_democratic_share": 0.6,
+      "interval": [
+        0.8316430020283976,
+        0.8722109533468559
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 582.2,
+        "x_envelope": [
+          580.2,
+          584.2
+        ],
+        "y_center": 373,
+        "y_envelope": [
+          365,
+          381
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.alliances.density0_7",
+      "initial_democratic_share": 0.7,
+      "interval": [
+        0.9391480730223124,
+        0.9797160243407708
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 626.4,
+        "x_envelope": [
+          624.4,
+          628.4
+        ],
+        "y_center": 320,
+        "y_envelope": [
+          312,
+          328
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.alliances.density1",
+      "initial_democratic_share": 1.0,
+      "interval": [
+        0.9797160243407708,
+        1.0
+      ],
+      "mechanism": "alliances",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 8,
+        "x_center": 759.0,
+        "x_envelope": [
+          757.0,
+          761.0
+        ],
+        "y_center": 300,
+        "y_envelope": [
+          292,
+          308
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.collective_security.density0",
+      "initial_democratic_share": 0.0,
+      "interval": [
+        0.0,
+        0.018255578093306288
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 317.0,
+        "x_envelope": [
+          315.0,
+          319.0
+        ],
+        "y_center": 793,
+        "y_envelope": [
+          786,
+          800
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.collective_security.density0_05",
+      "initial_democratic_share": 0.05,
+      "interval": [
+        0.08924949290060852,
+        0.1257606490872211
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 339.1,
+        "x_envelope": [
+          337.1,
+          341.1
+        ],
+        "y_center": 740,
+        "y_envelope": [
+          733,
+          747
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.collective_security.density0_1",
+      "initial_democratic_share": 0.1,
+      "interval": [
+        0.22718052738336714,
+        0.32454361054766734
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 22,
+        "x_center": 361.2,
+        "x_envelope": [
+          359.2,
+          363.2
+        ],
+        "y_center": 657,
+        "y_envelope": [
+          635,
+          679
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.collective_security.density0_15",
+      "initial_democratic_share": 0.15,
+      "interval": [
+        0.48884381338742394,
+        0.5780933062880325
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 20,
+        "x_center": 383.3,
+        "x_envelope": [
+          381.3,
+          385.3
+        ],
+        "y_center": 530,
+        "y_envelope": [
+          510,
+          550
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.collective_security.density0_2",
+      "initial_democratic_share": 0.2,
+      "interval": [
+        0.6937119675456389,
+        0.7748478701825557
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 18,
+        "x_center": 405.4,
+        "x_envelope": [
+          403.4,
+          407.4
+        ],
+        "y_center": 431,
+        "y_envelope": [
+          413,
+          449
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.collective_security.density0_25",
+      "initial_democratic_share": 0.25,
+      "interval": [
+        0.9188640973630832,
+        0.9553752535496958
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 427.5,
+        "x_envelope": [
+          425.5,
+          429.5
+        ],
+        "y_center": 331,
+        "y_envelope": [
+          324,
+          338
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.collective_security.density0_3",
+      "initial_democratic_share": 0.3,
+      "interval": [
+        0.9006085192697769,
+        0.9371196754563894
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 449.6,
+        "x_envelope": [
+          447.6,
+          451.6
+        ],
+        "y_center": 340,
+        "y_envelope": [
+          333,
+          347
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.collective_security.density0_4",
+      "initial_democratic_share": 0.4,
+      "interval": [
+        0.9513184584178499,
+        0.9878296146044625
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 493.8,
+        "x_envelope": [
+          491.8,
+          495.8
+        ],
+        "y_center": 315,
+        "y_envelope": [
+          308,
+          322
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.collective_security.density0_5",
+      "initial_democratic_share": 0.5,
+      "interval": [
+        0.9432048681541582,
+        0.9797160243407708
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 538.0,
+        "x_envelope": [
+          536.0,
+          540.0
+        ],
+        "y_center": 319,
+        "y_envelope": [
+          312,
+          326
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.collective_security.density0_6",
+      "initial_democratic_share": 0.6,
+      "interval": [
+        0.9249492900608519,
+        0.9614604462474645
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 582.2,
+        "x_envelope": [
+          580.2,
+          584.2
+        ],
+        "y_center": 328,
+        "y_envelope": [
+          321,
+          335
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.collective_security.density0_7",
+      "initial_democratic_share": 0.7,
+      "interval": [
+        0.9695740365111561,
+        1.0
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 626.4,
+        "x_envelope": [
+          624.4,
+          628.4
+        ],
+        "y_center": 306,
+        "y_envelope": [
+          299,
+          313
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    },
+    {
+      "attribution": "inferred_curve_value",
+      "calibration_id": "fig11",
+      "figure": 11,
+      "id": "fig11.collective_security.density1",
+      "initial_democratic_share": 1.0,
+      "interval": [
+        0.9817444219066938,
+        1.0
+      ],
+      "mechanism": "collective_security",
+      "metric": "democratic_share",
+      "mobile_share": 0.85,
+      "note": "Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.",
+      "pdf_page_1based": 20,
+      "pixel_reading": {
+        "line_and_horizontal_uncertainty_pixels": 7,
+        "x_center": 759.0,
+        "x_envelope": [
+          757.0,
+          761.0
+        ],
+        "y_center": 300,
+        "y_envelope": [
+          293,
+          307
+        ]
+      },
+      "printed_page": 489,
+      "read_status": "readable"
+    }
+  ],
+  "source_equivalence": "Unresolved",
+  "structural_exclusions": [
+    {
+      "figure": 10,
+      "id": "fig10.tagging.density0",
+      "in_family": false,
+      "initial_democratic_share": 0.0,
+      "interval": null,
+      "mechanism": "tagging",
+      "read_status": "undefined_density_zero",
+      "reason": "ratio_divides_by_initial_density"
+    },
+    {
+      "figure": 10,
+      "id": "fig10.alliances.density0",
+      "in_family": false,
+      "initial_democratic_share": 0.0,
+      "interval": null,
+      "mechanism": "alliances",
+      "read_status": "undefined_density_zero",
+      "reason": "ratio_divides_by_initial_density"
+    },
+    {
+      "figure": 10,
+      "id": "fig10.collective_security.density0",
+      "in_family": false,
+      "initial_democratic_share": 0.0,
+      "interval": null,
+      "mechanism": "collective_security",
+      "read_status": "undefined_density_zero",
+      "reason": "ratio_divides_by_initial_density"
+    }
+  ]
+}

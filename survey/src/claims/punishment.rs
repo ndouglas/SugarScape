@@ -71,7 +71,8 @@ fn fit(reading: fn(&mut PunishmentConfig)) -> Outcome {
     let mut within = [0, 0];
     let mut lines = Vec::new();
     // Curves sharing their settings (Fig. 2's m 0.01 is Fig. 1's ε 0.015) are run once.
-    let mut seen: Vec<((u64, u64, u64, bool, bool), Vec<f64>)> = Vec::new();
+    type CurveKey = (u64, u64, u64, bool, bool);
+    let mut seen: Vec<(CurveKey, Vec<f64>)> = Vec::new();
     for &(name, eps, m, p, punish, fixed, figure) in &curves {
         let key = (eps.to_bits(), m.to_bits(), p.to_bits(), punish, fixed);
         let v = match seen.iter().find(|(k, _)| *k == key) {

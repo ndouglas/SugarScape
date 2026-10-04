@@ -1166,6 +1166,7 @@ describe('Engine with other models', () => {
     expect(finishedNotice({ model: 'ants', stop_at: 2000 } as unknown as ModelConfig, 2000)).toBe('This run has reached its last step (2000) — Reset to run it again');
     expect(finishedNotice({ model: 'thresholds', stop_at: 50 } as unknown as ModelConfig, 50)).toBe('This run has reached its last step (50) — Reset to run it again');
     expect(finishedNotice({ model: 'firms', stop_at: 5000 } as unknown as ModelConfig, 5000)).toBe('This run has reached its last period (5000) — Reset to run it again');
+    expect(finishedNotice({ model: 'collusion' } as unknown as ModelConfig, 1864)).toBe('This session has finished at tick 1864 — Reset to run it again');
     expect(finishedNotice({ model: 'bali', stop_at: 30 } as unknown as ModelConfig, 360)).toBe('This run has reached its last year — Reset to run it again');
     const hoard = { model: 'hoard', days: 100, bouts: 20, generations: 60 } as unknown as ModelConfig;
     expect(finishedNotice(hoard, 120_000)).toBe('This run has reached its last generation (60) — Reset to run it again');
@@ -1229,5 +1230,15 @@ describe('Engine at the end year at Max', () => {
     e.setRunning(true);
     await vi.advanceTimersByTimeAsync(60);
     expect([e.tick, e.running, ends]).toEqual([50, false, 1]);
+  });
+});
+
+
+describe('auction completion notices', () => {
+  it('reports the fixed economic horizon and final window status', () => {
+    const config = { model: 'auctions', horizon: 10001 } as unknown as ModelConfig;
+    expect(finishedNotice(config, 11, { converged: 1 } as never)).toContain('10001 periods · final strategy window stable');
+    expect(finishedNotice(config, 11, { converged: 0 } as never)).toContain('final strategy window unstable');
+    expect(finishedNotice(config, 11)).toContain('Inspect shows final strategy stability');
   });
 });

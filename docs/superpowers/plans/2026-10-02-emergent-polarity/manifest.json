@@ -1,0 +1,283 @@
+{
+  "base": "614858ed5d7b0bc612a366054553542431beae1f",
+  "files": {
+    "crates/sugarscape-cli/src/main.rs": {
+      "after": "83d0040ce2af240ff96b336c54d6f50a39d02379e71748b7946f45b21afc51b8",
+      "before": "0021385111d7ac0c01cae8d3e8076773b94b3521e56541a77c1a5ebdc6cc6f81",
+      "phase": 2
+    },
+    "crates/sugarscape-cli/tests/cli.rs": {
+      "after": "4f000361d3b7c5d75286575987e97e2a1c5434ea6919c1df7eb0018f1e6a4876",
+      "before": "db21572376706eb2aab5996f590e5ea304162dc20575bae6e79f9bf80b2c3f84",
+      "phase": 2
+    },
+    "crates/sugarscape-core/src/lib.rs": {
+      "after": "a5aff41c2bb020bf01cd4100a557005032116c2030b69e0178629b13da380db7",
+      "before": "cd31366c2faaf4bc2435e72410d5b0d6e1489c91c6d8df201036685425692010",
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/model.rs": {
+      "after": "48db015e7fcfe70230e8774dadad2144dbc823ebaf09a2ec3b7ac9415039d6d2",
+      "before": "cf4b0f6198f86bd625de93f89f6045520d1517c366dba0c7650bb05b4cebc061",
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/polarity/alliance.rs": {
+      "after": "c3663489b0d16ce5eb2327b4d2c291ad9d7136a9a09710e3c8eb53d87d78b5d2",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/polarity/analysis.rs": {
+      "after": "e07253726bedddc60ffa66444dd76878d24c5512bb33ebc778e99854e01f02d7",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/polarity/combat.rs": {
+      "after": "8e349650e00c02fc3fa3fc43cfb6adbd80edc97a14534b723c627494eda13821",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/polarity/config.rs": {
+      "after": "b3444b63e436b2d3f6cd560e4ee6e2d5b46ced222f3cb84540693b505c93f387",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/polarity/decision.rs": {
+      "after": "596293cc4038e435ebd3963116e469b5a268103640dfee37200f0a13708f6326",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/polarity/mod.rs": {
+      "after": "87a6032e6c080f55d7d1df11dd00c2f6eb4ba4ce7a18025ec457bfe3f4bcceb3",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/polarity/presets.rs": {
+      "after": "6b2e6303ea3f684af3f0fe5a9decb05c55232c36d4c819558f28e61d2c9fb379",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/polarity/resources.rs": {
+      "after": "c59615803e4fbf7edb34be3ca1e6d91d905264588b5c3813f68b5057eab23dd1",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/polarity/stats.rs": {
+      "after": "eb43fbf64c1453be52208d4d612559f718891b0ca1b95a964cb64712bbee8cde",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/polarity/territory.rs": {
+      "after": "d7c7334bb2daa2c26509eb4819cb0b118eeb5fbc4ba0a1ceb957de55d0025b07",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/polarity/tests.rs": {
+      "after": "46c889c24c003748fc0c94c5ba0c68d54e0a82490d9a93daefe08b068743b465",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/polarity/view.rs": {
+      "after": "da10a726b824d58e4dd7388d490106b05bea9e5a10fad96f607e83727d61e345",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/polarity/world.rs": {
+      "after": "1906c8f8c4a29b2be84452d0efaa0ef2aae3ab7c7e2e103ec0886e0244a25bbb",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/presets.rs": {
+      "after": "0af43dc0222b21a8c76f1b4424900e0f40de9d8d2a0c4edd4e6a8649565974c2",
+      "before": "7608b627da72ba59c6603ca060871eb9d2a9073db8c6f885747341f8fb304a70",
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/sweep.rs": {
+      "after": "41c8b6294faa3407f89ac911dd52fd8d228ed1aca0d73dc5abb4e343c4c3435e",
+      "before": "2ec0010915dccabcc752ff7fb836e8f674a0a3e8ea6be3243ff4b5b55154d459",
+      "phase": 2
+    },
+    "crates/sugarscape-core/src/titles.rs": {
+      "after": "c37c2cf273361241f8c4f7ce3cb28603be34615de77e84628bf802a3970fe96d",
+      "before": "48dcb75d9da980ae91db12d44d4485a02baa11e23fe72bae0cf3ac22444d42f0",
+      "phase": 1
+    },
+    "crates/sugarscape-core/tests/golden.rs": {
+      "after": "877c41a51642d9c3780a3027dc7f0ad0addefe93f67983b25e2c6d72f4569f37",
+      "before": "56af7c0dd81d7ac3530d8784184981c0f92a4817ee961c675f3ce8abe51a8ac7",
+      "phase": 1
+    },
+    "crates/sugarscape-core/tests/polarity_discovery.rs": {
+      "after": "526e1fd5c73e40f4622b98c540da2ea5b45b38a4762f60625762eab04b6fc031",
+      "before": null,
+      "phase": 1
+    },
+    "survey/Cargo.toml": {
+      "after": "1e94663c30640a49fa0752ca45a556a58f2411b4525755ba4cb05bdbea4c8d4a",
+      "before": "278092ba8229461853a1f648d0d4516ea40a21ea3ea03aa881ae0c4821b0d8be",
+      "phase": 3
+    },
+    "survey/polarity/README.md": {
+      "after": "04ce67136f2dc4097b37f29a2b83db0ec1b6d9931f84a016100afa8c3e10ae0a",
+      "before": null,
+      "phase": 3
+    },
+    "survey/polarity/analysis.py": {
+      "after": "0b8365aad8a3591e054ecfa2c70850157f80b27a97851d02b071328dc33a4d30",
+      "before": null,
+      "phase": 3
+    },
+    "survey/polarity/manifest.py": {
+      "after": "bdb917511fd96202719c61f45b746b13844a4fee4eff86ddadd144654a6023ba",
+      "before": null,
+      "phase": 3
+    },
+    "survey/polarity/run.py": {
+      "after": "f9d712a068fe151eda44be812495ffb8f2b8067ecb8fa6b01eb5e4950a0e9949",
+      "before": null,
+      "phase": 3
+    },
+    "survey/polarity/studies.json": {
+      "after": "ce2c794b2abc3dc62983801584fee8b1c79b78bbb36936f1333879cc7f3bffbb",
+      "before": null,
+      "phase": 3
+    },
+    "survey/polarity/test_analysis.py": {
+      "after": "17bcf7efa25b1db488d95c8e8c6aa90595e9a24e6f25291709a82a787fa28151",
+      "before": null,
+      "phase": 3
+    },
+    "survey/polarity/test_manifest.py": {
+      "after": "cd32e82debbaff80f7fea176046cba71ac3dbcc0d8871b42347b5ece00b28afe",
+      "before": null,
+      "phase": 3
+    },
+    "survey/polarity/test_reporting.py": {
+      "after": "093d112ba4ad032695bc65136ad922e73f0636cea934a5a7f80af2e915b8f1d4",
+      "before": null,
+      "phase": 3
+    },
+    "survey/polarity/test_run.py": {
+      "after": "30d24d289ff9b8bb204987be89907810928c862015a49184693a85e08b27569b",
+      "before": null,
+      "phase": 3
+    },
+    "survey/src/bin/polarity.rs": {
+      "after": "de273a89a2487f3d7398e6100e9d6e94acebc2508ce83a6db26b335ed3b62156",
+      "before": null,
+      "phase": 3
+    },
+    "sweeps/polarity-predators.json": {
+      "after": "aabac3f78e495360195f71bf4f205b3716513372d681c77d224109a9ddba0f9f",
+      "before": null,
+      "phase": 2
+    },
+    "web/src/compare-presets.ts": {
+      "after": "433b416cc07725b06ddffec5254c355b2f0d9d5d65ae8e82244528c98d2a14ca",
+      "before": "203e8ade9a099a6ec736d72974271ab55e4b8541c771be899ff727de63c24f73",
+      "phase": 2
+    },
+    "web/src/engine.ts": {
+      "after": "aaa33b8d603d3a76cbaf0778c15876fa4729a117a2801a71272abe5637f030e9",
+      "before": "4c7412b658b2c90e4e42fd916a0a2bfe15cac55d7f198865f06245339c387e95",
+      "phase": 2
+    },
+    "web/src/experiments/form.ts": {
+      "after": "02712e34ee48ff96a7a6e082583ff243c494f81be5fd37736096d24863edb0f4",
+      "before": "bd4e4772bb7cf17bfdf431590dc87ba136cebde106d8f94c61e6f751a6dc5fc8",
+      "phase": 2
+    },
+    "web/src/models.ts": {
+      "after": "8a013066b2ce4da62668158f797303711909e80a37468d756546705de99ffe87",
+      "before": "4879016ab1631ed47dfb16f77296731c166c1f875c96283880dfc28862d256e9",
+      "phase": 2
+    },
+    "web/src/polarity-engine.test.ts": {
+      "after": "a767a46a12ce7bbd5c8b9b18332b26b18bcce0441ccc6581429236a918979675",
+      "before": null,
+      "phase": 2
+    },
+    "web/src/polarity-inspection.test.ts": {
+      "after": "a864eb2e3e890b59a3837cc1e862818e7ad72a9b183d51e05975f4c040a6faa6",
+      "before": null,
+      "phase": 2
+    },
+    "web/src/polarity.test.ts": {
+      "after": "89bc26a9d0012073150e75de123bb90eebbe40c2f815392dca408b5a32148e75",
+      "before": null,
+      "phase": 2
+    },
+    "web/src/polarity.ts": {
+      "after": "ff61f078e052ba80e25c5fb6001cf89896a03ec3cd7d0231d11a9f29b66b23df",
+      "before": null,
+      "phase": 2
+    },
+    "web/src/types.ts": {
+      "after": "a1a97c42c374a4454159ec8186349de00995768fc2f9a0d449e37398a7eb6958",
+      "before": "317cca0ef32035afb3b83f1e34a9731ea8ba037c3bb3d98e064a8ba7f6d5f14e",
+      "phase": 2
+    },
+    "web/src/ui/charts-panel.ts": {
+      "after": "ad51d2dc5904395c636f0cd738bff2dae42003f92bef3ae0cc86d2b3e4833ff0",
+      "before": "c5088a9a5c5dee405437057fef773600cd84ced3d20c9676dff1ae184b668997",
+      "phase": 2
+    },
+    "web/src/ui/grid-view.ts": {
+      "after": "ba517edc6edf72705da31317510fb191533a0069e4690a0068f4230e7bbbb128",
+      "before": "ec9b6d3c648efc4316ece39459e2c9f19f740352046f30cdcf626f22f8b9d764",
+      "phase": 2
+    },
+    "web/src/ui/inspect-panel.ts": {
+      "after": "b01b639f9e57d3950aa436fd64b6ccc796be774443da3c4f12ab31e596ec943d",
+      "before": "c06a546f25e2089ca8a36506f64fada4e8430244d8a783c0d2f2fa620334d7fc",
+      "phase": 2
+    },
+    "web/src/ui/series-data.ts": {
+      "after": "1d3d90888aceb9f248040d5afa0ee02afb8361bab3a1d1106ddf49060d276647",
+      "before": "313ad2d379ee1860f68f7fb6903c774becfa051500b35b08445918cea0bff38b",
+      "phase": 2
+    },
+    "web/src/valley.ts": {
+      "after": "1017c1352ba25fab9670bb0a86e73491ef3f91f3aa8daf3be34ebcdda6fdbe16",
+      "before": "43669e3d6774e75d16e269a7ecb79621d817b7b8fcb17006d62c2a9400f41875",
+      "phase": 2
+    }
+  },
+  "patches": [
+    {
+      "name": "01-core-tests.patch",
+      "part": "tests",
+      "phase": 1,
+      "sha256": "da5e291be381cece61dad6aa86ae43362df0859c43e10237b890b3d9280a1102"
+    },
+    {
+      "name": "01-core-implementation.patch",
+      "part": "implementation",
+      "phase": 1,
+      "sha256": "728da049b647621563151201d05d53387e51f9ba0a91742a84e213796966fdb8"
+    },
+    {
+      "name": "02-hosts-web-sweeps-tests.patch",
+      "part": "tests",
+      "phase": 2,
+      "sha256": "2cfddbee7f2cf30c5a0a65171599c8b7eb9b964cad38619ca2978a2328952f9d"
+    },
+    {
+      "name": "02-hosts-web-sweeps-implementation.patch",
+      "part": "implementation",
+      "phase": 2,
+      "sha256": "c1a5600c84f1cea3efca9778b8dfc6353b46488808f67f6cde15352ee8d30bf8"
+    },
+    {
+      "name": "03-survey-tests.patch",
+      "part": "tests",
+      "phase": 3,
+      "sha256": "e98c282854a82a95a2f60474ba11411530b63c966d8888298af1a3290e53bd9c"
+    },
+    {
+      "name": "03-survey-implementation.patch",
+      "part": "implementation",
+      "phase": 3,
+      "sha256": "c5443bbfae7fad60e2065f3ed8c6da3d94ef903e54f0d885d26d70fa564d58ba"
+    }
+  ]
+}

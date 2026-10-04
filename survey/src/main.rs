@@ -2,6 +2,21 @@
 //! app say it shows? See docs/superpowers/specs/2026-09-24-model-survey-design.md.
 //!
 //! `cargo run --release -- [--only <id prefix>] [--seeds N]`
+//!
+//! `cargo run --release -- --calibration` runs only Minds 8b's claim 2
+//! calibration (seeds 1–20 always) and writes its per-seed table to
+//! `out/minds8b-calibration.md` (tracked).
+//!
+//! `cargo run --release -- --usage` runs only Minds 8b's usage check (seeds
+//! 1–20 always; a check, not a claim) and writes `out/minds8b-usage.md`.
+//!
+//! `cargo run --release -- --presets` measures every watching preset
+//! (seeds 1–20 always; reported, not judged) and writes
+//! `out/minds8b-presets.md`.
+//!
+//! `cargo run --release -- --baseline` measures claim 3's variant forgo at
+//! every share with watching off (seeds 1–60; reported, not judged, added
+//! after the run) and prints the table appended to `out/minds8b-results.md`.
 
 mod claim;
 mod claims;
@@ -28,13 +43,23 @@ struct Row<'a> {
 }
 
 fn select(claims: Vec<Claim>, only: Option<&str>) -> Result<Vec<Claim>, String> {
-    let Some(prefix) = only else { return Ok(claims) };
-    let mut items: Vec<&str> = claims.iter().map(|c| c.id.split('.').next().unwrap()).collect();
+    let Some(prefix) = only else {
+        return Ok(claims);
+    };
+    let mut items: Vec<&str> = claims
+        .iter()
+        .map(|c| c.id.split('.').next().unwrap())
+        .collect();
     items.dedup();
     let known = items.join(", ");
-    let chosen: Vec<Claim> = claims.into_iter().filter(|c| c.id.starts_with(prefix)).collect();
+    let chosen: Vec<Claim> = claims
+        .into_iter()
+        .filter(|c| c.id.starts_with(prefix))
+        .collect();
     if chosen.is_empty() {
-        Err(format!("no claim id starts with {prefix:?}; known: {known}"))
+        Err(format!(
+            "no claim id starts with {prefix:?}; known: {known}"
+        ))
     } else {
         Ok(chosen)
     }
@@ -60,12 +85,64 @@ fn run_claim(c: &Claim, seeds: &[u64]) -> Outcome {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    if args.iter().any(|a| a == "--burrow") {
+        let mut route = args[1..].to_vec();
+        let position = route.iter().position(|a| a == "--burrow").unwrap();
+        route.remove(position);
+        if let Err(e) = claims::burrow::cli(&route) {
+            eprintln!("{e}");
+            std::process::exit(2);
+        }
+        return;
+    }
+    if args.iter().any(|a| a == "--protection") {
+        let mut route = args[1..].to_vec();
+        let position = route.iter().position(|a| a == "--protection").unwrap();
+        route.remove(position);
+        if let Err(e) = claims::protection::cli(&route) {
+            eprintln!("{e}");
+            std::process::exit(2);
+        }
+        return;
+    }
+    if args.iter().any(|a| a == "--minds9") {
+        let route: Vec<String> = args[1..]
+            .iter()
+            .filter(|a| a.as_str() != "--minds9")
+            .cloned()
+            .collect();
+        if let Err(e) = claims::minds9::cli(&route) {
+            eprintln!("{e}");
+            std::process::exit(2);
+        }
+        return;
+    }
+    if args.iter().any(|a| a == "--help") {
+        println!("survey [--only PREFIX] [--seeds N]\nsurvey --burrow --help (candidate manifest; no implicit execution)\nsurvey --minds9 --help (declared measured campaign)\nsurvey --protection --help (registered protection campaign)");
+        return;
+    }
     let flag = |name: &str| {
         args.iter()
             .position(|a| a == name)
             .and_then(|i| args.get(i + 1))
             .cloned()
     };
+    if args.iter().any(|a| a == "--calibration") {
+        print!("{}", claims::minds8b::calibration_report());
+        return;
+    }
+    if args.iter().any(|a| a == "--presets") {
+        print!("{}", claims::minds8b::presets_report());
+        return;
+    }
+    if args.iter().any(|a| a == "--baseline") {
+        print!("{}", claims::minds8b::baseline_report());
+        return;
+    }
+    if args.iter().any(|a| a == "--usage") {
+        print!("{}", claims::minds8b::usage_report());
+        return;
+    }
     let only = flag("--only");
     let n: u64 = flag("--seeds").map_or(20, |s| s.parse().expect("--seeds takes a number"));
     let seeds: Vec<u64> = (1..=n).collect();
@@ -115,7 +192,20 @@ mod tests {
     use crate::claim::{untestable, Source, Verdict};
 
     fn fake(id: &'static str, check: fn(&[u64]) -> Outcome) -> Claim {
-        Claim { id, item: "x", source: Source::App, citation: "", text: "", check }
+        Claim {
+            id,
+            item: "x",
+            source: Source::App,
+            citation: "",
+            text: "",
+            check,
+        }
+    }
+
+    #[test]
+    fn the_registered_auction_baseline_can_be_selected_without_running_it() {
+        let selected = select(claims::all(), Some("auctions.bs.baseline-direction")).unwrap();
+        assert_eq!(selected[0].id, "auctions.bs.baseline-direction");
     }
 
     #[test]
@@ -128,7 +218,12 @@ mod tests {
 
     #[test]
     fn only_filters_by_prefix_and_rejects_no_match() {
-        let make = || vec![fake("ii-2.a", |_| untestable("")), fake("iii-6.b", |_| untestable(""))];
+        let make = || {
+            vec![
+                fake("ii-2.a", |_| untestable("")),
+                fake("iii-6.b", |_| untestable("")),
+            ]
+        };
         assert_eq!(select(make(), Some("ii-")).unwrap().len(), 1);
         assert_eq!(select(make(), None).unwrap().len(), 2);
         let err = select(make(), Some("vii")).err().unwrap();

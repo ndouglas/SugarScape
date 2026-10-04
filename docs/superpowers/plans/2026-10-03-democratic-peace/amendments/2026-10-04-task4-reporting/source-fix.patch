@@ -1,0 +1,402 @@
+diff --git a/docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task4-reporting/derive_findings.py b/docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task4-reporting/derive_findings.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..99cf53e9d3ce206f4d4fe0bc07df661392df2131
+--- /dev/null
++++ b/docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task4-reporting/derive_findings.py
+@@ -0,0 +1,201 @@
++"""Dated deterministic census-label correction; never execute worlds or inference."""
++import argparse
++from copy import deepcopy
++import datetime
++import hashlib
++import json
++from pathlib import Path
++import platform
++import stat
++import subprocess
++import sys
++import tarfile
++import time
++
++BASE = 'a318d1f78fc7f0f8f13489f20d7e686737fc13d1'
++ORIGINAL_FINDINGS_SHA = '558b0f8c482503dba1afd3b2a0b97cf49567871eb323c6c0a8a66f7f60e0e08b'
++ORIGINAL_PROVENANCE_SHA = '3e804032a633b3bd41fce66bc42c1d8adac42b393ba6a892829799b5c2933c41'
++ORIGINAL_RAW_SHA = '753a1d5ff6236ba4720e0c52e46ab061643a5d27ef5c5d00175e0ff3f6d6c492'
++ORIGINAL_ARCHIVE_SHA = '69f7bbf5acd3a61190eea49df0657c3e72694d987c3de43f109f9bd70b3c70fa'
++FAMILIES = ('primary_contrasts', 'secondary_contrasts')
++DISCLOSURE = '\n## Reporting amendment — 2026-10-04\n\nThe 24 unregistered precision contrast references now have null censuses with `precision_not_registered`. The fixed required sample size is 100 per precision arm, separately recorded as `required_precision_sample_size`; it does not assert registration. This is a deterministic reporting derivation of the preserved original findings. All empirical histories, source censuses/intervals, methods, jobs, availability, p values and verdicts are unchanged. No worlds or inferential analysis were rerun. Original measurement bindings and amended reporting-code identities are separately retained in the provenance.\n'
++
++
++def canonical(value):
++    return json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()
++
++
++def digest(data):
++    return hashlib.sha256(data).hexdigest()
++
++
++def file_identity(path, root=None):
++    path = Path(path)
++    return {'path': path.relative_to(root).as_posix() if root else str(path.resolve()),
++            'bytes': path.stat().st_size, 'sha256': digest(path.read_bytes())}
++
++
++def validate_output_paths(inputs, outputs, immutable_directories=()):
++    protected = [Path(p).resolve() for p in inputs]
++    immutable = [Path(p).resolve() for p in immutable_directories]
++    seen = []
++    for output in outputs:
++        path = Path(output).resolve()
++        if any(path == parent or path.is_relative_to(parent) for parent in immutable):
++            raise ValueError('output enters an immutable original study directory')
++        if path.is_dir():
++            raise ValueError('output is a directory')
++        for other in protected + seen:
++            if path == other or (path.exists() and other.exists() and path.samefile(other)):
++                raise ValueError('output aliases protected input or another output')
++        seen.append(path)
++
++
++def derive_report(original, metadata):
++    if original.get('precision_registered') is not False or 'reporting_amendment' in original:
++        raise ValueError('requires the unamended original-only findings')
++    amended = deepcopy(original)
++    for family in FAMILIES:
++        components = amended[family]['components']
++        if len(components) != 6:
++            raise ValueError('requires both complete six-component families')
++        for component in components:
++            if component['unavailable_reason'] != 'precision_not_registered' or component['verdict'] != 'Unresolved':
++                raise ValueError('cannot amend an available or differently judged contrast')
++            for field in ('left_census', 'right_census'):
++                census = component[field]
++                if not isinstance(census, dict) or any(census.get(k) != v for k, v in
++                        [('registered_count', 100), ('missing_count', 100), ('received_count', 0), ('complete_count', 0)]):
++                    raise ValueError('unexpected original unregistered contrast census')
++                component[field] = None
++            if 'required_precision_sample_size' in component:
++                raise ValueError('sample-size metadata already amended')
++            component['required_precision_sample_size'] = 100
++    amended['reporting_amendment'] = deepcopy(metadata)
++    prove_invariance(original, amended)
++    return amended
++
++
++def prove_invariance(original, amended):
++    before = deepcopy(original); after = deepcopy(amended)
++    after.pop('reporting_amendment', None)
++    references = 0
++    for family in FAMILIES:
++        for old, new in zip(before[family]['components'], after[family]['components']):
++            for field in ('left_census', 'right_census'):
++                if new.pop(field) is not None:
++                    raise ValueError('corrected unregistered census must be null')
++                old.pop(field); references += 1
++            if new.pop('required_precision_sample_size') != 100:
++                raise ValueError('required precision sample size changed')
++    if references != 24 or before != after:
++        raise ValueError('empirical content changed outside the permitted census metadata')
++    return {'corrected_census_references': references,
++            'unchanged_empirical_projection_sha256': digest(canonical(before)),
++            'unchanged_content': 'every field outside 24 contrast censuses, required sample sizes and amendment provenance'}
++
++
++def main():
++    started = datetime.datetime.now(datetime.timezone.utc).isoformat(); clock = time.monotonic()
++    parser = argparse.ArgumentParser(description=__doc__)
++    for name in ('repo', 'study', 'original-provenance', 'source-archive', 'original-binary', 'out'):
++        parser.add_argument('--' + name, required=True, type=Path)
++    args = parser.parse_args(); root = args.repo.resolve(strict=True)
++    sys.path.insert(0, str(root))
++    from survey.democratic_peace.records import strict_json
++    from survey.democratic_peace.reporting import serialize_report, markdown_report
++    from survey.democratic_peace.manifest import contrast_definitions
++    import numpy as np
++    study = args.study.resolve(strict=True); out = args.out.resolve()
++    code_paths = sorted(p for p in (root/'survey/democratic_peace').iterdir()
++                        if p.is_file() and p.suffix in ('.py', '.json')) + [Path(__file__).resolve()]
++    inputs = sorted(p for p in study.rglob('*') if p.is_file()) + [args.original_provenance,
++             args.source_archive, args.original_binary, *code_paths]
++    outputs = [out/'findings.json', out/'findings.md', out/'provenance.json']
++    # Every destination is checked before mkdir, reads or any output write.
++    validate_output_paths(inputs, outputs, [study])
++    if any(p.exists() for p in outputs):
++        raise ValueError('preserve existing amendment outputs; use a fresh destination')
++    subprocess.run(['git', 'check-ignore', str(outputs[0])], cwd=root, check=True, capture_output=True)
++    original_bytes = (study/'findings.json').read_bytes(); provenance_bytes = args.original_provenance.read_bytes()
++    if digest(original_bytes) != ORIGINAL_FINDINGS_SHA or digest(provenance_bytes) != ORIGINAL_PROVENANCE_SHA:
++        raise ValueError('original findings/provenance differ from preserved review identity')
++    original = strict_json(original_bytes); provenance = strict_json(provenance_bytes)
++    manifest = strict_json((study/'manifest.json').read_bytes())
++    bindings = original['provenance']['binding']
++    if provenance['bindings'] != bindings or original['provenance']['data_sha256'] != ORIGINAL_RAW_SHA:
++        raise ValueError('original measurement bindings disagree')
++    for entry in provenance['evidence']:
++        path = root/entry['path']
++        if not path.resolve().is_relative_to(study):
++            raise ValueError('original study inventory points outside its immutable directory')
++        identity = file_identity(path)
++        if identity['bytes'] != entry['bytes'] or identity['sha256'] != entry['sha256']:
++            raise ValueError('original study evidence bytes changed')
++    for path, expected in [(study/'sessions.jsonl', ORIGINAL_RAW_SHA),
++            (study/'manifest.json', bindings['manifest_sha256']),
++            (study/'build-receipt.json', bindings['build_receipt_sha256']),
++            (args.original_binary, bindings['binary_sha256']), (args.source_archive, ORIGINAL_ARCHIVE_SHA)]:
++        if file_identity(path)['sha256'] != expected:
++            raise ValueError('preserved original input binding changed')
++    if digest(canonical(manifest['source_inventory'])) != bindings['source_inventory_sha256'] or manifest['source_inventory'] != provenance['source_inventory']:
++        raise ValueError('original source inventory binding changed')
++    with tarfile.open(args.source_archive) as archive:
++        for entry in manifest['source_inventory']:
++            member = archive.getmember(entry['path'])
++            if not member.isfile():
++                raise ValueError('original source archive member is not a regular file')
++            data = archive.extractfile(member).read()
++            if len(data) != entry['bytes'] or digest(data) != entry['sha256']:
++                raise ValueError('original frozen source archive image changed')
++    resolved = strict_json((study/'resolved.json').read_bytes())
++    if any(resolved[name] != value for name, value in bindings.items()):
++        raise ValueError('original resolved bindings changed')
++    if digest(resolved['resolved_configs_json'].encode()) != bindings['resolved_configs_sha256']:
++        raise ValueError('original resolved configuration payload changed')
++    if {'python': platform.python_version(), 'numpy': np.__version__} != manifest['method_contract']['runtime']:
++        raise ValueError('reporting runtime differs from retained pinned runtime')
++    actual_definitions = [c for family in FAMILIES for c in original[family]['components']]
++    definitions = contrast_definitions()
++    if len(actual_definitions) != 12 or any(any(c[k] != v for k, v in d.items())
++            for c, d in zip(actual_definitions, definitions)):
++        raise ValueError('original contrast definitions changed')
++    code_inventory = [dict(file_identity(p, root), mode=stat.S_IMODE(p.stat().st_mode)) for p in sorted(code_paths)]
++    metadata = {'date': '2026-10-04', 'classification': 'deterministic_reporting_derivation_no_inference',
++        'review_base': BASE, 'correction': '24 unregistered contrast census references set to null; required precision size100 stated separately',
++        'corrected_census_references': 24, 'original_findings_sha256': ORIGINAL_FINDINGS_SHA,
++        'original_provenance_sha256': ORIGINAL_PROVENANCE_SHA, 'original_measurement_binding': bindings,
++        'measurement_source_scope': 'preserved original frozen source archive, not current reporting code',
++        'reporting_code_inventory': code_inventory,
++        'reporting_code_inventory_sha256': digest(canonical(code_inventory)),
++        'original_source_archive': file_identity(args.source_archive),
++        'original_native_executable': file_identity(args.original_binary)}
++    amended = derive_report(original, metadata); invariance = prove_invariance(original, amended)
++    metadata['invariance'] = invariance; amended['reporting_amendment'] = metadata
++    json_bytes = serialize_report(amended).encode(); markdown_bytes = (markdown_report(amended) + DISCLOSURE).encode()
++    if markdown_report(original).encode() != (study/'findings.md').read_bytes():
++        raise ValueError('original Markdown differs from unchanged presentation code')
++    if [dict(file_identity(p, root), mode=stat.S_IMODE(p.stat().st_mode)) for p in sorted(code_paths)] != code_inventory:
++        raise ValueError('reporting code changed during derivation')
++    corrected_provenance = deepcopy(provenance)
++    corrected_provenance['classification'] = 'registered_democratic_peace_evidence_with_reporting_amendment'
++    corrected_provenance['bindings_scope'] = 'original measurement only; current reporting code is bound separately'
++    corrected_provenance['reporting_amendment'] = {**metadata,
++        'original_provenance_input': file_identity(args.original_provenance),
++        'original_findings_input': file_identity(study/'findings.json'),
++        'outputs': [{'name': 'findings.json', 'bytes': len(json_bytes), 'sha256': digest(json_bytes)},
++                    {'name': 'findings.md', 'bytes': len(markdown_bytes), 'sha256': digest(markdown_bytes)}],
++        'execution': {'command': [sys.executable, *sys.argv], 'cwd': str(Path.cwd()),
++            'runtime': {'python': platform.python_version(), 'numpy': np.__version__},
++            'started_utc': started, 'report_preparation_wall_seconds': time.monotonic()-clock,
++            'successful_exit_code': 0, 'worlds_executed': 0, 'inferential_analyses_executed': 0}}
++    provenance_output = serialize_report(corrected_provenance).encode()
++    out.mkdir(parents=True, exist_ok=True)
++    for path, data in zip(outputs, (json_bytes, markdown_bytes, provenance_output)):
++        with path.open('xb') as file:
++            file.write(data)
++    print('Corrected exactly24 census references; empirical projection unchanged; no worlds or inference.')
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/survey/democratic_peace/contrasts.py b/survey/democratic_peace/contrasts.py
+index 70c1c9170e33aa632d505d94f5c6c4086144797f..c0c1128561023afb49099d3151f22759c3d15877 100644
+--- a/survey/democratic_peace/contrasts.py
++++ b/survey/democratic_peace/contrasts.py
+@@ -30,8 +30,8 @@ def findings(histories, jobs, *, precision_registered, draws=100000):
+     for definition in contrast_definitions():
+         left = histories.get(definition['left'], [])
+         right = histories.get(definition['right'], [])
+-        left_census = population_summary(left, 100)
+-        right_census = population_summary(right, 100)
++        left_census = population_summary(left, 100) if precision_registered else None
++        right_census = population_summary(right, 100) if precision_registered else None
+         reason = 'precision_not_registered' if not precision_registered else None
+         if reason is None and (not left_census['population_complete'] or not right_census['population_complete']):
+             reason = 'incomplete_precision_history_population'
+@@ -44,6 +44,7 @@ def findings(histories, jobs, *, precision_registered, draws=100000):
+                 job_rng(jobs['bootstrap.' + definition['id']]), draws=draws)
+         families[definition['family']].append({**definition,
+             'left_census': left_census, 'right_census': right_census,
++            'required_precision_sample_size': 100,
+             'estimate': None if result is None else result['estimate'],
+             'p': None if result is None else result['p'], 'holm_p': None,
+             'interval': None if result is None else result['interval'],
+diff --git a/survey/democratic_peace/test_contrasts.py b/survey/democratic_peace/test_contrasts.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..155c20a8046fcb0173443e3bd452c85e4f9aa7e0
+--- /dev/null
++++ b/survey/democratic_peace/test_contrasts.py
+@@ -0,0 +1,54 @@
++import unittest
++from survey.democratic_peace import contrasts, manifest
++
++
++class PrecisionCensusTests(unittest.TestCase):
++    def findings(self, histories, registered):
++        jobs = {j['id']: j for j in manifest.analysis_jobs({})}
++        return contrasts.findings(histories, jobs, precision_registered=registered, draws=8)
++
++    def test_unregistered_precision_has_no_registration_or_missing_census(self):
++        result = self.findings({}, False)
++        for family in result.values():
++            for component in family['components']:
++                with self.subTest(component=component['id']):
++                    self.assertIsNone(component['left_census'])
++                    self.assertIsNone(component['right_census'])
++                    self.assertEqual(component['required_precision_sample_size'], 100)
++                    self.assertEqual(component['unavailable_reason'], 'precision_not_registered')
++
++    def test_registered_missing_precision_retains_the_registered_sample_requirement(self):
++        result = self.findings({}, True)
++        for family in result.values():
++            for component in family['components']:
++                self.assertEqual(component['left_census']['registered_count'], 100)
++                self.assertEqual(component['left_census']['missing_count'], 100)
++                self.assertEqual(component['right_census']['missing_count'], 100)
++                self.assertEqual(component['required_precision_sample_size'], 100)
++                self.assertEqual(component['unavailable_reason'], 'incomplete_precision_history_population')
++
++    def test_registered_incomplete_precision_keeps_received_invalid_and_missing_counts(self):
++        histories = {'precision.mobile0_5.alliances.density0_1': [{'complete': False}]}
++        component = self.findings(histories, True)['primary']['components'][0]
++        self.assertEqual(component['left_census']['registered_count'], 100)
++        self.assertEqual(component['left_census']['received_count'], 1)
++        self.assertEqual(component['left_census']['invalid_count'], 1)
++        self.assertEqual(component['left_census']['missing_count'], 99)
++        self.assertIsNone(component['estimate'])
++
++    def test_complete_synthetic_precision_censuses_remain_complete_with_bounded_draws(self):
++        # Synthetic fixture values only; no worlds or registered observations.
++        histories = {}
++        for definition in manifest.contrast_definitions():
++            for arm in (definition['left'], definition['right']):
++                histories[arm] = [{'complete': True, 'metrics': {
++                    'democratic_share': .5, 'all_democratic': False,
++                    'clustering_ratio': 1., 'democratic_extinction': False}} for _ in range(100)]
++        result = self.findings(histories, True)
++        for family in result.values():
++            for component in family['components']:
++                self.assertTrue(component['left_census']['population_complete'])
++                self.assertEqual(component['left_census']['missing_count'], 0)
++                self.assertEqual(component['right_census']['complete_count'], 100)
++                self.assertIsNone(component['unavailable_reason'])
++                self.assertEqual(component['estimate'], 0.)
+diff --git a/survey/democratic_peace/test_reporting_amendment.py b/survey/democratic_peace/test_reporting_amendment.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..dfe6fa11c9757f3983f9bf2a4b9ab8ccac697594
+--- /dev/null
++++ b/survey/democratic_peace/test_reporting_amendment.py
+@@ -0,0 +1,106 @@
++import copy
++import importlib.util
++import json
++import os
++from pathlib import Path
++import tempfile
++import unittest
++from survey.democratic_peace.manifest import contrast_definitions
++
++HELPER = Path(__file__).resolve().parents[2] / 'docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task4-reporting/derive_findings.py'
++
++
++def synthetic_report():
++    report = {'precision_registered': False, 'histories': [{'complete': True, 'value': .25}],
++              'source': {'interval': [.1, .2], 'original_census': {'complete_count': 30}},
++              'draws': {'source': 100000}, 'analysis_jobs': [{'index': 0}]}
++    for family in ('primary', 'secondary'):
++        components = []
++        for definition in contrast_definitions():
++            if definition['family'] != family:
++                continue
++            components.append({**definition, 'left_census': {'registered_count': 100,
++                'missing_count': 100, 'received_count': 0, 'complete_count': 0},
++                'right_census': {'registered_count': 100, 'missing_count': 100,
++                'received_count': 0, 'complete_count': 0}, 'estimate': None,
++                'p': None, 'holm_p': None, 'interval': None, 'result': None,
++                'unavailable_reason': 'precision_not_registered', 'verdict': 'Unresolved'})
++        report[family + '_contrasts'] = {'components': components, 'aggregate_verdict': 'Unresolved'}
++    return report
++
++
++class ReportingAmendmentTests(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        spec = importlib.util.spec_from_file_location('dp_reporting_amendment', HELPER)
++        cls.helper = importlib.util.module_from_spec(spec)
++        spec.loader.exec_module(cls.helper)
++
++    def test_derivation_corrects_exactly_24_references_without_mutating_input(self):
++        original = synthetic_report(); retained = copy.deepcopy(original)
++        amended = self.helper.derive_report(original, {'date': '2026-10-04'})
++        self.assertEqual(original, retained)
++        count = 0
++        for family in ('primary', 'secondary'):
++            for component in amended[family + '_contrasts']['components']:
++                self.assertIsNone(component['left_census'])
++                self.assertIsNone(component['right_census'])
++                self.assertEqual(component['required_precision_sample_size'], 100)
++                self.assertEqual(component['unavailable_reason'], 'precision_not_registered')
++                count += 2
++        self.assertEqual(count, 24)
++        self.assertEqual(self.helper.prove_invariance(original, amended)['corrected_census_references'], 24)
++
++    def test_deterministic_serialization_keeps_every_empirical_value(self):
++        original = synthetic_report(); metadata = {'date': '2026-10-04'}
++        first = self.helper.derive_report(original, metadata)
++        second = self.helper.derive_report(original, metadata)
++        self.assertEqual(json.dumps(first, sort_keys=True), json.dumps(second, sort_keys=True))
++        self.assertEqual(first['histories'], original['histories'])
++        self.assertEqual(first['source'], original['source'])
++        self.assertEqual(first['draws'], original['draws'])
++        self.assertEqual(first['analysis_jobs'], original['analysis_jobs'])
++
++    def test_empirical_changes_outside_the_census_fields_are_rejected(self):
++        original = synthetic_report(); amended = self.helper.derive_report(original, {})
++        amended['histories'][0]['value'] = .75
++        with self.assertRaisesRegex(ValueError, 'empirical'):
++            self.helper.prove_invariance(original, amended)
++
++    def test_registered_precision_and_nonempty_reference_census_are_rejected(self):
++        original = synthetic_report(); original['precision_registered'] = True
++        with self.assertRaises(ValueError):
++            self.helper.derive_report(original, {})
++        original['precision_registered'] = False
++        original['primary_contrasts']['components'][0]['left_census']['received_count'] = 1
++        with self.assertRaises(ValueError):
++            self.helper.derive_report(original, {})
++
++    def test_aliases_reject_before_any_output_or_directory_write(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root = Path(tmp); protected = root/'original.json'; protected.write_bytes(b'sentinel')
++            for kind in ('direct', 'symlink', 'hardlink'):
++                alias = root/(kind+'.json')
++                if kind == 'direct': alias = protected
++                elif kind == 'symlink': alias.symlink_to(protected)
++                else: os.link(protected, alias)
++                output = root/'uncreated/report.md'
++                with self.subTest(kind=kind), self.assertRaisesRegex(ValueError, 'alias'):
++                    self.helper.validate_output_paths([protected], [output, alias])
++                self.assertFalse(output.parent.exists())
++                self.assertEqual(protected.read_bytes(), b'sentinel')
++
++    def test_new_outputs_inside_original_study_are_rejected_before_writes(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root = Path(tmp); study = root/'study'; study.mkdir()
++            output = study/'new/report.json'
++            with self.assertRaisesRegex(ValueError, 'immutable'):
++                self.helper.validate_output_paths([], [output], [study])
++            self.assertFalse(output.parent.exists())
++
++    def test_two_output_paths_cannot_alias_each_other(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            path = Path(tmp)/'new.json'
++            with self.assertRaisesRegex(ValueError, 'alias'):
++                self.helper.validate_output_paths([], [path, path])
++            self.assertFalse(path.exists())

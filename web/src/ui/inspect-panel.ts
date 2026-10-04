@@ -1,10 +1,14 @@
+import { democraticPeaceRows } from '../democratic-peace';
+import { geosimRows } from '../geosim';
+import { polarityRows } from '../polarity';
+import { auctionRows } from '../auctions';
 import { citizenRows, shownCitizen } from '../civil';
 import { dpdRows } from '../dpd';
 import type { Engine } from '../engine';
 import { ethnoRows } from '../ethno';
 import { imageRows } from '../image-scoring';
 import { hoardStatusText } from '../hoard';
-import { hasCaches, isHoardView, isFirmsView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+import { hasCaches, isDemocraticPeaceView, isGeosimView, isPolarityView, isHoardView, isFirmsView, isCollusionView, isAuctionsView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
 import { playerRows } from '../spatial';
 import type {
   AgentView,
@@ -13,6 +17,7 @@ import type {
   CachingView,
   CentralView,
   TheftView,
+  WatchingView,
   PunishmentInspection,
   ZiInspection,
   BaliInspection,
@@ -21,6 +26,7 @@ import type {
   HoardConfig,
   HoardInspection,
   FirmsInspection,
+  CollusionInspection,
   RetirementInspection,
   ThresholdsInspection,
   FarolInspection,
@@ -46,7 +52,7 @@ import type {
   SpatialInspection,
   TagsInspection,
 } from '../types';
-import { ageText, allocationText, siteCachesText } from '../minds';
+import { ageText, allocationText, spatialHoardingRows, siteCachesText } from '../minds';
 import { PDSI_CLASSES, waterText } from '../valley';
 import { h } from './dom';
 import { percent } from './format';
@@ -129,7 +135,7 @@ export function cachingRows(c: CachingView, held: number, home: [number, number]
  * Memory) the map doesn't show the group, whose tags are random there, so it is left out.
  */
 export function agentText(a: Pick<AgentView, 'id' | 'sex'>, group: string, mode: ColorMode): string {
-  const minds: ColorMode[] = ['strategy', 'caching_rule', 'memory'];
+  const minds: ColorMode[] = ['strategy', 'caching_rule', 'memory', 'watching'];
   return minds.includes(mode) ? `#${a.id} · ${a.sex}` : `#${a.id} · ${a.sex} · ${group}`;
 }
 
@@ -151,6 +157,20 @@ export function theftRows(t: TheftView): [string, string][] {
     ['Stole', fmt(t.stolen_by_me)],
     ['Lost to thieves', fmt(t.stolen_from_me)],
     ...(t.fed > 0 ? [['Stomach', fmt(t.fed)] as [string, string]] : []),
+  ];
+}
+
+/**
+ * The Minds 8 rows, label and text: whether the agent watches (and is a scrounger), then the caches
+ * it remembers seeing buried: site, owner, amount and how long ago.
+ */
+export function watchingRows(w: WatchingView, width: number): [string, string][] {
+  return [
+    ['Watches', w.watches ? (w.scrounger ? 'yes (scrounger)' : 'yes') : 'no'],
+    ...w.seen.map((s, i): [string, string] => [
+      i === 0 ? 'Remembers seeing' : '',
+      `(${s.site % width}, ${Math.floor(s.site / width)}): #${s.owner}, ${fmt(s.amount)}, ${s.age} ticks ago`,
+    ]),
   ];
 }
 
@@ -219,9 +239,11 @@ export class InspectPanel {
           ]
         : []),
       ...(a.rate != null ? [row('Average rate ρ', rateText(a.rate))] : []),
-      ...(a.caching ? cachingRows(a.caching, a.holdings[0] ?? 0, a.central?.home ?? null).map(([k, v]) => row(k, v)) : []),
+      ...(a.caching ? cachingRows(a.caching, a.holdings[0] ?? 0, a.central?.home ?? null).map(([k, v]) => row(a.spatial_hoarding && k === 'Caches' ? 'Scatter caches' : k, v)) : []),
       ...(a.central ? centralRows(a.central).map(([k, v]) => row(k, v)) : []),
+      ...(a.spatial_hoarding ? spatialHoardingRows(a.spatial_hoarding).map(([k, v]) => row(k, v)) : []),
       ...(a.theft ? theftRows(a.theft).map(([k, v]) => row(k, v)) : []),
+      ...(a.watching ? watchingRows(a.watching, this.engine.sugar.width).map(([k, v]) => row(k, v)) : []),
       row('Age', ageText(a.age, a.max_age, this.engine.sugar.lifespan.enabled)),
       row('Fertile', `${a.fertile ? 'yes' : 'no'} (ages ${a.fertility_onset}–${a.fertility_end})`),
       row('Culture tags', h('code', {}, a.tags)),
@@ -308,6 +330,33 @@ export class InspectPanel {
     ];
     const m = view.member;
     if (m) rows.push(row('Agent', `#${m.id} · θ ${fmt(m.theta)} · effort ${fmt(m.effort)} · income ${fmt(m.income)} · utility ${fmt(m.utility)} · tenure ${m.tenure}`));
+    return rows;
+  }
+
+  /** A state of a firm's strategy map (its Q-values), or the session's results once it has finished. */
+  private collusionRows(view: CollusionInspection): HTMLElement[] {
+    const row = (k: string, v: string) => h('tr', {}, h('th', {}, k), h('td', {}, v));
+    const rows = [row('Benchmarks', `Nash ${view.nash.map(fmt).join(', ')} · monopoly ${view.monopoly.map(fmt).join(', ')}`)];
+    const st = view.state;
+    if (st) {
+      const last = st.prices.length ? st.prices[0].map(fmt).join(' and ') : 'none (no memory)';
+      rows.push(row('State', `#${st.state} · last prices ${last} · visited ${st.visits} times`));
+      st.q.forEach((q, i) => {
+        const best = Math.max(...q);
+        rows.push(row(`Firm ${i + 1}`, `charges ${fmt(st.greedy[i])} · Q from ${fmt(Math.min(...q))} to ${fmt(best)}`));
+      });
+    }
+    const o = view.outcome;
+    if (!o) {
+      rows.push(row('Session', `period ${view.period}: still learning`));
+      return rows;
+    }
+    rows.push(
+      row('Session', `${o.converged ? 'converged' : 'stopped at the cap'} after ${o.periods} periods · cycle of ${o.cycle.states.length}`),
+      row('Profit gain Δ', `${fmt(o.gain)} (firms ${o.gains.map(fmt).join(', ')}) · last window ${fmt(o.window_gain)} · first T_δ ${fmt(o.discounted_gain)}`),
+      row('Equilibrium', `${o.equilibrium.on_path ? 'on the path' : 'not on the path'} · ${fmt(100 * o.equilibrium.off_path_share)}% of other states`),
+      row('Deviations', `${o.punishment_like === null ? 'none' : `${fmt(100 * o.punishment_like)}%`} answered by a punishment-like response · ${o.rp_complete ? 'every one (RP-complete)' : 'not every one'}`),
+    );
     return rows;
   }
 
@@ -776,7 +825,13 @@ export class InspectPanel {
             : `Agent #${shown.agentId} has left.`;
       const note = gone ? [h('p', { class: 'error' }, left)] : [];
       // First: an empty ethnocentrism or demographic PD site is shaped like an empty Schelling site.
-      const rows = isHoardView(view)
+      const rows = isDemocraticPeaceView(view)
+        ? democraticPeaceRows(view).map(([key, value]) => h('tr', {}, h('th', {}, key), h('td', {}, value)))
+        : isGeosimView(view)
+        ? geosimRows(view).map(([k, v]) => h('tr', {}, h('th', {}, k), h('td', {}, v)))
+        : isPolarityView(view)
+        ? polarityRows(view).map(([k, v]) => h('tr', {}, h('th', {}, k), h('td', {}, v)))
+        : isHoardView(view)
         ? this.hoardRows(view)
         : isEthnoView(view, this.engine.model)
         ? this.ethnoSiteRows(view, gone)
@@ -786,6 +841,10 @@ export class InspectPanel {
             ? this.normsRows(view)
           : isAgreementView(view)
             ? this.agreementRows(view)
+          : isAuctionsView(view)
+            ? auctionRows(view, this.engine.colorMode).map(([k, v]) => h('tr', {}, h('th', {}, k), h('td', {}, v)))
+          : isCollusionView(view)
+            ? this.collusionRows(view)
           : isFirmsView(view)
             ? this.firmsRows(view)
           : isTippingView(view)

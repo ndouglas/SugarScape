@@ -241,8 +241,9 @@ must reduce to it when every switch is off.
   milestone 11's civil violence is half of that model.
 - **War weariness.** Public support falls with the logarithm of casualties (Mueller).
 - **Adaptation.** Measure and countermeasure, and generals fighting the last war.
-- **The size of wars.** Richardson's power law for deadly quarrels; Cederman's model reproduces it
-  (queue item 11).
+- **The size of wars.** Richardson's power-law claim for deadly quarrels and Cederman's
+  GeoSim claim, measured separately in Milestone 37 below. The polarity
+  reconstruction does not establish a war-size fit.
 
 ## The headline questions
 
@@ -261,6 +262,94 @@ The gap this program aims at: combat models usually strip away the economy, fami
 culture, and Sugarscape has all of them. Epstein and Axtell titled Chapter III "The Emergence of
 History" and did little with war. As far as we know, nobody has run the chain end to end on a shared
 economic and demographic base *(check)*.
+
+## Measured polarity handoff (2026-10-03)
+
+Milestone 36's [complete polarity findings](../superpowers/specs/2026-10-02-emergent-polarity-findings.md)
+retain all 28,520 registered sessions across 572 arms: 28,281 valid and 239
+invalid. These reconstruct EPM/provincial territorial conflicts, not GeoSim's
+technology/war-size model or observed deadly quarrels. Source compatibility,
+original/precision populations, invalidity and source uncertainty remain separate.
+
+Across valid outcomes, 3,583,155 episodes include
+81,753 domestic episodes and
+16,116 censored episodes. Mean active-period
+duration is 6.54904; uncensored median is
+1. The
+[descriptive summary](../superpowers/specs/2026-10-02-emergent-polarity-descriptive-summary.json)
+retains family-specific counts, end causes, durations, resource accounting and
+invalid partial-episode counts. Each episode carries start/end clocks, capitals,
+initial sizes, path, positive losses, signed creation, winner and censoring. Its
+duration includes the first conflict period; a cooperative ending timestamp does
+not add an active conflict period. Open episodes at stopping are censored. Attacks,
+DD encounters, conquests and episodes are distinct measures.
+
+The separate original 640-session population records 1.18711×10^9 positive
+destruction and 1.88860×10^9 signed creation units; the 6,400-session precision
+population records 4.38912×10^12 and 3.50614×10^12, respectively. The Störmer
+adaptation has a much larger finite tail (2.22173×10^191 signed creation units),
+so pooling resource magnitudes would conceal protocol/parameter differences.
+Positive resource destruction and signed resource creation are abstract units;
+**resources are not casualties**. EPM stock observations count sovereign capitals,
+provincial observations all primitive cells, with stock/session denominators;
+terminal frequency is distinct from unmeasured period exposure. Invalid end-state
+measurements describe the attempted clock and do not complete an aborted period.
+The original 237 sequential implementation panics and all original verdicts remain
+retained; a full 16×20 same-seed correction supplies final sequential data while
+28,200 unaffected raw records remain byte-identical in that retained pre-domestic
+dataset. The later [domestic source-fidelity amendment](../superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md)
+reruns all 14 provincial arms / 1,180 original seeds: 1,160 complete deterministic
+records match, while all 20 overextension Outcomes change. All 27,340 nonprovincial
+raw lines remain byte-identical. The actual source overextension illustration uses
+a 10×10 grid (100 primitive units) with unknown seed; it supplies no trajectory
+fit target. Updated overextension observations retain 92,623 voluntary revolt
+actions across 81,739 domestic episodes, with positive domestic combat damage.
+Actions, DD encounters and episodes remain distinct counts. No replacement seeds,
+new resource cap or post-measurement judge changes were used.
+
+## Measured GeoSim handoff (2026-10-03)
+
+Milestone 37's [findings](../superpowers/specs/2026-10-03-geosim-findings.md) retain
+all 37 arms / 1,490 attempts: 1,486 complete and 4 invalid. Ten conditional source-arm
+comparisons are Unresolved; the 75×75 grid is Incompatible. Only 8 of 88 source
+targets have complete predictive inference; 80 retain unavailable slots. Exact
+source equivalence remains Unresolved because severity scale, range/count
+conventions and original executable identity are unverified.
+
+All six fixed baseline-minus-no-shock and baseline-minus-context-off slope,
+R² and range contrasts are Unresolved: their joint source-fit populations are
+incomplete. The two separately declared modern descriptive contrasts are
+available. Baseline-minus-no-shock mean alpha is−0.868 (95% interval−0.940 to−0.799)
+and baseline-minus-context-off−0.980 (−1.029 to−0.935), consistent with a heavier
+adaptive fitted baseline tail within this reconstruction. Cutoff changes differ:
+mean xmin+1.322 (+0.967 to+1.724) against no shocks, but−1.521 (−2.003 to−1.026)
+against no context. These whole-history descriptive comparisons add no mechanism
+verdict or historical causal claim.
+
+The original pooled baseline is not rejected by its iid KS diagnostic(p≈0.266);
+the independent precision pool rejects(p≈0.002). Across 22 pools there are 15
+rejections,5 nonrejections and 2 inconclusive results, with 1,000 successful
+refitted draws per pool. There are 1,478 individual fits,8 insufficient tails and
+4 invalid histories;36 of 37 whole-history parameter summaries are available.
+Pooled iid fits/tests do not validate dependent histories. The declared nested
+cutoff-Pareto half-chi-square calibration remains unvalidated. Keep original,
+precision and alternative-reading populations distinct.
+
+No regime-type or democratic-peace experiment ran. CoWv4 participant data was
+recovered, but Thailand's war 170 death code −9 is unknown; the exact Clauset 2018
+SupplementS1 and Cederman 1820–1997 input remain unavailable. Known-sum endpoints
+cannot substitute for an empirical reproduction. GeoSim0 GPL-2.0-or-later differs from the
+framework's LGPL-2.1-or-later and unresolved nested GeoSim2 model license; all recovered
+code remains reference-only. The [author audit](../superpowers/specs/2026-10-03-geosim-author-code-reading-notes.md)
+and [artifact audit](../superpowers/specs/2026-10-03-geosim-artifact-audit.md) retain
+these limits.
+
+The [execution provenance](../superpowers/specs/2026-10-03-geosim-provenance.json)
+and [postmeasurement recorder amendment](../superpowers/specs/2026-10-03-geosim-postmeasurement-recorder-amendment.md)
+keep the measured source/binary and original raw/full/compact results separate
+from repaired and integrated builds. Carry the explicit front/territory/cluster
+and completed/censored/queued observables into future studies. Abstract resource
+damage does not measure casualties, AI intent or a real-world power law.
 
 ## Open questions
 

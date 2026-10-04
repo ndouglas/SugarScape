@@ -11,6 +11,42 @@ personal copies, never committed or redistributed. File names are
 read online or from another copy; add it when found. Scanned PDFs (no text layer) are marked
 *scan*: read them page by page as images (`pdftoppm -r 110 -png`).
 
+## Architecture and underworld research
+
+The [cultures, construction and underworlds programme](studies/2026-10-03-cultures-construction-and-underworlds.md)
+preserves the long-term campaign outline and selects collective burrow construction for first
+refinement. These books are research/design sources, not reproduced models or evidence that
+speculative cultural combinations are validated.
+
+Local copies collected on 2026-10-03 from the user's supplied library:
+
+| Source | Local file under `papers/` | Inspection status |
+|---|---|---|
+| Christopher Alexander, *Notes on the Synthesis of Form* (1964; supplied copy includes the 1971 paperback preface) | `architecture/alexander-1964-notes-on-the-synthesis-of-form.pdf` | Paperback preface and selected requirements/decomposition sections inspected; not reviewed in full |
+| Christopher Alexander, Sara Ishikawa, Murray Silverstein, with collaborators, *A Pattern Language* (1977) | `architecture/alexander-ishikawa-silverstein-et-al-1977-a-pattern-language.pdf` | Collected; not reviewed in full |
+| Christopher Alexander, *The Timeless Way of Building* (1979) | `architecture/alexander-1979-the-timeless-way-of-building.pdf` | Collected; not reviewed in full |
+
+The copies were verified byte-for-byte with SHA-256 against the originals. Exact source paths,
+destination paths, sizes, page counts and hashes are retained locally in
+`papers/architecture/alexander-local-provenance.json`. The PDFs and local provenance remain
+gitignored under the existing personal-library convention.
+
+The first burrow branch has an [initial excavation reading](studies/2026-10-03-burrow-excavation-reading.md)
+and [proposed lab design](superpowers/specs/2026-10-03-burrow-1-excavation-design.md).
+Pielström and Roces (2013), PLOS ONE e57040, is the selected transport/cue anchor; Green et al.
+(2017), Proceedings B 20162730, and Prasath et al. (version of record 2023), eLife 79638, are
+alternative/later leads. These articles were accessed online and are not yet copied into `papers/`.
+
+The [foraging/construction source audit](studies/2026-10-04-foraging-construction-reading.md)
+adds Hecker and Moses (2015), *Beyond pheromones*, as a controller-reference anchor. Its
+methods/pseudocode were inspected; a personal copy is at
+`papers/foraging/hecker-moses-2015-beyond-pheromones.pdf` with a local hash/provenance record.
+It has not been reproduced here. Michael et al. (2023), *Finding shortcuts through collective
+tunnel excavations in a subterranean termite*, is a later biological comparison target,
+inspected through accessible indexed methods/discussion and not copied locally. The
+[approved sequence and first-increment spec](superpowers/specs/2026-10-04-foraging-construction-design.md)
+record the next review gate. The [F1 reference guide](foraging.md) documents implemented and independently reviewed rules, not yet integrated into `main`; scientific execution remains separate.
+
 ## Reproduced
 
 | Milestone | Model kind | Sources | Headline |
@@ -41,6 +77,13 @@ read online or from another copy; add it when found. Scanned PDFs (no text layer
 | 31 | `tipping` | `schelling/schelling-1971-jms-dynamic-models-of-segregation.pdf` (*scan*), pp. 167–186; `schelling/schelling-1969-aer-models-of-segregation.pdf` | Schelling's bounded neighborhood reproduces completely: the two one-color states of Fig. 18, the 80–80 mixture from over 40 %, more than 25 % to tip in, the 3.0 threshold, forty apiece, the minority that must be the more tolerant and the less tolerant two-thirds |
 | 32 | `schelling`, `line` (variations) | `schelling/pancs-vriend-2007-jpube-spatial-proximity-model-revisited.pdf`, `schelling/gauvin-vannimenus-nadal-2009-epjb-phase-diagram.pdf`, `schelling/singh-vainchtein-weiss-2009-demres-parameters-scaling-aggregation.pdf`, `schelling/zhang-2004-jebo-residential-segregation-all-integrationist-world.pdf` | each under its authors' rules and with its own cluster count: Pancs & Vriend's 5 × 5 results, strict equilibria and ring reproduce, but not their footnote's spiked ≈ p100 (7.0 against 4.7), Gauvin et al.'s frozen, segregated and mixed phases and their 3/4, Singh et al.'s small city (2 clusters) against the big one (20 and 58); Gauvin et al.'s frozen line matches Table 1 within one step; Zhang's segregation from a checkerboard holds and his trades are exactly a conserved Ising model, but his Fig. 8 cutoff of 600 is the least possible, and read as his scaled potential it comes 400 times sooner, his transition sits near β ≈ 5, not 2, and eight neighbors are not twice as fast as four |
 | 33 | `firms` | `firms/axtell-1999-emergence-of-firms.pdf`; the follow-up `firms/axtell-2013-lem-endogenous-dynamics-of-firms-and-labor.pdf` (his 2013 parameterization) | Table 1's §2 analytics reproduce exactly, but optimal group sizes miss his "under 10" by a hair; the 1999 base case gives µ ≈ 2.5, not 1.28, and firms living ~4 periods, not 23.4, under every reading; most §4 tables' directions hold, the friends and seniority tables reverse; three unstated details (where sticky effort applies, which way seniority pay runs, who covers a base-pay shortfall) decide whole tables; the 2013 parameterization gives Zipf's law, though the largest firm peaks at 3 000–5 800 of the 10 000 agents after the burn-in (5 seeds), though most of the time it stays under about 1 000 (median 780–955) |
+| 34 | `collusion` | `ai-coordination/calvano-calzolari-denicolo-pastorello-2020-aer-ai-algorithmic-pricing-and-collusion.pdf` with its online appendix and replication package (MIT; the Fortran built here as the reference); the critics in `ai-coordination/`: Asker, Fershtman & Pakes 2021–22, Lambin 2024, Epivent & Lambin 2023, den Boer, Meylahn & Schinkel 2026, Waltman & Kaymak 2006–08 | the code's sessions reproduced period for period (100 of 100), Table I and Table A5 to the digit; the text's "more than 95 %" is 93.6 %; the described equilibrium holds in 0.2 % of sessions (the code's one-period test: 49.7 %); Fig. 4's deviation answers the wrong state; memoryless firms price higher (Δ 0.958), δ = 0 gives 0.212, increases are "punished" like cuts, synchronous learning halves Δ, re-paired firms earn 0.125; slower exploration and Lambin's Theorem 1 fail |
+| 35 | `auctions` | `multi-agent-coordination/banchio-skrzypacz-2022-arxiv-ai-and-auction-design.pdf`; Banchio & Mantegazza 2023 and other follow-ups in [reading notes](superpowers/specs/2026-10-02-q-learning-auctions-reading-notes.md) | Baseline low first-price/high second-price bids and all-action feedback direction hold; Figure 5, downward, fringe and persistent criteria fail; patient three-bidder coverage is inconclusive; initialization matters ([findings](superpowers/specs/2026-10-02-q-learning-auctions-findings.md)) |
+| 36 | `polarity` | `geopolitics/cederman-1994-isq-emergent-polarity.pdf`; Cederman 1997 ch.4–5; Radax, Störmer/Köhler et al. and Duffy in [reading notes](superpowers/specs/2026-10-02-emergent-polarity-reading-notes.md) | Complete 572-arm/28,520-session reconstruction measured: 45 Compatible, 24 Incompatible, 3 Unresolved; Defense P2 aggregate: Fails; Alliance P3 aggregate: Fails; 239 invalid outcomes retained. Direct endpoint stock frequencies and Störmer 110-configuration scatter; approved corrections, including the per-period domestic decision repair, retain original verdicts and same-seed provenance ([findings](superpowers/specs/2026-10-02-emergent-polarity-findings.md)); published |
+| 37 | `geosim` | `geopolitics/cederman-2003-apsr-modeling-the-size-of-wars.pdf`; the 2002 PNAS predecessor; Clauset 2018/2019 tail-analysis follow-ups | 37 arms / 1,490 attempts retained: 1,486 complete, 4 invalid. Conditional source comparisons: 10 Unresolved, 1 Incompatible (75×75 grid); exact source equivalence remains Unresolved. Eight of 88 source targets available; all six technology/context contrasts Unresolved. Modern pooled iid checks: 15 reject, 5 do not reject, 2 inconclusive ([findings](superpowers/specs/2026-10-03-geosim-findings.md), [provenance](superpowers/specs/2026-10-03-geosim-provenance.json)); published ([publication receipt](superpowers/specs/2026-10-03-geosim-publication.md)) |
+| 38 | `democratic_peace` | `geopolitics/cederman-2001-jcr-democratic-peace-kantian-selection-process.pdf`; Cederman/Rao 2001 and Cederman/Gleditsch 2004 in [reading notes](superpowers/specs/2026-10-03-democratic-peace-reading-notes.md) | Complete original-only census: 108 arms / 3,240 attempts, all complete, no invalid or missing keys. Precision not registered under the fixed runtime gate; all source scopes and six primary/six secondary contrasts Unresolved. 78 of 105 source slots readable; exact source equivalence Unresolved ([findings](superpowers/specs/2026-10-03-democratic-peace-findings.md), [provenance](superpowers/specs/2026-10-03-democratic-peace-provenance.json)); reviewed and published ([publication receipt](superpowers/specs/2026-10-04-democratic-peace-publication.md)) |
+
+Recovered GeoSim code stays reference-only: GeoSim0 declares GPL-2.0-or-later; the GROWLab framework declares LGPL-2.1-or-later; nested GeoSim2 headers leave model-specific licensing unresolved. No author model source was transplanted. See the [author provenance](superpowers/specs/2026-10-03-geosim-author-code-reading-notes.md) and [artifact audit](superpowers/specs/2026-10-03-geosim-artifact-audit.md).
 
 ## Queue
 
@@ -49,46 +92,43 @@ worth doing; "size" is a guess at the milestone's scale.
 
 | # | Model | Original | Critique or follow-up | Size | Shape |
 |---|---|---|---|---|---|
-| 1 | Emergent actors in world politics | `geopolitics/cederman-1997-emergent-actors-in-world-politics.pdf` (274-page book) | — | very large | new kind (states on a grid, conquest, nationalism) |
-| 2 | Algorithmic collusion | `ai-coordination/calvano-calzolari-denicolo-pastorello-2020-aer-ai-algorithmic-pricing-and-collusion.pdf` | `ai-coordination/`: Klein 2021 (sequential pricing), Asker, Fershtman & Pakes 2021–22 (learning rules), Calvano et al. 2021 (imperfect monitoring); Abada & Lambin 2023 wanted | medium | new kind (Q-learning pricing agents; coordination with no communication — AI safety) |
-| 3 | Q-learning auctions | `multi-agent-coordination/banchio-skrzypacz-2022-arxiv-ai-and-auction-design.pdf` | — | small | collusion in first- but not second-price auctions |
-| 4 | Inspection games | `ai-coordination/avenhaus-von-stengel-zamir-2002-handbook-gt-inspection-games.pdf` | — | small | monitoring against violation; the oversight core of the swarm-coordination study |
-| 5 | Naming game | `language/steels-1995-artificial-life-self-organizing-spatial-vocabulary.pdf`; `language/baronchelli-felici-loreto-caglioti-steels-2006-jstatmech-sharp-transition-shared-vocabularies.pdf` | `language/`: Dall'Asta et al. 2006 (networks); Baronchelli 2016 (the minimal rules) | small | new kind (conventions emerge; N^1.5 consensus) |
-| 6 | Category game | `language/puglisi-baronchelli-loreto-2008-pnas-cultural-route-linguistic-categories.pdf` | `language/baronchelli-gong-puglisi-loreto-2010-pnas-universality-color-naming.pdf` (World Color Survey) | medium | naming game on a continuum; color terms |
-| 7 | Lewis signaling games | `language/huttegger-skyrms-smead-zollman-2010-synthese-lewis-signaling-partial-pooling.pdf` | `language/barrett-2009-…`; Skyrms 2010 (partial) | small | codes invented by reinforcement; partial pooling |
-| 8 | Iterated learning | `language/kirby-2001-ieee-tec-spontaneous-evolution-linguistic-structure.pdf` | `language/griffiths-kalish-2007-…` (converges to the prior); `language/kirby-cornish-smith-2008-pnas-…` (the lab data) | medium | compositional structure from a transmission bottleneck |
-| 9 | The evolution of language | `language/nowak-krakauer-1999-pnas-evolution-of-language.pdf` | `language/nowak-komarova-niyogi-2001-science-…` | small | words, then grammar, past an error threshold |
-| 10 | Vowel systems | `language/de-boer-2000-j-phonetics-self-organization-vowel-systems-proof.pdf` | `language/de-boer-1999-…` | medium | imitation games in formant space; typology |
-| 11 | Language death | `language/abrams-strogatz-2003-nature-modelling-dynamics-language-death.pdf` | `language/`: Stauffer et al. 2007 (microscopic), Mira & Paredes 2005 (similarity), Castelló et al. 2006 (bilingualism) | medium | two-language competition; does one always die? |
-| 12 | Spatial dialects | `language/burridge-2017-prx-spatial-evolution-human-dialects.pdf` | `language/nettle-1999-lingua-…` (social impact; rate of change) | medium | dialect boundaries under surface tension; cities; terrain |
-| 13 | Superstition as adaptive error | `belief/foster-kokko-2009-proc-r-soc-b-evolution-superstitious-behaviour.pdf` | `belief/skinner-1948-…` (the pigeons); Beck & Forstmeier 2007 wanted | small | false associations pay when misses cost more than false alarms |
-| 14 | Rumors and hoaxes | `belief/galam-2003-physica-a-modelling-rumors-no-plane-pentagon.pdf` | `belief/zanette-2002-…`, `belief/moreno-nekovee-pacheco-2004-…` (rumors on networks) | small | belief without evidence spreads by local majority |
-| 15 | Religion ABMs | `belief/shults-gore-wildman-lynch-lane-toft-2018-jasss-mutual-escalation-anxiety-religious-groups.pdf` | `belief/`: Whitehouse et al. 2012 (modes of religiosity), Upal 2005, Gore et al. 2018 | medium | anxiety, escalation, doctrinal against imagistic modes |
-| 16 | Dynamic social impact | `social-psych/latane-1996-j-communication-dynamic-social-impact.pdf` (Nowak, Szamrej & Latané 1990 wanted) | `social-psych/`: Hołyst et al. 2000, Dworak & Malarz 2023 (exact rules, phase transitions) | medium | consolidation, clustering, continuing diversity |
-| 17 | The emperor's dilemma | `social-psych/centola-willer-macy-2005-ajs-emperors-dilemma-self-enforcing-norms.pdf` | — | small | enforcing a norm most privately reject |
-| 18 | Rogers' paradox | `social-psych/rogers-1988-am-anthropologist-does-biology-constrain-culture.pdf` | `social-psych/rendell-fogarty-laland-2010-…` (recast and resolved); Henrich & Boyd 1998 (conformism); Rendell et al. 2010 (the tournament) | small | social learning adds no fitness at equilibrium |
-| 19 | Minority opinion spreading | `social-psych/galam-2002-epjb-minority-opinion-spreading-random-geometry.pdf` | `social-psych/castellano-fortunato-loreto-2009-rmp-…` (review) | small | ties to the status quo let a minority win |
-| 20 | Differentiation without distancing | `social-psych/mas-flache-2013-plos-one-differentiation-without-distancing.pdf` | `social-psych/smaldino-epstein-2015-…` (conformity from distinctiveness); Antal et al. 2005 (social balance) | small | bipolarization without negative influence |
-| 21 | Agent_Zero | `social-psych/epstein-chelen-2016-strungmann-advancing-agent-zero.pdf` (the book wanted) | — | medium | affect, deliberation and social contagion in one agent |
-| 22 | The garbage can | Cohen, March & Olsen 1972 wanted; their Fortran in `organizations/garbage-can-code/` | `organizations/`: Fioretti & Lomi 2008 (agent-based), 2009 (buck-passing), Glynn et al. 2020; Bendor, Moe & Shotts 2001 wanted (code ≠ theory; their code saved) | medium | decisions by oversight and flight |
-| 23 | Exploration and exploitation | `organizations/march-1991-org-science-exploration-exploitation.pdf` (a re-post) | `organizations/jo-2024-arxiv-exact-solutions-simplified-march-model.pdf`; Chanda & Miller 2019 replication wanted | small | slow learners and turnover help the code |
-| 24 | Santa Fe artificial stock market | `markets/palmer-arthur-holland-lebaron-tayler-1994-physica-d-artificial-economic-life.pdf`; `markets/arthur-holland-lebaron-palmer-tayler-1996-sfi-wp-…` | `markets/lebaron-2002-…`; Ehrentreich 2008 wanted (the mutation operator's bias) | large | classifier-system traders; the complex regime |
-| 25 | Leadership in animal groups | `collective-motion/couzin-krause-franks-levin-2005-nature-effective-leadership-animal-groups.pdf` | `collective-motion/vicsek-…-1995-prl-…`, `collective-motion/couzin-krause-james-ruxton-franks-2002-jtb-collective-memory-spatial-sorting.pdf` (a re-post) | medium | an informed minority steers; Vicsek's transition |
-| 26 | Adaptive parties | `politics/kollman-miller-page-1992-sfi-wp-adaptive-parties-in-spatial-elections.pdf` | `politics/kollman-miller-page-1993-sfi-wp-…`; Laver 2005 wanted | medium | parties climbing an electoral landscape |
-| 27 | Division of labor | `multi-agent-coordination/theraulaz-bonabeau-deneubourg-1998-sfi-wp-response-threshold-reinforcement.pdf` | Bonabeau et al. 1996 wanted | small | response thresholds; specialists emerge |
-| 28 | Sequential social dilemmas | `multi-agent-coordination/leibo-et-al-2017-arxiv-marl-in-sequential-social-dilemmas.pdf` | `multi-agent-coordination/`: Perolat et al. 2017 (commons), Hughes et al. 2018 (inequity aversion) | medium | learners in gathering and commons games |
-| 29 | War, space and states | `archaeology/turchin-currie-turner-gavrilets-2013-pnas-war-space-old-world-complex-societies.pdf` (+ SI) | `archaeology/currie-…-2020-hssc-…` with its gridded data (CC0) | large | military technology from the steppe on a real map, 1500 BCE–1500 CE; geography and states |
-| 30 | Chiefdom cycling | `archaeology/gavrilets-anderson-turchin-2010-cliodynamics-cycling-in-complexity-of-early-societies.pdf` | — | medium | conquest and collapse of chiefdoms on a lattice |
-| 31 | Circumscription | `archaeology/williams-mesoudi-2024-jas-formal-test-abm-circumscription-theory.pdf` (Carneiro 1970 wanted) | `archaeology/`: Williams & Mesoudi 2025 (Oaxaca), Zinkina et al. 2016 (cross-cultural) | medium | states where arable land is walled in; a natural test on generated terrain |
-| 32 | Village Ecodynamics | `archaeology/crabtree-bocinsky-hooper-ryan-kohler-2017-am-antiquity-how-to-make-a-polity.pdf`; code MIT on GitHub, GPL-2.0 on CoMSES | `archaeology/kohler-…` SFI working papers; Kohler et al. 2012 wanted | very large | the Anasazi model's successor: farming, hunting, exchange, warfare |
-| 33 | Random drift in culture | `archaeology/bentley-hahn-shennan-2004-proc-r-soc-b-random-drift-and-culture-change.pdf` (Neiman 1995 wanted) | — | small | neutral copying; pottery, names, patents |
-| 34 | MERCURY | `archaeology/brughmans-poblome-2016-antiquity-roman-bazaar-or-market-economy.pdf`, `…-jasss-…` (code AFL-3.0 on CoMSES) | `archaeology/`: Kanters et al. 2021 (sensitivity), Carrignon et al. 2020 (ABC) | medium | Roman tableware and the Roman economy |
-| 35 | Raiding and consolidation | `archaeology/griffin-stanish-2007-structure-dynamics-abm-titicaca-political-consolidation.pdf` | — | medium | raids and settlement hierarchy (Titicaca) |
-| 36 | Farming and property | `agriculture/bowles-choi-2013-pnas-coevolution-of-farming-and-private-property.pdf` | `agriculture/bowles-choi-2016-sfi-wp-…` (the JPE version) | medium | farming takes off only with property |
-| 37 | The wave of advance | `agriculture/pinhasi-fort-ammerman-2005-plos-biology-…`; Ammerman & Cavalli-Sforza 1971 wanted | `agriculture/`: Fort 2012, 2015 (demic against cultural), Ackland et al. 2007 (hitchhiking), Lemmen et al. 2011, LaPolice et al. 2025, Aoki 2020 | medium | farming's front at ~1 km a year; radiocarbon targets |
-| 38 | Scattered strips | `agriculture/mccloskey-1976-research-econ-history-open-fields-behavior-towards-risk.pdf` | `agriculture/mccloskey-1991-jeh-prudent-peasant-open-fields.pdf` | small | medieval open fields as insurance |
-| 39 | Chayanov's rule | `agriculture/hammel-2005-pnas-chayanov-revisited.pdf` | `agriculture/puleston-tuljapurkar-winterhalder-2014-plos-one-invisible-cliff.pdf` | small | household labor over the family cycle |
-| 40 | Generated terrain and hydrology | `terrain/`: Perlin 2002, Gustavson 2005; Barnes et al. 2014 (priority-flood, flats), Tarboton 1997 (D∞), Mark 1983 (D8); Cordonnier et al. 2016, Génevaux et al. 2013 (erosion, hydrology); Smith & Barstad 2004 (orographic rain) | `terrain/`: Hack 1957, Rinaldo et al. 2014, Carraro et al. 2020 (OCNet) as realism checks; Horton 1945 and Braun & Willett 2013 wanted | large | our own milestone: a terrain generator validated against geomorphology's laws, then geography-driven models on ensembles of worlds |
+| 2 | Inspection games | `ai-coordination/avenhaus-von-stengel-zamir-2002-handbook-gt-inspection-games.pdf` | — | small | monitoring against violation; the oversight core of the swarm-coordination study |
+| 3 | Naming game | `language/steels-1995-artificial-life-self-organizing-spatial-vocabulary.pdf`; `language/baronchelli-felici-loreto-caglioti-steels-2006-jstatmech-sharp-transition-shared-vocabularies.pdf` | `language/`: Dall'Asta et al. 2006 (networks); Baronchelli 2016 (the minimal rules) | small | new kind (conventions emerge; N^1.5 consensus) |
+| 4 | Category game | `language/puglisi-baronchelli-loreto-2008-pnas-cultural-route-linguistic-categories.pdf` | `language/baronchelli-gong-puglisi-loreto-2010-pnas-universality-color-naming.pdf` (World Color Survey) | medium | naming game on a continuum; color terms |
+| 5 | Lewis signaling games | `language/huttegger-skyrms-smead-zollman-2010-synthese-lewis-signaling-partial-pooling.pdf` | `language/barrett-2009-…`; Skyrms 2010 (partial) | small | codes invented by reinforcement; partial pooling |
+| 6 | Iterated learning | `language/kirby-2001-ieee-tec-spontaneous-evolution-linguistic-structure.pdf` | `language/griffiths-kalish-2007-…` (converges to the prior); `language/kirby-cornish-smith-2008-pnas-…` (the lab data) | medium | compositional structure from a transmission bottleneck |
+| 7 | The evolution of language | `language/nowak-krakauer-1999-pnas-evolution-of-language.pdf` | `language/nowak-komarova-niyogi-2001-science-…` | small | words, then grammar, past an error threshold |
+| 8 | Vowel systems | `language/de-boer-2000-j-phonetics-self-organization-vowel-systems-proof.pdf` | `language/de-boer-1999-…` | medium | imitation games in formant space; typology |
+| 9 | Language death | `language/abrams-strogatz-2003-nature-modelling-dynamics-language-death.pdf` | `language/`: Stauffer et al. 2007 (microscopic), Mira & Paredes 2005 (similarity), Castelló et al. 2006 (bilingualism) | medium | two-language competition; does one always die? |
+| 10 | Spatial dialects | `language/burridge-2017-prx-spatial-evolution-human-dialects.pdf` | `language/nettle-1999-lingua-…` (social impact; rate of change) | medium | dialect boundaries under surface tension; cities; terrain |
+| 11 | Superstition as adaptive error | `belief/foster-kokko-2009-proc-r-soc-b-evolution-superstitious-behaviour.pdf` | `belief/skinner-1948-…` (the pigeons); Beck & Forstmeier 2007 wanted | small | false associations pay when misses cost more than false alarms |
+| 12 | Rumors and hoaxes | `belief/galam-2003-physica-a-modelling-rumors-no-plane-pentagon.pdf` | `belief/zanette-2002-…`, `belief/moreno-nekovee-pacheco-2004-…` (rumors on networks) | small | belief without evidence spreads by local majority |
+| 13 | Religion ABMs | `belief/shults-gore-wildman-lynch-lane-toft-2018-jasss-mutual-escalation-anxiety-religious-groups.pdf` | `belief/`: Whitehouse et al. 2012 (modes of religiosity), Upal 2005, Gore et al. 2018 | medium | anxiety, escalation, doctrinal against imagistic modes |
+| 14 | Dynamic social impact | `social-psych/latane-1996-j-communication-dynamic-social-impact.pdf` (Nowak, Szamrej & Latané 1990 wanted) | `social-psych/`: Hołyst et al. 2000, Dworak & Malarz 2023 (exact rules, phase transitions) | medium | consolidation, clustering, continuing diversity |
+| 15 | The emperor's dilemma | `social-psych/centola-willer-macy-2005-ajs-emperors-dilemma-self-enforcing-norms.pdf` | — | small | enforcing a norm most privately reject |
+| 16 | Rogers' paradox | `social-psych/rogers-1988-am-anthropologist-does-biology-constrain-culture.pdf` | `social-psych/rendell-fogarty-laland-2010-…` (recast and resolved); Henrich & Boyd 1998 (conformism); Rendell et al. 2010 (the tournament) | small | social learning adds no fitness at equilibrium |
+| 17 | Minority opinion spreading | `social-psych/galam-2002-epjb-minority-opinion-spreading-random-geometry.pdf` | `social-psych/castellano-fortunato-loreto-2009-rmp-…` (review) | small | ties to the status quo let a minority win |
+| 18 | Differentiation without distancing | `social-psych/mas-flache-2013-plos-one-differentiation-without-distancing.pdf` | `social-psych/smaldino-epstein-2015-…` (conformity from distinctiveness); Antal et al. 2005 (social balance) | small | bipolarization without negative influence |
+| 19 | Agent_Zero | `social-psych/epstein-chelen-2016-strungmann-advancing-agent-zero.pdf` (the book wanted) | — | medium | affect, deliberation and social contagion in one agent |
+| 20 | The garbage can | Cohen, March & Olsen 1972 wanted; their Fortran in `organizations/garbage-can-code/` | `organizations/`: Fioretti & Lomi 2008 (agent-based), 2009 (buck-passing), Glynn et al. 2020; Bendor, Moe & Shotts 2001 wanted (code ≠ theory; their code saved) | medium | decisions by oversight and flight |
+| 21 | Exploration and exploitation | `organizations/march-1991-org-science-exploration-exploitation.pdf` (a re-post) | `organizations/jo-2024-arxiv-exact-solutions-simplified-march-model.pdf`; Chanda & Miller 2019 replication wanted | small | slow learners and turnover help the code |
+| 22 | Santa Fe artificial stock market | `markets/palmer-arthur-holland-lebaron-tayler-1994-physica-d-artificial-economic-life.pdf`; `markets/arthur-holland-lebaron-palmer-tayler-1996-sfi-wp-…` | `markets/lebaron-2002-…`; Ehrentreich 2008 wanted (the mutation operator's bias) | large | classifier-system traders; the complex regime |
+| 23 | Leadership in animal groups | `collective-motion/couzin-krause-franks-levin-2005-nature-effective-leadership-animal-groups.pdf` | `collective-motion/vicsek-…-1995-prl-…`, `collective-motion/couzin-krause-james-ruxton-franks-2002-jtb-collective-memory-spatial-sorting.pdf` (a re-post) | medium | an informed minority steers; Vicsek's transition |
+| 24 | Adaptive parties | `politics/kollman-miller-page-1992-sfi-wp-adaptive-parties-in-spatial-elections.pdf` | `politics/kollman-miller-page-1993-sfi-wp-…`; Laver 2005 wanted | medium | parties climbing an electoral landscape |
+| 25 | Division of labor | `multi-agent-coordination/theraulaz-bonabeau-deneubourg-1998-sfi-wp-response-threshold-reinforcement.pdf` | Bonabeau et al. 1996 wanted | small | response thresholds; specialists emerge |
+| 26 | Sequential social dilemmas | `multi-agent-coordination/leibo-et-al-2017-arxiv-marl-in-sequential-social-dilemmas.pdf` | `multi-agent-coordination/`: Perolat et al. 2017 (commons), Hughes et al. 2018 (inequity aversion) | medium | learners in gathering and commons games |
+| 27 | War, space and states | `archaeology/turchin-currie-turner-gavrilets-2013-pnas-war-space-old-world-complex-societies.pdf` (+ SI) | `archaeology/currie-…-2020-hssc-…` with its gridded data (CC0) | large | military technology from the steppe on a real map, 1500 BCE–1500 CE; geography and states |
+| 28 | Chiefdom cycling | `archaeology/gavrilets-anderson-turchin-2010-cliodynamics-cycling-in-complexity-of-early-societies.pdf` | — | medium | conquest and collapse of chiefdoms on a lattice |
+| 29 | Circumscription | `archaeology/williams-mesoudi-2024-jas-formal-test-abm-circumscription-theory.pdf` (Carneiro 1970 wanted) | `archaeology/`: Williams & Mesoudi 2025 (Oaxaca), Zinkina et al. 2016 (cross-cultural) | medium | states where arable land is walled in; a natural test on generated terrain |
+| 30 | Village Ecodynamics | `archaeology/crabtree-bocinsky-hooper-ryan-kohler-2017-am-antiquity-how-to-make-a-polity.pdf`; code MIT on GitHub, GPL-2.0 on CoMSES | `archaeology/kohler-…` SFI working papers; Kohler et al. 2012 wanted | very large | the Anasazi model's successor: farming, hunting, exchange, warfare |
+| 31 | Random drift in culture | `archaeology/bentley-hahn-shennan-2004-proc-r-soc-b-random-drift-and-culture-change.pdf` (Neiman 1995 wanted) | — | small | neutral copying; pottery, names, patents |
+| 32 | MERCURY | `archaeology/brughmans-poblome-2016-antiquity-roman-bazaar-or-market-economy.pdf`, `…-jasss-…` (code AFL-3.0 on CoMSES) | `archaeology/`: Kanters et al. 2021 (sensitivity), Carrignon et al. 2020 (ABC) | medium | Roman tableware and the Roman economy |
+| 33 | Raiding and consolidation | `archaeology/griffin-stanish-2007-structure-dynamics-abm-titicaca-political-consolidation.pdf` | — | medium | raids and settlement hierarchy (Titicaca) |
+| 34 | Farming and property | `agriculture/bowles-choi-2013-pnas-coevolution-of-farming-and-private-property.pdf` | `agriculture/bowles-choi-2016-sfi-wp-…` (the JPE version) | medium | farming takes off only with property |
+| 35 | The wave of advance | `agriculture/pinhasi-fort-ammerman-2005-plos-biology-…`; Ammerman & Cavalli-Sforza 1971 wanted | `agriculture/`: Fort 2012, 2015 (demic against cultural), Ackland et al. 2007 (hitchhiking), Lemmen et al. 2011, LaPolice et al. 2025, Aoki 2020 | medium | farming's front at ~1 km a year; radiocarbon targets |
+| 36 | Scattered strips | `agriculture/mccloskey-1976-research-econ-history-open-fields-behavior-towards-risk.pdf` | `agriculture/mccloskey-1991-jeh-prudent-peasant-open-fields.pdf` | small | medieval open fields as insurance |
+| 37 | Chayanov's rule | `agriculture/hammel-2005-pnas-chayanov-revisited.pdf` | `agriculture/puleston-tuljapurkar-winterhalder-2014-plos-one-invisible-cliff.pdf` | small | household labor over the family cycle |
+| 38 | Generated terrain and hydrology | `terrain/`: Perlin 2002, Gustavson 2005; Barnes et al. 2014 (priority-flood, flats), Tarboton 1997 (D∞), Mark 1983 (D8); Cordonnier et al. 2016, Génevaux et al. 2013 (erosion, hydrology); Smith & Barstad 2004 (orographic rain) | `terrain/`: Hack 1957, Rinaldo et al. 2014, Carraro et al. 2020 (OCNet) as realism checks; Horton 1945 and Braun & Willett 2013 wanted | large | our own milestone: a terrain generator validated against geomorphology's laws, then geography-driven models on ensembles of worlds |
 
 ## Wanted
 
@@ -96,7 +136,7 @@ Papers that would strengthen a milestone, not yet found. Items 3 onward came fro
 2026-09-30 (for AI coordination, language, belief, social psychology, organizations, markets,
 archaeology, agriculture, migration and terrain); what it couldn't find free:
 
-- **AI coordination:** Abada & Lambin (2023), *Management Science*, doi:10.1287/mnsc.2022.4623;
+- **AI coordination:** Abada & Lambin (2023), *Management Science*, doi:10.1287/mnsc.2022.4623; Calvano, Calzolari, Denicolò & Pastorello (2023), 'Algorithmic collusion: genuine or spurious?' (*IJIO* 90); Klein's (2021) and Calvano et al.'s (2021) simulation code, available from the authors on request;
   Waltman & Kaymak (2008), *JEDC*.
 - **Language and belief:** Beck & Forstmeier (2007), *Human Nature* 18, doi:10.1007/BF02820845;
   Daley & Kendall (1964), *Nature* 204; Skyrms, *Signals* (2010), beyond its first chapter.
@@ -125,6 +165,12 @@ A second search (2026-09-30) added, still missing:
 - **Terrain:** Tucker & Hancock (2010), *Earth Surface Processes and Landforms* 35:28.
 
 Kept from third-party re-posts (2026-10-01; local copies, not the publishers'): Axtell (2018), *Handbook of Computational Economics* 4 ch. 3, and Axtell (2001), *Science* 293:1818, in `firms/`; March (1991) in `organizations/`; Couzin et al. (2002) in `collective-motion/`; Staddon & Simmelhag (1971) in `belief/`; Enquist, Eriksson & Ghirlanda (2007) in `culture/`.
+
+For the geopolitics lineage (2026-10-01): Cederman 1995, "Competing Identities", *EJIR* 1:331–65;
+Hannan 1979; Bremer & Mihalka 1977; Cusack & Stoll 1990 (the book); Duffy 1993; Antunes et al. 2002
+(BVG choice in the tribute model); Cederman, Girardin & Müller-Crepon 2023, *World Politics*;
+Alesina & Spolaore 1997, *QJE*; Cioffi-Revilla & Midlarsky 2004; Abramson 2017's replication data;
+the books of Tilly 1990, Levy 1983, Fazal 2007 and Richardson 1960.
 
 Earlier:
 

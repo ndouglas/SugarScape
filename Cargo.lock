@@ -593,6 +593,7 @@ name = "sugarscape-cli"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "serde",
  "serde_json",
  "sugarscape-core",
 ]
@@ -601,6 +602,7 @@ dependencies = [
 name = "sugarscape-core"
 version = "0.1.0"
 dependencies = [
+ "libm",
  "proptest",
  "rand 0.8.8",
  "rand_pcg",

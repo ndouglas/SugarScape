@@ -58,11 +58,13 @@ fn side(w: &World, a: &sugarscape_core::agent::Agent) -> Option<bool> {
 fn shuttle_share(seeds: &[u64]) -> Vec<f64> {
     each_seed(&preset("iv-1-spice"), seeds, |mut w| {
         w.run(100);
-        let mut last: BTreeMap<u64, Option<bool>> = w.agents().map(|a| (a.id, side(&w, a))).collect();
+        let mut last: BTreeMap<u64, Option<bool>> =
+            w.agents().map(|a| (a.id, side(&w, a))).collect();
         let mut switches: BTreeMap<u64, u32> = last.keys().map(|id| (*id, 0)).collect();
         for _ in 0..100 {
             w.step();
-            let now: BTreeMap<u64, Option<bool>> = w.agents().map(|a| (a.id, side(&w, a))).collect();
+            let now: BTreeMap<u64, Option<bool>> =
+                w.agents().map(|a| (a.id, side(&w, a))).collect();
             switches.retain(|id, _| now.contains_key(id));
             for (id, n) in switches.iter_mut() {
                 if let Some(s) = now[id] {

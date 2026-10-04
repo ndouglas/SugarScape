@@ -1,12 +1,16 @@
+import { democraticPeaceChartCaption } from '../democratic-peace';
+import { geosimChartCaption } from '../geosim';
+import { polarityChartCaption } from '../polarity';
+import { auctionChartCaption, auctionChartLines } from '../auctions';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import type { Engine } from '../engine';
 import { MAX_GOODS } from '../goods';
-import { cachingOn, calendarYear, theftOn } from '../models';
+import { cachingOn, calendarYear, pilferingOn, watcherSplit, watchingOn } from '../models';
 import { winterBands } from '../minds';
 import { hasPatches } from '../patches';
 import { CHART_POINTS, type ChartGroup, type HoardCharts, type HoardGenerationSeries, type Wants } from '../protocol';
-import type { Config, HoardConfig, ModelConfig, ModelKind } from '../types';
+import type { AuctionsConfig, DemocraticPeaceConfig, GeosimConfig, PolarityConfig, Config, HoardConfig, ModelConfig, ModelKind } from '../types';
 import { h } from './dom';
 import { compactNumber } from './format';
 import {
@@ -22,6 +26,7 @@ import {
   hoardSeasonTable,
   lineData,
   MODEL_CHARTS,
+  SPATIAL_HOARDING_CHARTS,
   overlayData,
   positionBars,
   positionSteps,
@@ -31,6 +36,7 @@ import {
   showsGoodWealth,
   showsTagHist,
   showsTotalWealth,
+  stumbledData,
   supplyDemandTable,
   timeAxisLabel,
   twoGoods,
@@ -55,10 +61,13 @@ interface ChartDef {
   section: Section;
   model?: ModelKind;
   lines?: (c: Config) => Line[];
+  configLines?: (c: ModelConfig) => Line[];
   range?: [number, number];
   shown?: (c: Config) => boolean;
   /** Another model's chart: whether it shows for a world's config (civil Model II's groups and kills). */
   modelShown?: (c: ModelConfig) => boolean;
+  /** Reshapes a time chart's table (ticks, then a column per line) before it is drawn. */
+  derive?: (data: LineData) => LineData;
   /** The caption names the traded pair (goods 0 and 1). */
   pair?: boolean;
   /** A `goodWealth` chart's good: the caption names it. */
@@ -111,6 +120,10 @@ const SECTIONS: { id: Section; title?: string; shown: (c: Config) => boolean }[]
 ];
 
 const CHARTS: ChartDef[] = [
+  ...SPATIAL_HOARDING_CHARTS.map((chart): ChartDef => ({
+    title: chart.title, kind: 'time', section: 'top', lines: fixed(chart.lines),
+    shown: (c) => c.spatial_hoarding?.enabled === true,
+  })),
   { title: 'Population', kind: 'time', section: 'top', lines: fixed([{ key: 'population', label: 'Agents', color: '--c1' }]) },
   { title: 'Gini coefficient', kind: 'time', section: 'top', lines: fixed([{ key: 'gini', label: 'Gini', color: '--c2' }]), range: [0, 1] },
   {
@@ -287,7 +300,7 @@ const CHARTS: ChartDef[] = [
     section: 'top',
     lines: fixed([{ key: 'pilferage_rate', label: 'Share of caches pilfered', color: '--c1' }]),
     range: [0, 1],
-    shown: theftOn,
+    shown: pilferingOn,
   },
   {
     // Cumulative shares of all sugar ever buried: dug by its owner, pilfered, lost with a dead owner, still buried.
@@ -301,7 +314,7 @@ const CHARTS: ChartDef[] = [
       { key: 'fate_buried', label: 'Still buried', color: '--c4' },
     ]),
     range: [0, 1],
-    shown: theftOn,
+    shown: pilferingOn,
   },
   {
     // Counts alone; the holdings (sugar) get their own chart so the axes don't mix units.
@@ -323,6 +336,49 @@ const CHARTS: ChartDef[] = [
       { key: 'cheater_holdings', label: 'Cheaters (mean sugar held)', color: '--c2' },
     ]),
     shown: hasCheaters,
+  },
+  {
+    // Minds 8: sugar pilfered each tick, split by how the thief came to the cache. The core's `pilfered`
+    // includes `raided`, so what was stumbled on is the difference.
+    title: 'Pilfers by source',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      { key: 'raided', label: 'Seen, then raided (sugar a tick)', color: '--c1' },
+      { key: 'pilfered', label: 'Stumbled on (sugar a tick)', color: '--c2' },
+    ]),
+    derive: stumbledData,
+    shown: watchingOn,
+  },
+  {
+    title: 'Wasted raids',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([{ key: 'raids_wasted', label: 'Arrivals where every seen cache was gone', color: '--c1' }]),
+    shown: watchingOn,
+  },
+  {
+    title: 'Watcher survival advantage',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      {
+        key: 'watcher_advantage',
+        label: 'Watcher minus other survival per founder',
+        color: '--c1',
+      },
+    ]),
+    shown: watcherSplit,
+  },
+  {
+    title: 'Watcher and other wealth per founder',
+    kind: 'time',
+    section: 'top',
+    lines: fixed([
+      { key: 'watcher_wealth', label: 'Watchers (held, cached and fed, per founder)', color: '--c1' },
+      { key: 'other_wealth', label: 'Others (held, cached and fed, per founder)', color: '--c2' },
+    ]),
+    shown: watcherSplit,
   },
   { title: 'Mean holdings', kind: 'time', section: 'goods', lines: perGood('mean_holding_') },
   { title: 'Mean metabolism', kind: 'time', section: 'goods', lines: perGood('mean_metabolism_') },
@@ -406,7 +462,7 @@ const CHARTS: ChartDef[] = [
   },
   // The other models' time charts (Decision 13), in the top section.
   ...(Object.entries(MODEL_CHARTS) as [ModelKind, (typeof MODEL_CHARTS)['ring']][]).flatMap(([model, charts]) =>
-    charts.map((c): ChartDef => ({ title: c.title, kind: 'time', section: 'top', model, lines: fixed(c.lines), range: c.range, modelShown: c.shown })),
+    charts.map((c): ChartDef => ({ title: c.title, kind: 'time', section: 'top', model, lines: fixed(c.lines), configLines: model === 'auctions' ? (config) => auctionChartLines(c.lines, config as AuctionsConfig) : undefined, range: c.range, modelShown: c.shown })),
   ),
   ...HOARD_CHARTS.map((c): ChartDef => ({ title: c.title, kind: c.season ? 'season' : 'generation', section: 'top', model: 'hoard', lines: fixed(c.lines), range: c.range })),
 ];
@@ -415,9 +471,9 @@ const CHARTS: ChartDef[] = [
  * The host chart group a chart draws for world `i` (7a Decision 4); none for the distributions.
  * B leaves out reference lines (A draws them).
  */
-function groupOf(def: ChartDef, c: Config, i: number): string[] {
+function groupOf(def: ChartDef, c: Config, i: number, config: ModelConfig): string[] {
   if (def.kind === 'band') return PRICE_GROUP;
-  return def.kind === 'time' ? worldLines(def.lines!(c), i).map((l) => l.key) : [];
+  return def.kind === 'time' ? worldLines(def.configLines?.(config) ?? def.lines!(c), i).map((l) => l.key) : [];
 }
 
 interface Plot {
@@ -599,7 +655,7 @@ export class ChartsPanel {
    * shows the charts and sections either world would show and names the traded pair.
    */
   private sync(): void {
-    const signature = JSON.stringify(this.worlds.map((w) => [w.model, CHARTS.map((d) => d.lines?.(w.sugar) ?? null)]));
+    const signature = JSON.stringify(this.worlds.map((w) => [w.model, CHARTS.map((d) => d.configLines?.(w.config) ?? d.lines?.(w.sugar) ?? null)]));
     if (signature !== this.built) {
       this.built = signature;
       this.build();
@@ -615,7 +671,15 @@ export class ChartsPanel {
       const good = p.def.good;
       const named = good === undefined ? undefined : configs.find((c) => good < c.goods.length)?.goods[good];
       p.caption.textContent =
-        p.def.pair && goods
+        p.def.model === 'democratic_peace'
+          ? democraticPeaceChartCaption(p.def.title, this.worlds.filter((world) => world.model === 'democratic_peace').map((world) => world.config as DemocraticPeaceConfig))
+          : p.def.model === 'geosim'
+          ? geosimChartCaption(p.def.title, this.worlds.filter((w) => w.model === 'geosim').map((w) => w.config as GeosimConfig))
+          : p.def.model === 'polarity'
+          ? polarityChartCaption(p.def.title, this.worlds.filter((w) => w.model === 'polarity').map((w) => w.config as PolarityConfig))
+          : p.def.model === 'auctions'
+          ? auctionChartCaption(p.def.title, this.worlds.filter((w) => w.model === 'auctions').map((w) => w.config as AuctionsConfig))
+          : p.def.pair && goods
           ? `${p.def.title} · ${goods[0].name}/${goods[1].name}`
           : named
             ? `${p.def.title} · ${named.name}`
@@ -641,7 +705,7 @@ export class ChartsPanel {
   private plotFor(def: ChartDef): HTMLElement {
     const caption = h('figcaption', {}, def.title);
     const figure = h('figure', { class: 'chart' }, caption);
-    const groups = this.worlds.map((w, i) => groupOf(def, w.sugar, i));
+    const groups = this.worlds.map((w, i) => groupOf(def, w.sugar, i, w.config));
     const hoardLines = isHoardKind(def.kind) ? def.lines!(this.engine.sugar).length : 0;
     const counts = groups.map((g) => (def.kind === 'band' ? 3 : isHoardKind(def.kind) ? hoardLines : g.length));
     const data = def.kind === 'time' || def.kind === 'band' || isHoardKind(def.kind) ? this.merge(counts.map(emptyTable)) : this.distData(def);
@@ -655,7 +719,7 @@ export class ChartsPanel {
     const series: uPlot.Series[] = [{ label: def.model && def.kind === 'time' ? timeAxisLabel(def.model) : X_LABEL[def.kind] }];
     const lorenz = def.kind === 'lorenz' || def.kind === 'lorenzTotal';
     if (lorenz) series.push({ label: 'Equality', stroke: this.color('--muted'), dash: [4, 4], width: 1 });
-    this.worlds.forEach((w, i) => series.push(...this.seriesFor(def, w.sugar, multi ? `${LABELS[i]} · ` : '', i === 1)));
+    this.worlds.forEach((w, i) => series.push(...this.seriesFor(def, w.sugar, multi ? `${LABELS[i]} · ` : '', i === 1, w.config)));
     const x: uPlot.Scale = { time: false };
     if (lorenz) x.range = [0, 1];
     if (def.kind === 'supplyDemand') x.distr = 3;
@@ -705,14 +769,14 @@ export class ChartsPanel {
   }
 
   /** One world's series: labeled "A · …"/"B · …" in Compare, B dashed and its points hollow. */
-  private seriesFor(def: ChartDef, c: Config, tag: string, b: boolean): uPlot.Series[] {
+  private seriesFor(def: ChartDef, c: Config, tag: string, b: boolean, config: ModelConfig): uPlot.Series[] {
     const dash = b ? B_DASH : undefined;
     switch (def.kind) {
       case 'generation':
       case 'season':
         return def.lines!(c).map((l) => ({ label: tag + l.label, stroke: this.color(l.color), width: 1.5, dash, points: { show: def.kind === 'generation' && !b, size: 4 } }));
       case 'time':
-        return worldLines(def.lines!(c), b ? 1 : 0).map((l) => ({ label: tag + l.label, stroke: this.color(l.color), width: 1.5, dash }));
+        return worldLines(def.configLines?.(config) ?? def.lines!(c), b ? 1 : 0).map((l) => ({ label: tag + l.label, stroke: this.color(l.color), width: 1.5, dash }));
       case 'band': {
         const sd = b ? [2, 3] : [4, 4];
         return [
@@ -801,7 +865,7 @@ export class ChartsPanel {
       const band = p.def.kind === 'band';
       // The anasazi's time charts count years from each world's start year.
       const offset = (i: number) => (p.def.model ? (calendarYear(this.worlds[i].config, 0) ?? 0) : 0);
-      p.plot.setData(this.merge(groups.map((g, i) => (g ? (band ? bandData(g) : lineData(g, offset(i))) : emptyTable(p.counts[i])))));
+      p.plot.setData(this.merge(groups.map((g, i) => (g ? (band ? bandData(g) : (p.def.derive ?? ((d: LineData) => d))(lineData(g, offset(i)))) : emptyTable(p.counts[i])))));
       return;
     }
     const version = this.dist.map((d) => d.version).join();

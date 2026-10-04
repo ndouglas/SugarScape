@@ -1,0 +1,241 @@
+# Burrow excavation and resource-access labs
+
+Burrow is a standalone checked replay lab for explicit excavation and spoil transport. Its
+controllers use supplied preferences. Replay correctness does not establish biological validity,
+learning, chamber counts, coordination or comparative success. A judged campaign requires a
+separately reviewed protocol and manifest. See the [approved design](superpowers/specs/2026-10-03-burrow-1-excavation-design.md)
+and [research programme](studies/2026-10-03-cultures-construction-and-underworlds.md). The [measured protocol and candidate manifest](superpowers/specs/2026-10-04-burrow-1-measured-protocol.md)
+and [resource-access design](superpowers/specs/2026-10-04-burrow-2-resource-access-design.md) were approved on 2026-10-04.
+Their engineering implementations are complete; resource-access integration into `main` is complete at `6076aed`. Scientific registration and execution remain separate.
+
+Run an acceptance demonstration from the repository root, using an absent or empty directory:
+
+```sh
+cargo run --release -p sugarscape-cli -- burrow \
+  --config docs/examples/burrow/relay-responsive.json \
+  --seed 7 --ticks 512 --sample-every 32 --out /tmp/sugarscape-burrow-1-review
+```
+
+`--config` and `--out` are required. Seed, ticks and sampling interval default to `7`, `512`
+and `32`. Seeds span the full unsigned 64-bit range. Zero ticks exports the initial state;
+sampling must be positive. Validation errors exit with code 2 and contextual `field: message`
+lines. I/O failures exit with code 1. The CLI validates the entire request before creating or
+writing output, creates missing directories, accepts empty directories and refuses nonempty
+directories or file paths. A later write failure reports the directory as potentially partial;
+it does not report successful completion. Retry into a new destination because files from a
+failed write may already remain in the original directory.
+
+The four examples vary only `transport` (`direct`, `relay`) and `cue` (`blind`, `responsive`).
+Their fixture uses the existing externally tagged JSON enum, with snake_case variant names:
+
+```json
+{
+  "fixture": { "growing": { "width": 41, "height": 25, "workers": 8 } },
+  "transport": "relay",
+  "cue": "responsive",
+  "freshness_window": 32,
+  "relay_distance": 3,
+  "response_weight": 3,
+  "minimum_recent_units": 2
+}
+```
+
+Omitted config fields receive core defaults; unknown fields are rejected. Other fixture forms
+are `{"choice":{"side":"left","pile":"fresh_accumulation"}}` (also `right`,
+`old_accumulation`, `single_fresh`) and `{"corridor":{"length":9,"workers":2}}`.
+The examples are parity fixtures and demonstrations, not scientific sweeps.
+
+## Outputs and replay
+
+The CLI displays the final map and a concise integer summary. It writes four fixed filenames:
+
+| File | Contents |
+| --- | --- |
+| `config.json` | Normalized shared configuration. |
+| `episode.json` | Entire shared episode, including setup, actions, choices, sampled maps, snapshots, histories, rates, labels and storage. |
+| `maps.txt` | Episode frames in order, each headed by `tick N fingerprint HEX`, followed by its ASCII map and a blank line. |
+| `summary.json` | Exactly the episode's final integer snapshot. |
+
+Seed is a decimal string, fingerprints are sixteen hexadecimal digits, and clocks use integer
+ticks. Initial and terminal frames are retained, including terminal frames off the sampling
+cadence. Choice fixtures stop after their first frontier selection, before committing an action;
+they can have initial and terminal frames at the same tick. `completed_ticks` counts completed
+worker permutation rounds, while `requested_ticks` retains the request. Sampling and diagnostics
+do not consume random draws. Repeating a config, seed, ticks and sample interval reproduces
+`episode.json` bytes on the same native build.
+
+The WASM function `burrow_replay_json(config_json, seed, ticks, sample_every)` returns the same
+serialized core episode. Its seed argument must contain only decimal digits and fit a `u64`;
+negative, floating point and overflow strings are rejected. Ticks and sampling are checked as
+finite integer JavaScript numbers before unsigned conversion: ticks must be in `0..=4294967295`,
+and sampling in `1..=4294967295`. Fractional, negative, nonfinite and out-of-range values are
+rejected with the corresponding field; core opportunity and ASCII limits still apply to valid
+integers. Errors follow the existing boundary
+contract: JSON strings of `[{"field":"...","message":"..."}]`. Full-record parity checks
+cover all four examples at seeds `7` and `18446744073709551615` without adding web controls.
+
+## Physical rules and observation limits
+
+The world is a finite horizontal four-neighbor lattice with no wraparound, diagonals or gravity.
+The growing fixture supplies exit `(0,12)`, open staging cells `x=0..2,y=10..14` and eight stable-ID
+workers. Subsequent open cells arise from digs on accessible frontier faces. Each tick shuffles
+workers once; each gets one sequential opportunity, observing earlier committed actions.
+
+A worker carries zero or one unit; full hands cannot dig. No open cell holds more than two workers.
+Digging opens one cell and creates one material unit; pickup/drop transfers an existing unit;
+disposal at the exit removes a unit from active inventory. Birth times survive drops and handoffs.
+Moves, digs, pickups, drops, disposal, blocked attempts and waits each cost one opportunity.
+Blocked attempts and waits have separate totals. One unit is a bookkeeping quantity, not a
+calibrated mass, and ticks/opportunities are not seconds or energy units.
+
+Workers observe their current cell and open cells within two open-cell hops, occupants, loose
+spoil and diggable faces adjoining those observed cells. They retain local frontier targets and
+wait when congestion prevents routing to a retained target. They receive no global frontier
+targets. The shortest exit-distance field and descending-neighbor information are explicitly
+supplied global navigation scaffolds for transport, rebuilt after geometry changes. Neither
+controller has a room count, desired nest shape or global construction plan.
+
+Direct transport carries toward disposal; relay transport can drop after three successful loaded
+moves when still away from the exit. Responsive selection weights locally observed frontier
+approaches with at least two recent units by three. Recent means age strictly less than 32 ticks
+in these examples. Blindness removes only this selection influence; workers still see and
+transport loose spoil. Preferences and staging are supplied, not learned.
+
+ASCII glyphs are `#` solid, `.` open, `E` exit, `o` loose material, `w` unloaded worker and `W`
+loaded worker. Exit and worker overlays hide spoil, and one glyph can represent two occupants;
+a loaded co-occupant takes precedence over an unloaded worker. Maps are projections. Consult
+trace and inventory for hidden holdings, piles and multiplicity.
+
+## Accounting and operational limits
+
+The inventory obeys `initial + excavated = carried + loose + disposed`. Authoritative integer
+snapshots record actions, opportunities, inventory and connected open area. Connected area follows
+accessible-frontier construction and does not classify success. Rates divide digs/disposals by
+actual opportunities; with zero opportunities both are JSON `null` (unavailable).
+
+Delivery histories retain material IDs, birth/disposal times, deduplicated carrier IDs, successful
+loaded moves and observed loose waiting. `disposed_at: null` means a censored delivery. Delivered
+age is disposal tick minus birth; unfinished age is final tick minus birth and must retain its
+censoring label. Old fixture units have supplied prior birth history; their observed waiting
+starts at fixture initialization, not at birth. Per-worker work, loaded/unloaded successful travel,
+spatial work and event-time dig distances are exported. Spatial coordinates identify the excavated
+target cell; `ActionEvent.from` records where the worker stood. A dig's distance is minimum prior
+open-neighbor exit distance plus one, frozen at opening even if a later shortcut appears.
+
+BFS diagnostics separately measure exit-field, observation and controller-route calls, visited
+cells and maximum queue lengths. These disjoint measured searches count actual algorithm work;
+they are separate from action costs. Exit fields initialize even with zero ticks and rebuild only
+after geometry changes. `storage` reports logical collection records, retained ASCII bytes and
+peak record/cell counts, independent of allocator capacity and machine word size. `retained_records`
+sums events, choices, frames, snapshots, deliveries, carrier IDs, worker work, spatial work,
+spatial worker IDs and dig distances; it excludes singleton config/setup/summary objects.
+These measurements do not replace separate wall-clock profiling.
+
+Operational caps are 262144 cells, 4096 workers (also constrained by fixture spawn capacity),
+one million requested worker opportunities and checked clock/weight/dimension arithmetic. Growing
+staging has capacity for 28 workers because the exit is excluded from spawning. Retained ASCII
+is conservatively capped at 64 MiB before stepping or reserving replay storage. Frame bytes equal
+`width * height + height + legend UTF-8 bytes`; requested frame count is one for zero ticks,
+otherwise `2 + floor(ticks / sample_every)`. The checked product must fit the cap. This can reject
+a request that would stop early or retain fewer frames; reduce requested ticks or increase the
+sample interval. These are lab resource limits, not physical calibration.
+
+## Approved designs and implementation sequence
+
+The measured-study protocol and resource-access design were approved on 2026-10-04. Their separate implementation plans were approved on 2026-10-04:
+
+1. [Measured archive and analysis harness](superpowers/plans/2026-10-04-burrow-1-measured-harness.md): physical transaction validation, complete manifest, immutable raw archives and saved-only descriptive analysis. Engineering acceptance uses construction seeds; scientific registration and execution remain separate.
+2. [Resource access](superpowers/plans/2026-10-04-burrow-2-resource-access.md): private local goal guidance, event-time structural access and checked CLI/WASM exports, preserving ordinary excavation replay bytes.
+
+The measured harness is merged and resource access is implemented in a separate branch. Neither implementation depends on inspecting scientific treatment outcomes.
+
+
+## Measured archive and saved analysis
+
+The engineering harness was merged into `main` at `88e2fa0` after fresh task and whole-branch reviews. The merged checkout passed 2111 workspace and 234 survey tests; formatting checks passed. The candidate stays unregistered and scientific execution is not authorized. `survey --burrow` prints the pinned full manifest without simulating. The construction route uses only seeds 7 and 8, all 18 declared corridor conditions and 512 opportunities per episode. Saved analysis never steps the engine.
+
+The following commands were exercised from a clean committed tree. They create new directories exclusively; use different destinations when repeating them:
+
+```bash
+cargo run --manifest-path survey/Cargo.toml --bin survey -- --burrow --run --construction --protocol-revision a4e0effd0532194621afbdd5672bc21cd0594235 --approval-context 'docs/superpowers/specs/2026-10-04-burrow-1-measured-protocol.md: design approval 2026-10-04; Task4 engineering construction acceptance' --out /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-construction
+cargo run --manifest-path survey/Cargo.toml --bin survey -- --burrow --analyze /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-construction/index.json --out /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-analysis-a
+cargo run --manifest-path survey/Cargo.toml --bin survey -- --burrow --analyze /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-construction/index.json --out /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-analysis-b
+cmp /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-analysis-a/analysis.json /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-analysis-b/analysis.json
+cmp /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-analysis-a/results.md /tmp/burrow-task4-e02a93aa40dd4d71a462d07969ab87fe-analysis-b/results.md
+```
+
+All commands above exited zero and both files were byte-identical. The construction report retains 36 seed rows, action/inventory/search/work/travel/storage/material diagnostics and carried/loose censoring; it contains no growing scientific contrasts or condition means. A tampered raw-file acceptance check exited 2 with a condition/seed SHA-256 error and created no results directory. Full commands and hashes are recorded in the [implementation closure](superpowers/plans/2026-10-04-burrow-1-measured-harness.md#engineering-closure).
+
+Archives use `burrow-archive-v1`: `index.incomplete.json` records the entire expected canonical key set before execution; complete `index.json` binds manifest/config/options, full code/protocol revisions, approval provenance, relative raw paths and SHA-256 bytes. Complete Episode envelopes are saved under `raw/`; exclusive per-record receipts remain under `progress/`. Failures retain an incomplete archive and `failure.json`; there is no silent resume. Analysis requires all canonical keys and validates raw paths, hashes, identities, setup, horizon and physical consistency before creating any output. It writes deterministic pretty `burrow-analysis-v1` JSON and Markdown, with no absolute input paths or generation time. `--analyze` rejects run, seed and panel overrides.
+
+Raw SHA-256 hashes prove byte consistency with the saved index; they do not establish external
+authenticity or provide signatures. Recorded `code_revision` is clean runtime-checkout metadata,
+not build attestation for a retained binary. Use the documented fresh `cargo run` workflow; a
+stale binary invoked directly is not proven to match that revision. The measured choice validator
+requires a first selection, so valid native zero-tick choice exports are outside its measured-choice
+acceptance. Report I/O failure can leave partial output; retry into a new destination.
+
+`validate_episode` reconstructs checked physical transitions, round schedules, material ownership/conservation, histories, physical snapshots and derived work. It consumes no controller decisions or RNG continuation. Fingerprints are format-checked state identifiers; controller BFS counts are bounded consistent diagnostics, not independently authenticated policy replay. Code provenance and unchanged engine regression tests support policy fidelity separately. A report cannot turn connected-open area, supplied global exit navigation or a one-cell corridor into evidence of emergent coordination or production throughput.
+
+Scientific readiness still requires a separately reviewed, committed executable-registration amendment preserving the prespecified matrix and explicitly recording its status/authorization, then separate user authorization for the scientific run. The current pinned unregistered candidate rejects scientific execution before I/O. Full revisions and a nonblank `--approval-context` document provenance; those flags do not grant approval. No scientific campaign or scientific-seed demonstration was run for engineering acceptance.
+
+
+## Checked structural resource access
+
+`burrow-access` composes the existing lab with an explicit task. These two fixed engineering
+scenes differ only in `task.objective` (`explore` or `known_goal`):
+
+```bash
+cargo run --release -p sugarscape-cli -- burrow-access --config docs/examples/burrow/access-explore.json --seed 7 --ticks 512 --sample-every 32 --out /tmp/burrow-access-explore-review
+cargo run --release -p sugarscape-cli -- burrow-access --config docs/examples/burrow/access-known-goal.json --seed 7 --ticks 512 --sample-every 32 --out /tmp/burrow-access-known-goal-review
+```
+
+Use a new or empty destination for each export. The required flags, defaults, full-width seeds,
+validation/I/O exit codes and exclusive-write/partial-output behavior match `burrow`. Every task
+field is required and unknown fields, including extra coordinate keys, are rejected. The public
+route requires a growing fixture, an initially solid diggable in-bounds goal and a positive checked
+weight. Examples explicitly include every lab field: 41×25, eight workers, direct transport,
+blind cues, freshness 32, relay distance three, response weight three and minimum recent units two.
+Their task designates `(7,12)` with weight three.
+
+Structural access means the designated cell is open and connected to the entrance for the present
+one-cell four-neighbor mover, ignoring transient occupancy. No resource is harvested, delivered
+or consumed. Explore workers receive no task coordinate and reproduce the ordinary nested Episode
+exactly. KnownGoal workers receive a supplied coordinate and bias only new local frontier selections
+that improve Manhattan distance. This is an engineering benchmark, not discovery, scent, learning
+or culture. Existing transport, retained targets, material transactions and action prices apply.
+A worker privately latches completion only after its own ordinary local view contains the opened
+goal, including on a loaded turn; access measurement never broadcasts completion.
+
+The run completes its full requested budget after access. `first_access` freezes the first committed
+action's one-based opportunity, material quantities and actual shortest open-cell exit distance;
+subsequent shortcuts can change `final_exit_distance`. Inaccessible endpoints retain null milestones
+and route distance with `deadline_censored=true`. Success on the final action is distinct from
+censoring. Zero ticks retains the initial map and zero observed opportunities. Report success and
+censoring together; successful-only averages omit unfinished runs.
+
+The four exclusive files are normalized outer `config.json`, complete outer `episode.json`,
+`maps.txt` and `summary.json`. Summary contains `{ "base": Snapshot, "access": AccessSummary }`.
+Map metadata names the supplied coordinate, policy, weight and endpoint structural access;
+frame maps retain all base glyphs, including `#` at the initially solid goal. The CLI prints the
+final base map, task/access heading and integer action/inventory summary. KnownGoal reproduction
+requires the outer config; the nested Episode's lab config alone is insufficient.
+
+The outer record also retains `task_assumptions` and `task_diagnostics`. Completion observations
+store each worker's first local sighting with tick and pre-action opportunity count, bounded by
+worker count. Their logical storage is counted separately from unchanged base Episode storage;
+completion checks and weight evaluations are deterministic computation proxies separate from
+base BFS diagnostics and paid actions. Explore has no latch/check/evaluation work.
+
+`burrow_access_replay_json(config_json, seed, ticks, sample_every)` returns the complete core
+AccessEpisode with the same checked decimal seed and original-f64 numeric boundary as `burrow_replay_json`.
+Malformed JSON errors use `burrow_access_config`; semantic errors retain their contextual task/lab
+fields. Native/WASM parity compares every outer field for both policies at seeds `7` and
+`18446744073709551615`, ticks 16 and sampling four. The 512-tick seed-seven scenes are acceptance
+examples and deterministic replays, without a preferred outcome or scientific treatment claim.
+
+
+Engineering review closure: Task and whole-branch reviews approved against `eea12eb`. Review checked generation/export only; saved-access validation remains outside this increment. Existing WASM packaging INFO notices are nonblocking. Resource-access integration into `main` is complete at `6076aed`.
+
+
+Resource access merged into `main` at `6076aed` after user authorization. Fresh merged checks passed: 2205 workspace tests (103 existing ignored), 248 survey tests and 1030 web tests; both format checks and the rebuilt WASM/typechecked browser build passed. Complete commands and evidence are in the [integration closure](superpowers/plans/2026-10-04-burrow-2-resource-access.md#verified-integration-into-main). Burrow scientific registration/execution remain separate.

@@ -8,6 +8,11 @@ import type { ModelConfig, Param } from './types';
  */
 export type ParamInput = string | boolean | { min: string; max: string; edited?: 'min' | 'max' };
 
+/** The accessible name a schema field contributes to a single or paired control. */
+export function schemaControlLabel(label: string, part?: 'slider' | 'number' | 'minimum' | 'maximum'): string {
+  return part ? `${label} ${part}`.trim() : label;
+}
+
 /** The params in panel sections, in the order each group first appears. */
 export function groupParams(params: Param[]): { group: string; params: Param[] }[] {
   const out: { group: string; params: Param[] }[] = [];

@@ -1,0 +1,1856 @@
+diff --git a/survey/Cargo.lock b/survey/Cargo.lock
+index b96a8c8bb2f9c423c7290558d43e406e5a8bb0c9..289741dec2902ed28e29bb0a742c4a879ecc3411 100644
+--- a/survey/Cargo.lock
++++ b/survey/Cargo.lock
+@@ -2,12 +2,78 @@
+ # It is not intended for manual editing.
+ version = 4
+ 
++[[package]]
++name = "block-buffer"
++version = "0.10.4"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
++dependencies = [
++ "generic-array",
++]
++
++[[package]]
++name = "cfg-if"
++version = "1.0.5"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
++
++[[package]]
++name = "cpufeatures"
++version = "0.2.17"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280"
++dependencies = [
++ "libc",
++]
++
++[[package]]
++name = "crypto-common"
++version = "0.1.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a"
++dependencies = [
++ "generic-array",
++ "typenum",
++]
++
++[[package]]
++name = "digest"
++version = "0.10.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
++dependencies = [
++ "block-buffer",
++ "crypto-common",
++]
++
++[[package]]
++name = "generic-array"
++version = "0.14.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
++dependencies = [
++ "typenum",
++ "version_check",
++]
++
+ [[package]]
+ name = "itoa"
+ version = "1.0.18"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+ 
++[[package]]
++name = "libc"
++version = "0.2.190"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "ce5d3ddc6d3fa000eb1536d85e147bfe31aacaba692ed6a876f95cb7c855be78"
++
++[[package]]
++name = "libm"
++version = "0.2.16"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
++
+ [[package]]
+ name = "memchr"
+ version = "2.8.3"
+@@ -99,10 +165,22 @@ dependencies = [
+  "zmij",
+ ]
+ 
++[[package]]
++name = "sha2"
++version = "0.10.9"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
++dependencies = [
++ "cfg-if",
++ "cpufeatures",
++ "digest",
++]
++
+ [[package]]
+ name = "sugarscape-core"
+ version = "0.1.0"
+ dependencies = [
++ "libm",
+  "rand",
+  "rand_pcg",
+  "serde",
+@@ -117,6 +195,7 @@ dependencies = [
+  "rand_pcg",
+  "serde",
+  "serde_json",
++ "sha2",
+  "sugarscape-core",
+ ]
+ 
+@@ -131,12 +210,24 @@ dependencies = [
+  "unicode-ident",
+ ]
+ 
++[[package]]
++name = "typenum"
++version = "1.20.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
++
+ [[package]]
+ name = "unicode-ident"
+ version = "1.0.26"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "d245f478577f809a851594d02313b640fb437e0bb33866753cff937863096954"
+ 
++[[package]]
++name = "version_check"
++version = "0.9.5"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
++
+ [[package]]
+ name = "zmij"
+ version = "1.0.23"
+diff --git a/survey/Cargo.toml b/survey/Cargo.toml
+index 3057e0638c97997b7ea215257e411692404ce8ae..758d760cdab9c6529b38cb6b8a39bce1b4b4f7a3 100644
+--- a/survey/Cargo.toml
++++ b/survey/Cargo.toml
+@@ -9,6 +9,8 @@ publish = false
+ [workspace]
+ 
+ [dependencies]
++# Native-only exact evidence binding; MIT OR Apache-2.0.
++sha2 = { version = "=0.10.9", default-features = false }
+ sugarscape-core = { path = "../crates/sugarscape-core" }
+ serde = { version = "1", features = ["derive"] }
+ serde_json = "1"
+diff --git a/survey/geosim/test_analysis.py b/survey/geosim/test_analysis.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..a11ff2d71c4e38d7369085f234256f185ceb0e07
+--- /dev/null
++++ b/survey/geosim/test_analysis.py
+@@ -0,0 +1,81 @@
++"""Catch missing registered findings and false complete/equivalent output."""
++import json,unittest
++from pathlib import Path
++from survey.geosim import analysis,manifest,reporting
++
++TABLE=Path(__file__).resolve().parents[2]/'docs/superpowers/specs/2026-10-03-geosim-source-table.json'
++
++class AnalysisTests(unittest.TestCase):
++    def fixture(self):
++        table=json.loads(TABLE.read_bytes());m=manifest.build_manifest(table,TABLE.read_bytes())
++        return m,table
++    def test_empty_dataset_exports_all1490_histories_88targets_6contrasts_22pools(self):
++        m,t=self.fixture();r=analysis.report(m,t,{},fixture_draws={'source':8,'ks':4,'parameters':8},alternatives=False)
++        self.assertEqual((len(r['histories']),len(r['source']['targets']),len(r['source_contrasts']),len(r['modern_pools'])),(1490,88,6,22))
++        self.assertEqual(r['received_histories'],0)
++        self.assertTrue(all(p['status']=='Unresolved' for p in r['modern_pools'].values()))
++        self.assertEqual(len(r['modern_parameter_contrasts']),2)
++        self.assertEqual(r['empirical']['clauset_s1']['status'],'Unresolved')
++    def test_provisional_manifest_cannot_run_registered_analysis(self):
++        m,t=self.fixture()
++        with self.assertRaisesRegex(ValueError,'frozen'):analysis.report(m,t,{})
++    def test_unregistered_key_is_an_integrity_error_not_missing_data(self):
++        m,t=self.fixture()
++        with self.assertRaisesRegex(ValueError,'unregistered'):analysis.report(m,t,{('wrong',3):{}},fixture_draws={'source':8,'ks':4,'parameters':8})
++    def test_method_change_cannot_silently_reuse_frozen_estimator(self):
++        m,t=self.fixture();m['method_contract']['pareto']['minimum_tail']=40
++        with self.assertRaisesRegex(ValueError,'method'):analysis.report(m,t,{},fixture_draws={'source':8,'ks':4,'parameters':8})
++    def test_serializer_excludes_private_arrays_and_rejects_unlabelled_nonfinite_results(self):
++        import numpy as np
++        r={'status':'Available','replicates':np.arange(4),'estimate':1.}
++        self.assertEqual(json.loads(reporting.serialize_report(r)),{'status':'Available','estimate':1.})
++        with self.assertRaises(ValueError):reporting.serialize_report({'status':'Available','estimate':float('inf')})
++    def test_markdown_keeps_source_equivalence_and_iid_limits_visible(self):
++        m,t=self.fixture();r=analysis.report(m,t,{},fixture_draws={'source':8,'ks':4,'parameters':8},alternatives=False)
++        text=reporting.markdown_report(r)
++        self.assertIn('Source equivalence',text);self.assertIn('Unresolved',text)
++        self.assertIn('iid',text);self.assertIn('1490',text)
++
++class JobBindingTests(unittest.TestCase):
++    def test_changed_job_state_cannot_be_reported_as_frozen_replay(self):
++        m,t=AnalysisTests().fixture();m['analysis_jobs'][35]['spawn_key']=[999]
++        with self.assertRaisesRegex(ValueError,'job'):analysis.report(m,t,{},fixture_draws={'source':8,'ks':4,'parameters':8},alternatives=False)
++
++class MarkdownFindingsTests(unittest.TestCase):
++    def test_markdown_prints_judged_modern_estimates_intervals_and_failures(self):
++        m,t=AnalysisTests().fixture();r=analysis.report(m,t,{},fixture_draws={'source':8,'ks':4,'parameters':8},alternatives=False)
++        r['modern_pools']['precision.base']={'status':'Available','alpha':2.4,'xmin':1200.,'n_tail':81,'ks':.061,
++            'ks_test':{'status':'Available','p':.274,'interval':[.246,.302],'verdict':'not_rejected_under_iid_diagnostic'},
++            'alternatives':{'lognormal':{'status':'converged','ratio':{'R':-1.4,'p':.041},'diagnostic_verdict':'Alternative_favored_under_iid_diagnostic'},
++                            'cutoff_pareto':{'status':'unresolved_near_boundary','reason':'guard contact','ratio':{'status':'unavailable'},'diagnostic_verdict':'Unresolved'}}}
++        r['modern_parameters']['precision.base'].update(status='Available',estimates={'alpha_mean':2.35},intervals={'alpha_mean':[2.1,2.6]},eligible_history_count=91)
++        r['modern_parameter_contrasts']['base_minus_shock0'].update(status='Available',estimate={'alpha_mean':.32},intervals={'alpha_mean':[.1,.5]})
++        text=reporting.markdown_report(r)
++        for expected in ('1200','81','0.274','0.246','0.302','-1.4','0.041','guard contact','2.35','2.1','2.6','0.32','0.1','0.5','91'):
++            self.assertIn(expected,text)
++
++if __name__=='__main__':unittest.main()
++
++class ExportDiagnosticsTests(unittest.TestCase):
++    def test_compact_histories_keep_conversion_counts_and_definition_checks(self):
++        import copy
++        from survey.geosim import source,modern
++        from survey.geosim.test_records import EnvelopeTests
++        row,_,_=EnvelopeTests().fixture();out=row['outcome'];template=out['completed_wars'][0]
++        out['completed_wars']=[]
++        for i,size in enumerate((.001,1e308)):
++            w=copy.deepcopy(template);w.update(id=i,raw_severity=size,exported_severity=size,java_saturated=i==1,java_subunit_zero=i==0)
++            out['completed_wars'].append(w)
++        out['legacy_visible_wars']=copy.deepcopy(out['completed_wars'])
++        for status in ('completed','implementation_panic'):
++            row['attempt'].update(status=status,panic_context=None if status=='completed' else 'after finish')
++            s=analysis._compact_source(source.history_source(row));m=analysis._compact_modern(modern.history_modern(row,alternatives=False))
++            label='complete_selected' if status=='completed' else 'partial_selected'
++            counters=s['census']['export_diagnostics'][label]
++            self.assertEqual(counters['emitted_java_saturated'],1)
++            self.assertEqual(counters['emitted_java_subunit_zero'],1)
++            self.assertEqual(counters['integer100_saturated'],1)
++            self.assertEqual(counters['integer100_subunit_zero'],1)
++            self.assertEqual(m['export_diagnostics'],s['census']['export_diagnostics'])
++            key='definition_checks' if status=='completed' else 'partial_definition_checks'
++            self.assertEqual(s[key]['integer100']['strict']['zero_count'],1)
+diff --git a/survey/geosim/test_cli.py b/survey/geosim/test_cli.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..f3a398ee73f9676cdd6983db890a5e74aa34b1c0
+--- /dev/null
++++ b/survey/geosim/test_cli.py
+@@ -0,0 +1,43 @@
++"""Exercise Python entry points without constructing or advancing any world."""
++import hashlib,json,subprocess,sys,tempfile,unittest
++from pathlib import Path
++from survey.geosim import manifest
++
++ROOT=Path(__file__).resolve().parents[2]
++TABLE=ROOT/'docs/superpowers/specs/2026-10-03-geosim-source-table.json'
++
++class CliTests(unittest.TestCase):
++    def test_freeze_command_binds_synthetic_source_tree_only(self):
++        from survey.geosim.test_provenance import source_tree
++        from survey.geosim.records import verify_source_inventory
++        with tempfile.TemporaryDirectory() as tmp:
++            root=Path(tmp);source_tree(root);m=root/'provisional.json';out=root/'frozen.json'
++            data=TABLE.read_bytes();m.write_text(json.dumps(manifest.build_manifest(json.loads(data),data)))
++            result=subprocess.run([sys.executable,'-m','survey.geosim.provenance','--manifest',str(m),'--source',str(root/'docs/superpowers/specs/2026-10-03-geosim-source-table.json'),
++                                   '--source-root',str(root),'--output',str(out)],cwd=ROOT,capture_output=True,text=True)
++            self.assertEqual(result.returncode,0,result.stderr)
++            frozen=json.loads(out.read_bytes())
++            self.assertEqual(frozen['provenance_status'],'frozen')
++            self.assertEqual(verify_source_inventory(root,frozen['source_inventory']),frozen['source_inventory_sha256'])
++    def test_manifest_command_writes_exact_source_hash_and_provisional_workload(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            out=Path(tmp)/'manifest.json'
++            result=subprocess.run([sys.executable,'-m','survey.geosim.manifest','--source',str(TABLE),'--output',str(out)],cwd=ROOT,capture_output=True,text=True)
++            self.assertEqual(result.returncode,0,result.stderr)
++            self.assertTrue(out.exists())
++            m=json.loads(out.read_bytes())
++            self.assertEqual(m['source_table_sha256'],hashlib.sha256(TABLE.read_bytes()).hexdigest())
++            self.assertEqual(m['provenance_status'],'provisional_unfrozen')
++            self.assertEqual(len(manifest.expected_keys(m)),1490)
++    def test_analysis_command_rejects_unfrozen_data_before_writing_output(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root=Path(tmp);m=root/'manifest.json';m.write_text(json.dumps(manifest.build_manifest(json.loads(TABLE.read_bytes()),TABLE.read_bytes())))
++            raw=root/'sessions.jsonl';raw.write_text('');unused=root/'unused.json';unused.write_text('{}');prefix=root/'findings'
++            result=subprocess.run([sys.executable,'-m','survey.geosim.analysis','--manifest',str(m),'--source',str(TABLE),'--sessions',str(raw),
++                                   '--resolved',str(unused),'--build-receipt',str(unused),'--binary',str(unused),'--source-root',str(ROOT),'--output',str(prefix)],
++                                   cwd=ROOT,capture_output=True,text=True)
++            self.assertNotEqual(result.returncode,0)
++            self.assertIn('frozen',result.stderr)
++            self.assertFalse(prefix.with_suffix('.json').exists())
++
++if __name__=='__main__':unittest.main()
+diff --git a/survey/geosim/test_manifest.py b/survey/geosim/test_manifest.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..93f1ce0a4e922af82f22b6948d4c0e44da54d7bc
+--- /dev/null
++++ b/survey/geosim/test_manifest.py
+@@ -0,0 +1,42 @@
++"""Catch missing arms, source override loss and availability-dependent RNG order."""
++import json
++from pathlib import Path
++import unittest
++from survey.geosim import manifest
++
++TABLE=Path(__file__).resolve().parents[2]/'docs/superpowers/specs/2026-10-03-geosim-source-table.json'
++
++class ManifestTests(unittest.TestCase):
++    def setUp(self):self.table=json.loads(TABLE.read_text())
++    def test_registered_keys_cover_all_four_populations_without_seed_overlap(self):
++        m=manifest.build_manifest(self.table)
++        keys=manifest.expected_keys(m)
++        self.assertEqual((len(m['arms']),len(keys),len(set(keys))),(37,1490,1490))
++        self.assertEqual(keys[-1],('artifact.reference_2017',370360015))
++    def test_row7_retains_both_thresholds_and_shock_footnote(self):
++        c=manifest.build_manifest(self.table)['arms'][6]['config_overrides']
++        self.assertEqual(c,{'periods_per_tick':100,'superiority_threshold':2.5,'victory_threshold':2.5,'shock_shift':10})
++    def test_artifact_is_a_rust_preset_reference_without_python_defaults(self):
++        a=manifest.build_manifest(self.table)['arms'][-1]
++        self.assertEqual((a['preset'],a['config_overrides']),('artifact_2017',{'periods_per_tick':100}))
++    def test_missing_or_duplicate_source_row_is_rejected(self):
++        self.table['rows'][1]['id']='base'
++        with self.assertRaises(ValueError):manifest.build_manifest(self.table)
++    def test_rng_jobs_reserve_unavailable_slots_and_preserve_later_child(self):
++        m=manifest.build_manifest(self.table);jobs=manifest.analysis_jobs(m)
++        self.assertEqual((len(jobs),jobs[13]['id'],jobs[71]['id']),(72,'ks.original.base','parameters.artifact.reference_2017'))
++        self.assertEqual(manifest.job_rng(jobs[35]).integers(0,100,5).tolist(),manifest.job_rng(jobs[35]).integers(0,100,5).tolist())
++    def test_method_contract_is_fixed_before_any_source_inventory_freeze(self):
++        m=manifest.build_manifest(self.table)
++        self.assertEqual((m['source_draws'],m['ks_draws'],m['analysis_seed']),(100000,1000,2026100301))
++        self.assertEqual(m['provenance_status'],'provisional_unfrozen')
++
++class MethodBytesTests(unittest.TestCase):
++    def test_method_hash_uses_exact_supplied_string_and_parsed_contract(self):
++        import hashlib
++        source=json.loads(TABLE.read_text());m=manifest.build_manifest(source,TABLE.read_bytes())
++        payload=m['method_contract_json']
++        self.assertEqual(hashlib.sha256(payload.encode()).hexdigest(),m['method_contract_sha256'])
++        self.assertEqual(json.loads(payload),m['method_contract'])
++
++if __name__=='__main__':unittest.main()
+diff --git a/survey/geosim/test_modern.py b/survey/geosim/test_modern.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..47d3dfb5ca077efd31a8908f3baed1afdb509958
+--- /dev/null
++++ b/survey/geosim/test_modern.py
+@@ -0,0 +1,141 @@
++"""Catch survivor pooling, missing fit refits and false optimizer/calibration success."""
++import copy,unittest
++import numpy as np
++from survey.geosim import modern
++from survey.geosim import test_records as record_fixtures
++
++class ModernTests(unittest.TestCase):
++    def test_tail_sufficiency_and_equal_value_degeneracy_are_explicit(self):
++        self.assertEqual(modern.fit_sizes(np.arange(1,50),alternatives=False)['status'],'Insufficient_tail')
++        self.assertEqual(modern.fit_sizes(np.ones(50),alternatives=False)['status'],'Degenerate_tail')
++    def test_nonfinite_fit_data_is_unresolved_without_nonfinite_json(self):
++        f=modern.fit_sizes([float('inf')]*50,alternatives=False)
++        self.assertEqual(f['status'],'Unresolved')
++        self.assertIn('nonfinite',f['reason'])
++    def test_four_alternatives_share_one_selected_support_and_preserve_failure(self):
++        x=np.exp(np.linspace(.01,1,80));f=modern.fit_sizes(x)
++        self.assertEqual(f['status'],'Available')
++        self.assertEqual(set(f['alternatives']),{'exponential','lognormal','stretched_exponential','cutoff_pareto'})
++        self.assertTrue(all(a['xmin']==f['xmin'] and a['n_tail']==f['n_tail'] for a in f['alternatives'].values()))
++        self.assertEqual(f['alternatives']['cutoff_pareto']['ratio']['calibration_validity'],'unvalidated')
++    def test_invalid_history_positive_completions_never_become_primary_modern_data(self):
++        row,_,_=record_fixtures.EnvelopeTests().fixture();out=row['outcome'];row['attempt']['status']='invalid'
++        out.update(valid=False,periods=521,attempted_period=522,finish_reason='invalid',invalid_reason='fixture')
++        f=modern.history_modern(row,alternatives=False)
++        self.assertEqual(f['status'],'Unresolved')
++        self.assertEqual(f['raw_sizes'],[])
++        self.assertEqual(f['partial_diagnostic']['n'],1)
++    def test_artifact_modern_data_uses_completed_raw_backlog_once(self):
++        row,_,_=record_fixtures.EnvelopeTests().fixture();out=row['outcome'];out['config']['completed_export']='one_per_period'
++        out['legacy_visible_wars']=[];out['exporter_backlog']=copy.deepcopy(out['completed_wars'])
++        f=modern.history_modern(row,alternatives=False)
++        self.assertEqual(f['raw_sizes'],[10.])
++        self.assertEqual(f['backlog_count'],1)
++    def test_incomplete_arm_keeps_pool_and_ks_unresolved(self):
++        h=[{'complete':True,'raw_sizes':[1.,2.,3.]}]*14
++        p=modern.fit_pool(h,expected=15,alternatives=False)
++        self.assertEqual(p['status'],'Unresolved')
++        self.assertEqual(p['reason'],'incomplete_registered_history_population')
++    def test_semiparametric_draws_refit_every_cutoff_and_replay_seed(self):
++        x=np.exp(np.linspace(.01,2,100));f=modern.fit_sizes(x,cutoff_search='grid100',alternatives=False)
++        a=modern.ks_refit_test(f,x,np.random.default_rng(13),draws=8)
++        b=modern.ks_refit_test(f,x,np.random.default_rng(13),draws=8)
++        self.assertEqual(a,b)
++        self.assertEqual(a['replicates_attempted'],8)
++        self.assertEqual(a['refitted_cutoff_search'],'grid100')
++        if a['status']!='Unresolved':self.assertEqual(a['p'],(a['exceedances']+1)/9)
++    def test_any_predetermined_failed_refit_is_unresolved_without_replacements(self):
++        x=np.geomspace(1e300,1.7e308,50)
++        fit=modern.fit_sizes(x,cutoff_search='grid100',alternatives=False)
++        a=modern.ks_refit_test(fit,x,np.random.default_rng(13),draws=8)
++        self.assertEqual(a['status'],'Unresolved')
++        self.assertEqual(a['replicates_attempted'],8)
++        self.assertGreater(a['failed_replicates'],0)
++        self.assertEqual(a['failed_replicates']+a['successful_replicates'],8)
++    def test_parameter_bootstrap_keeps_empty_eligibility_draws_visible(self):
++        h=[{'complete':True,'status':'Available','alpha':2.,'xmin':1.}]+[{'complete':True,'status':'Insufficient_tail'}]*14
++        p=modern.parameter_bootstrap(h,np.random.default_rng(13),expected=15,draws=32)
++        self.assertEqual(p['status'],'Unresolved')
++        self.assertGreater(p['empty_replicates'],0)
++        self.assertEqual(p['registered_history_count'],15)
++        self.assertEqual(p['eligible_history_count'],1)
++    def test_parameter_contrasts_reuse_independent_arm_replicate_arrays(self):
++        a=modern.parameter_bootstrap([{'complete':True,'status':'Available','alpha':3.,'xmin':10.}]*15,np.random.default_rng(13),expected=15,draws=16)
++        b=modern.parameter_bootstrap([{'complete':True,'status':'Available','alpha':2.,'xmin':4.}]*15,np.random.default_rng(14),expected=15,draws=16)
++        c=modern.parameter_contrast(a,b)
++        self.assertEqual(c['intervals'],{'alpha_mean':[1.,1.],'alpha_median':[1.,1.],'xmin_mean':[6.,6.],'xmin_median':[6.,6.]})
++        self.assertNotIn('p',c)
++        self.assertEqual(c['inference'],'descriptive_independent_whole_history')
++
++class LargeParameterTests(unittest.TestCase):
++    def test_large_finite_parameter_means_and_even_medians_do_not_overflow(self):
++        histories=[{'complete':True,'status':'Available','alpha':2.,'xmin':1e308}]*100
++        p=modern.parameter_bootstrap(histories,np.random.default_rng(13),expected=100,draws=8)
++        self.assertEqual(p['status'],'Available')
++        self.assertAlmostEqual(p['estimates']['xmin_mean']/1e308,1.)
++        self.assertEqual(p['estimates']['xmin_median'],1e308)
++        self.assertEqual(p['empty_replicates'],0)
++
++class FinalDiagnosticsTests(unittest.TestCase):
++    def test_nonfinite_failed_density_has_null_telemetry_and_explicit_reason(self):
++        fit={'status':'converged','loglike':float('inf'),'logpdf':np.full(50,float('inf')),'k':1.}
++        result=modern._final_fit(fit)
++        self.assertEqual(result['status'],'unresolved_nonfinite_final_density')
++        self.assertIsNone(result['loglike'])
++        self.assertIn('loglike',result['unavailable_numeric_fields'])
++
++if __name__=='__main__':unittest.main()
++
++class NarrowObservedNullTests(unittest.TestCase):
++    def test_narrow_likelihood_ratio_uses_exported_pareto_shape(self):
++        import math
++        from survey.geosim import numerics
++        from survey.geosim.methods import METHOD_CONTRACT
++        x=1e100*np.exp(np.linspace(0,1e-12,100));f=modern.fit_sizes(x)
++        self.assertEqual(f['status'],'Available')
++        tail=np.sort(x[x>=f['xmin']]);y=np.log1p((tail-f['xmin'])/f['xmin'])
++        lp=math.log(f['alpha']-1)-math.log(f['xmin'])-f['alpha']*y
++        alternate=numerics.fit_exp(y,math.log(f['xmin']))
++        expected=numerics.likelihood_ratios({'alpha':f['alpha'],'logpdf':lp},alternate)
++        self.assertEqual(f['alternatives']['exponential']['ratio'],expected)
++
++    def test_generated_refits_preserve_power_two_scaling_of_narrow_tail(self):
++        import math
++        x=1e100*np.exp(np.linspace(0,1e-12,100));scaled=np.ldexp(x,-300)
++        fits=[modern.fit_sizes(s,cutoff_search='grid100',alternatives=False) for s in (x,scaled)]
++        results=[modern.ks_refit_test(f,s,np.random.default_rng(13),draws=8) for f,s in zip(fits,(x,scaled))]
++        self.assertEqual(results[0]['failed_replicates'],0)
++        self.assertEqual(results[1]['failed_replicates'],0)
++        self.assertEqual([math.ldexp(v,-300) for v in results[0]['refitted_xmins']],results[1]['refitted_xmins'])
++        self.assertEqual({k:v for k,v in results[0].items() if k!='refitted_xmins'},
++                         {k:v for k,v in results[1].items() if k!='refitted_xmins'})
++
++class RepresentableTailGenerationTests(unittest.TestCase):
++    def test_intermediate_exponential_overflow_does_not_fail_representable_refit(self):
++        import math
++        x=np.exp(np.linspace(-460.,40.,100))
++        fit=modern.fit_sizes(x,cutoff_search='grid100',alternatives=False)
++        self.assertEqual(fit['status'],'Available')
++        reference_rng=np.random.default_rng(3)
++        nt=int(reference_rng.binomial(len(x),fit['n_tail']/len(x)))
++        self.assertEqual(nt,100)  # No body draw is consumed for this fixed regression.
++        e=reference_rng.exponential(1/(fit['alpha']-1),nt)
++        self.assertGreater(float(e.max()),math.log(np.finfo(float).max))
++        reference_tail=np.exp(math.log(fit['xmin'])+e)
++        self.assertTrue(np.all(np.isfinite(reference_tail)))
++        reference=modern.fit_sizes(reference_tail,cutoff_search='grid100',alternatives=False)
++        self.assertEqual(reference['status'],'Available')
++        actual_rng=np.random.default_rng(3)
++        result=modern.ks_refit_test(fit,x,actual_rng,draws=1)
++        self.assertEqual(result['status'],'Available')
++        self.assertEqual(result['failed_replicates'],0)
++        self.assertEqual(result['exceedances'],int(reference['ks']>=fit['ks']))
++        self.assertEqual(actual_rng.bit_generator.state,reference_rng.bit_generator.state)
++
++    def test_tail_transform_preserves_direct_near_cutoff_and_finite_exception(self):
++        import math
++        near=np.array([0.,1e-16,1e-12,.1])
++        np.testing.assert_array_equal(modern._pareto_tail(1e100,near),1e100*np.exp(near))
++        np.testing.assert_array_equal(modern._pareto_tail(1e-200,np.array([1000.])),
++                                      np.exp(math.log(1e-200)+np.array([1000.])))
++        with self.assertRaises(FloatingPointError):modern._pareto_tail(1.,np.array([1000.]))
+diff --git a/survey/geosim/test_numerics.py b/survey/geosim/test_numerics.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..00ba0c90368dd6e4fd67c92c8c8d7444643c2008
+--- /dev/null
++++ b/survey/geosim/test_numerics.py
+@@ -0,0 +1,92 @@
++"""Independent density/KS oracles for independently authored numerical kernels."""
++import math,unittest
++import numpy as np
++from scipy import optimize,stats,special
++from survey.geosim import numerics
++
++class NumericTests(unittest.TestCase):
++    def test_cutoff_normalizer_matches_independent_special_function_identities(self):
++        for k in [.001,.1,1.,10.]:
++            self.assertAlmostEqual(math.exp(numerics.cutoff_logj(0,k)),1/k,delta=1e-9/k)
++            self.assertAlmostEqual(math.exp(numerics.cutoff_logj(1,k)),math.exp(k)*special.exp1(k),delta=1e-9)
++            self.assertAlmostEqual(math.exp(numerics.cutoff_logj(2,k)),1-k*math.exp(k)*special.exp1(k),delta=1e-9)
++    def test_tied_ks_checks_both_ecdf_sides_against_independent_scipy(self):
++        x=np.array([1.]*20+[2.]*20+[3.]*20+[4.]*20)
++        f=numerics.grid_pareto(x,grid=False);tail=x[x>=f['xmin']]
++        ref=stats.kstest(tail,lambda z:1-(z/f['xmin'])**(1-f['alpha'])).statistic
++        self.assertAlmostEqual(f['ks'],ref,delta=1e-12)
++    def test_rescaling_support_leaves_shape_and_ks_unchanged(self):
++        x=np.exp(np.linspace(.01,3,150));f=numerics.grid_pareto(x)
++        for scale in [1e-100,1e100]:
++            g=numerics.grid_pareto(x*scale)
++            self.assertAlmostEqual(f['alpha'],g['alpha'],delta=1e-10)
++            self.assertAlmostEqual(f['ks'],g['ks'],delta=1e-10)
++    def test_truncated_exponential_logdensity_matches_scipy_shifted_distribution(self):
++        y=np.linspace(.01,1,100);xmin=3.;f=numerics.fit_exp(y,math.log(xmin));x=xmin*np.exp(y)
++        ref=stats.expon.logpdf(x,loc=xmin,scale=xmin/f['k'])
++        np.testing.assert_allclose(f['logpdf'],ref,atol=1e-8,rtol=0)
++    def test_truncated_lognormal_fit_agrees_with_independent_nelder_mead(self):
++        xmin=1.;x=np.exp(stats.truncnorm.ppf((np.arange(100)+.5)/100,0,np.inf,loc=0,scale=.7));y=np.log(x)
++        f=numerics.fit_lognormal(y,0.)
++        self.assertEqual(f['status'],'converged')
++        def objective(z):
++            mu,logsigma=z;sigma=math.exp(logsigma)
++            return -np.mean(stats.norm.logpdf(y,loc=mu,scale=sigma)-y-stats.norm.logsf(0,loc=mu,scale=sigma))
++        ref=optimize.minimize(objective,[0,math.log(.7)],method='Nelder-Mead',options={'xatol':1e-10,'fatol':1e-12,'maxiter':1000})
++        self.assertTrue(ref.success)
++        self.assertAlmostEqual(f['mu'],ref.x[0],delta=2e-5)
++        self.assertAlmostEqual(f['sigma'],math.exp(ref.x[1]),delta=2e-5)
++        self.assertAlmostEqual(-f['loglike']/len(y),ref.fun,delta=1e-9)
++    def test_stretched_domain_includes_shapes_above_one(self):
++        x=(1-np.log1p(-(np.arange(100)+.5)/100))**(1/1.8)
++        f=numerics.fit_stretched(np.log(x),0.)
++        self.assertEqual(f['status'],'converged');self.assertGreater(f['beta'],1)
++        ref=stats.weibull_min.logpdf(x,c=f['beta'],scale=f['k']**(-1/f['beta']))+f['k']
++        np.testing.assert_allclose(f['logpdf'],ref,atol=1e-8,rtol=0)
++    def test_nonexistent_finite_alternative_mles_are_unresolved(self):
++        y=np.r_[np.full(99,.1),20.]
++        self.assertEqual(numerics.fit_lognormal(y,0.)['status'],'unattained_pareto_limit')
++        self.assertEqual(numerics.fit_stretched(y,0.)['status'],'unattained_pareto_limit')
++    def test_exact_cutoff_kkt_boundary_has_equal_fit_p_one_and_qualified_calibration(self):
++        y=np.r_[np.full(99,.1),20.];pure=numerics.pareto_at(np.exp(y),1.)
++        f=numerics.fit_cutoff(y,0.);self.assertEqual(f['status'],'boundary_pareto')
++        r=numerics.likelihood_ratios(pure,f,nested=True)
++        self.assertEqual((r['T'],r['p']),(0.,1.))
++        self.assertEqual(r['calibration_validity'],'unvalidated')
++    def test_unverified_equal_interior_cutoff_cannot_manufacture_boundary_equality(self):
++        pure={'alpha':2.5,'logpdf':np.zeros(50)};alt={'status':'converged','logpdf':np.zeros(50)}
++        self.assertEqual(numerics.likelihood_ratios(pure,alt,nested=True)['status'],'unresolved_near_boundary')
++    def test_zero_variance_nonnested_ratio_is_unresolved(self):
++        r=numerics.likelihood_ratios({'logpdf':np.zeros(50)},{'status':'converged','logpdf':np.zeros(50)})
++        self.assertEqual(r['status'],'unresolved_zero_variance')
++
++if __name__=='__main__':unittest.main()
++
++class NarrowTailTests(unittest.TestCase):
++    def test_narrow_tail_uses_one_fit_and_exact_power_two_rescaling(self):
++        from survey.geosim import modern
++        from survey.geosim.methods import METHOD_CONTRACT
++        tolerance=METHOD_CONTRACT['reference_agreement']
++        for base in (1.,1000.,1e100):
++            x=base*np.exp(np.linspace(0,1e-12,100))
++            f=modern.fit_sizes(x,alternatives=False)
++            self.assertEqual(f['status'],'Available')
++            tail=x[x>=f['xmin']]
++            ref=numerics.pareto_at(tail,f['xmin'])
++            self.assertEqual(f['alpha'],ref['alpha'])
++            self.assertEqual(f['loglike'],ref['loglike'])
++            y=np.array([math.log1p((float(v)-f['xmin'])/f['xmin']) for v in tail])
++            lp=math.log(f['alpha']-1)-math.log(f['xmin'])-f['alpha']*y
++            self.assertAlmostEqual(f['loglike']/len(tail),float(lp.mean()),delta=tolerance['nll_per_observation_absolute'])
++            for exponent in (-300,300):
++                g=modern.fit_sizes(np.ldexp(x,exponent),alternatives=False)
++                self.assertEqual(g['status'],'Available')
++                self.assertAlmostEqual(f['alpha'],g['alpha'],delta=tolerance['rescaling_alpha_ks_absolute'])
++                self.assertAlmostEqual(f['ks'],g['ks'],delta=tolerance['rescaling_alpha_ks_absolute'])
++                self.assertEqual(g['xmin'],math.ldexp(f['xmin'],exponent))
++
++    def test_density_rejects_unrepresentable_alpha_instead_of_infinite_fit(self):
++        x=np.r_[np.ones(49),np.nextafter(1.,2.)]
++        # A valid representable narrow fit remains finite; a collapsed tail is unavailable.
++        self.assertTrue(math.isfinite(numerics.pareto_at(x,1.)['alpha']))
++        with self.assertRaises(numerics.NumericFailure):numerics.pareto_at(np.ones(50),1.)
+diff --git a/survey/geosim/test_provenance.py b/survey/geosim/test_provenance.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..78de54b310c1134050d0c109465b338708b49147
+--- /dev/null
++++ b/survey/geosim/test_provenance.py
+@@ -0,0 +1,58 @@
++"""An internally consistent digest cannot excuse omitted scientific sources."""
++import hashlib,json,tempfile,unittest
++from pathlib import Path
++from survey.geosim import provenance,records,manifest
++
++TABLE=Path(__file__).resolve().parents[2]/'docs/superpowers/specs/2026-10-03-geosim-source-table.json'
++
++def source_tree(root):
++    for name in provenance.REQUIRED_FILES:
++        path=root/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'fixture source\n')
++    for name in ['crates/sugarscape-core/src/lib.rs','crates/sugarscape-core/src/geosim/mod.rs','survey/geosim/provenance.py']:
++        path=root/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'abc')
++    (root/provenance.TABLE).write_bytes(TABLE.read_bytes())
++
++class ProvenanceTests(unittest.TestCase):
++    def test_inventory_is_sorted_and_binds_actual_bytes(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root=Path(tmp);source_tree(root);inventory=provenance.source_inventory(root)
++            self.assertEqual([e['path'] for e in inventory],sorted(e['path'] for e in inventory))
++            entry=next(e for e in inventory if e['path']=='crates/sugarscape-core/src/lib.rs')
++            self.assertEqual(entry,{'path':'crates/sugarscape-core/src/lib.rs','bytes':3,'sha256':hashlib.sha256(b'abc').hexdigest()})
++            self.assertTrue(records.verify_source_inventory(root,inventory))
++    def test_empty_truncated_and_unsorted_inventory_are_rejected(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root=Path(tmp);source_tree(root);inventory=provenance.source_inventory(root)
++            for forged in ([],inventory[1:],list(reversed(inventory))):
++                with self.assertRaises(ValueError):records.verify_source_inventory(root,forged)
++    def test_process_outputs_are_excluded_but_new_source_is_required(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root=Path(tmp);source_tree(root);before=provenance.source_inventory(root)
++            for name in ['survey/geosim/IMPLEMENTATION_PLAN.md','survey/geosim/reference/raw/x.py','survey/out/manifest.json','docs/superpowers/plans/packet/replay.py',
++                         'docs/superpowers/specs/2026-10-03-geosim-findings.md','docs/superpowers/specs/2026-10-03-geosim-provenance.json']:
++                path=root/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(b'ignored')
++            self.assertEqual(provenance.source_inventory(root),before)
++            (root/'survey/geosim/new_estimator.py').write_bytes(b'new')
++            with self.assertRaisesRegex(ValueError,'omits'):records.verify_source_inventory(root,before)
++    def test_changed_normative_audit_fails_prior_binding(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root=Path(tmp);source_tree(root);inventory=provenance.source_inventory(root)
++            (root/'docs/superpowers/specs/2026-10-03-geosim-artifact-audit.md').write_bytes(b'changed')
++            with self.assertRaisesRegex(ValueError,'SHA256'):records.verify_source_inventory(root,inventory)
++    def test_missing_required_dependency_or_symlink_is_rejected(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root=Path(tmp);source_tree(root);path=root/'survey/geosim/requirements.txt';path.unlink()
++            with self.assertRaisesRegex(ValueError,'missing'):provenance.source_inventory(root)
++            path.symlink_to(root/'Cargo.toml')
++            with self.assertRaisesRegex(ValueError,'symlink'):provenance.source_inventory(root)
++    def test_freeze_checks_exact_provisional_population_and_source_payload(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root=Path(tmp);source_tree(root);data=TABLE.read_bytes();m=manifest.build_manifest(json.loads(data),data)
++            frozen=provenance.freeze_manifest(m,root,data)
++            self.assertEqual(frozen['provenance_status'],'frozen')
++            self.assertEqual(m['provenance_status'],'provisional_unfrozen')
++            self.assertEqual(records.verify_source_inventory(root,frozen['source_inventory']),frozen['source_inventory_sha256'])
++            m['arms'][0]['config_overrides']['shock']=3
++            with self.assertRaisesRegex(ValueError,'provisional'):provenance.freeze_manifest(m,root,data)
++
++if __name__=='__main__':unittest.main()
+diff --git a/survey/geosim/test_records.py b/survey/geosim/test_records.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..1171ed7c4eb98991fa8094dd0c875a4e600aaeb7
+--- /dev/null
++++ b/survey/geosim/test_records.py
+@@ -0,0 +1,271 @@
++"""Catch aborted-period completions entering fit data and forged bindings."""
++import copy,hashlib,json,math,tempfile,unittest
++from pathlib import Path
++from survey.geosim import records
++
++class RecordsTests(unittest.TestCase):
++    def outcome(self,valid=False):
++        war={'id':0,'parents':[],'start_period':501,'end_period':521,'last_active_period':501,
++             'active_periods':1,'elapsed_periods':21,'raw_severity':10.,'exported_severity':10.,
++             'participants':[{'state':{'capital_cell':0,'sovereignty_generation':0},'last_fighting_period':501}],
++             'end_cause':'shadow_expired_or_participants_retired','java_saturated':False,'java_subunit_zero':False,'fighting_periods':[501]}
++        return {'config':{'width':2,'height':2,'initialization_periods':500,'observation_periods':10000,
++                          'count_boundary':'after_initialization','completed_export':'all_completed','severity_export':'raw_damage'},
++                'seed':3,'rng_mode':'portable_pcg64_mcg','periods':10500 if valid else 521,
++                'attempted_period':10500 if valid else 522,'counting_start':501,'valid':valid,'state_available':True,
++                'finish_reason':'horizon' if valid else 'invalid','invalid_reason':None if valid else 'nonfinite cumulative science ledger',
++                'completed_wars':[war],'censored_wars':[],'legacy_visible_wars':[copy.deepcopy(war)],'exporter_backlog':[],
++                'merges':[],'retired_states':[],'sovereign_count':0,'states':[],'cells':[{'id':i,'owner':{'capital_cell':0,'sovereignty_generation':0},'last_threshold':3.,'next_generation':1} for i in range(4)],'ledger':{**dict.fromkeys(('attacks','fighting_front_periods','mutual_front_periods','conquests','collapses','disconnections','stale_claims','locked_claims','double_successes','path_collisions','shocks'),0),**dict.fromkeys(('damage','measured_damage','capacity_increase','capacity_decrease','clipping','retirement_capacity','reemergence_capacity','recurrence_residual'),0.)},'fronts':[],'resource_updates':[],
++                'partial_period_fights':[]}
++    def test_attempted_period_completion_is_excluded_even_from_partial_diagnostics(self):
++        out=self.outcome();bad=copy.deepcopy(out['completed_wars'][0]);bad.update(id=1,end_period=522,elapsed_periods=22)
++        out['completed_wars'].append(bad);out['legacy_visible_wars'].append(copy.deepcopy(bad));before=copy.deepcopy(out)
++        c=records.completed_censuses(out)
++        self.assertEqual([w['id'] for w in c['partial_completed']],[0])
++        self.assertEqual(c['excluded'][0]['reasons'],['invalid_partial_period_completion'])
++        self.assertEqual(c['primary_completed'],[]);self.assertEqual(out,before)
++    def test_backlog_is_completed_biology_but_never_legacy_source_census(self):
++        out=self.outcome(True);out['config']['completed_export']='one_per_period'
++        out['legacy_visible_wars']=[];out['exporter_backlog']=copy.deepcopy(out['completed_wars'])
++        c=records.completed_censuses(out)
++        self.assertEqual((len(c['primary_completed']),len(c['source_selected'])),(1,0))
++    def test_generation_distinct_participants_are_not_merged_by_capital(self):
++        out=self.outcome();out['completed_wars'][0]['participants'].append({'state':{'capital_cell':0,'sovereignty_generation':1},'last_fighting_period':501})
++        out['legacy_visible_wars']=copy.deepcopy(out['completed_wars'])
++        self.assertEqual(len(records.completed_censuses(out)['partial_completed']),1)
++    def test_invalid_raw_severity_is_preserved_with_exclusion_reason(self):
++        out=self.outcome();out['completed_wars'][0]['raw_severity']=-1
++        out['legacy_visible_wars']=[]
++        c=records.completed_censuses(out)
++        self.assertIn('invalid_raw_severity',c['excluded'][0]['reasons'])
++    def test_valid_horizon_census_with_future_completion_is_integrity_error(self):
++        out=self.outcome(True);out['completed_wars'][0]['end_period']=10501
++        with self.assertRaises(ValueError):records.completed_censuses(out)
++    def test_strict_json_rejects_duplicate_fields_and_nonfinite_numbers(self):
++        for text in ['{"seed":1,"seed":2}','{"x":NaN}']:
++            with self.assertRaises(ValueError):records.strict_json(text)
++    def test_native_config_payload_uses_exact_native_float_bytes(self):
++        payload='[{"id":"a","config":{"x":1e-6}}]'
++        export={'resolved_configs_json':payload,'resolved_configs_sha256':hashlib.sha256(payload.encode()).hexdigest(),
++                'arms':[{'id':'a','config':{'x':.000001}}]}
++        self.assertEqual(records.resolved_payload(export),[{'id':'a','config':{'x':.000001}}])
++        export['arms'][0]['config']['x']=.000002
++        with self.assertRaises(ValueError):records.resolved_payload(export)
++    def test_source_inventory_rejects_traversal_symlink_and_missing_bytes(self):
++        with tempfile.TemporaryDirectory() as t:
++            from survey.geosim.test_provenance import source_tree
++            from survey.geosim.provenance import source_inventory
++            root=Path(t);source_tree(root);valid=source_inventory(root)
++            self.assertTrue(records.verify_source_inventory(root,valid))
++            for path in ['../file','/file']:
++                with self.assertRaises(ValueError):records.verify_source_inventory(root,[{**valid[0],'path':path}])
++            (root/'escape').symlink_to('/etc/passwd')
++            with self.assertRaises(ValueError):records.verify_source_inventory(root,[{**valid[0],'path':'escape'}])
++
++
++class EnvelopeTests(unittest.TestCase):
++    def fixture(self):
++        out=RecordsTests().outcome(True)
++        expected={'id':'original.base','index':0,'sessions':15,'first_seed':370000001,'config':out['config']}
++        binding={k:'a'*64 for k in ('manifest_sha256','binary_sha256','source_inventory_sha256','build_receipt_sha256','resolved_configs_sha256')}
++        out['seed']=370000001
++        row={'schema_version':1,'model':'geosim','arm':'original.base','seed':370000001,'arm_index':0,'repeat_index':0,
++             'config':out['config'],**binding,'attempt':{'status':'completed','construction_errors':[],'panic_context':None,'recorder_error':None},'outcome':out}
++        return row,expected,binding
++    def test_unknown_model_or_fields_cannot_be_resumed_as_geosim(self):
++        row,arm,binding=self.fixture()
++        self.assertEqual(records.validate_record(row,arm,binding),('original.base',370000001))
++        for key,value in [('model','polarity'),('unexpected',True)]:
++            bad={**row,key:value}
++            with self.assertRaises(ValueError):records.validate_record(bad,arm,binding)
++    def test_changed_provenance_and_unregistered_seed_are_rejected(self):
++        row,arm,binding=self.fixture()
++        for key,value in [('binary_sha256','b'*64),('seed',370000999),('repeat_index',4)]:
++            with self.assertRaises(ValueError):records.validate_record({**row,key:value},arm,binding)
++    def test_missing_outcome_needs_explicit_incomplete_error(self):
++        row,arm,binding=self.fixture();row['outcome']=None
++        row['attempt']={'status':'incomplete','construction_errors':[],'panic_context':None,'recorder_error':'native run omitted Outcome'}
++        self.assertEqual(records.history_availability(row)['status'],'incomplete')
++        self.assertEqual(records.validate_record(row,arm,binding),('original.base',370000001))
++        row['attempt']['recorder_error']=None
++        with self.assertRaises(ValueError):records.validate_record(row,arm,binding)
++    def test_postfinish_panic_preserves_valid_outcome_as_partial_only(self):
++        from survey.geosim import source,modern
++        row,arm,binding=self.fixture();row['attempt'].update(status='implementation_panic',panic_context='after native advance')
++        before=copy.deepcopy(row['outcome'])
++        self.assertFalse(records.history_availability(row)['complete'])
++        self.assertEqual(records.validate_record(row,arm,binding),('original.base',370000001))
++        s=source.history_source(row);m=modern.history_modern(row,alternatives=False)
++        self.assertIsNone(s['vector']);self.assertEqual(m['raw_sizes'],[])
++        self.assertEqual(len(s['census']['partial_completed']),1)
++        self.assertEqual(row['outcome'],before)
++        row['attempt']['panic_context']=None
++        with self.assertRaisesRegex(ValueError,'panic_context'):records.history_availability(row)
++    def test_build_receipt_rejects_unknown_fields_and_changed_manifest(self):
++        receipt={'schema_version':1,'model':'geosim','manifest_sha256':'a'*64,'source_inventory_sha256':'b'*64,
++                 'prebuild_inventory_sha256':'b'*64,'postbuild_inventory_sha256':'b'*64,'binary_sha256':'c'*64,
++                 'build_command':['cargo','build','--release'],'cwd':'/fixture','target':'aarch64-apple-darwin',
++                 'rustc_version':'fixture','cargo_version':'fixture','lockfile_hashes':{'Cargo.lock':'d'*64,'survey/Cargo.lock':'e'*64},'features':[],'build_flags':[]}
++        self.assertTrue(records.validate_build_receipt(receipt,'a'*64,'c'*64,'b'*64))
++        with self.assertRaises(ValueError):records.validate_build_receipt({**receipt,'unknown':1},'a'*64,'c'*64,'b'*64)
++        with self.assertRaises(ValueError):records.validate_build_receipt(receipt,'d'*64,'c'*64,'b'*64)
++        with self.assertRaisesRegex(ValueError,'locks'):records.validate_build_receipt({**receipt,'lockfile_hashes':{}},'a'*64,'c'*64,'b'*64)
++
++
++class ReadSessionsTests(unittest.TestCase):
++    def reader_fixture(self):
++        row,arm,binding=EnvelopeTests().fixture()
++        payload=json.dumps([{'id':arm['id'],'config':arm['config']}],separators=(',',':'))
++        binding['resolved_configs_sha256']=hashlib.sha256(payload.encode()).hexdigest()
++        row['resolved_configs_sha256']=binding['resolved_configs_sha256']
++        resolved={**binding,'arms':[{'id':arm['id'],'config':arm['config']}],
++                  'resolved_configs_json':payload}
++        return row,{'arms':[arm]},resolved,binding
++    def test_duplicate_registered_keys_fail_without_silently_overwriting(self):
++        row,m,r,b=self.reader_fixture()
++        with tempfile.TemporaryDirectory() as tmp:
++            p=Path(tmp)/'raw.jsonl';p.write_text(json.dumps(row)+'\n'+json.dumps(row)+'\n')
++            with self.assertRaisesRegex(ValueError,'duplicate'):records.read_sessions(p,m,r,b)
++    def test_mixed_manifest_and_truncated_last_record_fail(self):
++        row,m,r,b=self.reader_fixture()
++        with tempfile.TemporaryDirectory() as tmp:
++            p=Path(tmp)/'raw.jsonl';p.write_text(json.dumps(row)+'\n{')
++            with self.assertRaisesRegex(ValueError,'raw line 2'):records.read_sessions(p,m,r,b)
++            row['manifest_sha256']='b'*64;p.write_text(json.dumps(row)+'\n')
++            with self.assertRaisesRegex(ValueError,'provenance'):records.read_sessions(p,m,r,b)
++    def test_valid_raw_key_is_returned_without_mutating_census(self):
++        row,m,r,b=self.reader_fixture()
++        with tempfile.TemporaryDirectory() as tmp:
++            p=Path(tmp)/'raw.jsonl';p.write_text(json.dumps(row)+'\n')
++            data=records.read_sessions(p,m,r,b)
++            self.assertEqual(data[('original.base',370000001)],row)
++
++class JsonOverflowTests(unittest.TestCase):
++    def test_finite_token_exponent_overflow_is_rejected_at_every_depth(self):
++        for text in ['{"x":1e999}','{"x":-1e999}','[1,{"x":[1e999]}]','{"x":{"y":[-1e999]}}']:
++            with self.subTest(text=text):
++                with self.assertRaisesRegex(ValueError,'nonfinite'):records.strict_json(text)
++    def test_null_unavailable_numbers_survive_overflow_validation(self):
++        self.assertEqual(records.strict_json('{"x":[null,1e-6]}'),{'x':[None,.000001]})
++
++class CensusConservationTests(unittest.TestCase):
++    def test_same_id_cannot_be_completed_and_censored(self):
++        out=RecordsTests().outcome(True);w=copy.deepcopy(out['completed_wars'][0]);w.update(end_period=None,end_cause=None)
++        out['censored_wars']=[w]
++        with self.assertRaisesRegex(ValueError,'censored'):records.completed_censuses(out)
++    def test_positive_completed_war_cannot_disappear_from_collector(self):
++        out=RecordsTests().outcome(True);out['legacy_visible_wars']=[]
++        with self.assertRaisesRegex(ValueError,'collector'):records.completed_censuses(out)
++    def test_all_completed_cannot_retain_positive_backlog(self):
++        out=RecordsTests().outcome(True);out['exporter_backlog']=out['legacy_visible_wars'];out['legacy_visible_wars']=[]
++        with self.assertRaisesRegex(ValueError,'backlog'):records.completed_censuses(out)
++    def test_integer_subunit_zero_still_belongs_to_positive_raw_collector(self):
++        out=RecordsTests().outcome(True);out['config']['severity_export']='java_int100'
++        out['completed_wars'][0].update(raw_severity=.001,exported_severity=0.,java_subunit_zero=True)
++        out['legacy_visible_wars']=copy.deepcopy(out['completed_wars'])
++        self.assertEqual(len(records.completed_censuses(out)['primary_completed']),1)
++        out['legacy_visible_wars']=[]
++        with self.assertRaisesRegex(ValueError,'collector'):records.completed_censuses(out)
++    def test_raw_zero_is_completed_but_not_queued(self):
++        out=RecordsTests().outcome(True);out['completed_wars'][0].update(raw_severity=0.,exported_severity=0.)
++        out['legacy_visible_wars']=[]
++        self.assertEqual(len(records.completed_censuses(out)['primary_completed']),1)
++        out['legacy_visible_wars']=copy.deepcopy(out['completed_wars'])
++        with self.assertRaisesRegex(ValueError,'collector'):records.completed_censuses(out)
++    def test_censored_war_has_no_completion_and_unique_generation_identities(self):
++        out=RecordsTests().outcome(True);w=copy.deepcopy(out['completed_wars'][0]);w.update(id=1,end_period=None,end_cause='horizon_censored',elapsed_periods=10000)
++        out['censored_wars']=[w]
++        self.assertEqual(records.completed_censuses(out)['censored_count'],1)
++        w['participants'].append(copy.deepcopy(w['participants'][0]))
++        with self.assertRaisesRegex(ValueError,'censored'):records.completed_censuses(out)
++
++class CoreCensoredShapeTests(unittest.TestCase):
++    def test_actual_core_horizon_censored_cause_is_retained_and_not_completed(self):
++        out=RecordsTests().outcome(True);w=copy.deepcopy(out['completed_wars'][0])
++        w.update(id=1,end_period=None,end_cause='horizon_censored',elapsed_periods=10000)
++        out['censored_wars']=[w]
++        c=records.completed_censuses(out)
++        self.assertEqual(c['censored_count'],1)
++        self.assertEqual([war['id'] for war in c['primary_completed']],[0])
++        self.assertEqual(out['censored_wars'][0]['end_cause'],'horizon_censored')
++
++if __name__=='__main__':unittest.main()
++
++class StrictNestedTests(unittest.TestCase):
++    def test_interrupted_append_with_complete_json_but_no_newline_is_rejected(self):
++        row,m,r,b=ReadSessionsTests().reader_fixture()
++        with tempfile.TemporaryDirectory() as tmp:
++            p=Path(tmp)/'raw.jsonl';p.write_text(json.dumps(row))
++            with self.assertRaisesRegex(ValueError,'raw line 1.*newline'):
++                records.read_sessions(p,m,r,b)
++
++    def test_unknown_or_missing_nested_fields_and_wrong_types_are_rejected(self):
++        row,arm,binding=EnvelopeTests().fixture()
++        sid={'capital_cell':0,'sovereignty_generation':0}
++        out=row['outcome']
++        out['states']=[{'id':sid,'capacity':1.,'threshold':3.,'alert':False,'campaign':None,
++            'previous_damage':0.,'newly_independent':False,'extracted_yield':1.,'recurrence_residual':0.}]
++        out['sovereign_count']=1
++        out['fronts']=[{'states':[sid,{**sid,'capital_cell':1}],'previous':[False,False],'actions':[False,False],
++            'old_commitments':[0.,0.],'commitments':[0.,0.],'path':None,'initiator':None,'last_damage':[0.,0.],
++            'last_victory_probabilities':[None,None]}]
++        out['resource_updates']=[{'state':sid,'period':1,'old_capacity':1.,'extracted_yield':1.,'applied_damage':0.,
++            'target_capacity':1.,'new_capacity':1.,'clipping':0.,'residual':0.,'reset':False}]
++        out['merges']=[{'period':1,'survivor':0,'absorbed':1}]
++        self.assertEqual(records.validate_record(row,arm,binding),('original.base',370000001))
++        paths=[('completed_wars',0),('completed_wars',0,'participants',0),
++               ('completed_wars',0,'participants',0,'state'),('states',0),('states',0,'id'),
++               ('cells',0),('ledger',),('fronts',0),('resource_updates',0),('merges',0)]
++        for path in paths:
++            for mode in ('extra','missing','type'):
++                with self.subTest(path=path,mode=mode):
++                    bad=copy.deepcopy(row);obj=bad['outcome']
++                    for key in path:obj=obj[key]
++                    if mode=='extra':obj['unexpected']='corrupt'
++                    elif mode=='missing':del obj[next(iter(obj))]
++                    else:obj[next(iter(obj))]=True
++                    bad['outcome']['legacy_visible_wars']=copy.deepcopy(bad['outcome']['completed_wars'])
++                    with self.assertRaises(ValueError):records.validate_record(bad,arm,binding)
++
++    def test_nested_availability_clocks_and_array_shapes_fail_closed(self):
++        mutations=[('rng_mode','other'),('counting_start',True),('sovereign_count',1),('cells',[]),
++                   ('partial_period_fights',[[{'capital_cell':0,'sovereignty_generation':0}]]),
++                   ('ledger',{'damage':0.})]
++        for key,value in mutations:
++            with self.subTest(key=key):
++                row,arm,b=EnvelopeTests().fixture();row['outcome'][key]=value
++                with self.assertRaises(ValueError):records.validate_record(row,arm,b)
++        for field,value in [('java_saturated',1),('parents',[True]),('raw_severity',None),('last_active_period',True)]:
++            with self.subTest(field=field):
++                row,arm,b=EnvelopeTests().fixture();row['outcome']['completed_wars'][0][field]=value
++                row['outcome']['legacy_visible_wars']=copy.deepcopy(row['outcome']['completed_wars'])
++                with self.assertRaises(ValueError):records.validate_record(row,arm,b)
++
++class InvalidNestedTests(unittest.TestCase):
++    def test_invalid_outcome_still_rejects_corrupt_war_clocks_and_participants(self):
++        for field,value in [('fighting_periods',[501,501]),('active_periods',2),('elapsed_periods',1),
++                            ('participants',[{'state':{'capital_cell':0,'sovereignty_generation':0},'last_fighting_period':600}])]:
++            with self.subTest(field=field):
++                row,arm,b=EnvelopeTests().fixture();out=row['outcome']
++                row['attempt']['status']='invalid';out.update(valid=False,periods=521,attempted_period=522,finish_reason='invalid',invalid_reason='fixture')
++                out['completed_wars'][0][field]=value;out['legacy_visible_wars']=copy.deepcopy(out['completed_wars'])
++                with self.assertRaises(ValueError):records.validate_record(row,arm,b)
++
++    def test_invalid_required_float_nulls_preserved_but_valid_nulls_rejected(self):
++        row,arm,b=EnvelopeTests().fixture();out=row['outcome'];out['ledger']['damage']=None
++        with self.assertRaises(ValueError):records.validate_record(row,arm,b)
++        row['attempt']['status']='invalid';out.update(valid=False,periods=521,attempted_period=522,finish_reason='invalid',invalid_reason='fixture')
++        self.assertEqual(records.validate_record(row,arm,b),('original.base',370000001))
++        self.assertIsNone(out['ledger']['damage'])
++
++class NativeBoundaryParityTests(unittest.TestCase):
++    def test_bare_carriage_return_is_not_native_complete_line(self):
++        row,m,r,b=ReadSessionsTests().reader_fixture()
++        with tempfile.TemporaryDirectory() as tmp:
++            p=Path(tmp)/'raw.jsonl';p.write_bytes(json.dumps(row).encode()+b'\r')
++            with self.assertRaisesRegex(ValueError,'newline'):records.read_sessions(p,m,r,b)
++
++    def test_integer_config_cannot_be_replaced_by_equal_float(self):
++        row,arm,b=EnvelopeTests().fixture();row=copy.deepcopy(row)
++        row['config']['width']=2.;row['outcome']['config']['width']=2.
++        with self.assertRaises(ValueError):records.validate_record(row,arm,b)
+diff --git a/survey/geosim/test_run.py b/survey/geosim/test_run.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..a24f3910cf6bd25119d8f2e540e7505bb8eb9103
+--- /dev/null
++++ b/survey/geosim/test_run.py
+@@ -0,0 +1,42 @@
++"""Boundary fixtures invoke only tiny dummy Python processes, never GeoSim periods."""
++import hashlib,json,subprocess,tempfile,unittest
++from pathlib import Path
++from survey.geosim import run
++from survey.geosim.methods import canonical_bytes
++
++class RunTests(unittest.TestCase):
++    def dummy(self,root,code=0):
++        exe=root/'dummy-native';exe.write_text('#!/usr/bin/env python3\nimport json,sys\nprint(json.dumps(sys.argv[1:]))\nsys.exit('+str(code)+')\n');exe.chmod(0o755)
++        return exe
++    def test_runner_passes_exact_manifest_sha_and_explicit_native_paths(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root=Path(tmp);m=root/'manifest.json';m.write_bytes(b'{ "fixture": true }\n');exe=self.dummy(root)
++            result=run.run_native(exe,m,root/'out.jsonl',validate=True,resolved_out=root/'resolved.json',source_root=root)
++            args=json.loads(result.stdout)
++            self.assertEqual(args[args.index('--manifest-sha256')+1],hashlib.sha256(m.read_bytes()).hexdigest())
++            self.assertIn('--validate',args);self.assertIn('--resolved-out',args)
++            self.assertFalse((root/'out.jsonl').exists())
++    def test_nonzero_native_exit_is_not_reported_as_success(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root=Path(tmp);m=root/'manifest.json';m.write_text('{}');exe=self.dummy(root,7)
++            with self.assertRaises(subprocess.CalledProcessError):run.run_native(exe,m,root/'out.jsonl',source_root=root)
++    def test_receipt_binds_actual_binary_manifest_and_equal_prepost_source(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            from survey.geosim.test_provenance import source_tree
++            from survey.geosim.provenance import source_inventory
++            root=Path(tmp);source_tree(root);inv=source_inventory(root)
++            digest=hashlib.sha256(canonical_bytes(inv)).hexdigest();m=root/'manifest.json'
++            m.write_text(json.dumps({'model':'geosim','provenance_status':'frozen','source_inventory':inv,'source_inventory_sha256':digest}))
++            exe=self.dummy(root)
++            receipt=run.make_build_receipt(m,exe,root,prebuild_inventory_sha256=digest,build_command=['cargo','build'],build_exit_code=0,
++                      toolchain={'target':'fixture','rustc_version':'fixture','cargo_version':'fixture'},lockfile_paths=['Cargo.lock','survey/Cargo.lock'])
++            self.assertEqual(receipt['binary_sha256'],hashlib.sha256(exe.read_bytes()).hexdigest())
++            self.assertEqual(receipt['manifest_sha256'],hashlib.sha256(m.read_bytes()).hexdigest())
++            with self.assertRaisesRegex(ValueError,'locks'):
++                run.make_build_receipt(m,exe,root,prebuild_inventory_sha256=digest,build_command=['cargo','build'],build_exit_code=0,
++                                      toolchain={'target':'fixture','rustc_version':'fixture','cargo_version':'fixture'},lockfile_paths=[])
++            with self.assertRaises(ValueError):run.make_build_receipt(m,exe,root,prebuild_inventory_sha256='0'*64,build_command=['cargo'],build_exit_code=0,toolchain={},lockfile_paths=[])
++    def test_failed_build_cannot_produce_integrity_receipt(self):
++        with self.assertRaises(ValueError):run.make_build_receipt(Path('absent'),Path('absent'),Path('.'),prebuild_inventory_sha256='0'*64,build_command=['cargo'],build_exit_code=1,toolchain={},lockfile_paths=[])
++
++if __name__=='__main__':unittest.main()
+diff --git a/survey/geosim/test_source.py b/survey/geosim/test_source.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..f192781b9e372cf53181096af0d3cbad3d914d16
+--- /dev/null
++++ b/survey/geosim/test_source.py
+@@ -0,0 +1,78 @@
++"""Catch wrong CCDF populations, marginal resampling and shrunk Holm families."""
++import math,unittest
++import numpy as np
++from survey.geosim import source
++
++class SourceTests(unittest.TestCase):
++    def test_strict_unique_ccdf_recovers_exact_geometric_regression(self):
++        sizes=[0]+[100]*16+[1000]*8+[10000]*4+[100000]*2+[1000000]+[10000000]
++        f=source.source_fit(sizes)
++        self.assertAlmostEqual(f['slope'],-math.log10(2),places=12)
++        self.assertAlmostEqual(f['r2'],1.,places=12)
++        self.assertEqual((f['war_count'],f['positive_count'],f['log_range'],len(f['fit_points'])),(33,32,5.,4))
++    def test_boundary_ties_use_strict_survival_and_maximum_is_excluded(self):
++        f=source.source_fit([0,100,10**2.5,10**2.5,1000,10000,100000])
++        self.assertEqual(len(f['fit_points']),3)
++        self.assertEqual(f['fit_points'][0],[2.5,math.log10(.5)])
++    def test_unavailable_fit_does_not_invent_zero_slope_or_range(self):
++        self.assertIsNone(source.source_fit([0,0])['log_range'])
++        f=source.source_fit([1000]*7)
++        self.assertEqual(f['log_range'],0.)
++        self.assertIsNone(f['slope'])
++    def test_nonfinite_and_negative_source_data_fail(self):
++        for s in [float('nan'),float('inf'),-1]:
++            with self.assertRaises(ValueError):source.source_fit([1,s])
++    def test_rounding_interval_maximum_covers_central_gaps_ties_and_tail_floor(self):
++        self.assertEqual(source.maximize_interval_p([0,1,2,3],[1.4,1.6])['p'],1.)
++        self.assertEqual(source.maximize_interval_p([0,0,0,1,2,2,5],[0,0])['p'],1.)
++        self.assertEqual(source.maximize_interval_p([0,1,2,3],[100,100])['p'],.4)
++    def test_fixed88_and6_families_keep_unavailable_hypotheses(self):
++        self.assertEqual(source.fixed_holm([.001]+[None]*87,88)[0],.088)
++        self.assertEqual(source.fixed_holm([.001,.008,.01,.4,None,None],6),[.006,.04,.04,1.,None,None])
++        with self.assertRaises(ValueError):source.fixed_holm([.001],88)
++    def test_source_verdict_requires_completeness_but_rejection_has_precedence(self):
++        self.assertEqual(source.arm_verdict([.001,None],False),'Incompatible')
++        self.assertEqual(source.arm_verdict([.1]*8,False),'Unresolved')
++        self.assertEqual(source.arm_verdict([.1]*8,True),'Compatible')
++    def test_joint_prediction_preserves_affine_relation_across_metrics(self):
++        i=np.arange(100,dtype=float);v=np.column_stack((i,2*i+1,3*i+2,4*i+3))
++        d=source.predictive_targets(v,np.random.default_rng(7),draws=32)['replicates']
++        np.testing.assert_array_equal(d[:,4],2*d[:,1]+1)
++        np.testing.assert_array_equal(d[:,6],3*d[:,1]+2)
++        with self.assertRaises(ValueError):source.predictive_targets(v[:99],np.random.default_rng(7),draws=32)
++    def test_independent_contrast_does_not_pair_identical_history_labels(self):
++        i=np.arange(100,dtype=float);v=np.column_stack((i,i,i))
++        f=source.independent_contrast(v,v,np.random.default_rng(7),draws=32)
++        self.assertTrue(np.any(f['replicates']!=0))
++    def test_constant_group_difference_has_inclusive_plus_one_p(self):
++        f=source.independent_contrast(np.full((100,3),5.),np.full((100,3),3.),np.random.default_rng(7),draws=16)
++        self.assertEqual(f['estimate'],[2.,2.,2.])
++        self.assertEqual(f['intervals'],[[2.,2.]]*3)
++        self.assertEqual(f['p'],[2/17]*3)
++    def test_contrast_sign_and_missingness_remain_distinct(self):
++        self.assertEqual(source.contrast_verdict(2.,.01),'Holds')
++        self.assertEqual(source.contrast_verdict(-2.,.01),'Fails')
++        self.assertEqual(source.contrast_verdict(2.,.05),'Inconclusive')
++        self.assertEqual(source.contrast_verdict(None,None),'Unresolved')
++
++if __name__=='__main__':unittest.main()
++
++class DefinitionChecksTests(unittest.TestCase):
++    def test_inclusive_rank_tail_and_integer100_are_separate_from_primary(self):
++        wars=[{'raw_severity':x,'exported_severity':x} for x in [0,.001,100,1000,1000,10000,100000]]
++        primary=source.source_fit([w['exported_severity'] for w in wars])
++        checks=source.source_definition_checks(wars)
++        self.assertEqual(checks['status'],'inferred_descriptive_source_equivalence_unresolved')
++        exported=checks['exported']
++        self.assertEqual(exported['fit_tail'],{'count':4,'positive_distinct_count':3,'log_range':2.})
++        self.assertEqual(exported['inclusive_unique']['fit_points'][0],[3.,math.log10(4/6)])
++        self.assertEqual(exported['descending_rank']['fit_points'],[[5.,math.log10(1/6)],[4.,math.log10(2/6)],[3.,math.log10(3/6)],[3.,math.log10(4/6)]])
++        self.assertEqual(checks['integer100']['strict']['zero_count'],2)
++        self.assertEqual(checks['integer100']['fit_tail']['count'],5)
++        self.assertEqual(primary,source.source_fit([w['exported_severity'] for w in wars]))
++        self.assertEqual(len(primary['fit_points']),2)
++        self.assertEqual(exported['inclusive_unique']['fit_status'],'available')
++
++    def test_rank_fit_requires_three_distinct_x_despite_repeated_observations(self):
++        checks=source.source_definition_checks([{'raw_severity':x,'exported_severity':x} for x in [1000]*5+[10000]*5])
++        self.assertEqual(checks['exported']['descending_rank']['fit_status'],'unavailable')
+diff --git a/survey/geosim/test_source_findings.py b/survey/geosim/test_source_findings.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..e47878febaff2d02488ec8cb433f812d82ee3213
+--- /dev/null
++++ b/survey/geosim/test_source_findings.py
+@@ -0,0 +1,52 @@
++import copy,json,unittest
++from pathlib import Path
++from survey.geosim import source,manifest
++from survey.geosim import test_records as record_fixtures
++
++TABLE=Path(__file__).resolve().parents[2]/'docs/superpowers/specs/2026-10-03-geosim-source-table.json'
++
++class SourceFindingsTests(unittest.TestCase):
++    def setUp(self):
++        self.table=json.loads(TABLE.read_bytes());self.manifest=manifest.build_manifest(self.table)
++        self.jobs={j['id']:j for j in self.manifest['analysis_jobs']}
++        self.histories={}
++        for row in self.table['rows']:
++            for family,n in [('original',15),('precision',100)]:
++                self.histories[f"{family}.{row['id']}"]=[{'availability':{'complete':True},'vector':[-.55,.991,4.2,204]} for _ in range(n)]
++    def test_all88_source_slots_remain_when_precision_is_missing(self):
++        del self.histories['precision.base']
++        result=source.source_findings(self.table,self.histories,self.jobs,draws=16)
++        self.assertEqual(len(result['targets']),88)
++        self.assertEqual(result['arms']['base']['conditional_verdict'],'Unresolved')
++        self.assertTrue(all(r['p'] is None for r in result['targets'][:8]))
++        self.assertEqual(result['family_size'],88)
++    def test_incomplete_original_cannot_be_compatible_even_with_complete_precision(self):
++        self.histories['original.base'].pop()
++        result=source.source_findings(self.table,self.histories,self.jobs,draws=16)
++        self.assertEqual(result['arms']['base']['conditional_verdict'],'Unresolved')
++        self.assertTrue(all(r['p'] is not None for r in result['targets'][:8]))
++    def test_source_equivalence_stays_unresolved_when_conditional_complete(self):
++        result=source.source_findings(self.table,self.histories,self.jobs,draws=16)
++        self.assertEqual(result['arms']['base']['conditional_verdict'],'Compatible')
++        self.assertEqual(result['arms']['base']['source_equivalence'],'Unresolved')
++    def test_one_invalid_precision_history_never_reduces_sample_size(self):
++        self.histories['precision.base'][0]={'availability':{'complete':False},'vector':None}
++        result=source.source_findings(self.table,self.histories,self.jobs,draws=16)
++        self.assertTrue(all(r['p'] is None for r in result['targets'][:8]))
++    def test_six_contrast_slots_preserve_missing_precision_arm(self):
++        del self.histories['precision.shock0']
++        result=source.contrast_findings(self.histories,self.jobs,draws=16)
++        self.assertEqual(len(result),6)
++        self.assertTrue(all(r['verdict']=='Unresolved' for r in result[:3]))
++        self.assertTrue(all(r['p'] is not None for r in result[3:]))
++    def test_history_source_never_promotes_invalid_partial_completion(self):
++        row,_,_=record_fixtures.EnvelopeTests().fixture();row['attempt']['status']='invalid';o=row['outcome']
++        o.update(valid=False,periods=521,attempted_period=522,finish_reason='invalid',invalid_reason='fixture')
++        bad=copy.deepcopy(o['completed_wars'][0]);bad.update(id=1,end_period=522,elapsed_periods=22)
++        o['completed_wars'].append(bad);o['legacy_visible_wars'].append(copy.deepcopy(bad))
++        result=source.history_source(row)
++        self.assertIsNone(result['vector'])
++        self.assertEqual(result['partial_diagnostic']['war_count'],1)
++        self.assertEqual(result['census']['excluded'][0]['reasons'],['invalid_partial_period_completion'])
++
++if __name__=='__main__':unittest.main()
+diff --git a/survey/src/bin/geosim.rs b/survey/src/bin/geosim.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..5103c56b7498137925894fd333473a9c5bb425bd
+--- /dev/null
++++ b/survey/src/bin/geosim.rs
+@@ -0,0 +1,386 @@
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use serde_json::json;
++    #[test]
++    fn hash_is_actual_sha256_not_a_caller_label() {
++        assert_eq!(
++            digest(b"abc"),
++            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
++        );
++    }
++    #[test]
++    fn recursive_duplicate_fields_and_nonfinite_tokens_are_rejected() {
++        for bytes in [
++            b"{\"nested\":{\"seed\":1,\"seed\":2}}".as_slice(),
++            b"{\"x\":NaN}",
++            b"{\"x\":1e999}",
++        ] {
++            assert!(strict_json(bytes).is_err());
++        }
++    }
++    #[test]
++    fn rust_paper_defaults_and_overrides_are_authoritative() {
++        let c=resolve_config("paper", &json!({"width":2,"height":2,"initial_states":1,"observation_periods":13,"initialization_periods":0,"periods_per_tick":5})).unwrap();
++        assert_eq!(
++            (c.width, c.height, c.horizon(), c.periods_per_tick),
++            (2, 2, 13, 5)
++        );
++        assert_eq!(
++            c.defender_threshold,
++            sugarscape_core::geosim::DefenderThreshold::Reciprocal
++        );
++    }
++    #[test]
++    fn artifact_resolution_uses_actual_named_preset() {
++        let c = resolve_config("artifact_2017", &json!({})).unwrap();
++        assert_eq!(c, GeosimConfig::artifact_2017());
++    }
++    #[test]
++    fn unknown_config_keys_readings_and_presets_fail_before_construction() {
++        for (preset, overrides) in [
++            ("paper", json!({"unknown":1})),
++            ("paper", json!({"damage_incidence":"unknown"})),
++            ("absent", json!({})),
++        ] {
++            assert!(resolve_config(preset, &overrides).is_err());
++        }
++    }
++}
++
++#[cfg(test)]
++mod manifest_tests {
++    use super::*;
++    const REGISTERED: &str = include_str!("../../tests/fixtures/geosim-registered-manifest.json");
++    fn root() -> PathBuf {
++        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
++            .parent()
++            .unwrap()
++            .to_owned()
++    }
++    #[test]
++    fn all_registered_configs_are_resolved_without_world_construction() {
++        let p = prepare(
++            REGISTERED.as_bytes(),
++            &root(),
++            &digest(REGISTERED.as_bytes()),
++        )
++        .unwrap();
++        assert_eq!(p.arms.len(), 37);
++        assert_eq!(p.arms.iter().map(|a| a.sessions).sum::<u64>(), 1490);
++        assert_eq!(p.arms[6].config.superiority_threshold, 2.5);
++        assert_eq!(p.arms[6].config.victory_threshold, 2.5);
++        assert_eq!(p.arms[6].config.shock_shift, 10.0);
++        assert_eq!(
++            p.arms[36].config.numerical_policy,
++            sugarscape_core::geosim::NumericalPolicy::FloorZero
++        );
++        let values: Value = strict_json(p.payload.as_bytes()).unwrap();
++        assert_eq!(values.as_array().unwrap().len(), 37);
++        assert_eq!(p.payload_sha, digest(p.payload.as_bytes()));
++    }
++    #[test]
++    fn exact_manifest_hash_and_registration_changes_are_rejected() {
++        assert!(prepare(REGISTERED.as_bytes(), &root(), &"a".repeat(64)).is_err());
++        for field in ["first_seed", "sessions", "index"] {
++            let mut v = strict_json(REGISTERED.as_bytes()).unwrap();
++            v["arms"][0][field] = serde_json::json!(999);
++            let b = serde_json::to_vec(&v).unwrap();
++            assert!(prepare(&b, &root(), &digest(&b)).is_err());
++        }
++    }
++    #[test]
++    fn unknown_manifest_fields_and_changed_method_payload_fail() {
++        let mut v = strict_json(REGISTERED.as_bytes()).unwrap();
++        v["unknown"] = serde_json::json!(true);
++        let b = serde_json::to_vec(&v).unwrap();
++        assert!(prepare(&b, &root(), &digest(&b)).is_err());
++        let mut v = strict_json(REGISTERED.as_bytes()).unwrap();
++        v["method_contract_json"] = serde_json::json!("{}");
++        let b = serde_json::to_vec(&v).unwrap();
++        assert!(prepare(&b, &root(), &digest(&b)).is_err());
++    }
++}
++
++#[cfg(test)]
++mod record_tests {
++    use super::*;
++    use serde_json::json;
++    fn arm() -> ResolvedArm {
++        ResolvedArm{id:"fixture.tiny".into(),index:0,family:"fixture".into(),preset:"paper".into(),sessions:1,first_seed:41,config:resolve_config("paper",&json!({"width":2,"height":2,"initial_states":4,"initialization_periods":0,"observation_periods":4,"periods_per_tick":4,"attack_probability":1,"superiority_threshold":0.1,"resource_adjustment":1,"damage_fraction":1})).unwrap()}
++    }
++    fn binding() -> Bindings {
++        Bindings {
++            manifest_sha256: digest(b"manifest"),
++            binary_sha256: digest(b"self"),
++            source_inventory_sha256: None,
++            build_receipt_sha256: None,
++            resolved_configs_sha256: digest(b"configs"),
++        }
++    }
++    #[test]
++    fn actual_invalid_world_retains_attempted_clock_and_exact_resume_integrity() {
++        let a = arm();
++        let b = binding();
++        let row = execute_with(&a, 0, &b, GeosimWorld::new, |w| w.run(1)).unwrap();
++        assert_eq!(row["attempt"]["status"], "invalid");
++        validate_record(&row, &a, &b).unwrap();
++        for name in ["binary_sha256", "resolved_configs_sha256"] {
++            let mut changed = row.clone();
++            changed[name] = json!("a".repeat(64));
++            assert!(validate_record(&changed, &a, &b).is_err());
++        }
++        let mut changed = row.clone();
++        changed["config"]["war_shadow"] = json!(999);
++        assert!(validate_record(&changed, &a, &b).is_err());
++        let mut changed = row.clone();
++        changed["outcome"]["attempted_period"] = json!(999);
++        assert!(validate_record(&changed, &a, &b).is_err());
++    }
++    #[test]
++    fn outer_panic_after_terminal_outcome_is_never_reported_completed() {
++        let mut a = arm();
++        a.config.damage_fraction = 0.0;
++        let b = binding();
++        let row = execute_with(&a, 0, &b, GeosimWorld::new, |w| {
++            w.run(1);
++            panic!("postfinish motif");
++        })
++        .unwrap();
++        assert_eq!(row["outcome"]["valid"], true);
++        assert_eq!(row["attempt"]["status"], "implementation_panic");
++        validate_record(&row, &a, &b).unwrap();
++        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
++            .join("out/geosim-protocol-implementation/native-postfinish-panic-fixture.json");
++        atomic_json(&path, &row).unwrap();
++    }
++    #[test]
++    fn construction_failure_outer_panic_inner_finish_and_incomplete_have_distinct_status() {
++        let a = arm();
++        let b = binding();
++        let row = execute_with(
++            &a,
++            0,
++            &b,
++            |_, _| {
++                Err(vec![sugarscape_core::config::FieldError::new(
++                    "width",
++                    "fixture rejected",
++                )])
++            },
++            |_| {},
++        )
++        .unwrap();
++        assert_eq!(row["attempt"]["status"], "construction_error");
++        assert!(row["outcome"].is_null());
++        validate_record(&row, &a, &b).unwrap();
++        let row = execute_with(&a, 0, &b, |_, _| panic!("constructor motif"), |_| {}).unwrap();
++        assert_eq!(row["attempt"]["status"], "construction_panic");
++        assert!(row["outcome"].is_null());
++        let row = execute_with(&a, 0, &b, GeosimWorld::new, |_| panic!("advance motif")).unwrap();
++        assert_eq!(row["attempt"]["status"], "implementation_panic");
++        assert!(row["outcome"].is_object());
++        validate_record(&row, &a, &b).unwrap();
++        let row = execute_with(&a, 0, &b, GeosimWorld::new, |w| {
++            w.invalidate_after_panic("inner caught motif".into())
++        })
++        .unwrap();
++        assert_eq!(row["attempt"]["status"], "implementation_panic");
++        assert!(row["attempt"]["panic_context"]
++            .as_str()
++            .unwrap()
++            .contains("inner caught motif"));
++        let row = execute_with(&a, 0, &b, GeosimWorld::new, |_| {}).unwrap();
++        assert_eq!(row["attempt"]["status"], "incomplete");
++        assert!(row["outcome"].is_null());
++        validate_record(&row, &a, &b).unwrap();
++    }
++}
++
++#[cfg(test)]
++mod provenance_tests {
++    use super::*;
++    use serde_json::json;
++    #[test]
++    fn inventory_paths_are_canonical_and_source_symlinks_are_forbidden() {
++        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
++            .parent()
++            .unwrap()
++            .to_owned();
++        assert!(safe_path(&root, "survey//Cargo.toml").is_err());
++        assert!(safe_path(&root, "../Cargo.toml").is_err());
++        #[cfg(unix)]
++        {
++            let path =
++                std::env::temp_dir().join(format!("geosim-inventory-path-{}", std::process::id()));
++            std::fs::create_dir_all(&path).unwrap();
++            std::fs::write(path.join("real"), b"source").unwrap();
++            std::os::unix::fs::symlink(path.join("real"), path.join("alias")).unwrap();
++            assert!(safe_path(&path, "alias").is_err());
++            std::fs::remove_dir_all(path).unwrap();
++        }
++    }
++    #[test]
++    fn receipt_must_bind_actual_manifest_binary_sources_pre_post_and_locks() {
++        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
++            .parent()
++            .unwrap()
++            .to_owned();
++        let manifest = digest(b"manifest");
++        let binary = digest(b"binary");
++        let inventory = digest(b"inventory");
++        let v = json!({"schema_version":1,"model":"geosim","manifest_sha256":manifest,"binary_sha256":binary,"source_inventory_sha256":inventory,"prebuild_inventory_sha256":inventory,"postbuild_inventory_sha256":inventory,
++   "build_command":["cargo","build","--manifest-path","survey/Cargo.toml","--bin","geosim"],"cwd":root,"target":"aarch64-apple-darwin","rustc_version":tool_version("rustc").unwrap(),"cargo_version":tool_version("cargo").unwrap(),"lockfile_hashes":{"Cargo.lock":digest(&read(&root.join("Cargo.lock")).unwrap()),"survey/Cargo.lock":digest(&read(&root.join("survey/Cargo.lock")).unwrap())},"features":[],"build_flags":[]});
++        let bytes = serde_json::to_vec(&v).unwrap();
++        assert_eq!(
++            receipt_binding(&bytes, &root, &manifest, &binary, &inventory).unwrap(),
++            digest(&bytes)
++        );
++        for name in [
++            "manifest_sha256",
++            "binary_sha256",
++            "source_inventory_sha256",
++            "prebuild_inventory_sha256",
++            "postbuild_inventory_sha256",
++        ] {
++            let mut changed = v.clone();
++            changed[name] = json!("a".repeat(64));
++            assert!(receipt_binding(
++                &serde_json::to_vec(&changed).unwrap(),
++                &root,
++                &manifest,
++                &binary,
++                &inventory
++            )
++            .is_err());
++        }
++        let mut changed = v.clone();
++        changed["lockfile_hashes"]["survey/Cargo.lock"] = json!("a".repeat(64));
++        assert!(receipt_binding(
++            &serde_json::to_vec(&changed).unwrap(),
++            &root,
++            &manifest,
++            &binary,
++            &inventory
++        )
++        .is_err());
++        let mut changed = v;
++        changed["unknown"] = json!(true);
++        assert!(receipt_binding(
++            &serde_json::to_vec(&changed).unwrap(),
++            &root,
++            &manifest,
++            &binary,
++            &inventory
++        )
++        .is_err());
++    }
++}
++
++#[cfg(test)]
++mod census_tests {
++    use super::*;
++    use serde_json::json;
++    fn motif() -> (ResolvedArm, Bindings, Value) {
++        let config=resolve_config("paper",&json!({"width":2,"height":2,"initial_states":1,"initialization_periods":0,"observation_periods":4,"periods_per_tick":4,"attack_probability":0,"shock_probability":0,"severity_export":"java_int100"})).unwrap();
++        let arm = ResolvedArm {
++            id: "fixture.census".into(),
++            index: 0,
++            family: "fixture".into(),
++            preset: "paper".into(),
++            sessions: 1,
++            first_seed: 51,
++            config,
++        };
++        let binding = Bindings {
++            manifest_sha256: digest(b"m"),
++            binary_sha256: digest(b"b"),
++            source_inventory_sha256: None,
++            build_receipt_sha256: None,
++            resolved_configs_sha256: digest(b"r"),
++        };
++        let mut row = execute_with(&arm, 0, &binding, GeosimWorld::new, |w| w.run(1)).unwrap();
++        let war = json!({"id":9,"parents":[],"start_period":1,"end_period":2,"last_active_period":1,"active_periods":1,"elapsed_periods":2,"raw_severity":0.001,"exported_severity":0.0,"participants":[{"state":{"capital_cell":0,"sovereignty_generation":7},"last_fighting_period":1}],"end_cause":"shadow_expired","java_saturated":false,"java_subunit_zero":true,"fighting_periods":[1]});
++        row["outcome"]["completed_wars"] = json!([war.clone()]);
++        row["outcome"]["legacy_visible_wars"] = json!([war]);
++        (arm, binding, row)
++    }
++    #[test]
++    fn positive_subunit_zero_requires_collector_membership_and_zero_raw_forbids_it() {
++        let (a, b, row) = motif();
++        validate_record(&row, &a, &b).unwrap();
++        let mut changed = row.clone();
++        changed["outcome"]["legacy_visible_wars"] = json!([]);
++        assert!(validate_record(&changed, &a, &b).is_err());
++        let mut changed = row.clone();
++        changed["outcome"]["exporter_backlog"] = changed["outcome"]["legacy_visible_wars"].clone();
++        assert!(validate_record(&changed, &a, &b).is_err());
++        let mut changed = row.clone();
++        for list in ["completed_wars", "legacy_visible_wars"] {
++            changed["outcome"][list][0]["raw_severity"] = json!(0.0);
++        }
++        assert!(validate_record(&changed, &a, &b).is_err());
++        changed["outcome"]["legacy_visible_wars"] = json!([]);
++        validate_record(&changed, &a, &b).unwrap();
++    }
++    #[test]
++    fn legacy_backlog_keeps_positive_raw_even_when_integer_export_is_zero() {
++        let (mut a, b, mut row) = motif();
++        a.config.completed_export = sugarscape_core::geosim::CompletedExport::OnePerPeriod;
++        row["config"] = serde_json::to_value(&a.config).unwrap();
++        row["outcome"]["config"] = row["config"].clone();
++        row["outcome"]["exporter_backlog"] = row["outcome"]["legacy_visible_wars"].clone();
++        row["outcome"]["legacy_visible_wars"] = serde_json::json!([]);
++        validate_record(&row, &a, &b).unwrap();
++    }
++    #[test]
++    fn completed_and_censored_identity_are_disjoint_and_generations_are_exact() {
++        let (a, b, row) = motif();
++        let mut changed = row.clone();
++        let mut censored = changed["outcome"]["completed_wars"][0].clone();
++        censored["end_period"] = Value::Null;
++        censored["end_cause"] = json!("horizon_censored");
++        censored["elapsed_periods"] = json!(4);
++        changed["outcome"]["censored_wars"] = json!([censored]);
++        assert!(validate_record(&changed, &a, &b).is_err());
++        let mut changed = row;
++        changed["outcome"]["completed_wars"][0]["participants"][0]["state"]["capital_cell"] =
++            json!(4);
++        assert!(validate_record(&changed, &a, &b).is_err());
++    }
++    #[test]
++    fn partial_completion_and_null_ledger_remain_raw_but_valid_horizon_rejects_them() {
++        let (a, b, mut row) = motif();
++        row["attempt"]["status"] = json!("invalid");
++        row["outcome"]["valid"] = json!(false);
++        row["outcome"]["periods"] = json!(1);
++        row["outcome"]["attempted_period"] = json!(2);
++        row["outcome"]["finish_reason"] = json!("invalid");
++        row["outcome"]["invalid_reason"] = json!("partial motif");
++        row["outcome"]["ledger"]["damage"] = Value::Null;
++        row["outcome"]["resource_updates"] = json!([]);
++        let original = row.clone();
++        validate_record(&row, &a, &b).unwrap();
++        assert_eq!(row, original);
++        row["attempt"]["status"] = json!("completed");
++        row["outcome"]["valid"] = json!(true);
++        assert!(validate_record(&row, &a, &b).is_err());
++    }
++    #[test]
++    fn duplicate_cells_states_and_unknown_partial_identity_fields_are_rejected() {
++        let (a, b, row) = motif();
++        let mut changed = row.clone();
++        changed["outcome"]["cells"][1] = changed["outcome"]["cells"][0].clone();
++        assert!(validate_record(&changed, &a, &b).is_err());
++        let mut changed = row.clone();
++        let state = changed["outcome"]["states"][0].clone();
++        changed["outcome"]["states"]
++            .as_array_mut()
++            .unwrap()
++            .push(state);
++        assert!(validate_record(&changed, &a, &b).is_err());
++        let mut changed = row;
++        changed["outcome"]["partial_period_fights"] = json!([[{"capital_cell":0,"sovereignty_generation":7,"unknown":true},{"capital_cell":1,"sovereignty_generation":0},0]]);
++        assert!(validate_record(&changed, &a, &b).is_err());
++    }
++}
+diff --git a/survey/tests/fixtures/geosim-registered-manifest.json b/survey/tests/fixtures/geosim-registered-manifest.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..74e18c93f2f4643bcde0f0eb87d2ed7a22c7a185
+--- /dev/null
++++ b/survey/tests/fixtures/geosim-registered-manifest.json
+@@ -0,0 +1 @@
++{"analysis_jobs":[{"id":"predictive.source.base","index":0,"root_entropy":2026100301,"spawn_key":[0],"state_u32":[376766346,1901801382,2357989843,2916848472]},{"id":"predictive.source.shock10","index":1,"root_entropy":2026100301,"spawn_key":[1],"state_u32":[2468243366,788597120,34736020,3474193711]},{"id":"predictive.source.shock0","index":2,"root_entropy":2026100301,"spawn_key":[2],"state_u32":[868247881,499304744,835127734,4206723746]},{"id":"predictive.source.context_off","index":3,"root_entropy":2026100301,"spawn_key":[3],"state_u32":[2416277492,1681468797,1060838809,3886732608]},{"id":"predictive.source.shadow10","index":4,"root_entropy":2026100301,"spawn_key":[4],"state_u32":[3094907371,225163940,3557800625,4008327263]},{"id":"predictive.source.shadow40","index":5,"root_entropy":2026100301,"spawn_key":[5],"state_u32":[906024990,1307637400,1775072471,3050822830]},{"id":"predictive.source.thresholds2_5_shock10","index":6,"root_entropy":2026100301,"spawn_key":[6],"state_u32":[2110282419,1482537562,361419758,670929100]},{"id":"predictive.source.mobile0_9","index":7,"root_entropy":2026100301,"spawn_key":[7],"state_u32":[2684587148,35614507,4214199133,2726144170]},{"id":"predictive.source.distance_offset0_2","index":8,"root_entropy":2026100301,"spawn_key":[8],"state_u32":[1477528113,2580105654,2928149193,3977136783]},{"id":"predictive.source.distance_exponent5","index":9,"root_entropy":2026100301,"spawn_key":[9],"state_u32":[3008223028,606381300,2274174520,1048358533]},{"id":"predictive.source.grid75","index":10,"root_entropy":2026100301,"spawn_key":[10],"state_u32":[886740411,4155722253,739086459,4001414796]},{"id":"contrast.base_minus_shock0","index":11,"root_entropy":2026100301,"spawn_key":[11],"state_u32":[3393276491,3996474797,3902454931,74398514]},{"id":"contrast.base_minus_context_off","index":12,"root_entropy":2026100301,"spawn_key":[12],"state_u32":[3846237607,111709135,1202247928,3683814643]},{"id":"ks.original.base","index":13,"root_entropy":2026100301,"spawn_key":[13],"state_u32":[3086169509,62524836,2653371102,582556395]},{"id":"ks.original.shock10","index":14,"root_entropy":2026100301,"spawn_key":[14],"state_u32":[2444442577,3381957068,2657705292,3377221352]},{"id":"ks.original.shock0","index":15,"root_entropy":2026100301,"spawn_key":[15],"state_u32":[4069792306,2669854049,2738554530,2544859128]},{"id":"ks.original.context_off","index":16,"root_entropy":2026100301,"spawn_key":[16],"state_u32":[3486098549,788174475,499712658,4007581330]},{"id":"ks.original.shadow10","index":17,"root_entropy":2026100301,"spawn_key":[17],"state_u32":[472540893,2921633189,475653753,2298692357]},{"id":"ks.original.shadow40","index":18,"root_entropy":2026100301,"spawn_key":[18],"state_u32":[2176431256,2731094973,1619841635,422139784]},{"id":"ks.original.thresholds2_5_shock10","index":19,"root_entropy":2026100301,"spawn_key":[19],"state_u32":[993282993,3888435601,1217922915,149188554]},{"id":"ks.original.mobile0_9","index":20,"root_entropy":2026100301,"spawn_key":[20],"state_u32":[2377251854,3967861300,1980575793,3336755566]},{"id":"ks.original.distance_offset0_2","index":21,"root_entropy":2026100301,"spawn_key":[21],"state_u32":[1676405930,1419657312,1797110293,3507350717]},{"id":"ks.original.distance_exponent5","index":22,"root_entropy":2026100301,"spawn_key":[22],"state_u32":[1889351214,178973458,2209380846,904677601]},{"id":"ks.original.grid75","index":23,"root_entropy":2026100301,"spawn_key":[23],"state_u32":[3707443889,701232191,1368224599,383446873]},{"id":"ks.precision.base","index":24,"root_entropy":2026100301,"spawn_key":[24],"state_u32":[447778035,4222751930,356919991,2638923070]},{"id":"ks.precision.shock10","index":25,"root_entropy":2026100301,"spawn_key":[25],"state_u32":[15647244,3746332479,1035033277,388450249]},{"id":"ks.precision.shock0","index":26,"root_entropy":2026100301,"spawn_key":[26],"state_u32":[3766777133,2587644801,1685175195,1954912990]},{"id":"ks.precision.context_off","index":27,"root_entropy":2026100301,"spawn_key":[27],"state_u32":[639311611,3374683714,1432729639,3320601424]},{"id":"ks.precision.shadow10","index":28,"root_entropy":2026100301,"spawn_key":[28],"state_u32":[1741450436,3224769178,2451517991,428758222]},{"id":"ks.precision.shadow40","index":29,"root_entropy":2026100301,"spawn_key":[29],"state_u32":[1456885264,4159716063,2865380499,3999139149]},{"id":"ks.precision.thresholds2_5_shock10","index":30,"root_entropy":2026100301,"spawn_key":[30],"state_u32":[331275787,450182866,2085109597,3154182726]},{"id":"ks.precision.mobile0_9","index":31,"root_entropy":2026100301,"spawn_key":[31],"state_u32":[1409708243,3873751674,286330874,603583201]},{"id":"ks.precision.distance_offset0_2","index":32,"root_entropy":2026100301,"spawn_key":[32],"state_u32":[3201433655,616509115,963017647,303529567]},{"id":"ks.precision.distance_exponent5","index":33,"root_entropy":2026100301,"spawn_key":[33],"state_u32":[3084574599,2677499640,1357110372,2030330679]},{"id":"ks.precision.grid75","index":34,"root_entropy":2026100301,"spawn_key":[34],"state_u32":[4013838154,4137402286,3287734855,381451195]},{"id":"parameters.original.base","index":35,"root_entropy":2026100301,"spawn_key":[35],"state_u32":[2294397411,2577941739,467797056,3904651628]},{"id":"parameters.original.shock10","index":36,"root_entropy":2026100301,"spawn_key":[36],"state_u32":[3376014647,717861913,1287563482,2953537000]},{"id":"parameters.original.shock0","index":37,"root_entropy":2026100301,"spawn_key":[37],"state_u32":[1762461459,836724279,57192992,2955393685]},{"id":"parameters.original.context_off","index":38,"root_entropy":2026100301,"spawn_key":[38],"state_u32":[1848523854,2413260226,4077303306,2211517772]},{"id":"parameters.original.shadow10","index":39,"root_entropy":2026100301,"spawn_key":[39],"state_u32":[3963139272,2532408557,357489988,2739114157]},{"id":"parameters.original.shadow40","index":40,"root_entropy":2026100301,"spawn_key":[40],"state_u32":[713497705,2379077426,959354361,321288865]},{"id":"parameters.original.thresholds2_5_shock10","index":41,"root_entropy":2026100301,"spawn_key":[41],"state_u32":[3030669290,3401065684,2273220451,1751660468]},{"id":"parameters.original.mobile0_9","index":42,"root_entropy":2026100301,"spawn_key":[42],"state_u32":[2824915272,856448435,2216785745,1417445609]},{"id":"parameters.original.distance_offset0_2","index":43,"root_entropy":2026100301,"spawn_key":[43],"state_u32":[3352154166,2429435523,3549273084,1063393082]},{"id":"parameters.original.distance_exponent5","index":44,"root_entropy":2026100301,"spawn_key":[44],"state_u32":[3037390942,1577729607,1233815454,653862123]},{"id":"parameters.original.grid75","index":45,"root_entropy":2026100301,"spawn_key":[45],"state_u32":[944861890,2141776856,3199545041,3942139671]},{"id":"parameters.precision.base","index":46,"root_entropy":2026100301,"spawn_key":[46],"state_u32":[2242384935,4081237035,1142179766,293342160]},{"id":"parameters.precision.shock10","index":47,"root_entropy":2026100301,"spawn_key":[47],"state_u32":[3388048042,1279803849,962262609,742202892]},{"id":"parameters.precision.shock0","index":48,"root_entropy":2026100301,"spawn_key":[48],"state_u32":[2861389242,1421888703,3765080653,1126301899]},{"id":"parameters.precision.context_off","index":49,"root_entropy":2026100301,"spawn_key":[49],"state_u32":[1235460348,281004286,3878868734,2392078531]},{"id":"parameters.precision.shadow10","index":50,"root_entropy":2026100301,"spawn_key":[50],"state_u32":[4098031538,3957571006,3241154098,3037871636]},{"id":"parameters.precision.shadow40","index":51,"root_entropy":2026100301,"spawn_key":[51],"state_u32":[2224983746,483717722,2324720038,1529002797]},{"id":"parameters.precision.thresholds2_5_shock10","index":52,"root_entropy":2026100301,"spawn_key":[52],"state_u32":[3444519001,3134124842,2799067201,1164027237]},{"id":"parameters.precision.mobile0_9","index":53,"root_entropy":2026100301,"spawn_key":[53],"state_u32":[1631856882,3893120312,3716457654,3170924321]},{"id":"parameters.precision.distance_offset0_2","index":54,"root_entropy":2026100301,"spawn_key":[54],"state_u32":[2617686530,1424050565,960821669,2388577781]},{"id":"parameters.precision.distance_exponent5","index":55,"root_entropy":2026100301,"spawn_key":[55],"state_u32":[1020016087,4217622801,636365061,3656413804]},{"id":"parameters.precision.grid75","index":56,"root_entropy":2026100301,"spawn_key":[56],"state_u32":[3845453731,612499642,3117091408,3747703645]},{"id":"parameters.reading.printed_increasing","index":57,"root_entropy":2026100301,"spawn_key":[57],"state_u32":[1890393881,1348596610,613543951,3441864273]},{"id":"parameters.reading.manhattan","index":58,"root_entropy":2026100301,"spawn_key":[58],"state_u32":[268362327,1028538289,2615551654,2110042509]},{"id":"parameters.reading.attacker_first","index":59,"root_entropy":2026100301,"spawn_key":[59],"state_u32":[3582243721,2322233072,17975244,3249749364]},{"id":"parameters.reading.global_no_action","index":60,"root_entropy":2026100301,"spawn_key":[60],"state_u32":[1348903342,77874899,2927165245,1788458348]},{"id":"parameters.reading.all_fronts","index":61,"root_entropy":2026100301,"spawn_key":[61],"state_u32":[1872416017,3378661914,3268716672,2793545705]},{"id":"parameters.reading.own_commitment","index":62,"root_entropy":2026100301,"spawn_key":[62],"state_u32":[203679156,3912365568,1291162890,2694274960]},{"id":"parameters.reading.exclusive","index":63,"root_entropy":2026100301,"spawn_key":[63],"state_u32":[2709084991,3991372634,1730128633,3091454542]},{"id":"parameters.reading.collapse_only","index":64,"root_entropy":2026100301,"spawn_key":[64],"state_u32":[3747813860,2177719796,3047306457,1490172790]},{"id":"parameters.reading.affected_states","index":65,"root_entropy":2026100301,"spawn_key":[65],"state_u32":[3112760646,1134380105,3157725245,3767226255]},{"id":"parameters.reading.adjacent_active_states","index":66,"root_entropy":2026100301,"spawn_key":[66],"state_u32":[640717119,4135024675,2568836674,2722420469]},{"id":"parameters.reading.add_losses","index":67,"root_entropy":2026100301,"spawn_key":[67],"state_u32":[2946549660,141086195,594347580,3038485837]},{"id":"parameters.reading.initiator_curve","index":68,"root_entropy":2026100301,"spawn_key":[68],"state_u32":[3565881880,1988520347,3368185712,1487140514]},{"id":"parameters.reading.mutual_only","index":69,"root_entropy":2026100301,"spawn_key":[69],"state_u32":[3004224231,3549576455,1952528167,447789057]},{"id":"parameters.reading.java_int100","index":70,"root_entropy":2026100301,"spawn_key":[70],"state_u32":[4033523898,3259772537,1216226107,1715363411]},{"id":"parameters.artifact.reference_2017","index":71,"root_entropy":2026100301,"spawn_key":[71],"state_u32":[2228602343,2296156366,3588236916,3814597306]}],"analysis_seed":2026100301,"arms":[{"config_overrides":{"periods_per_tick":100},"family":"original","first_seed":370000001,"id":"original.base","index":0,"preset":"paper","sessions":15},{"config_overrides":{"periods_per_tick":100,"shock_shift":10},"family":"original","first_seed":370010001,"id":"original.shock10","index":1,"preset":"paper","sessions":15},{"config_overrides":{"periods_per_tick":100,"shock_shift":0},"family":"original","first_seed":370020001,"id":"original.shock0","index":2,"preset":"paper","sessions":15},{"config_overrides":{"context_activation":false,"periods_per_tick":100},"family":"original","first_seed":370030001,"id":"original.context_off","index":3,"preset":"paper","sessions":15},{"config_overrides":{"periods_per_tick":100,"war_shadow":10},"family":"original","first_seed":370040001,"id":"original.shadow10","index":4,"preset":"paper","sessions":15},{"config_overrides":{"periods_per_tick":100,"war_shadow":40},"family":"original","first_seed":370050001,"id":"original.shadow40","index":5,"preset":"paper","sessions":15},{"config_overrides":{"periods_per_tick":100,"shock_shift":10,"superiority_threshold":2.5,"victory_threshold":2.5},"family":"original","first_seed":370060001,"id":"original.thresholds2_5_shock10","index":6,"preset":"paper","sessions":15},{"config_overrides":{"mobile_share":0.9,"periods_per_tick":100},"family":"original","first_seed":370070001,"id":"original.mobile0_9","index":7,"preset":"paper","sessions":15},{"config_overrides":{"distance_offset":0.2,"periods_per_tick":100},"family":"original","first_seed":370080001,"id":"original.distance_offset0_2","index":8,"preset":"paper","sessions":15},{"config_overrides":{"distance_exponent":5,"periods_per_tick":100},"family":"original","first_seed":370090001,"id":"original.distance_exponent5","index":9,"preset":"paper","sessions":15},{"config_overrides":{"height":75,"initial_states":450,"periods_per_tick":100,"width":75},"family":"original","first_seed":370100001,"id":"original.grid75","index":10,"preset":"paper","sessions":15},{"config_overrides":{"periods_per_tick":100},"family":"precision","first_seed":370110001,"id":"precision.base","index":11,"preset":"paper","sessions":100},{"config_overrides":{"periods_per_tick":100,"shock_shift":10},"family":"precision","first_seed":370120001,"id":"precision.shock10","index":12,"preset":"paper","sessions":100},{"config_overrides":{"periods_per_tick":100,"shock_shift":0},"family":"precision","first_seed":370130001,"id":"precision.shock0","index":13,"preset":"paper","sessions":100},{"config_overrides":{"context_activation":false,"periods_per_tick":100},"family":"precision","first_seed":370140001,"id":"precision.context_off","index":14,"preset":"paper","sessions":100},{"config_overrides":{"periods_per_tick":100,"war_shadow":10},"family":"precision","first_seed":370150001,"id":"precision.shadow10","index":15,"preset":"paper","sessions":100},{"config_overrides":{"periods_per_tick":100,"war_shadow":40},"family":"precision","first_seed":370160001,"id":"precision.shadow40","index":16,"preset":"paper","sessions":100},{"config_overrides":{"periods_per_tick":100,"shock_shift":10,"superiority_threshold":2.5,"victory_threshold":2.5},"family":"precision","first_seed":370170001,"id":"precision.thresholds2_5_shock10","index":17,"preset":"paper","sessions":100},{"config_overrides":{"mobile_share":0.9,"periods_per_tick":100},"family":"precision","first_seed":370180001,"id":"precision.mobile0_9","index":18,"preset":"paper","sessions":100},{"config_overrides":{"distance_offset":0.2,"periods_per_tick":100},"family":"precision","first_seed":370190001,"id":"precision.distance_offset0_2","index":19,"preset":"paper","sessions":100},{"config_overrides":{"distance_exponent":5,"periods_per_tick":100},"family":"precision","first_seed":370200001,"id":"precision.distance_exponent5","index":20,"preset":"paper","sessions":100},{"config_overrides":{"height":75,"initial_states":450,"periods_per_tick":100,"width":75},"family":"precision","first_seed":370210001,"id":"precision.grid75","index":21,"preset":"paper","sessions":100},{"config_overrides":{"distance_formula":"printed_increasing","periods_per_tick":100},"family":"reading","first_seed":370220001,"id":"reading.printed_increasing","index":22,"preset":"paper","sessions":15},{"config_overrides":{"distance_metric":"manhattan","periods_per_tick":100},"family":"reading","first_seed":370230001,"id":"reading.manhattan","index":23,"preset":"paper","sessions":15},{"config_overrides":{"path_sampling":"attacker_first","periods_per_tick":100},"family":"reading","first_seed":370240001,"id":"reading.attacker_first","index":24,"preset":"paper","sessions":15},{"config_overrides":{"initiation_guard":"global_no_action","periods_per_tick":100},"family":"reading","first_seed":370250001,"id":"reading.global_no_action","index":25,"preset":"paper","sessions":15},{"config_overrides":{"enemy_total":"all_fronts","periods_per_tick":100},"family":"reading","first_seed":370260001,"id":"reading.all_fronts","index":26,"preset":"paper","sessions":15},{"config_overrides":{"damage_basis":"own_commitment","periods_per_tick":100},"family":"reading","first_seed":370270001,"id":"reading.own_commitment","index":27,"preset":"paper","sessions":15},{"config_overrides":{"periods_per_tick":100,"victory_draws":"exclusive"},"family":"reading","first_seed":370280001,"id":"reading.exclusive","index":28,"preset":"paper","sessions":15},{"config_overrides":{"capital_capture":"collapse_only","periods_per_tick":100},"family":"reading","first_seed":370290001,"id":"reading.collapse_only","index":29,"preset":"paper","sessions":15},{"config_overrides":{"locking":"affected_states","periods_per_tick":100},"family":"reading","first_seed":370300001,"id":"reading.affected_states","index":30,"preset":"paper","sessions":15},{"config_overrides":{"cluster_linkage":"adjacent_active_states","periods_per_tick":100},"family":"reading","first_seed":370310001,"id":"reading.adjacent_active_states","index":31,"preset":"paper","sessions":15},{"config_overrides":{"damage_feedback":"add_losses","periods_per_tick":100},"family":"reading","first_seed":370320001,"id":"reading.add_losses","index":32,"preset":"paper","sessions":15},{"config_overrides":{"attack_projection":"initiator_curve","periods_per_tick":100},"family":"reading","first_seed":370330001,"id":"reading.initiator_curve","index":33,"preset":"paper","sessions":15},{"config_overrides":{"periods_per_tick":100,"severity_damage":"mutual_only"},"family":"reading","first_seed":370340001,"id":"reading.mutual_only","index":34,"preset":"paper","sessions":15},{"config_overrides":{"periods_per_tick":100,"severity_export":"java_int100"},"family":"reading","first_seed":370350001,"id":"reading.java_int100","index":35,"preset":"paper","sessions":15},{"config_overrides":{"periods_per_tick":100},"family":"artifact","first_seed":370360001,"id":"artifact.reference_2017","index":36,"preset":"artifact_2017","sessions":15}],"execution_mode":"registered","ks_draws":1000,"method_contract":{"availability":{"incomplete_pool":"unresolved_reserved_ks_slot","invalid_history":"partial_diagnostics_only_no_primary_pool_or_bootstrap","successful_completion":"end_period<=Outcome.periods","zero_eligible_parameter_replicate":"unresolved_no_replacements"},"contrasts":{"draws":100000,"family_size":6,"holm_reject_below":0.05,"ids":["base_minus_shock0","base_minus_context_off"],"metrics":["slope","r2","log_range"],"resampling":"independent_whole_history"},"cutoff":{"boundary":"exact_convex_KKT_alpha>2_and_mean_excess>=1/(alpha-2)","bounds":[[-100.0,100.0],[-32.0,32.0]],"near_boundary":"unresolved","near_boundary_gain_per_observation":1e-10,"starts":"alpha=[min(99,pareto_alpha),1,0] x k=[1,.1,.01]/mean_excess; clip_logk[-31,31]"},"interval":{"level":0.95,"quantile_method":"linear"},"ks_test":{"calibration":"iid_semiparametric_generated_refitted_grid100","draws":1000,"exceedance":"Dstar>=Dobs","failure":"any_predetermined_failed_replicate_unresolved_no_replacements","interval":"95%_Clopper_Pearson_b_of_B","level":0.1,"p":"(b+1)/(B+1)","tail_generation":"E=exponential(1/(alpha-1)); xmin*exp(E) when E<=log(float64_max), else exp(log(xmin)+E); final_overflow_fails; unchanged_draws_and_order"},"lognormal":{"bounds":[[-100.0,100.0],[1e-08,10000.0]],"coordinates":"mean_scaled_natural_a_b","nonexistence":"scaled_second_moment>=2","starts":[[-1.0,0.5],[0.0,0.5],[1.0,0.1],[1.0,0.01]]},"optimizer":{"accept_gradient_inf_below":1e-06,"ftol":1e-13,"gtol":1e-08,"guard_contact":"unresolved","maxiter":1000,"maxls":50,"method":"L-BFGS-B"},"parameter_bootstrap":{"conditional_eligible_interval":"descriptive_only","contrast_inference":"descriptive_linear95_interval_no_p_family_or_verdict","contrast_method":"same_index_independent_arm_replicate_array_differences","contrasts":["precision.base-minus-precision.shock0","precision.base-minus-precision.context_off"],"draws":100000,"empty_or_incomplete":"primary_unresolved","metrics":["alpha_mean","alpha_median","xmin_mean","xmin_median"],"positive_mean":"max_scaled_mean","positive_median":"arithmetic_midpoint_with_overflow_safe_branch","rng":"independent_fixed_per_arm_parameter_child","sampling":"all_registered_history_rows_with_joint_eligibility_masks"},"pareto":{"cutoff_ties":"smallest_xmin_exact","fit_authority":"one_sorted_centered_ratio_MLE_for_cutoff_KS_alpha_logpdf_likelihood_ratios","grid_indices":"j*(M-1)//99 for j=0..99 when M>100","individual_search":"all_observed","ks":"max_left_and_right_ecdf_at_unique_ties","log_ratios":"log1p((x-xmin)/xmin)_when_x/2<=xmin_else_log(x)-log(xmin)","minimum_tail":50,"numeric_failure":"nondegenerate_candidate_unrepresentable_alpha_or_density_unresolved","pool_search":"grid100"},"quadrature":{"epsabs":1e-11,"epsrel":1e-10,"limit":250,"max_relative_error":1e-08,"normalizer":"scaled_positive_dimensionless_integral"},"ratios":{"calibration_validity":"unvalidated","exact_equal_p":1.0,"level":0.1,"nested":"declared_half_chi_square_1","nonnested":"CSN_normalized_two_sided","qualification":"alpha<=3_lacks_finite_boundary_information; alpha>3_not_validation","variance_divisor":"n","variance_floor":1e-24},"reference_agreement":{"ks_absolute":1e-12,"log_density_absolute":1e-08,"nll_per_observation_absolute":1e-09,"parameters_absolute":2e-05,"relative_normalization_error":1e-09,"rescaling_alpha_ks_absolute":1e-10},"revision":"geosim-offline-v1-premeasurement-correction-2026-10-03-round2","rng":{"batch_size":1024,"child":"SeedSequence(root,spawn_key=(fixed_job_index,))","contrast_order":"base_block_then_control_block","generator":"PCG64","jobs":72,"ks_order":"binomial_tail_count,body_indices,tail_exponential","root":2026100301},"runtime":{"numpy":"2.4.6","python":"3.13.5","scipy":"1.17.1"},"source":{"ccdf":"strict_unique_positive","count":"all_selected_completed_including_zero","cutoff_log10":2.5,"definition_checks":{"counters":"emitted_java_flags_separate_from_recomputed_integer100_saturated_subunit_zero_unavailable; overlapping_strata_not_summed","diagnostic_strata":["complete_all","complete_selected","partial_all","partial_selected","completed_records","censored","backlog","legacy_visible"],"fit":"OLS_log10; cutoff_log10>=2.5; at_least3_distinct_x; positive_x_y_variance","fit_tail":"all_positive_selected_observations_log10>=2.5_including_maximum_and_ties; count_distinct_count_log_range","inclusive":"unique_positive_thresholds_count(S>=s)/N_positive","integer100":"same_selected_raw_wars; truncating_saturating_int32(raw*100); strict_inclusive_rank_and_fit_tail","rank":"descending_positive_observation_rank_r/N_positive; retain_separate_tied_ranks","status":"inferred_descriptive_source_equivalence_unresolved"},"draws":100000,"family_size":88,"holm_reject_below":0.05,"minimum_fit_points":3,"ols_roundoff_tolerance":1e-12,"p":"inclusive_two_sided_plus_one_maximize_closed_source_interval","precision_history_count":100,"prediction_history_count":15,"range":"full_positive_selected_census"},"stretched":{"beta_bounds":[1e-08,100.0],"brent_rtol":1e-10,"brent_xtol":1e-10,"domain":"beta>0_including_beta>1","maxiter":200,"nonexistence":"endpoint_score<=0"}},"method_contract_json":"{\"availability\":{\"incomplete_pool\":\"unresolved_reserved_ks_slot\",\"invalid_history\":\"partial_diagnostics_only_no_primary_pool_or_bootstrap\",\"successful_completion\":\"end_period<=Outcome.periods\",\"zero_eligible_parameter_replicate\":\"unresolved_no_replacements\"},\"contrasts\":{\"draws\":100000,\"family_size\":6,\"holm_reject_below\":0.05,\"ids\":[\"base_minus_shock0\",\"base_minus_context_off\"],\"metrics\":[\"slope\",\"r2\",\"log_range\"],\"resampling\":\"independent_whole_history\"},\"cutoff\":{\"boundary\":\"exact_convex_KKT_alpha>2_and_mean_excess>=1/(alpha-2)\",\"bounds\":[[-100.0,100.0],[-32.0,32.0]],\"near_boundary\":\"unresolved\",\"near_boundary_gain_per_observation\":1e-10,\"starts\":\"alpha=[min(99,pareto_alpha),1,0] x k=[1,.1,.01]/mean_excess; clip_logk[-31,31]\"},\"interval\":{\"level\":0.95,\"quantile_method\":\"linear\"},\"ks_test\":{\"calibration\":\"iid_semiparametric_generated_refitted_grid100\",\"draws\":1000,\"exceedance\":\"Dstar>=Dobs\",\"failure\":\"any_predetermined_failed_replicate_unresolved_no_replacements\",\"interval\":\"95%_Clopper_Pearson_b_of_B\",\"level\":0.1,\"p\":\"(b+1)/(B+1)\",\"tail_generation\":\"E=exponential(1/(alpha-1)); xmin*exp(E) when E<=log(float64_max), else exp(log(xmin)+E); final_overflow_fails; unchanged_draws_and_order\"},\"lognormal\":{\"bounds\":[[-100.0,100.0],[1e-08,10000.0]],\"coordinates\":\"mean_scaled_natural_a_b\",\"nonexistence\":\"scaled_second_moment>=2\",\"starts\":[[-1.0,0.5],[0.0,0.5],[1.0,0.1],[1.0,0.01]]},\"optimizer\":{\"accept_gradient_inf_below\":1e-06,\"ftol\":1e-13,\"gtol\":1e-08,\"guard_contact\":\"unresolved\",\"maxiter\":1000,\"maxls\":50,\"method\":\"L-BFGS-B\"},\"parameter_bootstrap\":{\"conditional_eligible_interval\":\"descriptive_only\",\"contrast_inference\":\"descriptive_linear95_interval_no_p_family_or_verdict\",\"contrast_method\":\"same_index_independent_arm_replicate_array_differences\",\"contrasts\":[\"precision.base-minus-precision.shock0\",\"precision.base-minus-precision.context_off\"],\"draws\":100000,\"empty_or_incomplete\":\"primary_unresolved\",\"metrics\":[\"alpha_mean\",\"alpha_median\",\"xmin_mean\",\"xmin_median\"],\"positive_mean\":\"max_scaled_mean\",\"positive_median\":\"arithmetic_midpoint_with_overflow_safe_branch\",\"rng\":\"independent_fixed_per_arm_parameter_child\",\"sampling\":\"all_registered_history_rows_with_joint_eligibility_masks\"},\"pareto\":{\"cutoff_ties\":\"smallest_xmin_exact\",\"fit_authority\":\"one_sorted_centered_ratio_MLE_for_cutoff_KS_alpha_logpdf_likelihood_ratios\",\"grid_indices\":\"j*(M-1)//99 for j=0..99 when M>100\",\"individual_search\":\"all_observed\",\"ks\":\"max_left_and_right_ecdf_at_unique_ties\",\"log_ratios\":\"log1p((x-xmin)/xmin)_when_x/2<=xmin_else_log(x)-log(xmin)\",\"minimum_tail\":50,\"numeric_failure\":\"nondegenerate_candidate_unrepresentable_alpha_or_density_unresolved\",\"pool_search\":\"grid100\"},\"quadrature\":{\"epsabs\":1e-11,\"epsrel\":1e-10,\"limit\":250,\"max_relative_error\":1e-08,\"normalizer\":\"scaled_positive_dimensionless_integral\"},\"ratios\":{\"calibration_validity\":\"unvalidated\",\"exact_equal_p\":1.0,\"level\":0.1,\"nested\":\"declared_half_chi_square_1\",\"nonnested\":\"CSN_normalized_two_sided\",\"qualification\":\"alpha<=3_lacks_finite_boundary_information; alpha>3_not_validation\",\"variance_divisor\":\"n\",\"variance_floor\":1e-24},\"reference_agreement\":{\"ks_absolute\":1e-12,\"log_density_absolute\":1e-08,\"nll_per_observation_absolute\":1e-09,\"parameters_absolute\":2e-05,\"relative_normalization_error\":1e-09,\"rescaling_alpha_ks_absolute\":1e-10},\"revision\":\"geosim-offline-v1-premeasurement-correction-2026-10-03-round2\",\"rng\":{\"batch_size\":1024,\"child\":\"SeedSequence(root,spawn_key=(fixed_job_index,))\",\"contrast_order\":\"base_block_then_control_block\",\"generator\":\"PCG64\",\"jobs\":72,\"ks_order\":\"binomial_tail_count,body_indices,tail_exponential\",\"root\":2026100301},\"runtime\":{\"numpy\":\"2.4.6\",\"python\":\"3.13.5\",\"scipy\":\"1.17.1\"},\"source\":{\"ccdf\":\"strict_unique_positive\",\"count\":\"all_selected_completed_including_zero\",\"cutoff_log10\":2.5,\"definition_checks\":{\"counters\":\"emitted_java_flags_separate_from_recomputed_integer100_saturated_subunit_zero_unavailable; overlapping_strata_not_summed\",\"diagnostic_strata\":[\"complete_all\",\"complete_selected\",\"partial_all\",\"partial_selected\",\"completed_records\",\"censored\",\"backlog\",\"legacy_visible\"],\"fit\":\"OLS_log10; cutoff_log10>=2.5; at_least3_distinct_x; positive_x_y_variance\",\"fit_tail\":\"all_positive_selected_observations_log10>=2.5_including_maximum_and_ties; count_distinct_count_log_range\",\"inclusive\":\"unique_positive_thresholds_count(S>=s)/N_positive\",\"integer100\":\"same_selected_raw_wars; truncating_saturating_int32(raw*100); strict_inclusive_rank_and_fit_tail\",\"rank\":\"descending_positive_observation_rank_r/N_positive; retain_separate_tied_ranks\",\"status\":\"inferred_descriptive_source_equivalence_unresolved\"},\"draws\":100000,\"family_size\":88,\"holm_reject_below\":0.05,\"minimum_fit_points\":3,\"ols_roundoff_tolerance\":1e-12,\"p\":\"inclusive_two_sided_plus_one_maximize_closed_source_interval\",\"precision_history_count\":100,\"prediction_history_count\":15,\"range\":\"full_positive_selected_census\"},\"stretched\":{\"beta_bounds\":[1e-08,100.0],\"brent_rtol\":1e-10,\"brent_xtol\":1e-10,\"domain\":\"beta>0_including_beta>1\",\"maxiter\":200,\"nonexistence\":\"endpoint_score<=0\"}}","method_contract_sha256":"56ce49b6b77808c7cbfef0b9a182f6a573ab097925590cec78c8ed88567a10a0","model":"geosim","provenance_status":"provisional_unfrozen","schema_version":1,"source_draws":100000,"source_inventory":null,"source_inventory_sha256":null,"source_table_sha256":"44a7d45d5206081ed179febae5285546924a894e55ebfb25e93222e59a1ed976","spec":"docs/superpowers/specs/2026-10-03-geosim-design.md"}
+diff --git a/survey/tests/geosim_native.rs b/survey/tests/geosim_native.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..da09ce8760c374cc4dd18115746ac9077c96010e
+--- /dev/null
++++ b/survey/tests/geosim_native.rs
+@@ -0,0 +1,339 @@
++use serde_json::{json, Value};
++use sha2::{Digest, Sha256};
++use std::{
++    fs,
++    path::{Path, PathBuf},
++    process::{Command, Output},
++    sync::atomic::{AtomicU64, Ordering},
++};
++static NEXT: AtomicU64 = AtomicU64::new(0);
++struct Fixture(PathBuf);
++impl Fixture {
++    fn new() -> Self {
++        let p = std::env::temp_dir().join(format!(
++            "geosim-native-{}-{}",
++            std::process::id(),
++            NEXT.fetch_add(1, Ordering::Relaxed)
++        ));
++        fs::create_dir_all(&p).unwrap();
++        Self(p)
++    }
++    fn path(&self, name: &str) -> PathBuf {
++        self.0.join(name)
++    }
++    fn manifest(&self, synthetic: bool) -> PathBuf {
++        let mut v: Value =
++            serde_json::from_str(include_str!("fixtures/geosim-registered-manifest.json")).unwrap();
++        if synthetic {
++            v["execution_mode"] = json!("synthetic_unregistered");
++            v["arms"] = json!([
++             {"id":"fixture.invalid","index":0,"family":"fixture","preset":"paper","sessions":1,"first_seed":1,"config_overrides":{"width":2,"height":2,"initial_states":4,"initialization_periods":0,"observation_periods":4,"periods_per_tick":4,"resource_adjustment":1,"damage_fraction":1,"attack_probability":1,"superiority_threshold":0.1}},
++             {"id":"fixture.valid","index":1,"family":"fixture","preset":"artifact_2017","sessions":1,"first_seed":2,"config_overrides":{"width":2,"height":2,"initial_states":1,"initialization_periods":0,"observation_periods":2,"periods_per_tick":2,"shock_probability":0,"attack_probability":0}}
++            ]);
++        }
++        let p = self.path("manifest.json");
++        fs::write(&p, serde_json::to_vec(&v).unwrap()).unwrap();
++        p
++    }
++    fn run(&self, manifest: &Path, flags: &[&str]) -> Output {
++        Command::new(env!("CARGO_BIN_EXE_geosim"))
++            .args(["--manifest"])
++            .arg(manifest)
++            .args([
++                "--manifest-sha256",
++                &hash(&fs::read(manifest).unwrap()),
++                "--source-root",
++            ])
++            .arg(Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap())
++            .arg("--resolved-out")
++            .arg(self.path("resolved.json"))
++            .arg("--out")
++            .arg(self.path("sessions.jsonl"))
++            .args(flags)
++            .output()
++            .unwrap()
++    }
++}
++impl Drop for Fixture {
++    fn drop(&mut self) {
++        let _ = fs::remove_dir_all(&self.0);
++    }
++}
++fn hash(b: &[u8]) -> String {
++    format!("{:x}", Sha256::digest(b))
++}
++fn success(out: Output) {
++    assert!(
++        out.status.success(),
++        "{}",
++        String::from_utf8_lossy(&out.stderr)
++    );
++}
++#[test]
++fn actual_native_registered_validation_resolves_all_configs_without_histories() {
++    let f = Fixture::new();
++    let m = f.manifest(false);
++    success(f.run(&m, &["--validate"]));
++    let v: Value = serde_json::from_slice(&fs::read(f.path("resolved.json")).unwrap()).unwrap();
++    assert_eq!(v["arms"].as_array().unwrap().len(), 37);
++    assert!(!f.path("sessions.jsonl").exists());
++    assert_eq!(
++        v["binary_sha256"],
++        hash(&fs::read(env!("CARGO_BIN_EXE_geosim")).unwrap())
++    );
++    let payload = v["resolved_configs_json"].as_str().unwrap();
++    assert_eq!(v["resolved_configs_sha256"], hash(payload.as_bytes()));
++    assert!(!f.run(&m, &[]).status.success());
++    assert!(!f.run(&m, &["--allow-unfrozen-fixture"]).status.success());
++    assert!(!f
++        .run(&m, &["--validate", "--arm", "original.b"])
++        .status
++        .success());
++}
++#[test]
++fn actual_native_fixture_preserves_invalid_and_resumes_exact_keys_with_all_rows_checked() {
++    let f = Fixture::new();
++    let m = f.manifest(true);
++    assert!(!f.run(&m, &[]).status.success());
++    success(f.run(&m, &["--allow-unfrozen-fixture"]));
++    let bytes = fs::read(f.path("sessions.jsonl")).unwrap();
++    let rows = String::from_utf8(bytes.clone())
++        .unwrap()
++        .lines()
++        .map(|l| serde_json::from_str::<Value>(l).unwrap())
++        .collect::<Vec<_>>();
++    assert_eq!(rows.len(), 2);
++    assert_eq!(rows[0]["attempt"]["status"], "invalid");
++    assert_eq!(rows[0]["outcome"]["periods"], 3);
++    assert_eq!(rows[0]["outcome"]["attempted_period"], 4);
++    assert_eq!(rows[1]["attempt"]["status"], "completed");
++    success(f.run(
++        &m,
++        &["--allow-unfrozen-fixture", "--arm", "fixture.invalid"],
++    ));
++    assert_eq!(fs::read(f.path("sessions.jsonl")).unwrap(), bytes);
++    for field in ["binary_sha256", "resolved_configs_sha256"] {
++        let mut changed = rows.clone();
++        changed[1][field] = json!("a".repeat(64));
++        let corrupt = changed.iter().map(|v| format!("{v}\n")).collect::<String>();
++        fs::write(f.path("sessions.jsonl"), &corrupt).unwrap();
++        assert!(!f
++            .run(
++                &m,
++                &["--allow-unfrozen-fixture", "--arm", "fixture.invalid"]
++            )
++            .status
++            .success());
++        assert_eq!(
++            fs::read_to_string(f.path("sessions.jsonl")).unwrap(),
++            corrupt
++        );
++    }
++    fs::write(
++        f.path("sessions.jsonl"),
++        format!(
++            "{}{}",
++            String::from_utf8(bytes.clone()).unwrap(),
++            String::from_utf8(bytes).unwrap()
++        ),
++    )
++    .unwrap();
++    assert!(!f.run(&m, &["--allow-unfrozen-fixture"]).status.success());
++}
++fn copy_sources(root: &Path, relative: &str, destination: &Path, entries: &mut Vec<Value>) {
++    let source = root.join(relative);
++    if source.is_dir() {
++        for e in fs::read_dir(&source).unwrap() {
++            let e = e.unwrap();
++            if e.file_name() == "__pycache__"
++                || e.path().strip_prefix(root).unwrap() == Path::new("survey/geosim/reference/raw")
++            {
++                continue;
++            }
++
++            let rel = e
++                .path()
++                .strip_prefix(root)
++                .unwrap()
++                .to_str()
++                .unwrap()
++                .to_owned();
++            if e.file_type().unwrap().is_dir()
++                || rel.ends_with(".rs")
++                || rel.ends_with(".py")
++                || rel.ends_with(".java")
++            {
++                copy_sources(root, &rel, destination, entries);
++            }
++        }
++    } else {
++        let b = fs::read(&source).unwrap();
++        let path = destination.join(relative);
++        fs::create_dir_all(path.parent().unwrap()).unwrap();
++        fs::write(path, &b).unwrap();
++        entries.push(json!({"path":relative,"bytes":b.len(),"sha256":hash(&b)}));
++    }
++}
++#[test]
++fn actual_native_frozen_fixture_recomputes_inventory_and_pre_post_receipt_bindings() {
++    let f = Fixture::new();
++    let original = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
++    let frozen_root = f.path("immutable-source-fixture");
++    let mut inventory = Vec::new();
++    for relative in [
++        "Cargo.toml",
++        "Cargo.lock",
++        "crates/sugarscape-core/Cargo.toml",
++        "crates/sugarscape-core/assets/sugar-map.txt",
++        "crates/sugarscape-core/tests/geosim_discovery.rs",
++        "crates/sugarscape-core/tests/geosim_host_sweep.rs",
++        "crates/sugarscape-core/tests/geosim_invalid_sweep.rs",
++        "survey/Cargo.toml",
++        "survey/Cargo.lock",
++        "survey/src/bin/geosim.rs",
++        "survey/tests/geosim_native.rs",
++        "survey/tests/fixtures/geosim-registered-manifest.json",
++        "survey/geosim/.python-version",
++        "survey/geosim/requirements.txt",
++        "survey/geosim/README.md",
++        "survey/geosim/NUMERICAL_METHODS.md",
++        "survey/geosim/reference/extract.py",
++        "survey/geosim/reference/test_extract.py",
++        "survey/geosim/reference/test_launch.py",
++        "survey/geosim/reference/GeoSimReferenceProbe.java",
++        "docs/superpowers/specs/2026-10-03-geosim-source-table.json",
++        "docs/superpowers/specs/2026-10-03-geosim-design.md",
++        "docs/superpowers/specs/2026-10-03-geosim-source-extraction.md",
++        "docs/superpowers/specs/2026-10-03-geosim-reading-notes.md",
++        "docs/superpowers/specs/2026-10-03-geosim-author-code-reading-notes.md",
++        "docs/superpowers/specs/2026-10-03-geosim-mechanics-reading-notes.md",
++        "docs/superpowers/specs/2026-10-03-geosim-defender-threshold-amendment.md",
++        "docs/superpowers/specs/2026-10-03-geosim-damage-incidence-audit.md",
++        "docs/superpowers/specs/2026-10-03-geosim-artifact-audit.md",
++        "docs/superpowers/specs/2026-10-03-geosim-finite-technology-amendment.md",
++        "docs/superpowers/specs/2026-10-03-geosim-portability-amendment.md",
++        "crates/sugarscape-core/src",
++        "crates/sugarscape-core/tests",
++        "survey/tests",
++        "survey/geosim",
++    ] {
++        copy_sources(original, relative, &frozen_root, &mut inventory);
++    }
++    inventory.sort_by(|a, b| a["path"].as_str().cmp(&b["path"].as_str()));
++    inventory.dedup_by(|a, b| a["path"] == b["path"]);
++    inventory.sort_by(|a, b| a["path"].as_str().cmp(&b["path"].as_str()));
++    let inventory_sha = hash(&serde_json::to_vec(&inventory).unwrap());
++    let m = f.manifest(true);
++    let mut manifest: Value = serde_json::from_slice(&fs::read(&m).unwrap()).unwrap();
++    manifest["provenance_status"] = json!("frozen");
++    manifest["source_inventory"] = json!(inventory);
++    manifest["source_inventory_sha256"] = json!(inventory_sha);
++    fs::write(&m, serde_json::to_vec(&manifest).unwrap()).unwrap();
++    let manifest_sha = hash(&fs::read(&m).unwrap());
++    let version = |tool: &str| {
++        String::from_utf8(Command::new(tool).arg("--version").output().unwrap().stdout)
++            .unwrap()
++            .trim()
++            .to_owned()
++    };
++    let receipt = json!({"schema_version":1,"model":"geosim","manifest_sha256":manifest_sha,"binary_sha256":hash(&fs::read(env!("CARGO_BIN_EXE_geosim")).unwrap()),"source_inventory_sha256":inventory_sha,"prebuild_inventory_sha256":inventory_sha,"postbuild_inventory_sha256":inventory_sha,"build_command":["cargo","build","--manifest-path","survey/Cargo.toml","--bin","geosim"],"cwd":frozen_root,"target":"synthetic-validator-fixture","rustc_version":version("rustc"),"cargo_version":version("cargo"),"lockfile_hashes":{"Cargo.lock":hash(&fs::read(frozen_root.join("Cargo.lock")).unwrap()),"survey/Cargo.lock":hash(&fs::read(frozen_root.join("survey/Cargo.lock")).unwrap())},"features":[],"build_flags":[]});
++    let receipt_path = f.path("receipt.json");
++    fs::write(&receipt_path, serde_json::to_vec(&receipt).unwrap()).unwrap();
++    let run = || {
++        Command::new(env!("CARGO_BIN_EXE_geosim"))
++            .arg("--manifest")
++            .arg(&m)
++            .args(["--manifest-sha256", &manifest_sha])
++            .arg("--source-root")
++            .arg(&frozen_root)
++            .arg("--build-receipt")
++            .arg(&receipt_path)
++            .arg("--resolved-out")
++            .arg(f.path("resolved.json"))
++            .arg("--out")
++            .arg(f.path("sessions.jsonl"))
++            .arg("--validate")
++            .output()
++            .unwrap()
++    };
++    success(run());
++    fs::write(
++        frozen_root.join("docs/superpowers/specs/2026-10-03-geosim-findings.md"),
++        b"publication fixture outside normative inputs",
++    )
++    .unwrap();
++    success(run());
++
++    assert!(!f.path("sessions.jsonl").exists());
++    let export: Value =
++        serde_json::from_slice(&fs::read(f.path("resolved.json")).unwrap()).unwrap();
++    assert_eq!(
++        export["build_receipt_sha256"],
++        hash(&fs::read(&receipt_path).unwrap())
++    );
++    assert_eq!(export["source_inventory_sha256"], inventory_sha);
++    let mut changed = receipt.clone();
++    changed["prebuild_inventory_sha256"] = json!("a".repeat(64));
++    fs::write(&receipt_path, serde_json::to_vec(&changed).unwrap()).unwrap();
++    assert!(!run().status.success());
++    fs::write(&receipt_path, serde_json::to_vec(&receipt).unwrap()).unwrap();
++    fs::write(
++        frozen_root.join("crates/sugarscape-core/src/geosim/world.rs"),
++        b"changed engine bytes",
++    )
++    .unwrap();
++    assert!(!run().status.success());
++    fs::write(
++        frozen_root.join("crates/sugarscape-core/src/geosim/world.rs"),
++        fs::read(original.join("crates/sugarscape-core/src/geosim/world.rs")).unwrap(),
++    )
++    .unwrap();
++    let mut changed = manifest;
++    changed["source_inventory"]
++        .as_array_mut()
++        .unwrap()
++        .retain(|e| e["path"] != "crates/sugarscape-core/src/geosim/world.rs");
++    changed["source_inventory_sha256"] = json!(hash(
++        &serde_json::to_vec(&changed["source_inventory"]).unwrap()
++    ));
++    fs::write(&m, serde_json::to_vec(&changed).unwrap()).unwrap();
++    let out = Command::new(env!("CARGO_BIN_EXE_geosim"))
++        .arg("--manifest")
++        .arg(&m)
++        .args(["--manifest-sha256", &hash(&fs::read(&m).unwrap())])
++        .arg("--source-root")
++        .arg(&frozen_root)
++        .arg("--build-receipt")
++        .arg(&receipt_path)
++        .arg("--resolved-out")
++        .arg(f.path("resolved.json"))
++        .arg("--out")
++        .arg(f.path("sessions.jsonl"))
++        .arg("--validate")
++        .output()
++        .unwrap();
++    assert!(!out.status.success());
++    assert!(String::from_utf8_lossy(&out.stderr).contains("omits required"));
++}
++
++#[test]
++fn omitted_resolved_output_defaults_adjacent_to_sessions_without_worlds() {
++    let f = Fixture::new();
++    let manifest = f.manifest(false);
++    let out = Command::new(env!("CARGO_BIN_EXE_geosim"))
++        .arg("--manifest")
++        .arg(&manifest)
++        .args(["--manifest-sha256", &hash(&fs::read(&manifest).unwrap())])
++        .arg("--source-root")
++        .arg(Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap())
++        .arg("--out")
++        .arg(f.path("sessions.jsonl"))
++        .arg("--validate")
++        .output()
++        .unwrap();
++    success(out);
++    let export: Value =
++        serde_json::from_slice(&fs::read(f.path("sessions.jsonl.resolved.json")).unwrap()).unwrap();
++    assert_eq!(export["arms"].as_array().unwrap().len(), 37);
++    assert!(!f.path("sessions.jsonl").exists());
++}

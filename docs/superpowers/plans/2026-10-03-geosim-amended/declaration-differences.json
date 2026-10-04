@@ -1,0 +1,60 @@
+{
+  "amended_declaration_sha256": "8b5043e2c2a1be68d161231861e295f3dfb61fa98a8871ac6ad645917ff418b5",
+  "amended_source_inventory_sha256": "e84e46c4573c4e5ac217f1f57c45ce8f28174a902f24756bef494a27c252a04a",
+  "analysis_jobs": 72,
+  "analysis_jobs_differences": [],
+  "arms": 37,
+  "arms_differences": [],
+  "attempted_keys": 1490,
+  "changed_declaration_fields": [
+    "source_inventory",
+    "source_inventory_sha256"
+  ],
+  "changed_sources": {
+    "crates/sugarscape-core/src/geosim/claims.rs": {
+      "after": {
+        "bytes": 13047,
+        "path": "crates/sugarscape-core/src/geosim/claims.rs",
+        "sha256": "134147e2572ccde8d010f39fc23bc7f032a9ac7bc563dad3f8226d7104cf522d"
+      },
+      "before": {
+        "bytes": 10485,
+        "path": "crates/sugarscape-core/src/geosim/claims.rs",
+        "sha256": "9e74735ae08093eb44951d6c8e15e26f49551ff2b1f13d0713c15c1805162f2f"
+      }
+    },
+    "crates/sugarscape-core/src/geosim/combat.rs": {
+      "after": {
+        "bytes": 14347,
+        "path": "crates/sugarscape-core/src/geosim/combat.rs",
+        "sha256": "6e1e811031e455065c64c67d9cebac535d35c0beb84a0f36445da0cacee3af5f"
+      },
+      "before": {
+        "bytes": 14503,
+        "path": "crates/sugarscape-core/src/geosim/combat.rs",
+        "sha256": "28fa92547207f8b748011ae596e3feb22ea6a7129ba6dd1db0bc43beb55cfabf"
+      }
+    },
+    "docs/superpowers/specs/2026-10-03-geosim-design.md": {
+      "after": {
+        "bytes": 36972,
+        "path": "docs/superpowers/specs/2026-10-03-geosim-design.md",
+        "sha256": "048a8726bec0367ad486fb7f26e4f4baf414099f342d48e22670d9df0725c539"
+      },
+      "before": {
+        "bytes": 36096,
+        "path": "docs/superpowers/specs/2026-10-03-geosim-design.md",
+        "sha256": "4d92d76299f22086c89b6d1dba97d785bdb36b1041ecadc4868d90d5ffcc3117"
+      }
+    }
+  },
+  "keys_differences": [],
+  "method_contract_differences": [],
+  "original_declaration_sha256": "c984743ce12f3a2433221a43f6db04e7b43f33e5f022a3e1f581b128f5d82cc2",
+  "original_source_inventory_sha256": "a2695f217568a08ed370a0ab5a7f0581dc58acce33b615037fde760a13cfdae8",
+  "scientific_source_count": 325,
+  "source_roster_added": [],
+  "source_roster_removed": [],
+  "unchanged_method_contract_sha256": "23dfcea82e39a0a869aa60df5e6d2b22244e70a837a05ac3b22185e94f7630e7",
+  "unchanged_source_table_sha256": "44a7d45d5206081ed179febae5285546924a894e55ebfb25e93222e59a1ed976"
+}

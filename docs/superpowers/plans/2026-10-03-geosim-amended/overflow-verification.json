@@ -1,0 +1,161 @@
+{
+  "all_declaration_field_differences": [
+    "method_contract",
+    "method_contract_json",
+    "method_contract_sha256",
+    "source_inventory",
+    "source_inventory_sha256"
+  ],
+  "arms": 37,
+  "arms_keys_seeds_jobs_unchanged": true,
+  "broad_suites_run": false,
+  "clean_six_stage_replay": true,
+  "correction_commit": "9dd36f78ad8ce49650659408b44f4784d0d3c3ec",
+  "current_final_tree": "55868dde4ac2bc390dcafffe723112d82267be18",
+  "current_manifest_sha256": "31ff4a4dfb71e5a69f40023c71b77533b4cf3d81f4b83197168c84ea327fd17f",
+  "declaration_sha256": "7e6baf8445230187f1d4169b114fecb9bd698b3569a3af79188230b41eb287d4",
+  "evidence_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-execution/survey/out/geosim-packet-overflow-refresh-20261003-195325-8b880c",
+  "execution_checkpoint": 6,
+  "execution_product_spec_plan_unchanged": true,
+  "fix_base_commit": "ff8cbd39326f4b938fc715ab8ce3af421e25113a",
+  "full_final_byte_mode_equal": true,
+  "full_inventory_count": 1398,
+  "independently_regenerated_declaration_byte_equal": true,
+  "jobs": 72,
+  "keys": 1490,
+  "method_contract_sha256": "56ce49b6b77808c7cbfef0b9a182f6a573ab097925590cec78c8ed88567a10a0",
+  "patch_changes": [
+    {
+      "after": "a6aeeeda0ced1717604770e47f14b740063331bfaf23332af87bfd8dc3bac154",
+      "before": "916b7fb31715f83aaeac2e5dedb3599f6bb1042f5f57257378f704292e96c70e",
+      "name": "03-survey-tests.patch"
+    },
+    {
+      "after": "5158aafe389cbab3d26d68bff762e303a4b749b0ad3f887dc012e89cb1d7e74f",
+      "before": "510c7f93c76277fd79d9c23b0b67e8609c86dbae81cd81b69411df4a0e287c39",
+      "name": "03-survey-implementation.patch"
+    }
+  ],
+  "previous_declaration_sha256": "1012a29246af4a50068a67cc19b3331bfc11de28bb5acadb74758a8573ca07fa",
+  "previous_final_tree": "553d48fc51b9ca11f92acbd2cc6a96c553909047",
+  "previous_manifest_sha256": "7e503ff22fab12159b178f2075e146b8eeb9ceac3189d55195a1ad391d6b24f3",
+  "previous_method_contract_sha256": "9ff510fb666c3bdaf60c842dcd3db8f97e66232e54f40721c179bf4fc433f9dd",
+  "previous_packet_commit": "ff8cbd39326f4b938fc715ab8ce3af421e25113a",
+  "previous_source_inventory_sha256": "073e34974a496747eec5b6fd877011ea737bcd102571f0cf4163e1918adfcba1",
+  "product_counts": [
+    504,
+    513,
+    520,
+    524,
+    525,
+    538,
+    552
+  ],
+  "protected_count": 846,
+  "real_git_replay_tests": 18,
+  "registered_worlds_run": false,
+  "replay_rules_tooling_protected_roster_unchanged": true,
+  "retained_worktrees": {
+    "expected": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-overflow-expected-8b880c",
+    "replay": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-overflow-replay-8b880c"
+  },
+  "scientific_source_count": 325,
+  "scientific_source_roster_unchanged": true,
+  "scoped_rereview_pending": true,
+  "source_inventory_differences": [
+    {
+      "after": {
+        "bytes": 40488,
+        "path": "docs/superpowers/specs/2026-10-03-geosim-design.md",
+        "sha256": "49e3b73eaf6df870b238febccab3ddfb13021aab47a0c99326a8a303dd367ee5"
+      },
+      "before": {
+        "bytes": 39564,
+        "path": "docs/superpowers/specs/2026-10-03-geosim-design.md",
+        "sha256": "97d69b8eb92e34342ad10565841a45af5ec9c7e33cb2f7adf671791caa54b0c6"
+      },
+      "path": "docs/superpowers/specs/2026-10-03-geosim-design.md"
+    },
+    {
+      "after": {
+        "bytes": 14977,
+        "path": "survey/geosim/NUMERICAL_METHODS.md",
+        "sha256": "247e51627f6a246ce870750640ab3128ddd433daaf8e7f19163de33805975a12"
+      },
+      "before": {
+        "bytes": 13517,
+        "path": "survey/geosim/NUMERICAL_METHODS.md",
+        "sha256": "4d46850335d2f262996a9756aed2dfb021e3acefc8bdbc7d636ca89fdb04ede5"
+      },
+      "path": "survey/geosim/NUMERICAL_METHODS.md"
+    },
+    {
+      "after": {
+        "bytes": 6538,
+        "path": "survey/geosim/methods.py",
+        "sha256": "2f35c276b5de8401fc9caa684812ec483c504d4cdf8dd69e726eb03d22bbb43b"
+      },
+      "before": {
+        "bytes": 6462,
+        "path": "survey/geosim/methods.py",
+        "sha256": "286f9beae3bb8153fd1594b1241e54cc0d65f38c1f657041654e085aaef12b06"
+      },
+      "path": "survey/geosim/methods.py"
+    },
+    {
+      "after": {
+        "bytes": 13123,
+        "path": "survey/geosim/modern.py",
+        "sha256": "2a14bca16c471af045470fad5ec22bcacf7117e14ca2f0d839f59319157eac8e"
+      },
+      "before": {
+        "bytes": 12885,
+        "path": "survey/geosim/modern.py",
+        "sha256": "421449b68d145a0e6450792196c8b5ab8564344226e6a50ac83caef672b4a775"
+      },
+      "path": "survey/geosim/modern.py"
+    },
+    {
+      "after": {
+        "bytes": 9242,
+        "path": "survey/geosim/test_modern.py",
+        "sha256": "03291cfb4e242a5ec3790b053d346a9b28469ed196d6aaa1e7cd1bbcbdc1e072"
+      },
+      "before": {
+        "bytes": 7412,
+        "path": "survey/geosim/test_modern.py",
+        "sha256": "a1c79007c349dd5c6de90cb452c5b087ae424c5fcb9428ebbe56f7bac8d3d983"
+      },
+      "path": "survey/geosim/test_modern.py"
+    },
+    {
+      "after": {
+        "bytes": 28793,
+        "path": "survey/tests/fixtures/geosim-registered-manifest.json",
+        "sha256": "ea8a30237e06ef3f664a52e9b8f5a0c9d4cb71c66fb188a52e8173773cb24f3a"
+      },
+      "before": {
+        "bytes": 28641,
+        "path": "survey/tests/fixtures/geosim-registered-manifest.json",
+        "sha256": "b22fdc8b34f38957af1fae044b97bad3a69faf7057fec80288e9939770fe41f1"
+      },
+      "path": "survey/tests/fixtures/geosim-registered-manifest.json"
+    }
+  ],
+  "source_inventory_sha256": "5d7f78abd30f8dee86abb63f11f110b36a7119f554c0ae0d663a9aab7f579181",
+  "stage1_through_stage4_patches_unchanged": true,
+  "stage5_corrected_test_support_paths": [
+    "survey/geosim/test_modern.py",
+    "survey/tests/fixtures/geosim-registered-manifest.json"
+  ],
+  "stage5_locked_meaningful_red": true,
+  "trees": [
+    "4ab07d31fedc7e8f3cf35a36252da71218668fce",
+    "e1dae85e71befd4619a1337cafd64d7a2c039434",
+    "f301a54730b443cf597fc8afdc4d0fdb188e0b00",
+    "a5632ba6a0a0ad604f91902b99208926641e6c02",
+    "89675fe9168da07ca6383442732a7f6011f70628",
+    "06abaa4c0706141aca78e2b01268b214e5e40417",
+    "55868dde4ac2bc390dcafffe723112d82267be18"
+  ]
+}

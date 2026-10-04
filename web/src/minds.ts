@@ -1,6 +1,6 @@
 // Minds 5–6 on the page: the season, the lab's schedule and the per-site cache marks, as text and
 // shapes the grid view, toolbar, charts and Inspect draw (the core's `MindsView`).
-import { CACHE_CHEATER, CACHE_HOARDER, CACHE_LARDER, type Config, type LabView, type MindsView, type SiteCacheView } from './types';
+import { CACHE_CHEATER, CACHE_HOARDER, CACHE_LARDER, type Config, type LabView, type MindsView, type SpatialHoardingInspect, type SiteCacheView } from './types';
 
 const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
 
@@ -85,7 +85,7 @@ export function cacheSize(total: number, max: number): number {
 /** A site's "Caches here" text: each owner and amount ("#12: 4.5 · #30 (cheater): 2"), or "none". */
 export function siteCachesText(caches: SiteCacheView[], cheaters: boolean, max = 6): string {
   if (caches.length === 0) return 'none';
-  const shown = caches.slice(0, max).map((c) => `#${c.owner}${cheaters && c.cheater_owner ? ' (cheater)' : ''}: ${fmt(c.amount)}`);
+  const shown = caches.slice(0, max).map((c) => `#${c.owner}${cheaters && c.cheater_owner ? ' (cheater)' : ''}: ${fmt(c.amount)}${c.kind ? ` (${c.kind})` : ''}`);
   const more = caches.length - shown.length;
   return shown.join(' · ') + (more > 0 ? ` · and ${more} more` : '');
 }
@@ -99,4 +99,15 @@ export function allocationText(alloc: [number, number][]): string {
 /** The Age row: "a / max" where agents die of old age (lifespan on), else just "a". */
 export function ageText(age: number, maxAge: number, lifespan: boolean): string {
   return lifespan ? `${age} / ${maxAge}` : String(age);
+}
+
+/** Spatial fields remain separate from scatter caching; delivery is still part of holdings. */
+export function spatialHoardingRows(s: SpatialHoardingInspect): [string, string][] {
+  return [
+    ['Home', `(${s.home.x}, ${s.home.y})`],
+    ['Larder probability L', fmt(s.larder_trait)], ['Defense target D', fmt(s.defense_trait)],
+    ['Larder', `${fmt(s.larder)} at home`],
+    ['Delivery', s.delivery == null ? 'none' : `${fmt(s.delivery)} pending (still carried)`],
+    ['Guarding', s.guarding ? 'yes' : 'no'], ['Observed larders', String(s.observed_larders)],
+  ];
 }

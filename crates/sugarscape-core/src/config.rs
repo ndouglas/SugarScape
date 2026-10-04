@@ -660,6 +660,18 @@ pub enum CachingRule {
     Plan,
 }
 
+/// Minds 6 and 8b: below what an owner with caches digs one up. Before
+/// Minds 8b this was only a survey probe (`World::probe_dig_at_reserve`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DigBelow {
+    /// Below half its reserve, R / 2 (Minds 5's threshold).
+    #[default]
+    Half,
+    /// Below its whole reserve R.
+    Reserve,
+}
+
 /// Minds 5: a carrying limit, plus caches agents bury and dig, under `rule`.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -682,6 +694,10 @@ pub struct Caching {
     /// Minds 6: good 0 lost (counted as eaten) for each cache buried, at
     /// least 0. Live.
     pub bury_cost: f64,
+    /// Minds 8b: an owner with caches digs below half its reserve R / 2
+    /// (`half`) or below its whole reserve R (`reserve`). A central-place
+    /// world always digs below R. Live.
+    pub dig_below: DigBelow,
 }
 
 impl Default for Caching {
@@ -694,6 +710,7 @@ impl Default for Caching {
             lookahead: 1,
             mixed: false,
             bury_cost: 0.0,
+            dig_below: DigBelow::Half,
         }
     }
 }
@@ -770,8 +787,7 @@ impl Theft {
     /// ⌊(i − 1)·s⌋ for s = `cheaters`. Over ids 1..=n that's ⌊n·s⌋ cheaters,
     /// an exact proportion, with no draw.
     pub fn founder_cheats(&self, id: u64) -> bool {
-        let s = self.cheaters;
-        s > 0.0 && (id as f64 * s).floor() > (id.saturating_sub(1) as f64 * s).floor()
+        dealt_by_id(self.cheaters, id)
     }
 
     /// Whether theft is on at all: a chance to find, or any cheaters.
@@ -780,11 +796,165 @@ impl Theft {
     }
 }
 
+/// The id rule that deals a trait to a share of founders: id i (counting
+/// from 1) has it iff ⌊i·s⌋ > ⌊(i − 1)·s⌋. Over ids 1..=n that's ⌊n·s⌋
+/// agents, an exact proportion, with no draw. Minds 6's cheaters and Minds
+/// 8's watchers are both dealt by it, so at equal shares they're the same
+/// agents.
+pub(crate) fn dealt_by_id(share: f64, id: u64) -> bool {
+    share > 0.0 && (id as f64 * share).floor() > (id.saturating_sub(1) as f64 * share).floor()
+}
+
+/// Minds 8: when a seen cache is a place to go.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RaidWhen {
+    /// Always.
+    #[default]
+    Always,
+    /// Only while the watcher holds less than R / 2.
+    Hungry,
+}
+
+/// Minds 8b: whether a watcher at a site with fresh entries raids only when
+/// the remembered amount is at least the site's welfare value.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RaidIf {
+    /// Raid only when the remembered amount there is at least the site's value.
+    #[default]
+    Better,
+    /// Always raid (the first round's rule).
+    Always,
+}
+
+/// Minds 8b: a seen cache's candidate value.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SeenValue {
+    /// The remembered amount, summed over owners.
+    #[default]
+    Amount,
+    /// That amount capped at the agent's room under the carrying limit.
+    Room,
+}
+
+/// Minds 8b: which founders watch.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Who {
+    /// `watchers`, dealt by id.
+    #[default]
+    Share,
+    /// Every non-cheater, whatever `watchers` says.
+    Hoarders,
+    /// Every cheater, whatever `watchers` says.
+    Cheaters,
+}
+
+/// Minds 8b: what a scrounger (watches and cheats) does holding a fresh entry.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Scrounge {
+    /// Harvest candidates stay as they are.
+    #[default]
+    Harvest,
+    /// Only seen caches and staying put, harvesting nothing on staying.
+    Forgo,
+}
+
+/// Minds 8: agents that watch others bury food and raid the cache on purpose.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Watching {
+    /// Watching at all. Live.
+    pub on: bool,
+    /// Ticks a seen cache stays remembered. Live.
+    pub span: u32,
+    /// Share of founders, in [0, 1], who watch (dealt by id, no draw).
+    /// Reset-only.
+    pub watchers: f64,
+    /// When a seen cache is a place to go. Live.
+    pub raid_when: RaidWhen,
+    /// Raid on arrival only when the remembered amount is at least the
+    /// site's value (`better`), or always. Live.
+    pub raid_if: RaidIf,
+    /// A seen cache's candidate value. Live.
+    pub value: SeenValue,
+    /// Which founders watch. Reset-only. Under `hoarders` and `cheaters`,
+    /// `watchers` is ignored.
+    pub who: Who,
+    /// What a scrounger does holding a fresh entry. Live.
+    pub scrounge: Scrounge,
+}
+
+impl Default for Watching {
+    fn default() -> Self {
+        Self {
+            on: false,
+            span: 7,
+            watchers: 1.0,
+            raid_when: RaidWhen::Always,
+            raid_if: RaidIf::Better,
+            value: SeenValue::Amount,
+            who: Who::Share,
+            scrounge: Scrounge::Harvest,
+        }
+    }
+}
+
+impl Watching {
+    /// Whether the founder with `id` (ids count from 1) watches. Under
+    /// `share`, the same id rule as `Theft::founder_cheats`, for s =
+    /// `watchers`. Under `hoarders` every non-cheater watches, under
+    /// `cheaters` every cheater (`cheats` is the founder's cheater flag,
+    /// `Theft::founder_cheats(id)`).
+    pub fn founder_watches(&self, id: u64, cheats: bool) -> bool {
+        match self.who {
+            Who::Share => dealt_by_id(self.watchers, id),
+            Who::Hoarders => !cheats,
+            Who::Cheaters => cheats,
+        }
+    }
+}
+
 /// Minds 5: central-place foraging — round trips from a home, under the
 /// marginal-value rule or planning.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Central {
     pub enabled: bool,
+}
+
+/// Minds 9: reset-only spatial hoarding episode parameters.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct SpatialHoarding {
+    pub enabled: bool,
+    pub larder: f64,
+    pub defense: f64,
+    pub guard: bool,
+    pub defense_slope: f64,
+    pub find_larder: f64,
+}
+
+impl Default for SpatialHoarding {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            larder: 0.15,
+            defense: 0.5,
+            guard: true,
+            defense_slope: 10.0,
+            find_larder: 0.25,
+        }
+    }
+}
+
+impl SpatialHoarding {
+    /// Omit the default extension from old-world exports.
+    fn is_default(&self) -> bool {
+        *self == Self::default()
+    }
 }
 
 /// Minds 5: which lab's protocol the scripted harness runs (Task 6).
@@ -969,7 +1139,7 @@ pub const STRUCTURAL_FIELDS: [&str; 5] =
     ["width", "height", "tag_length", "population", "placement"];
 
 /// Paths a schedule may not set: structure (culture, disease) and the decision rule.
-pub const RESET_ONLY_PATHS: [&str; 31] = [
+pub const RESET_ONLY_PATHS: [&str; 34] = [
     "culture.rule",
     "culture.features",
     "culture.traits",
@@ -999,6 +1169,9 @@ pub const RESET_ONLY_PATHS: [&str; 31] = [
     "theft",
     "theft.owner_memory",
     "theft.cheaters",
+    "watching",
+    "watching.watchers",
+    "watching.who",
     "central",
     "central.enabled",
 ];
@@ -1022,6 +1195,8 @@ fn reset_only(path: &str) -> bool {
             | ["culture", "groups", _]
             | ["culture", "groups", _, "zeros", ..]
             | ["lab", ..]
+            | ["protection_lab", ..]
+            | ["spatial_hoarding", ..]
             | ["walls", ..]
     ) || RESET_ONLY_PATHS.contains(&path)
 }
@@ -1097,9 +1272,15 @@ pub struct Config {
     pub caching: Caching,
     #[serde(default)]
     pub theft: Theft,
+    #[serde(default)]
+    pub watching: Watching,
     pub central: Central,
+    #[serde(default, skip_serializing_if = "SpatialHoarding::is_default")]
+    pub spatial_hoarding: SpatialHoarding,
     #[serde(default)]
     pub lab: Option<Lab>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protection_lab: Option<crate::minds::protection::state::LabConfig>,
     pub schedule: Vec<ScheduledChange>,
 }
 
@@ -1183,8 +1364,11 @@ impl Default for Config {
             mvt: Mvt::default(),
             caching: Caching::default(),
             theft: Theft::default(),
+            watching: Watching::default(),
             central: Central { enabled: false },
+            spatial_hoarding: SpatialHoarding::default(),
             lab: None,
+            protection_lab: None,
             schedule: Vec::new(),
         }
     }
@@ -1246,6 +1430,14 @@ impl Errors {
 }
 
 impl Config {
+    /// Minds 6's pilfering bookkeeping (candidate counts, fates, theft
+    /// series) runs under theft or watching.
+    pub fn pilfering_on(&self) -> bool {
+        self.theft.is_on()
+            || self.watching.on
+            || (self.spatial_hoarding.enabled && self.spatial_hoarding.find_larder > 0.0)
+    }
+
     pub fn from_json(json: &str) -> Result<Self, Vec<FieldError>> {
         let value: serde_json::Value = serde_json::from_str(json)
             .map_err(|e| vec![FieldError::new("config", e.to_string())])?;
@@ -1699,7 +1891,9 @@ impl Config {
         );
         self.check_groups(&mut e);
         e.check(
-            self.growback.rate.is_finite() && self.growback.rate > 0.0,
+            self.growback.rate.is_finite()
+                && (self.growback.rate > 0.0
+                    || (self.protection_lab.is_some() && self.growback.rate == 0.0)),
             "growback.rate",
             "must be a number > 0",
         );
@@ -1850,6 +2044,56 @@ impl Config {
             "caching.bury_cost",
             "a bury cost applies only in the field",
         );
+        for (name, value) in [
+            ("larder", self.spatial_hoarding.larder),
+            ("defense", self.spatial_hoarding.defense),
+            ("find_larder", self.spatial_hoarding.find_larder),
+        ] {
+            e.check(
+                value.is_finite() && (0.0..=1.0).contains(&value),
+                &format!("spatial_hoarding.{name}"),
+                "must be finite and between 0 and 1",
+            );
+        }
+        e.check(
+            self.spatial_hoarding.defense_slope.is_finite()
+                && self.spatial_hoarding.defense_slope > 0.0,
+            "spatial_hoarding.defense_slope",
+            "must be finite and positive",
+        );
+        if self.spatial_hoarding.enabled {
+            for (ok, message) in [
+                (self.goods.len() == 1, "goods must contain exactly one good"),
+                (
+                    self.movement.mode == MoveMode::Walk,
+                    "movement.mode must be walk",
+                ),
+                (self.movement.speed == 1, "movement.speed must be 1"),
+                (
+                    self.caching.capacity > 0,
+                    "caching.capacity must be positive",
+                ),
+                (!self.central.enabled, "central.enabled must be false"),
+                (self.lab.is_none(), "lab must be absent"),
+                (!self.caching.mixed, "caching.mixed must be false"),
+                (
+                    self.caching.rule == CachingRule::Even,
+                    "caching.rule must be even",
+                ),
+                (!self.sex.enabled, "sex.enabled must be false"),
+                (
+                    !self.replacement.enabled,
+                    "replacement.enabled must be false",
+                ),
+                (!self.combat.enabled, "combat.enabled must be false"),
+                (!self.disease.enabled, "disease.enabled must be false"),
+                (!self.credit.enabled, "credit.enabled must be false"),
+                (!self.trade.enabled, "trade.enabled must be false"),
+                (!self.lifespan.enabled, "lifespan.enabled must be false"),
+            ] {
+                e.check(ok, "spatial_hoarding.enabled", message);
+            }
+        }
         let theft_field = if self.theft.find > 0.0 {
             "theft.find"
         } else {
@@ -1879,6 +2123,31 @@ impl Config {
             !self.theft.is_on() || !self.central.enabled,
             theft_field,
             "theft can't run in a central-place world",
+        );
+        e.check(
+            self.watching.watchers.is_finite() && (0.0..=1.0).contains(&self.watching.watchers),
+            "watching.watchers",
+            "must be between 0 and 1",
+        );
+        e.check(
+            self.watching.span >= 1,
+            "watching.span",
+            "must be at least 1",
+        );
+        e.check(
+            !self.watching.on || self.caching.is_on(),
+            "watching.on",
+            "watching needs caching (a caching rule or a carrying limit)",
+        );
+        e.check(
+            !self.watching.on || self.lab.is_none(),
+            "watching.on",
+            "watching can't run in a lab",
+        );
+        e.check(
+            !self.watching.on || !self.central.enabled,
+            "watching.on",
+            "watching can't run in a central-place world",
         );
         e.check(
             !self.central.enabled
@@ -2017,6 +2286,7 @@ impl Config {
             "disease.outbreaks",
             "an outbreak's length override must be 1 ≤ min ≤ max < immune_length",
         );
+        e.0.extend(crate::minds::protection::lab::validation_errors(self));
         e.finish()
     }
 
@@ -2043,6 +2313,10 @@ impl Config {
     /// Decision 7).
     pub fn with_path(&self, path: &str, value: &serde_json::Value) -> Result<Config, FieldError> {
         let mut json = serde_json::to_value(self).expect("config serializes");
+        // The default extension is omitted from exports, but reset controls
+        // still need to address every field through the dotted-path API.
+        json["spatial_hoarding"] =
+            serde_json::to_value(self.spatial_hoarding).expect("spatial hoarding serializes");
         let unknown = || FieldError::new("schedule", format!("unknown field {path}"));
         let mut slot = &mut json;
         for key in path.split('.') {
@@ -2187,8 +2461,47 @@ impl Config {
         if self.theft.cheaters != next.theft.cheaters {
             out.push(FieldError::new("theft.cheaters", msg));
         }
+        if self.watching.who != next.watching.who {
+            out.push(FieldError::new("watching.who", msg));
+        }
+        if self.watching.watchers != next.watching.watchers {
+            out.push(FieldError::new("watching.watchers", msg));
+        }
         if self.central.enabled != next.central.enabled {
             out.push(FieldError::new("central.enabled", msg));
+        }
+        for (changed, path) in [
+            (
+                self.spatial_hoarding.enabled != next.spatial_hoarding.enabled,
+                "enabled",
+            ),
+            (
+                self.spatial_hoarding.larder != next.spatial_hoarding.larder,
+                "larder",
+            ),
+            (
+                self.spatial_hoarding.defense != next.spatial_hoarding.defense,
+                "defense",
+            ),
+            (
+                self.spatial_hoarding.guard != next.spatial_hoarding.guard,
+                "guard",
+            ),
+            (
+                self.spatial_hoarding.defense_slope != next.spatial_hoarding.defense_slope,
+                "defense_slope",
+            ),
+            (
+                self.spatial_hoarding.find_larder != next.spatial_hoarding.find_larder,
+                "find_larder",
+            ),
+        ] {
+            if changed {
+                out.push(FieldError::new(format!("spatial_hoarding.{path}"), msg));
+            }
+        }
+        if self.protection_lab != next.protection_lab {
+            out.push(FieldError::new("protection_lab", msg));
         }
         if self.lab != next.lab {
             out.push(FieldError::new("lab", msg));
@@ -2207,6 +2520,139 @@ mod tests {
             .into_iter()
             .map(|e| e.field)
             .collect()
+    }
+
+    fn spatial_config() -> Config {
+        let mut c = Config::default();
+        c.spatial_hoarding.enabled = true;
+        c.movement.mode = MoveMode::Walk;
+        c.caching.rule = CachingRule::Even;
+        c.caching.capacity = 50;
+        c
+    }
+
+    #[test]
+    fn spatial_hoarding_older_and_partial_configs_load_defaults() {
+        let older = Config::from_json("{}").unwrap();
+        assert!(!older.spatial_hoarding.enabled);
+        assert_eq!(older.spatial_hoarding.larder, 0.15);
+        assert!(serde_json::to_value(&older)
+            .unwrap()
+            .get("spatial_hoarding")
+            .is_none());
+        for mut json in [
+            serde_json::json!({}),
+            serde_json::to_value(Config::default()).unwrap(),
+        ] {
+            json["spatial_hoarding"] = serde_json::json!({"guard": false});
+            let c = Config::from_json(&json.to_string()).unwrap();
+            assert!(!c.spatial_hoarding.guard);
+            assert_eq!(c.spatial_hoarding.defense, 0.5);
+            assert_eq!(c.spatial_hoarding.defense_slope, 10.0);
+            assert_eq!(c.spatial_hoarding.find_larder, 0.25);
+        }
+    }
+
+    #[test]
+    fn spatial_hoarding_invalid_scalars_are_rejected_even_when_disabled() {
+        for path in ["larder", "defense", "find_larder"] {
+            for value in [-0.1, 1.1] {
+                let mut json = serde_json::to_value(Config::default()).unwrap();
+                json["spatial_hoarding"] = serde_json::json!({path: value});
+                let errors = Config::from_json(&json.to_string()).unwrap_err();
+                assert!(errors
+                    .iter()
+                    .any(|e| e.field == format!("spatial_hoarding.{path}")));
+            }
+        }
+        for value in [f64::NAN, f64::INFINITY] {
+            for field in ["larder", "defense", "find_larder", "defense_slope"] {
+                let mut c = Config::default();
+                match field {
+                    "larder" => c.spatial_hoarding.larder = value,
+                    "defense" => c.spatial_hoarding.defense = value,
+                    "find_larder" => c.spatial_hoarding.find_larder = value,
+                    _ => c.spatial_hoarding.defense_slope = value,
+                }
+                assert!(fields(c.validate()).contains(&format!("spatial_hoarding.{field}")));
+            }
+        }
+        for slope in [0.0, -1.0] {
+            let mut c = Config::default();
+            c.spatial_hoarding.defense_slope = slope;
+            assert!(fields(c.validate()).contains(&"spatial_hoarding.defense_slope".to_owned()));
+        }
+    }
+
+    #[test]
+    fn spatial_hoarding_rejects_each_incompatible_rule() {
+        type Edit = fn(&mut Config);
+        let cases: [(&str, Edit); 15] = [
+            ("goods", |c| c.add_good(Good::sugar())),
+            ("movement.mode", |c| c.movement.mode = MoveMode::Jump),
+            ("movement.speed", |c| c.movement.speed = 2),
+            ("caching.capacity", |c| c.caching.capacity = 0),
+            ("central.enabled", |c| c.central.enabled = true),
+            ("lab", |c| {
+                c.lab = Some(Lab {
+                    protocol: LabProtocol::Raby,
+                    food_first: true,
+                })
+            }),
+            ("caching.mixed", |c| c.caching.mixed = true),
+            ("caching.rule", |c| c.caching.rule = CachingRule::None),
+            ("sex.enabled", |c| c.sex.enabled = true),
+            ("replacement.enabled", |c| c.replacement.enabled = true),
+            ("combat.enabled", |c| c.combat.enabled = true),
+            ("disease.enabled", |c| c.disease.enabled = true),
+            ("credit.enabled", |c| c.credit.enabled = true),
+            ("trade.enabled", |c| c.trade.enabled = true),
+            ("lifespan.enabled", |c| c.lifespan.enabled = true),
+        ];
+        spatial_config().validate().unwrap();
+        for (path, edit) in cases {
+            let mut c = spatial_config();
+            edit(&mut c);
+            assert!(
+                c.validate()
+                    .unwrap_err()
+                    .iter()
+                    .any(|e| e.field == "spatial_hoarding.enabled" && e.message.contains(path)),
+                "{path}"
+            );
+        }
+    }
+
+    #[test]
+    fn spatial_hoarding_all_fields_are_reset_only() {
+        let c = Config::default();
+        for (path, value) in [
+            ("spatial_hoarding", serde_json::json!({})),
+            ("spatial_hoarding.enabled", serde_json::json!(true)),
+            ("spatial_hoarding.larder", serde_json::json!(0.3)),
+            ("spatial_hoarding.defense", serde_json::json!(0.7)),
+            ("spatial_hoarding.guard", serde_json::json!(false)),
+            ("spatial_hoarding.defense_slope", serde_json::json!(20.0)),
+            ("spatial_hoarding.find_larder", serde_json::json!(0.5)),
+        ] {
+            let mut scheduled = c.clone();
+            scheduled.schedule = vec![change(1, path, value.clone())];
+            assert!(
+                scheduled
+                    .validate()
+                    .unwrap_err()
+                    .iter()
+                    .any(|e| e.message.contains("only on reset")),
+                "{path}"
+            );
+            if path != "spatial_hoarding" {
+                let next = c.with_path(path, &value).unwrap();
+                assert!(
+                    c.structural_changes(&next).iter().any(|e| e.field == path),
+                    "{path}"
+                );
+            }
+        }
     }
 
     #[test]
@@ -4063,6 +4509,7 @@ mod tests {
                 lookahead: 1,
                 mixed: false,
                 bury_cost: 0.0,
+                dig_below: DigBelow::Half,
             }
         );
         assert_eq!(
@@ -4108,6 +4555,7 @@ mod tests {
                 lookahead: 1,
                 mixed: false,
                 bury_cost: 0.0,
+                dig_below: DigBelow::Half,
             }
         );
 
@@ -4548,6 +4996,43 @@ mod tests {
     }
 
     #[test]
+    fn dig_below_defaults_to_half_loads_from_older_configs_and_is_live() {
+        assert_eq!(Config::default().caching.dig_below, DigBelow::Half);
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        assert_eq!(v["caching"]["dig_below"], serde_json::json!("half"));
+        v["caching"].as_object_mut().unwrap().remove("dig_below");
+        assert_eq!(
+            Config::from_value(v.clone()).unwrap().caching.dig_below,
+            DigBelow::Half
+        );
+        v["caching"]["dig_below"] = serde_json::json!("reserve");
+        assert_eq!(
+            Config::from_value(v).unwrap().caching.dig_below,
+            DigBelow::Reserve
+        );
+        let a = Config::default();
+        let f = a.structural_changes(&{
+            let mut c = a.clone();
+            c.caching.dig_below = DigBelow::Reserve;
+            c
+        });
+        assert!(f.is_empty(), "{f:?}");
+        let c = Config {
+            schedule: vec![change(5, "caching.dig_below", serde_json::json!("reserve"))],
+            caching: Caching {
+                rule: CachingRule::Even,
+                ..Caching::default()
+            },
+            movement: Movement {
+                mode: MoveMode::Walk,
+                ..Movement::default()
+            },
+            ..Default::default()
+        };
+        c.validate().unwrap();
+    }
+
+    #[test]
     fn theft_find_loot_and_bury_cost_are_live_the_rest_reset_only() {
         let a = Config::default();
         let f = a.structural_changes(&{
@@ -4638,5 +5123,249 @@ mod tests {
         c.caching.mixed = false;
         c.caching.rule = CachingRule::Plan;
         assert_eq!(c.caching.founder_rule(1), CachingRule::Plan);
+    }
+
+    #[test]
+    fn watching_older_configs_load_with_defaults() {
+        let d = Config::default().watching;
+        assert_eq!(
+            d,
+            Watching {
+                on: false,
+                span: 7,
+                watchers: 1.0,
+                raid_when: RaidWhen::Always,
+                raid_if: RaidIf::Better,
+                value: SeenValue::Amount,
+                who: Who::Share,
+                scrounge: Scrounge::Harvest,
+            }
+        );
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["watching"] = serde_json::json!({ "raid_if": "always", "value": "room", "who": "cheaters", "scrounge": "forgo" });
+        let w = Config::from_value(v).unwrap().watching;
+        assert_eq!(
+            (w.raid_if, w.value, w.who, w.scrounge),
+            (
+                RaidIf::Always,
+                SeenValue::Room,
+                Who::Cheaters,
+                Scrounge::Forgo
+            )
+        );
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v.as_object_mut().unwrap().remove("watching");
+        assert_eq!(Config::from_value(v).unwrap().watching, d);
+        let mut v = serde_json::to_value(Config::default()).unwrap();
+        v["watching"] = serde_json::json!({ "raid_when": "hungry" });
+        let w = Config::from_value(v).unwrap().watching;
+        assert_eq!(w.raid_when, RaidWhen::Hungry);
+        assert_eq!((w.span, w.watchers, w.on), (7, 1.0, false));
+    }
+
+    #[test]
+    fn watching_is_validated() {
+        let ok = || {
+            let mut c = Config::default();
+            c.movement.mode = MoveMode::Walk;
+            c.caching.capacity = 50;
+            c.watching.on = true;
+            c
+        };
+        ok().validate().unwrap();
+        let one = |edit: &dyn Fn(&mut Config), field: &str, msg: &str| {
+            let mut c = ok();
+            edit(&mut c);
+            let e = c.validate().unwrap_err();
+            assert_eq!(e.len(), 1, "{e:?}");
+            assert_eq!((e[0].field.as_str(), e[0].message.as_str()), (field, msg));
+        };
+        one(
+            &|c| c.caching.capacity = 0,
+            "watching.on",
+            "watching needs caching (a caching rule or a carrying limit)",
+        );
+        one(
+            &|c| c.watching.watchers = 1.1,
+            "watching.watchers",
+            "must be between 0 and 1",
+        );
+        one(
+            &|c| c.watching.watchers = -0.1,
+            "watching.watchers",
+            "must be between 0 and 1",
+        );
+        one(
+            &|c| c.watching.watchers = f64::NAN,
+            "watching.watchers",
+            "must be between 0 and 1",
+        );
+        one(
+            &|c| c.watching.span = 0,
+            "watching.span",
+            "must be at least 1",
+        );
+        // Off, the same bad numbers still fail; a lab and a central-place
+        // world refuse watching when it's on.
+        let mut c = Config::default();
+        c.watching.span = 0;
+        assert_eq!(c.validate().unwrap_err()[0].field, "watching.span");
+        let mut c = ok();
+        c.central.enabled = true;
+        assert!(c
+            .validate()
+            .unwrap_err()
+            .iter()
+            .any(|e| e.field == "watching.on"
+                && e.message == "watching can't run in a central-place world"));
+        let mut c = ok();
+        c.lab = Some(Lab {
+            protocol: LabProtocol::Raby,
+            food_first: false,
+        });
+        assert!(c
+            .validate()
+            .unwrap_err()
+            .iter()
+            .any(|e| e.field == "watching.on" && e.message == "watching can't run in a lab"));
+    }
+
+    #[test]
+    fn watching_on_span_and_raid_when_are_live_watchers_reset_only() {
+        let a = Config::default();
+        let f = a.structural_changes(&{
+            let mut c = a.clone();
+            c.watching.on = true;
+            c.watching.span = 3;
+            c.watching.raid_when = RaidWhen::Hungry;
+            c.watching.raid_if = RaidIf::Always;
+            c.watching.value = SeenValue::Room;
+            c.watching.scrounge = Scrounge::Forgo;
+            c
+        });
+        assert!(f.is_empty(), "{f:?}");
+        let mut n = a.clone();
+        n.watching.who = Who::Hoarders;
+        assert_eq!(
+            a.structural_changes(&n)
+                .into_iter()
+                .map(|e| e.field)
+                .collect::<Vec<_>>(),
+            ["watching.who"]
+        );
+        let mut n = a.clone();
+        n.watching.watchers = 0.5;
+        let f: Vec<String> = a
+            .structural_changes(&n)
+            .into_iter()
+            .map(|e| e.field)
+            .collect();
+        assert_eq!(f, ["watching.watchers"]);
+        // A schedule may set the live fields but not the rest.
+        let mut c = Config {
+            caching: Caching {
+                rule: CachingRule::Even,
+                ..Caching::default()
+            },
+            movement: Movement {
+                mode: MoveMode::Walk,
+                ..Movement::default()
+            },
+            schedule: vec![
+                change(5, "watching.on", serde_json::json!(true)),
+                change(6, "watching.span", serde_json::json!(3)),
+                change(7, "watching.raid_when", serde_json::json!("hungry")),
+                change(8, "watching.raid_if", serde_json::json!("always")),
+                change(9, "watching.value", serde_json::json!("room")),
+                change(10, "watching.scrounge", serde_json::json!("forgo")),
+            ],
+            ..Default::default()
+        };
+        c.validate().unwrap();
+        for (path, value) in [
+            ("watching.watchers", serde_json::json!(0.5)),
+            ("watching.who", serde_json::json!("hoarders")),
+            ("watching", serde_json::json!({ "span": 3 })),
+        ] {
+            c.schedule = vec![change(5, path, value)];
+            let errs = c.validate().unwrap_err();
+            assert!(
+                errs[0].message.contains("only on reset"),
+                "{path}: {errs:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn watchers_are_dealt_by_id_exactly_and_match_cheaters() {
+        for (s, n) in [(0.25, 100u64), (0.5, 100), (1.0 / 3.0, 99)] {
+            let w = Watching {
+                watchers: s,
+                ..Watching::default()
+            };
+            let got = (1..=n).filter(|&i| w.founder_watches(i, false)).count();
+            assert_eq!(got as u64, (n as f64 * s).floor() as u64, "s = {s}");
+        }
+        let none = Watching {
+            watchers: 0.0,
+            ..Watching::default()
+        };
+        assert!((1..=50).all(|i| !none.founder_watches(i, false)));
+        for s in [0.0, 0.1, 0.25, 0.5, 1.0 / 3.0, 0.9, 1.0] {
+            let w = Watching {
+                watchers: s,
+                ..Watching::default()
+            };
+            let t = Theft {
+                cheaters: s,
+                ..Theft::default()
+            };
+            for id in 1..=200 {
+                assert_eq!(
+                    w.founder_watches(id, t.founder_cheats(id)),
+                    t.founder_cheats(id),
+                    "s={s} id={id}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn who_decides_which_founders_watch() {
+        let w = |who, watchers| Watching {
+            who,
+            watchers,
+            ..Watching::default()
+        };
+        // share: the id rule, whatever the cheater flag says.
+        let share = w(Who::Share, 0.5);
+        for id in 1..=20 {
+            assert_eq!(
+                share.founder_watches(id, true),
+                share.founder_watches(id, false)
+            );
+        }
+        // hoarders: every non-cheater, whatever `watchers` says.
+        for watchers in [0.0, 0.5] {
+            let h = w(Who::Hoarders, watchers);
+            assert!(h.founder_watches(3, false) && !h.founder_watches(3, true));
+            let c = w(Who::Cheaters, watchers);
+            assert!(!c.founder_watches(3, false) && c.founder_watches(3, true));
+        }
+        // No cheaters configured: hoarders is everyone, cheaters is nobody.
+        let t = Theft::default();
+        assert!((1..=50).all(|i| w(Who::Hoarders, 0.0).founder_watches(i, t.founder_cheats(i))));
+        assert!((1..=50).all(|i| !w(Who::Cheaters, 1.0).founder_watches(i, t.founder_cheats(i))));
+    }
+
+    #[test]
+    fn pilfering_runs_under_theft_or_watching() {
+        let mut c = Config::default();
+        assert!(!c.pilfering_on());
+        c.theft.find = 0.2;
+        assert!(c.pilfering_on());
+        c.theft.find = 0.0;
+        c.watching.on = true;
+        assert!(c.pilfering_on());
     }
 }

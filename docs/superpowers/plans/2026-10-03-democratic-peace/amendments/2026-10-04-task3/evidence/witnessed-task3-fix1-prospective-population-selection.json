@@ -1,0 +1,16 @@
+{
+  "decision": "original_only",
+  "original_registered_prospective_count": 3240,
+  "precision_registered_prospective_count": 0,
+  "precision_status": "not_registered_runtime_gate",
+  "analysis_precision_reason": "precision_not_registered",
+  "runtime_receipt_sha256": "1c13e3af26abd68fe4dc3bf4a427cf1163d0f0e63919674c35e275e0a0064817",
+  "full_forecast_cpu_hours": 12.168000000000001,
+  "original_forecast_cpu_hours": 2.8080000000000003,
+  "maximum_cpu_hours": 8,
+  "maximum_rss_bytes": 19103744,
+  "registered_histories_executed": 0,
+  "manifest_frozen": false,
+  "concurrency": 1,
+  "reason": "Conservative full-population CPU forecast exceeds fixed eight-hour scheduling gate"
+}

@@ -1,0 +1,28 @@
+{
+  "classification": "controller_inline_plan_self_review",
+  "spec": "docs/superpowers/specs/2026-10-03-democratic-peace-design.md",
+  "spec_sha256": "5a636fea911df0e331189cee17b28fe7273588fe26dd7d94a01b2bcc37f4a4a9",
+  "requirement_owners": {
+    "boundary_architecture_defaults_named_choices_phase_order_atomicity": "Task1",
+    "outcomes_metrics_recording": "Tasks1/3",
+    "source_extraction_and_availability": "source-only base and Task3",
+    "populations_seeds_runtime_gate": "Tasks3/4",
+    "conditional_source_judges_and_mechanism_contrasts": "Tasks3/4",
+    "playground_inspect_compare_experiments": "Task2",
+    "verification_review_publication": "Tasks1\u20134"
+  },
+  "five_review_focus_items_owned": true,
+  "actual_export_signatures_compared": true,
+  "complete_patch_file_lists_checked": true,
+  "relative_plan_links_verified": true,
+  "placeholder_scan_passed": true,
+  "fresh_replay_full_bytes_modes_equal": true,
+  "registered_histories": 0,
+  "registered_resampling": 0,
+  "decision_for_written_review": "original_only under prospective8CPU-hour gate; full study forecast9.438CPUh",
+  "limitations": [
+    "metadata registration/publishing helpers have CLI parsing/negative-gate checks, not an activated registered study",
+    "precision inference remains unavailable in original-only mode",
+    "no exact original2001 executable/statistic identity"
+  ]
+}

@@ -1,0 +1,923 @@
+{
+  "version": 1,
+  "paper": "papers/geopolitics/cederman-2003-apsr-modeling-the-size-of-wars.pdf",
+  "paper_sha256": "9fe7ef6b369d1c58e43c0551fe924e9e87d0cf57d8398f59532c97392887a495",
+  "table": 1,
+  "printed_page": 143,
+  "pdf_page_1based": 10,
+  "visually_verified": "2026-10-03",
+  "rounding_assumption": "nearest; half last printed unit; integer median exact",
+  "source_cutoff": {
+    "log_base": 10,
+    "minimum_log_severity": 2.5,
+    "printed_page": 141,
+    "footnote": 8,
+    "raw_vs_exported_scale": "unverified"
+  },
+  "rows": [
+    {
+      "row": 1,
+      "id": "base",
+      "source_histories": 15,
+      "config_overrides": {},
+      "targets": {
+        "slope_min": {
+          "printed": -0.64,
+          "interval": [
+            -0.645,
+            -0.635
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_median": {
+          "printed": -0.55,
+          "interval": [
+            -0.555,
+            -0.545
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_max": {
+          "printed": -0.49,
+          "interval": [
+            -0.495,
+            -0.485
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_min": {
+          "printed": 0.975,
+          "interval": [
+            0.9745,
+            0.9755
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_median": {
+          "printed": 0.991,
+          "interval": [
+            0.9905,
+            0.9915
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_max": {
+          "printed": 0.996,
+          "interval": [
+            0.9955,
+            0.9965
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "log_range_median": {
+          "printed": 4.2,
+          "interval": [
+            4.15,
+            4.25
+          ],
+          "definition_status": "inferred"
+        },
+        "war_count_median": {
+          "printed": 204,
+          "interval": [
+            204,
+            204
+          ],
+          "definition_status": "inferred"
+        }
+      }
+    },
+    {
+      "row": 2,
+      "id": "shock10",
+      "source_histories": 15,
+      "config_overrides": {
+        "shock_shift": 10
+      },
+      "targets": {
+        "slope_min": {
+          "printed": -0.71,
+          "interval": [
+            -0.715,
+            -0.705
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_median": {
+          "printed": -0.62,
+          "interval": [
+            -0.625,
+            -0.615
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_max": {
+          "printed": -0.56,
+          "interval": [
+            -0.565,
+            -0.555
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_min": {
+          "printed": 0.968,
+          "interval": [
+            0.9675,
+            0.9685
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_median": {
+          "printed": 0.98,
+          "interval": [
+            0.9795,
+            0.9805
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_max": {
+          "printed": 0.993,
+          "interval": [
+            0.9925,
+            0.9935
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "log_range_median": {
+          "printed": 3.7,
+          "interval": [
+            3.65,
+            3.75
+          ],
+          "definition_status": "inferred"
+        },
+        "war_count_median": {
+          "printed": 267,
+          "interval": [
+            267,
+            267
+          ],
+          "definition_status": "inferred"
+        }
+      }
+    },
+    {
+      "row": 3,
+      "id": "shock0",
+      "source_histories": 15,
+      "config_overrides": {
+        "shock_shift": 0
+      },
+      "targets": {
+        "slope_min": {
+          "printed": -1.43,
+          "interval": [
+            -1.435,
+            -1.425
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_median": {
+          "printed": -1.32,
+          "interval": [
+            -1.325,
+            -1.315
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_max": {
+          "printed": -1.17,
+          "interval": [
+            -1.175,
+            -1.165
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_min": {
+          "printed": 0.878,
+          "interval": [
+            0.8775,
+            0.8785
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_median": {
+          "printed": 0.941,
+          "interval": [
+            0.9405,
+            0.9415
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_max": {
+          "printed": 0.975,
+          "interval": [
+            0.9745,
+            0.9755
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "log_range_median": {
+          "printed": 1.4,
+          "interval": [
+            1.35,
+            1.45
+          ],
+          "definition_status": "inferred"
+        },
+        "war_count_median": {
+          "printed": 132,
+          "interval": [
+            132,
+            132
+          ],
+          "definition_status": "inferred"
+        }
+      }
+    },
+    {
+      "row": 4,
+      "id": "context_off",
+      "source_histories": 15,
+      "config_overrides": {
+        "context_activation": false
+      },
+      "targets": {
+        "slope_min": {
+          "printed": -1.52,
+          "interval": [
+            -1.525,
+            -1.515
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_median": {
+          "printed": -1.34,
+          "interval": [
+            -1.345,
+            -1.335
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_max": {
+          "printed": -1.2,
+          "interval": [
+            -1.205,
+            -1.195
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_min": {
+          "printed": 0.835,
+          "interval": [
+            0.8345,
+            0.8355
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_median": {
+          "printed": 0.882,
+          "interval": [
+            0.8815,
+            0.8825
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_max": {
+          "printed": 0.934,
+          "interval": [
+            0.9335,
+            0.9345
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "log_range_median": {
+          "printed": 1.6,
+          "interval": [
+            1.55,
+            1.65
+          ],
+          "definition_status": "inferred"
+        },
+        "war_count_median": {
+          "printed": 696,
+          "interval": [
+            696,
+            696
+          ],
+          "definition_status": "inferred"
+        }
+      }
+    },
+    {
+      "row": 5,
+      "id": "shadow10",
+      "source_histories": 15,
+      "config_overrides": {
+        "war_shadow": 10
+      },
+      "targets": {
+        "slope_min": {
+          "printed": -0.69,
+          "interval": [
+            -0.695,
+            -0.685
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_median": {
+          "printed": -0.6,
+          "interval": [
+            -0.605,
+            -0.595
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_max": {
+          "printed": -0.53,
+          "interval": [
+            -0.535,
+            -0.525
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_min": {
+          "printed": 0.966,
+          "interval": [
+            0.9655,
+            0.9665
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_median": {
+          "printed": 0.99,
+          "interval": [
+            0.9895,
+            0.9905
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_max": {
+          "printed": 0.996,
+          "interval": [
+            0.9955,
+            0.9965
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "log_range_median": {
+          "printed": 4.2,
+          "interval": [
+            4.15,
+            4.25
+          ],
+          "definition_status": "inferred"
+        },
+        "war_count_median": {
+          "printed": 325,
+          "interval": [
+            325,
+            325
+          ],
+          "definition_status": "inferred"
+        }
+      }
+    },
+    {
+      "row": 6,
+      "id": "shadow40",
+      "source_histories": 15,
+      "config_overrides": {
+        "war_shadow": 40
+      },
+      "targets": {
+        "slope_min": {
+          "printed": -0.6,
+          "interval": [
+            -0.605,
+            -0.595
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_median": {
+          "printed": -0.5,
+          "interval": [
+            -0.505,
+            -0.495
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_max": {
+          "printed": -0.45,
+          "interval": [
+            -0.455,
+            -0.445
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_min": {
+          "printed": 0.97,
+          "interval": [
+            0.9695,
+            0.9705
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_median": {
+          "printed": 0.989,
+          "interval": [
+            0.9885,
+            0.9895
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_max": {
+          "printed": 0.997,
+          "interval": [
+            0.9965,
+            0.9975
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "log_range_median": {
+          "printed": 4.2,
+          "interval": [
+            4.15,
+            4.25
+          ],
+          "definition_status": "inferred"
+        },
+        "war_count_median": {
+          "printed": 148,
+          "interval": [
+            148,
+            148
+          ],
+          "definition_status": "inferred"
+        }
+      }
+    },
+    {
+      "row": 7,
+      "id": "thresholds2_5_shock10",
+      "source_histories": 15,
+      "config_overrides": {
+        "superiority_threshold": 2.5,
+        "victory_threshold": 2.5,
+        "shock_shift": 10
+      },
+      "targets": {
+        "slope_min": {
+          "printed": -0.62,
+          "interval": [
+            -0.625,
+            -0.615
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_median": {
+          "printed": -0.53,
+          "interval": [
+            -0.535,
+            -0.525
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_max": {
+          "printed": -0.46,
+          "interval": [
+            -0.465,
+            -0.455
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_min": {
+          "printed": 0.965,
+          "interval": [
+            0.9645,
+            0.9655
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_median": {
+          "printed": 0.984,
+          "interval": [
+            0.9835,
+            0.9845
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_max": {
+          "printed": 0.991,
+          "interval": [
+            0.9905,
+            0.9915
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "log_range_median": {
+          "printed": 4.3,
+          "interval": [
+            4.25,
+            4.35
+          ],
+          "definition_status": "inferred"
+        },
+        "war_count_median": {
+          "printed": 210,
+          "interval": [
+            210,
+            210
+          ],
+          "definition_status": "inferred"
+        }
+      }
+    },
+    {
+      "row": 8,
+      "id": "mobile0_9",
+      "source_histories": 15,
+      "config_overrides": {
+        "mobile_share": 0.9
+      },
+      "targets": {
+        "slope_min": {
+          "printed": -0.65,
+          "interval": [
+            -0.655,
+            -0.645
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_median": {
+          "printed": -0.58,
+          "interval": [
+            -0.585,
+            -0.575
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_max": {
+          "printed": -0.53,
+          "interval": [
+            -0.535,
+            -0.525
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_min": {
+          "printed": 0.954,
+          "interval": [
+            0.9535,
+            0.9545
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_median": {
+          "printed": 0.987,
+          "interval": [
+            0.9865,
+            0.9875
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_max": {
+          "printed": 0.992,
+          "interval": [
+            0.9915,
+            0.9925
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "log_range_median": {
+          "printed": 4.3,
+          "interval": [
+            4.25,
+            4.35
+          ],
+          "definition_status": "inferred"
+        },
+        "war_count_median": {
+          "printed": 250,
+          "interval": [
+            250,
+            250
+          ],
+          "definition_status": "inferred"
+        }
+      }
+    },
+    {
+      "row": 9,
+      "id": "distance_offset0_2",
+      "source_histories": 15,
+      "config_overrides": {
+        "distance_offset": 0.2
+      },
+      "targets": {
+        "slope_min": {
+          "printed": -0.72,
+          "interval": [
+            -0.725,
+            -0.715
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_median": {
+          "printed": -0.52,
+          "interval": [
+            -0.525,
+            -0.515
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_max": {
+          "printed": -0.43,
+          "interval": [
+            -0.435,
+            -0.425
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_min": {
+          "printed": 0.908,
+          "interval": [
+            0.9075,
+            0.9085
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_median": {
+          "printed": 0.99,
+          "interval": [
+            0.9895,
+            0.9905
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_max": {
+          "printed": 0.995,
+          "interval": [
+            0.9945,
+            0.9955
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "log_range_median": {
+          "printed": 4.4,
+          "interval": [
+            4.35,
+            4.45
+          ],
+          "definition_status": "inferred"
+        },
+        "war_count_median": {
+          "printed": 211,
+          "interval": [
+            211,
+            211
+          ],
+          "definition_status": "inferred"
+        }
+      }
+    },
+    {
+      "row": 10,
+      "id": "distance_exponent5",
+      "source_histories": 15,
+      "config_overrides": {
+        "distance_exponent": 5
+      },
+      "targets": {
+        "slope_min": {
+          "printed": -0.6,
+          "interval": [
+            -0.605,
+            -0.595
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_median": {
+          "printed": -0.53,
+          "interval": [
+            -0.535,
+            -0.525
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_max": {
+          "printed": -0.46,
+          "interval": [
+            -0.465,
+            -0.455
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_min": {
+          "printed": 0.974,
+          "interval": [
+            0.9735,
+            0.9745
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_median": {
+          "printed": 0.986,
+          "interval": [
+            0.9855,
+            0.9865
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_max": {
+          "printed": 0.991,
+          "interval": [
+            0.9905,
+            0.9915
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "log_range_median": {
+          "printed": 4.3,
+          "interval": [
+            4.25,
+            4.35
+          ],
+          "definition_status": "inferred"
+        },
+        "war_count_median": {
+          "printed": 217,
+          "interval": [
+            217,
+            217
+          ],
+          "definition_status": "inferred"
+        }
+      }
+    },
+    {
+      "row": 11,
+      "id": "grid75",
+      "source_histories": 15,
+      "config_overrides": {
+        "width": 75,
+        "height": 75,
+        "initial_states": 450
+      },
+      "targets": {
+        "slope_min": {
+          "printed": -0.67,
+          "interval": [
+            -0.675,
+            -0.665
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_median": {
+          "printed": -0.59,
+          "interval": [
+            -0.595,
+            -0.585
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "slope_max": {
+          "printed": -0.54,
+          "interval": [
+            -0.545,
+            -0.535
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_min": {
+          "printed": 0.987,
+          "interval": [
+            0.9865,
+            0.9875
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_median": {
+          "printed": 0.993,
+          "interval": [
+            0.9925,
+            0.9935
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "r2_max": {
+          "printed": 0.996,
+          "interval": [
+            0.9955,
+            0.9965
+          ],
+          "definition_status": "severity_scale_unverified"
+        },
+        "log_range_median": {
+          "printed": 4.6,
+          "interval": [
+            4.55,
+            4.65
+          ],
+          "definition_status": "inferred"
+        },
+        "war_count_median": {
+          "printed": 502,
+          "interval": [
+            502,
+            502
+          ],
+          "definition_status": "inferred"
+        }
+      }
+    }
+  ],
+  "figure_diagnostics": [
+    {
+      "figure": 6,
+      "printed_page": 142,
+      "pdf_page_1based": 9,
+      "sample_seed_status": "unknown publication seed; later port calls seed5 representative",
+      "selected_by": "median R2 among15 base histories",
+      "printed": {
+        "intercept": 1.68,
+        "slope": -0.64,
+        "r2": 0.991,
+        "war_count": 218
+      },
+      "judge": "descriptive; no quantitative trajectory match"
+    },
+    {
+      "figure": 7,
+      "printed_page": 143,
+      "metric": "r2",
+      "edges": [
+        0.97,
+        0.975,
+        0.98,
+        0.985,
+        0.99,
+        0.995,
+        1.0
+      ],
+      "counts": [
+        1,
+        0,
+        2,
+        3,
+        6,
+        3
+      ],
+      "edge_reading": "left-inclusive/right-exclusive; last upper bound inclusive is inferred",
+      "judge": "descriptive histogram; not an additional registered hypothesis",
+      "raster_uncertainty": {
+        "x_axis_pixels": [
+          329,
+          811
+        ],
+        "dpi": 130,
+        "boundary_pixels": 2,
+        "boundary_metric": 0.00013
+      }
+    },
+    {
+      "figure": 8,
+      "printed_page": 144,
+      "metric": "slope",
+      "edges": [
+        -0.66,
+        -0.64,
+        -0.62,
+        -0.6,
+        -0.58,
+        -0.56,
+        -0.54,
+        -0.52,
+        -0.5,
+        -0.48
+      ],
+      "counts": [
+        1,
+        0,
+        0,
+        3,
+        2,
+        2,
+        4,
+        2,
+        1
+      ],
+      "edge_reading": "left-inclusive/right-exclusive; last upper bound inclusive is inferred",
+      "judge": "descriptive histogram; not an additional registered hypothesis",
+      "raster_uncertainty": {
+        "x_axis_pixels": [
+          317,
+          799
+        ],
+        "dpi": 130,
+        "boundary_pixels": 2,
+        "boundary_metric": 0.00075
+      }
+    }
+  ]
+}

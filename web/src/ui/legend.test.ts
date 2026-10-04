@@ -37,6 +37,7 @@ describe('the legend', () => {
     expect(labels('caching_rule', c({ caching: caching('even', false) }))).toEqual(['even']);
     expect(labels('caching_rule', c({ caching: caching('even', false), theft: theft(0.5) }))).toEqual(['none (cheaters)', 'even']);
     expect(labels('caching_rule', c({ caching: caching('none', true), theft: theft(0.5) }))[0]).toBe('none (and cheaters)');
+    expect(labels('watching', config)).toEqual(['watcher who buries', 'scrounger (watches, never buries)', 'does not watch']);
     expect(labels('memory', config)).toEqual(['remembers', "doesn't remember"]);
     expect(labels('tribe', config)).toEqual(['Blue', 'Red']);
   });
@@ -78,4 +79,8 @@ describe('the hoard legend (Minds 7)', () => {
     expect(labels(true)).toContain('cheater');
     expect(hoardLegend(false).find((i) => i.label.startsWith('L and D'))?.mark).toEqual({ kind: 'ramp', from: HOARD_COLORS.LOW, to: HOARD_COLORS.HIGH });
   });
+});
+
+it('labels a guarded spatial home with its paid-action marker', () => {
+  expect(overlayLegend({ ...none, homes: true, guarding: true }, config).map(i => i.label)).toContain('guarding (paid action)');
 });

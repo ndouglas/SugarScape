@@ -182,7 +182,8 @@ fn fixation_text(c: &ImageConfig) -> String {
 /// cooperative generations (≥ 0.9) and over the 51 generations up to each
 /// collapse's last cooperative one (memoized).
 fn cycles() -> Arc<Vec<(f64, f64, f64, f64)>> {
-    static CACHE: Mutex<Option<Arc<Vec<(f64, f64, f64, f64)>>>> = Mutex::new(None);
+    type CycleMeasurements = Arc<Vec<(f64, f64, f64, f64)>>;
+    static CACHE: Mutex<Option<CycleMeasurements>> = Mutex::new(None);
     let mut cache = CACHE.lock().unwrap_or_else(|e| e.into_inner());
     if let Some(v) = cache.as_ref() {
         return v.clone();

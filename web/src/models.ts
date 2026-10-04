@@ -7,6 +7,14 @@ import type {
   TippingInspection,
   FirmsConfig,
   FirmsInspection,
+  CollusionConfig,
+  GeosimConfig,
+  GeosimInspection,
+  PolarityConfig,
+  PolarityInspection,
+  AuctionsConfig,
+  AuctionsInspection,
+  CollusionInspection,
   ZiInspection,
   BaliConfig,
   BaliInspection,
@@ -35,6 +43,7 @@ import type {
   StructureConfig,
   StructureInspection,
   ColorMode,
+  DemocraticPeaceInspection,
   Config,
   DpdConfig,
   DpdInspection,
@@ -54,7 +63,7 @@ import type {
   TagsInspection,
 } from './types';
 
-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms'];
+export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion', 'auctions', 'polarity', 'geosim', 'democratic_peace'];
 
 /** The presets menu's group labels. */
 export const MODEL_LABELS: Record<ModelKind, string> = {
@@ -85,12 +94,17 @@ export const MODEL_LABELS: Record<ModelKind, string> = {
   tipping: "Schelling's tipping",
   hoard: 'The evolution of hoarding',
   firms: 'The Emergence of Firms',
+  collusion: 'Algorithmic Collusion',
+  auctions: 'Q-learning Auctions',
+  polarity: 'Emergent Polarity',
+  geosim: 'GeoSim: The Size of Wars',
+  democratic_peace: 'Democratic Peace as Selection',
 };
 
 /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
 export function modelOf(c: ModelConfig): ModelKind {
   const tag = (c as { model?: unknown }).model;
-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms'
+  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion' || tag === 'auctions' || tag === 'polarity' || tag === 'geosim' || tag === 'democratic_peace'
     ? tag
     : 'sugarscape';
 }
@@ -199,6 +213,16 @@ export function isFirmsView(v: AnyInspection): v is FirmsInspection {
   return 'panel' in v && 'firm' in v && 'member' in v;
 }
 
+/** An auction cell carries action values and played-pair occupancy. */
+export function isAuctionsView(v: AnyInspection): v is AuctionsInspection {
+  return 'panel' in v && 'occupancy' in v && 'learners' in v;
+}
+
+/** A collusion cell carries the session outcome and monopoly benchmark. */
+export function isCollusionView(v: AnyInspection): v is CollusionInspection {
+  return 'panel' in v && 'outcome' in v && 'monopoly' in v;
+}
+
 /** A point of Schelling's tipping plane. */
 export function isTippingView(v: AnyInspection): v is TippingInspection {
   return 'red_content' in v && 'blue_content' in v;
@@ -250,6 +274,14 @@ export function calendarYear(c: ModelConfig, tick: number): number | null {
  * last generation); Infinity for a model that never finishes.
  */
 export function ticksLeft(c: ModelConfig, tick: number): number {
+  if (modelOf(c) === 'geosim') {
+    const g = c as GeosimConfig;
+    return Math.max(0, Math.ceil((g.initialization_periods + g.observation_periods) / g.periods_per_tick) - tick);
+  }
+  if (modelOf(c) === 'polarity') {
+    const p = c as PolarityConfig;
+    return Math.max(0, Math.ceil(p.horizon / p.periods_per_tick) - tick);
+  }
   if ('model' in c && c.model === 'anasazi') return Math.max(0, c.end_year - c.start_year - tick);
   if (modelOf(c) === 'tags' && (c as TagsConfig).end > 0) return Math.max(0, (c as TagsConfig).end - tick);
   if (modelOf(c) === 'ethno' && (c as EthnoConfig).end > 0) return Math.max(0, (c as EthnoConfig).end - tick);
@@ -276,6 +308,16 @@ export function ticksLeft(c: ModelConfig, tick: number): number {
     return Math.max(h.generations, Math.max(1, Math.ceil(tick / s))) * s - tick;
   }
   if (modelOf(c) === 'firms' && (c as FirmsConfig).stop_at > 0) return Math.max(0, (c as FirmsConfig).stop_at - tick);
+  // Auctions always reach the horizon, including a partial final tick.
+  if (modelOf(c) === 'auctions') {
+    const a = c as AuctionsConfig;
+    return Math.max(0, Math.ceil(a.horizon / a.periods_per_tick) - tick);
+  }
+  // A pricing session ends when its strategies settle, at most one period past the cap.
+  if (modelOf(c) === 'collusion') {
+    const k = c as CollusionConfig;
+    return Math.max(0, Math.ceil((k.cap + 1) / k.periods_per_tick) - tick);
+  }
   return Infinity;
 }
 
@@ -298,6 +340,7 @@ export function finishesUnpredictably(c: ModelConfig): boolean {
   if (model === 'opinions') return (c as OpinionsConfig).stop_when_stable;
   if (model === 'agreement') return (c as AgreementConfig).stop_when_stable;
   if (model === 'retirement') return (c as RetirementConfig).stop_at_norm;
+  if (model === 'collusion' || model === 'polarity') return true;
   if (model === 'sugarscape') return (c as Config).culture.rule === 'axelrod' && (c as Config).culture.stop_when_settled === true;
   return model === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
 }
@@ -333,7 +376,7 @@ export function sugarscapeChapter(p: Preset): string {
  * Whether `c` is a Minds world (docs/studies/2026-09-27-minds.md): a sugarscape config that uses any rule
  * the Minds experiments added — a decision other than rule M, walking, memory, walls, truffles, caching,
  * a carrying limit, central-place foraging, a winter everywhere at once, or theft (a chance to find caches
- * or any cheaters).
+ * or any cheaters), or watching.
  * The Minds run on the sugarscape model but have their own entry in the model menu.
  */
 export function usesMinds(c: ModelConfig): boolean {
@@ -351,7 +394,8 @@ export function usesMinds(c: ModelConfig): boolean {
     s.central?.enabled === true ||
     s.seasons?.mode === 'global' ||
     (s.theft?.find ?? 0) > 0 ||
-    (s.theft?.cheaters ?? 0) > 0
+    (s.theft?.cheaters ?? 0) > 0 ||
+    s.watching?.on === true
   );
 }
 
@@ -361,6 +405,27 @@ export const cachingOn = (c: Config): boolean =>
 
 /** Minds 6: theft is on (a chance to find caches, or any cheaters), as the core's `Theft::is_on`. */
 export const theftOn = (c: Config): boolean => (c.theft?.find ?? 0) > 0 || (c.theft?.cheaters ?? 0) > 0;
+
+/** Minds 8: watching is on. */
+export const watchingOn = (c: Config): boolean => c.watching?.on === true;
+
+/**
+ * Minds 8: watching is on and tells founders apart, some watching and some not (the core's
+ * `watchers_split`). Under `who: share`, `0 < watchers < 1`; under `hoarders` the watchers are the
+ * non-cheaters and under `cheaters` the cheaters, so a split needs `0 < cheaters < 1`. Exact, as the
+ * core is: the id rule deals ⌊n·s⌋ of the n founders, so a split needs `0 < ⌊n·s⌋ < n`.
+ */
+export const watcherSplit = (c: Config): boolean => {
+  if (!watchingOn(c)) return false;
+  const who = c.watching?.who ?? 'share';
+  const share = who === 'share' ? (c.watching?.watchers ?? 1) : (c.theft?.cheaters ?? 0);
+  const n = c.population;
+  const dealt = share > 0 ? Math.floor(n * share) : 0;
+  return dealt > 0 && dealt < n;
+};
+
+/** Minds 6 and 8: caches get pilfered, by theft or by watchers' raids (the core's `Config::pilfering_on`). */
+export const pilferingOn = (c: Config): boolean => theftOn(c) || watchingOn(c);
 
 /** Minds 5–6: whether `c` can hold caches (caching on, or a central world's larders). */
 export const hasCaches = (c: Config): boolean => cachingOn(c) || c.central?.enabled === true;
@@ -410,6 +475,7 @@ const MINDS_TITLES: Record<string, string> = {
   '5': 'Minds 5: caching',
   '6': 'Minds 6: theft',
   '7': 'Minds 7: evolution of hoarding',
+  '8': 'Minds 8: watching',
 };
 
 /**
@@ -460,6 +526,8 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     // Minds 6: hoarder or cheater; Minds 5: each agent's caching rule. See `defaultColorMode`.
     ['strategy', 'Strategy'],
     ['caching_rule', 'Caching rule'],
+    // Minds 8: watchers who bury, scroungers, others.
+    ['watching', 'Watching'],
     // Minds 3: whether each agent remembers.
     ['memory', 'Memory'],
   ],
@@ -614,6 +682,15 @@ export const COLOR_MODES: Record<ModelKind, [ColorMode, string][]> = {
     ['effort', 'Effort'],
     ['income', 'Income'],
   ],
+  democratic_peace: [['territory', 'Ownership'], ['governing_regime', 'Governing regime'], ['latent_regime', 'Latent regime'], ['resources', 'Resources'], ['alliances', 'Alliance threat and membership'], ['pariahs', 'Pariah status']],
+  geosim: [['territory', 'Ownership'], ['capacity', 'Resource capacity'], ['technology', 'Technology'], ['alert', 'Alert and campaign'], ['wars', 'War membership']],
+  polarity: [['territory', 'Territory'], ['resources', 'Resources'], ['strategy', 'Latent strategy'], ['coalitions', 'Coalitions']],
+  auctions: [['bids', 'Bids · whole run'], ['late', 'Bids · final 20%'], ['values', 'Values']],
+  // Each firm's strategy map: price or how often each state was visited.
+  collusion: [
+    ['price', 'Price'],
+    ['visits', 'Visits'],
+  ],
 };
 
 /** The overlays each model can draw: the sugarscape's networks, the valley's water, settlements and links. */
@@ -645,4 +722,22 @@ export const MODEL_OVERLAYS: Record<ModelKind, Overlay[]> = {
   tipping: [],
   hoard: [],
   firms: [],
+  // Each firm's strategy map: price or how often each state was visited.
+  collusion: [],
+  geosim: [],
+  democratic_peace: [],
+  polarity: [],
+  auctions: [],
 };
+
+export function isPolarityView(v: AnyInspection): v is PolarityInspection {
+  return 'model' in v && v.model === 'polarity';
+}
+
+export function isGeosimView(v: AnyInspection): v is GeosimInspection {
+  return 'model' in v && v.model === 'geosim';
+}
+
+export function isDemocraticPeaceView(view: AnyInspection): view is DemocraticPeaceInspection {
+  return 'model' in view && view.model === 'democratic_peace';
+}

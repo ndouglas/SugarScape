@@ -67,6 +67,7 @@ export interface SimLike {
   landscape_edited(good: number): boolean;
   export_series_csv(): string;
   export_agents_csv(): string;
+  export_model_json?(): string;
   networks(kind: string): Uint32Array;
   credit_graph(): string;
   disease_list(): string;
@@ -449,6 +450,9 @@ export class SimHost {
         return { ok: true, value: sim.export_series_csv() };
       case 'agentsCsv':
         return { ok: true, value: sim.export_agents_csv() };
+      case 'modelJson':
+        if (!sim.export_model_json) throw new Error('Full model JSON is unavailable in this simulation module');
+        return { ok: true, value: sim.export_model_json() };
       case 'fingerprint':
         return { ok: true, value: sim.fingerprint() };
       case 'session':

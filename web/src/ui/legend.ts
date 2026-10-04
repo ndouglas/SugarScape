@@ -70,7 +70,7 @@ export function hoardLegend(cheaters: boolean): LegendItem[] {
   ];
 }
 /** The overlay symbols the legend can show; the grid view draws each the same way. */
-export type LegendSymbol = 'cache' | 'cheater-cache' | 'own-cache' | 'home' | 'larder' | 'memory' | 'spot' | 'path' | 'route' | 'tray' | 'turn';
+export type LegendSymbol = 'cache' | 'cheater-cache' | 'own-cache' | 'home' | 'guard' | 'larder' | 'memory' | 'spot' | 'path' | 'route' | 'tray' | 'turn';
 
 export type LegendMark =
   | { kind: 'swatch'; color: string }
@@ -112,6 +112,8 @@ export function colorLegend(mode: ColorMode, config: Config): LegendItem[] {
       return (config.theft?.cheaters ?? 0) > 0 ? [swatch('hoarder', c.HOARDER), swatch('cheater', c.CHEATER)] : [swatch('hoarder', c.HOARDER)];
     case 'caching_rule':
       return cachingRuleLegend(config);
+    case 'watching':
+      return [swatch('watcher who buries', c.HOARDER), swatch('scrounger (watches, never buries)', c.CHEATER), swatch('does not watch', c.NEUTRAL)];
     case 'memory':
       return [swatch('remembers', c.REMEMBERS), swatch("doesn't remember", c.NEUTRAL)];
     default:
@@ -147,6 +149,7 @@ export interface MapMarks {
   /** A central world's homes (with the caches overlay), and whether any larder holds sugar. */
   homes: boolean;
   larders: boolean;
+  guarding?: boolean;
   /** The selected agent's remembered sites, and whether any is a known truffle spot. */
   memory: boolean;
   spots: boolean;
@@ -169,6 +172,7 @@ export function overlayLegend(m: MapMarks, config: Config): LegendItem[] {
   }
   if (m.ownCaches) out.push(symbol("the selected agent's caches", 'own-cache'));
   if (m.homes) out.push(symbol('home', 'home'));
+  if (m.homes && m.guarding) out.push(symbol('guarding (paid action)', 'guard'));
   if (m.homes && m.larders) out.push(symbol('larder (size: sugar)', 'larder'));
   if (m.memory) out.push(symbol('remembered site (fades with age)', 'memory'));
   if (m.memory && m.spots) out.push(symbol('known truffle spot (filled: ripe)', 'spot'));
@@ -226,6 +230,9 @@ function markSvg(mark: LegendMark): SVGSVGElement {
         break;
       case 'home':
         add('rect', { x: '2', y: '2', width: '10', height: '10', fill: 'none', style: 'stroke: var(--c3)', 'stroke-width': '1.5' });
+        break;
+      case 'guard':
+        add('rect', { x: '1', y: '1', width: '12', height: '12', fill: 'none', style: 'stroke: var(--accent)', 'stroke-width': '2.5' });
         break;
       case 'larder':
         add('polygon', { points: diamond, style: 'fill: var(--c3)', stroke: '#000', 'stroke-width': '1' });

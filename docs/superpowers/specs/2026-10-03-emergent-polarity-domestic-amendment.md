@@ -1,0 +1,25 @@
+# Domestic decision source-fidelity amendment — 2026-10-03
+
+The final review at `9753053062dbd3e03a75566903f2761fb67ce296` identified an undocumented episode-open veto in the provincial decision. The controller approved its removal and a full same-seed provincial rerun before publication.
+
+Cederman (1997), printed p.124, Figure 5.7 (PDF p.139), directs a province to respond D to the center's previous D; otherwise it reevaluates its stock / center-front commitment ratio each period. An existing conflict episode does not suppress this decision. Printed pp.126–128 (PDF pp.141–143) replace the initiation criterion with the stochastic function for both predator states and secessionist provinces. The selected action-memory rule remains explicit: `previous_action` permits renewed initiation when the province's provisional action is C; `war_until_victory` retains its named persistent-defection treatment. Episode accounting continues to identify contiguous conflicts independently of voluntary revolt actions, so reinitiation can add a revolt action and DD/damage without creating another episode.
+
+Only the domestic episode veto is removed. The two random tie selectors now draw only for more than one candidate, as the frozen conditional draw schedule requires. All 572 registered resolved configs use `tie_break=lowest_id`; this correction cannot alter any registered arm. The nullable TypeScript stock/accounting contract models actual invalid WASM JSON values. Neither bounded minor fix changes scientific judges or studies.
+
+Rerun all 14 provincial arms with their identical 1,180 registered seeds: eight `two_level` arms ×20, five `two_level_precision` arms ×200, and 20 `overextension.narrative_observation` sessions. Preserve every reviewed dataset and verdict. Assemble a new complete dataset by replacing all 1,180 provincial records while retaining the exact 27,340 nonprovincial raw lines. Recompute the complete unchanged 100,000-draw report with seed 2026100202 and all dependent stock/episode/descriptive outputs; retain every before/after result. Matching precision compatibility scores are not an invariance proof. No seed replacements, reduced draws, cap, source-manifest edits or judge changes are permitted.
+
+## Dated source-example clarification
+
+The frozen reading notes' 400-unit narrative reference and the pre-domestic findings' corresponding phrase conflate different examples. The actual overextension illustration is explicitly a ten-by-ten grid on printed p.129 (PDF p.144), followed by Figure 5.11 on printed p.130 (PDF p.145). Its seed is unknown. The registered overextension configuration is correctly 100 cells. Current narrative uses that size; frozen research notes, source PDFs, extraction records, hashes and historical summaries remain unchanged. No trajectory fit is registered or inferred.
+
+## Retained evidence and status
+
+The original partial/full telemetry runs, 237 original sequential panics, original verdicts, telemetry/export/sequential amendments, and the reviewed complete 863-row summary remain preserved. The reviewed summaries are also copied under `2026-10-03-emergent-polarity-pre-domestic-*`; original raw/hash-bound ignored files are unchanged. New ignored execution evidence uses only `survey/out/polarity-domestic-*`. Stage 4 remains In Progress pending controller review, integration, CI and Pages.
+
+## Completed same-seed execution
+
+Engine `b1bf1e5ac82bc223aa45b1b9672d9c1f6d4dbb1b` completed all 1,180 provincial sessions, retaining the exact 27,340 nonprovincial raw lines. All 1,160 deterministic two-level complete records match; all 20 overextension Outcomes change. The complete 572-arm/28,520-session report was recomputed with the frozen 18 functions, 100,000 draws and seed 2026100202: all 863 rows, results and verdicts remain identical. Direct stock counts/frequencies, all 110 Störmer coordinates and all source/P2/P3 rows remain identical; overextension episode and accounting descriptives change.
+
+Overextension voluntary revolt actions increase from 65,743 to 92,623, while domestic episodes increase from 65,743 to 81,739. Positive loss in domestic episodes changes from zero to 2,185,593.335182336 abstract units. All 20 sessions complete 4,000 periods. These action, episode, damage and clock observations are separately retained for every original seed in the [exact before/after receipt](2026-10-03-emergent-polarity-domestic-before-after.json). Its DD event totals include domestic and interstate encounters.
+
+The [dated findings](2026-10-03-emergent-polarity-domestic-findings.md), [execution provenance](2026-10-03-emergent-polarity-domestic-execution-provenance.json), [assembly receipt](2026-10-03-emergent-polarity-domestic-assembly-receipt.json) and [preserved pre-domestic findings](2026-10-03-emergent-polarity-pre-domestic-findings.md) bind the amended evidence and historical results. All prior raw, failed-export and panic evidence remains unchanged. Stage 4 remains In Progress pending the controller's scoped review and publication gates.

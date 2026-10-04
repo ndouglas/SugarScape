@@ -1,0 +1,513 @@
+diff --git a/crates/sugarscape-cli/src/main.rs b/crates/sugarscape-cli/src/main.rs
+--- a/crates/sugarscape-cli/src/main.rs
++++ b/crates/sugarscape-cli/src/main.rs
+@@ -205,7 +205,19 @@
+     let mut world = ModelWorld::new(config.clone(), args.seed)?;
+     world.model_mut().run(args.ticks);
+     let world = world.model();
+-    if world.finished() && world.tick() < u64::from(args.ticks) {
++    if world.finished() && config.kind() == ModelKind::Polarity {
++        let latest: serde_json::Value =
++            serde_json::from_str(&world.latest_json()).expect("core snapshot is JSON");
++        let periods = latest["periods"].as_u64().unwrap_or(0);
++        let reason = latest["finish_reason"].as_str().unwrap_or("endpoint");
++        eprintln!(
++            "finished at tick {} ({periods} completed periods, {reason})",
++            world.tick()
++        );
++        if let Some(invalidity) = latest["invalidity"].as_str() {
++            eprintln!("invalid reconstruction: {invalidity}");
++        }
++    } else if world.finished() && world.tick() < u64::from(args.ticks) {
+         // The anasazi stops at its end year; civil violence when a group is gone;
+         // the tags model at its last generation; Axelrod's culture and bounded
+         // confidence once stable, a sugarscape under his rule once its cultures
+diff --git a/crates/sugarscape-core/src/sweep.rs b/crates/sugarscape-core/src/sweep.rs
+--- a/crates/sugarscape-core/src/sweep.rs
++++ b/crates/sugarscape-core/src/sweep.rs
+@@ -391,6 +391,9 @@
+         })?;
+         if let Some(max) = config.max_ticks().filter(|&max| self.ticks > max) {
+             let why = match config.kind() {
++                crate::model::ModelKind::Polarity => {
++                    format!("polarity reaches its economic horizon after {max} display ticks in this config")
++                }
+                 crate::model::ModelKind::Tags => {
+                     format!("the tags model stops at its last generation, {max} in this config")
+                 }
+@@ -965,7 +968,7 @@
+     pub json: &'static str,
+ }
+ 
+-const BUILTINS: [Builtin; 214] = [
++const BUILTINS: [Builtin; 215] = [
+     Builtin {
+         id: "fig-ii-5",
+         json: include_str!("../../../sweeps/fig-ii-5.json"),
+@@ -1821,6 +1824,10 @@
+     Builtin {
+         id: "auctions-duration",
+         json: include_str!("../../../sweeps/auctions-duration.json"),
++    },
++    Builtin {
++        id: "polarity-predators",
++        json: include_str!("../../../sweeps/polarity-predators.json"),
+     },
+ ];
+ 
+@@ -1839,6 +1846,20 @@
+ 
+ #[cfg(test)]
+ mod tests {
++    #[test]
++    fn polarity_playground_sweep_couples_defense_and_victory_ratios() {
++        let sweep =
++            super::builtin("polarity-predators").expect("the polarity experiment is discoverable");
++        let points = sweep.points().unwrap();
++        let config = sweep.config_for(&points[24]).unwrap();
++        let crate::model::ModelConfig::Polarity(c) = config else {
++            panic!("polarity preset required")
++        };
++        assert_eq!((c.superiority, c.victory), (3.0, 3.0));
++        assert_eq!(c.source_profile, crate::polarity::SourceProfile::Chapter4);
++        assert_eq!(sweep.metric.series(), "sovereign_count");
++    }
++
+     use super::*;
+     use crate::config::Config;
+     use crate::world::World;
+@@ -2858,7 +2879,8 @@
+                 "auctions-market",
+                 "auctions-bidders",
+                 "auctions-persistent",
+-                "auctions-duration"
++                "auctions-duration",
++                "polarity-predators"
+             ]
+         );
+         for b in builtins() {
+diff --git a/sweeps/polarity-predators.json b/sweeps/polarity-predators.json
+new file mode 100644
+--- /dev/null
++++ b/sweeps/polarity-predators.json
+@@ -0,0 +1,13 @@
++{
++  "name": "Emergent Polarity: predator share and defense",
++  "description": "Small playground sample at Cederman 1994's eight predator settings, with superiority and victory ratios coupled at 2 or 3. Three seeds per cell are exploratory, not the source's twenty-seed reconstruction. Chapter 4 damage and the exported named reconstruction choices are retained; terminal sovereign count includes early hegemony. Native registered studies judge source compatibility separately.",
++  "base": { "preset": "polarity-original" },
++  "x": { "label": "Initial predator share", "path": "predator_share", "values": [0, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1] },
++  "series": { "label": "Superiority / victory ratio", "values": [
++    { "at": 2, "name": "Offense: 2 / 2", "set": { "superiority": 2, "victory": 2 } },
++    { "at": 3, "name": "Defense: 3 / 3", "set": { "superiority": 3, "victory": 3 } }
++  ] },
++  "seeds": { "from": 1, "count": 3 },
++  "ticks": 1000,
++  "metric": { "kind": "final", "series": "sovereign_count" }
++}
+diff --git a/web/src/compare-presets.ts b/web/src/compare-presets.ts
+--- a/web/src/compare-presets.ts
++++ b/web/src/compare-presets.ts
+@@ -14,6 +14,9 @@
+ 
+ export const COMPARE_PRESETS: ComparePreset[] = [
+   { id: 'vi-2-vs-vi-3', label: 'Indecomposability — VI-2 vs VI-3 (Compare)', a: 'vi-2-no-trade', b: 'vi-3-trade' },
++  { id: 'polarity-offense-defense', label: 'Offense vs defense — Emergent Polarity (Compare)', a: 'polarity-original', b: 'polarity-defense' },
++  { id: 'polarity-alliance-effect', label: 'No alliances vs behavioral alliances — Emergent Polarity (Compare)', a: 'polarity-original', b: 'polarity-alliances' },
++
+   {
+     id: 'lhv-published-vs-documented',
+     label: 'Replication vs documented — Anasazi (Compare)',
+diff --git a/web/src/engine.ts b/web/src/engine.ts
+--- a/web/src/engine.ts
++++ b/web/src/engine.ts
+@@ -26,7 +26,7 @@
+ import { MAX_TICKS, SimHost } from './sim-host';
+ import { wasmSimModule } from './sim-module';
+ import { InlineTransport, startWorker, type Transport } from './transport';
+-import type { AgreementConfig, AuctionsConfig, AuctionsStats, ColorMode, Config, FieldError, HoardConfig, HoardStatus, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
++import type { AgreementConfig, AuctionsConfig, AuctionsStats, PolarityStats, ColorMode, Config, FieldError, HoardConfig, HoardStatus, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
+ import init, { model_schemas_json, presets_json } from './wasm-pkg/sugarscape.js';
+ 
+ export type { Overlay, PlaceOverrides } from './protocol';
+@@ -53,6 +53,11 @@
+ 
+ /** What the page says when a world has run its course (the engine pauses and fires 'finished'). */
+ export function finishedNotice(config: ModelConfig, tick: number, latest?: ModelStats | null): string {
++  if (modelOf(config) === 'polarity') {
++    const p = latest as PolarityStats | null | undefined;
++    if (p?.invalidity) return `Invalid reconstruction at period ${p.periods}: ${p.invalidity} — Reset to run it again`;
++    return `This session finished at period ${p?.periods ?? 'unavailable'} (${p?.finish_reason ?? 'endpoint'}) — Reset to run it again`;
++  }
+   if (modelOf(config) === 'civil') return `A group has died out at t = ${tick} — Reset to run it again`;
+   if (modelOf(config) === 'farol') return `This run has reached its last round (${tick}) — Reset to run it again`;
+   if (modelOf(config) === 'ants' || modelOf(config) === 'thresholds') return `This run has reached its last step (${tick}) — Reset to run it again`;
+@@ -400,6 +405,7 @@
+     }
+     engine.origin = { config, seed: engine.seed, landscapes };
+     engine.adopt(result.snapshot);
++    if (engine.model === 'polarity') engine.origin.config = structuredClone(engine.config);
+     engine.replayMoved = false;
+     engine.baseConfig = structuredClone(engine.config);
+     engine.presetId = engine.matchPreset();
+@@ -1140,6 +1146,7 @@
+       this.memoryCells = NO_CELLS;
+     }
+     const clamped = this.adopt(result.snapshot);
++    if (this.model === 'polarity') this.origin.config = structuredClone(this.config);
+     if (!opts.keepSetup) {
+       this.baseConfig = structuredClone(this.config);
+       this.presetId = opts.presetId ?? this.matchPreset();
+diff --git a/web/src/experiments/form.ts b/web/src/experiments/form.ts
+--- a/web/src/experiments/form.ts
++++ b/web/src/experiments/form.ts
+@@ -1,4 +1,4 @@
+-import type { AuctionsConfig, FieldError, ModelConfig, ModelKind, Param } from '../types';
++import type { AuctionsConfig, PolarityConfig, FieldError, ModelConfig, ModelKind, Param } from '../types';
+ import type { Axis, Metric, ShorthandAxis, Sweep, SweepBase } from './types';
+ import { formatValues, parseValues, type AxisScalar } from './values';
+ 
+@@ -109,6 +109,10 @@
+   if (model === 'firms') {
+     // The built-in firms-beta's axis: the size exponent against increasing returns (A99 Table 3).
+     return { ...form, x: { path: 'beta', values: '1.7:2.1:0.1' }, ticks: 5000, metric: { ...form.metric, kind: 'final', series: 'mu' } };
++  }
++  if (model === 'polarity') {
++    const p = config as PolarityConfig | undefined;
++    return { ...form, description: 'Cederman predator-share settings; terminal sovereign count after the economic horizon or hegemony. Parameters and source profile are retained; ticks batch complete periods.', x: { path: 'predator_share', values: '0,0.05,0.1,0.2,0.4,0.6,0.8,1' }, ticks: p ? Math.ceil(p.horizon / p.periods_per_tick) : 1000, metric: { ...form.metric, kind: 'final', series: 'sovereign_count' } };
+   }
+   if (model === 'auctions') {
+     return { ...form, set: { auction: 'mixture' }, description: 'Formats from first price (1) to second price (2), using mixture payment. Terminal policy revenue after the fixed horizon; one tick executes periods_per_tick auctions.', x: { path: 'auction_alpha', values: '1:2:0.1' }, ticks: config ? Math.ceil((config as AuctionsConfig).horizon / (config as AuctionsConfig).periods_per_tick) : 1000, metric: { ...form.metric, kind: 'final', series: 'terminal_revenue' } };
+diff --git a/web/src/models.ts b/web/src/models.ts
+--- a/web/src/models.ts
++++ b/web/src/models.ts
+@@ -8,6 +8,8 @@
+   FirmsConfig,
+   FirmsInspection,
+   CollusionConfig,
++  PolarityConfig,
++  PolarityInspection,
+   AuctionsConfig,
+   AuctionsInspection,
+   CollusionInspection,
+@@ -58,7 +60,7 @@
+   TagsInspection,
+ } from './types';
+ 
+-export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion', 'auctions'];
++export const MODELS: ModelKind[] = ['sugarscape', 'schelling', 'ring', 'anasazi', 'civil', 'tags', 'spatial', 'culture', 'classes', 'ethno', 'opinions', 'structure', 'dpd', 'norms', 'agreement', 'image', 'farol', 'ants', 'thresholds', 'retirement', 'punishment', 'zi', 'bali', 'line', 'tipping', 'hoard', 'firms', 'collusion', 'auctions', 'polarity'];
+ 
+ /** The presets menu's group labels. */
+ export const MODEL_LABELS: Record<ModelKind, string> = {
+@@ -91,12 +93,13 @@
+   firms: 'The Emergence of Firms',
+   collusion: 'Algorithmic Collusion',
+   auctions: 'Q-learning Auctions',
++  polarity: 'Emergent Polarity',
+ };
+ 
+ /** A config without a `model` key (or with `"sugarscape"`) is a sugarscape config. */
+ export function modelOf(c: ModelConfig): ModelKind {
+   const tag = (c as { model?: unknown }).model;
+-  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion' || tag === 'auctions'
++  return tag === 'schelling' || tag === 'ring' || tag === 'anasazi' || tag === 'civil' || tag === 'spatial' || tag === 'tags' || tag === 'culture' || tag === 'classes' || tag === 'ethno' || tag === 'opinions' || tag === 'structure' || tag === 'dpd' || tag === 'norms' || tag === 'agreement' || tag === 'image' || tag === 'farol' || tag === 'ants' || tag === 'thresholds' || tag === 'retirement' || tag === 'punishment' || tag === 'zi' || tag === 'bali' || tag === 'line' || tag === 'tipping' || tag === 'hoard' || tag === 'firms' || tag === 'collusion' || tag === 'auctions' || tag === 'polarity'
+     ? tag
+     : 'sugarscape';
+ }
+@@ -266,6 +269,10 @@
+  * last generation); Infinity for a model that never finishes.
+  */
+ export function ticksLeft(c: ModelConfig, tick: number): number {
++  if (modelOf(c) === 'polarity') {
++    const p = c as PolarityConfig;
++    return Math.max(0, Math.ceil(p.horizon / p.periods_per_tick) - tick);
++  }
+   if ('model' in c && c.model === 'anasazi') return Math.max(0, c.end_year - c.start_year - tick);
+   if (modelOf(c) === 'tags' && (c as TagsConfig).end > 0) return Math.max(0, (c as TagsConfig).end - tick);
+   if (modelOf(c) === 'ethno' && (c as EthnoConfig).end > 0) return Math.max(0, (c as EthnoConfig).end - tick);
+@@ -324,7 +331,7 @@
+   if (model === 'opinions') return (c as OpinionsConfig).stop_when_stable;
+   if (model === 'agreement') return (c as AgreementConfig).stop_when_stable;
+   if (model === 'retirement') return (c as RetirementConfig).stop_at_norm;
+-  if (model === 'collusion') return true;
++  if (model === 'collusion' || model === 'polarity') return true;
+   if (model === 'sugarscape') return (c as Config).culture.rule === 'axelrod' && (c as Config).culture.stop_when_settled === true;
+   return model === 'civil' && (c as CivilConfig).variant === 'ethnic' && (c as CivilConfig).stop_at_extinction;
+ }
+@@ -666,6 +673,7 @@
+     ['effort', 'Effort'],
+     ['income', 'Income'],
+   ],
++  polarity: [['territory', 'Territory'], ['resources', 'Resources'], ['strategy', 'Latent strategy'], ['coalitions', 'Coalitions']],
+   auctions: [['bids', 'Bids · whole run'], ['late', 'Bids · final 20%'], ['values', 'Values']],
+   // Each firm's strategy map: price or how often each state was visited.
+   collusion: [
+@@ -705,5 +713,10 @@
+   firms: [],
+   // Each firm's strategy map: price or how often each state was visited.
+   collusion: [],
++  polarity: [],
+   auctions: [],
+ };
++
++export function isPolarityView(v: AnyInspection): v is PolarityInspection {
++  return 'model' in v && v.model === 'polarity';
++}
+diff --git a/web/src/polarity.ts b/web/src/polarity.ts
+new file mode 100644
+--- /dev/null
++++ b/web/src/polarity.ts
+@@ -0,0 +1,40 @@
++import type { PolarityConfig, PolarityInspection } from './types';
++const resource = (v: number | null): string => typeof v === 'number' && Number.isFinite(v) ? v.toFixed(3) : 'unavailable';
++interface FrontView { key: { a: number; b: number }; actions: boolean[]; previous: boolean[]; commitments: (number | null)[]; path: number[] | null }
++const actions = (v: boolean[]) => v.map(x => x ? 'D' : 'C').join('/');
++const fronts = (v: unknown): string => Array.isArray(v) && v.length ? (v as FrontView[]).map(f => `${f.key.a}–${f.key.b}: ${actions(f.actions)} · previous ${actions(f.previous)} · resources ${f.commitments.map(resource).join('/')} · path ${f.path?.join(' → ') ?? 'None'}`).join('; ') : 'None';
++const trust = (v: unknown): string => Array.isArray(v) && v.length ? (v as {neighbor: number; trust: number | null}[]).map(t => `${t.neighbor}: ${resource(t.trust)}`).join('; ') : 'None';
++const event = (v: unknown): string => {
++  if (v == null) return 'None';
++  const e = v as { id: number; period: number; kind: string; cells: number[]; front: number[] | null };
++  return `#${e.id} · period ${e.period} · ${e.kind}${e.cells.length ? ` · cells ${e.cells.join(', ')}` : ''}${e.front ? ` · front ${e.front.join('–')}` : ''}`;
++};
++/** Sovereignty and resources stay separate from defensive coalition membership. */
++export function polarityRows(view: PolarityInspection): [string, string][] {
++  const rows: [string, string][] = [
++    ['Government', `Cell ${view.cell.id} · capital ${view.capital} · latent ${view.cell.predator ? 'predator' : 'status quo'}`],
++    ['Resources', `Province ${resource(view.province_stock)} · corporate ${resource(view.corporate_stock)}`],
++    ['Territory', `${view.members.length} cells: ${view.members.join(', ')}`],
++    ['Sovereign neighbors', view.neighbors.join(', ') || 'None'],
++    ['Trust', trust(view.trust)], ['Prime threat', view.threat === null ? 'None' : String(view.threat)],
++    ['Defensive coalition', Array.isArray(view.coalition) ? view.coalition.join(', ') || 'None' : 'None'], ['Foreign fronts', fronts(view.foreign_fronts)],
++    ['Domestic fronts', fronts(view.domestic_fronts)], ['Last structural event', event(view.last_event)],
++  ];
++  if (view.periods !== undefined) rows.unshift(['Session', `${view.periods} of ${view.horizon ?? 'unavailable'} periods`]);
++  if (view.invalidity) rows.push(['Invalid reconstruction', view.invalidity]);
++  else if (view.finish_reason) rows.push(['Completion', view.finish_reason]);
++  if (view.events !== undefined) {
++    rows.push(['Event log', `${view.events.length} retained · cap ${view.event_log_limit ?? 'unavailable'} · ${view.events_dropped ?? 0} older events dropped`]);
++    for (const entry of view.events.slice(-10)) rows.push(['Recent event', event(entry)]);
++  }
++  return rows;
++}
++/** Charts retain display ticks and state the economic period batching for each world. */
++export function polarityChartCaption(title: string, configs: PolarityConfig[]): string {
++  return `${title} · ${configs.map((c, i) => `${configs.length > 1 ? `${i === 0 ? 'A' : 'B'}: ` : ''}${c.periods_per_tick} periods/tick`).join(' · ')}`;
++}
++
++export function polarityLegend(config: PolarityConfig, mode: import('./types').ColorMode, periods: number): string {
++  const meaning = mode === 'coalitions' ? 'Defensive coalitions do not transfer sovereignty' : mode === 'strategy' ? 'Latent predator/status-quo strategy is restored on independence' : mode === 'resources' ? 'Primitive cell stock; corporate control is shown in Inspect' : 'Colors identify sovereign ownership; black borders separate governments';
++  return `${periods} of ${config.horizon} periods · ${config.periods_per_tick} periods/tick · ${config.source_profile === 'chapter4' ? 'Cederman 1994 / chapter 4' : 'Cederman 1997 / chapter 5'} reconstruction · ${meaning} · White center: capital · orange/green corner: latent predator/status quo`;
++}
+diff --git a/web/src/types.ts b/web/src/types.ts
+--- a/web/src/types.ts
++++ b/web/src/types.ts
+@@ -247,7 +247,7 @@
+ }
+ 
+ /** The models the playground runs (milestones 9–13). */
+-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion' | 'auctions';
++export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion' | 'auctions' | 'polarity';
+ 
+ /** A fraction range (Schelling's preferences). */
+ export interface FRange { min: number; max: number }
+@@ -666,7 +666,7 @@
+   stop_at: number;
+ }
+ 
+-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig | AuctionsConfig;
++export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig | AuctionsConfig | PolarityConfig;
+ 
+ /**
+  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
+@@ -1462,7 +1462,7 @@
+   stable_at: number;
+ }
+ 
+-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats | AuctionsStats;
++export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats | AuctionsStats | PolarityStats;
+ 
+ export interface SiteView {
+   x: number;
+@@ -2202,7 +2202,7 @@
+   agent: null;
+ }
+ 
+-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection | AuctionsInspection;
++export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection | AuctionsInspection | PolarityInspection;
+ 
+ /**
+  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
+@@ -2212,6 +2212,9 @@
+  * `payoff`.
+  */
+ export type ColorMode =
++  | 'territory'
++  | 'resources'
++  | 'coalitions'
+   | 'bids'
+   | 'late'
+   | 'values'
+@@ -2338,3 +2341,36 @@
+   occupancy: number[]; late_occupancy: number[]; whole_count: number; late_count: number; learners: AuctionLearnerView[];
+   equilibria: number[][]; outcome: AuctionsOutcome | null; agent: null;
+ }
++
++/** Cederman 1994/1997 reconstruction; every control requires reset. */
++export interface PolarityConfig {
++  model: 'polarity'; variant: 'epm' | 'two_level' | 'overextension'; source_profile: 'chapter4' | 'chapter5';
++  width: number; height: number; topology: 'bounded' | 'torus'; predator_share: number; placement: 'exact_count' | 'bernoulli';
++  initial_mean: number; initial_sd: number; harvest_mean: number; harvest_sd: number; resource_distribution: 'normal' | 'bounded_uniform';
++  superiority: number; victory: number; damage_rate: number; asymmetric_damage: 'source' | 'on' | 'off'; allocation: 'equal' | 'pra';
++  action_memory: 'previous_action' | 'war_until_victory'; schlieffen_gate: 'own_current_defections' | 'previous_hostilities' | 'unresolved_war';
++  pra_alliance_support: 'front_commitments' | 'stocks';
++  combat_path: 'stored_episode' | 'redraw_each_period'; tie_break: 'lowest_id' | 'random'; path_collision: 'lowest_id' | 'random';
++  pra_active: 'either_defection' | 'mutual_defection'; victory_timing: 'before_damage' | 'after_damage' | 'after_harvest';
++  update: 'snapshot' | 'sequential'; locking: 'affected_cells' | 'affected_states'; capital_capture: 'collapse_only' | 'capture_and_fragment';
++  province_transfer: 'equal_share' | 'primitive_stock_only'; resource_policy: 'signed' | 'floor_zero' | 'reject_nonpositive';
++  alliances: boolean; trust_initial: number; threat_threshold: number; negative_trust_rate: number; positive_trust_rate: number;
++  threat_observation: 'neighbor_aggression' | 'dyadic_aggression'; obligation_timing: 'same_period' | 'next_period'; pra_attack_rule: 'diagram' | 'literal_prose';
++  tax_rate: number; tax_discount: number; tax_distance: 'manhattan' | 'territorial_path'; stochastic_threshold: number; stochastic_exponent: number;
++  stochastic_resolution: 'single_draw' | 'independent_draws'; horizon: number; stop_at_hegemony: boolean; periods_per_tick: number;
++  event_log: boolean; event_log_limit: number;
++}
++export interface PolarityStats {
++  tick: number; period: number; periods: number; last_tick_periods: number; finish_reason: string | null; invalidity: string | null;
++  sovereign_count: number; largest_territory: number; second_largest_territory: number; predator_capital_share: number;
++  total_stock: number; capital_stock: number; province_stock: number; nonpositive_stocks: number; destruction: number; signed_creation: number;
++  attacks: number; dd_encounters: number; conquests: number; capital_collapses: number; disconnections: number; revolts: number; coalitions: number; open_episodes: number;
++  harvest: number; taxes: number; transfers: number; clipping: number; stale_claims: number; locked_claims: number; double_successes: number; path_collisions: number;
++}
++export interface PolarityInspection {
++  model: 'polarity'; period?: number; periods?: number; horizon?: number; finish_reason?: string | null; invalidity?: string | null;
++  event_log_limit?: number; events_dropped?: number; events?: unknown[];
++  cell: { id: number; capital: number; predator: boolean; stock: number | null }; capital: number; province_stock: number | null; corporate_stock: number | null; members: number[]; neighbors: number[];
++  trust: unknown; threat: number | null; coalition: unknown; foreign_fronts: unknown; domestic_fronts: unknown; last_event: unknown;
++  agent: null;
++}
+diff --git a/web/src/ui/charts-panel.ts b/web/src/ui/charts-panel.ts
+--- a/web/src/ui/charts-panel.ts
++++ b/web/src/ui/charts-panel.ts
+@@ -1,3 +1,4 @@
++import { polarityChartCaption } from '../polarity';
+ import { auctionChartCaption, auctionChartLines } from '../auctions';
+ import uPlot from 'uplot';
+ import 'uplot/dist/uPlot.min.css';
+@@ -7,7 +8,7 @@
+ import { winterBands } from '../minds';
+ import { hasPatches } from '../patches';
+ import { CHART_POINTS, type ChartGroup, type HoardCharts, type HoardGenerationSeries, type Wants } from '../protocol';
+-import type { AuctionsConfig, Config, HoardConfig, ModelConfig, ModelKind } from '../types';
++import type { AuctionsConfig, PolarityConfig, Config, HoardConfig, ModelConfig, ModelKind } from '../types';
+ import { h } from './dom';
+ import { compactNumber } from './format';
+ import {
+@@ -663,7 +664,9 @@
+       const good = p.def.good;
+       const named = good === undefined ? undefined : configs.find((c) => good < c.goods.length)?.goods[good];
+       p.caption.textContent =
+-        p.def.model === 'auctions'
++        p.def.model === 'polarity'
++          ? polarityChartCaption(p.def.title, this.worlds.filter((w) => w.model === 'polarity').map((w) => w.config as PolarityConfig))
++          : p.def.model === 'auctions'
+           ? auctionChartCaption(p.def.title, this.worlds.filter((w) => w.model === 'auctions').map((w) => w.config as AuctionsConfig))
+           : p.def.pair && goods
+           ? `${p.def.title} · ${goods[0].name}/${goods[1].name}`
+diff --git a/web/src/ui/grid-view.ts b/web/src/ui/grid-view.ts
+--- a/web/src/ui/grid-view.ts
++++ b/web/src/ui/grid-view.ts
+@@ -1,8 +1,9 @@
++import { polarityLegend } from '../polarity';
+ import { auctionLegend } from '../auctions';
+ import type { Engine } from '../engine';
+ import { isSugarView } from '../models';
+ import { NETWORKS, type NetworkOverlay } from '../protocol';
+-import type { AgentView, AuctionsConfig, AuctionsStats, HoardConfig } from '../types';
++import type { AgentView, AuctionsConfig, AuctionsStats, PolarityConfig, PolarityStats, HoardConfig } from '../types';
+ import { linkSegments, SETTLEMENT_COLOR, settlementRadius, settlements, WATER_COLOR } from '../valley';
+ import { cacheSize, cacheSummary, compartmentName, isCheaterOnly, isLarder, labStatus } from '../minds';
+ import { h } from './dom';
+@@ -269,7 +270,8 @@
+     // Minds 7: the frame is a population panel, one column per agent.
+     const hoard = this.engine.model === 'hoard';
+     const auction = this.engine.model === 'auctions' ? auctionLegend(this.engine.config as AuctionsConfig, this.engine.colorMode, (this.engine.latest as AuctionsStats | null)?.periods ?? 0) : null;
+-    const status = auction ? auction.status : sugar && marks.lab ? labStatus(marks.lab) : hoard ? HOARD_STATUS : '';
++    const polarity = this.engine.model === 'polarity' ? polarityLegend(this.engine.config as PolarityConfig, this.engine.colorMode, (this.engine.latest as PolarityStats | null)?.periods ?? 0) : null;
++    const status = polarity ?? (auction ? auction.status : sugar && marks.lab ? labStatus(marks.lab) : hoard ? HOARD_STATUS : '');
+     const items = auction ? auction.items : sugar
+       ? [...colorLegend(this.engine.colorMode, this.engine.sugar), ...overlayLegend(marks, this.engine.sugar)]
+       : hoard
+diff --git a/web/src/ui/inspect-panel.ts b/web/src/ui/inspect-panel.ts
+--- a/web/src/ui/inspect-panel.ts
++++ b/web/src/ui/inspect-panel.ts
+@@ -1,3 +1,4 @@
++import { polarityRows } from '../polarity';
+ import { auctionRows } from '../auctions';
+ import { citizenRows, shownCitizen } from '../civil';
+ import { dpdRows } from '../dpd';
+@@ -5,7 +6,7 @@
+ import { ethnoRows } from '../ethno';
+ import { imageRows } from '../image-scoring';
+ import { hoardStatusText } from '../hoard';
+-import { hasCaches, isHoardView, isFirmsView, isCollusionView, isAuctionsView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
++import { hasCaches, isPolarityView, isHoardView, isFirmsView, isCollusionView, isAuctionsView, isAgreementView, isAntsView, isBaliView, isLineView, isTippingView, isPunishmentView, isZiView, isRetirementView, isThresholdsView, isFarolView, isCivilView, isClassesView, isCultureView, isDpdView, isEthnoView, isImageView, isNormsView, isOpinionsView, isRingView, isStructureView, isSpatialView, isSugarView, isTagsView, isValleyView } from '../models';
+ import { playerRows } from '../spatial';
+ import type {
+   AgentView,
+@@ -821,7 +822,9 @@
+             : `Agent #${shown.agentId} has left.`;
+       const note = gone ? [h('p', { class: 'error' }, left)] : [];
+       // First: an empty ethnocentrism or demographic PD site is shaped like an empty Schelling site.
+-      const rows = isHoardView(view)
++      const rows = isPolarityView(view)
++        ? polarityRows(view).map(([k, v]) => h('tr', {}, h('th', {}, k), h('td', {}, v)))
++        : isHoardView(view)
+         ? this.hoardRows(view)
+         : isEthnoView(view, this.engine.model)
+         ? this.ethnoSiteRows(view, gone)
+diff --git a/web/src/ui/series-data.ts b/web/src/ui/series-data.ts
+--- a/web/src/ui/series-data.ts
++++ b/web/src/ui/series-data.ts
+@@ -757,6 +757,13 @@
+   ],
+   // Minds 7 charts by generation and this season's bouts (HOARD_CHARTS), not over the whole run.
+   hoard: [],
++  polarity: [
++    { title: 'Polarity', lines: [{ key: 'sovereign_count', label: 'Sovereign states (tick end)', color: '--c1' }, { key: 'largest_territory', label: 'Largest territory', color: '--c2' }, { key: 'second_largest_territory', label: 'Second largest', color: '--c3' }] },
++    { title: 'Resources', lines: [{ key: 'total_stock', label: 'Total stock (tick end)', color: '--c1' }, { key: 'capital_stock', label: 'Capital stock', color: '--c2' }, { key: 'province_stock', label: 'Province stock', color: '--c3' }] },
++    { title: 'Combat costs', lines: [{ key: 'destruction', label: 'Positive destruction (tick sum)', color: '--red' }, { key: 'signed_creation', label: 'Signed damage creation (tick sum)', color: '--c4' }] },
++    { title: 'Structural events', lines: [{ key: 'conquests', label: 'Conquests (tick sum)', color: '--c1' }, { key: 'capital_collapses', label: 'Capital collapses', color: '--red' }, { key: 'disconnections', label: 'Disconnected provinces', color: '--c2' }, { key: 'revolts', label: 'Revolts', color: '--c3' }] },
++    { title: 'Economic clock', lines: [{ key: 'periods', label: 'Completed periods', color: '--c1' }, { key: 'last_tick_periods', label: 'Periods in last tick', color: '--c2' }] },
++  ],
+   auctions: [
+     { title: 'Bids', lines: [
+       { key: 'bid_1', label: 'Bidder 1 played (tick mean)', color: '--c1' },
+diff --git a/web/src/valley.ts b/web/src/valley.ts
+--- a/web/src/valley.ts
++++ b/web/src/valley.ts
+@@ -1,7 +1,7 @@
+ // The Long House Valley's page-side overlays and readout (milestone 10).
+ import { calendarYear, modelOf } from './models';
+ import type { ValleyOverlay, ValleyState } from './protocol';
+-import type { AnasaziConfig, ModelConfig, ValleyCellView } from './types';
++import type { AnasaziConfig, ModelConfig, ModelStats, PolarityStats, ValleyCellView } from './types';
+ import { wrappedSegments } from './ui/overlay';
+ 
+ /** The Display panel's checkboxes for the valley's overlays, in order. */
+@@ -47,13 +47,17 @@
+ }
+ 
+ /** A world for the toolbar's readout. */
+-export interface ReadoutWorld { config: ModelConfig; tick: number; population: number }
++export interface ReadoutWorld { config: ModelConfig; tick: number; population: number; latest?: ModelStats | null }
+ 
+ /**
+  * The toolbar's readout: `t = 42 · 400 agents`, or for the anasazi the calendar year and its
+  * households (`AD 1142 · 213 households`); in Compare both worlds' counts.
+  */
+ export function readoutText(a: ReadoutWorld, b: ReadoutWorld | null): string {
++  if (modelOf(a.config) === 'polarity') {
++    const periods = (w: ReadoutWorld) => (w.latest as PolarityStats | null)?.periods ?? 0;
++    return b ? `t = ${a.tick} · A ${periods(a)} periods, ${a.population} · B ${periods(b)} periods, ${b.population} sovereign governments` : `t = ${a.tick} · ${periods(a)} periods · ${a.population} sovereign governments`;
++  }
+   const year = calendarYear(a.config, a.tick);
+   const when = year === null ? `t = ${a.tick}` : `AD ${year}`;
+   const noun = year === null ? 'agents' : 'households';

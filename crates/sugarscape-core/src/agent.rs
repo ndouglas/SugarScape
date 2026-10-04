@@ -170,6 +170,7 @@ impl Tags {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Agent {
+    pub protection: Option<crate::minds::protection::state::ProtectionState>,
     pub id: AgentId,
     pub pos: Pos,
     pub vision: u32,
@@ -286,6 +287,16 @@ pub struct Agent {
     /// dealt by id when `theft.cheaters` > 0 (`Theft::founder_cheats`);
     /// children take the acting parent's. Never hashed, like `caching_rule`.
     pub cheater: bool,
+    /// Minds 8: a watcher remembers the burials it sees (`watching::see`).
+    /// Founders are dealt by id when `watching.watchers` > 0
+    /// (`Watching::founder_watches`); an agent born later doesn't watch.
+    /// Never hashed, like `cheater`.
+    pub watches: bool,
+    /// Minds 8: the caches this watcher has seen buried, keyed (site index,
+    /// owner), each with the amount seen and the tick last seen. Empty (and
+    /// unallocated) unless it watches with `watching.on`; forgotten by age
+    /// (`watching::sweep`). Never hashed.
+    pub seen: BTreeMap<(u32, AgentId), crate::minds::caching::watching::SeenCache>,
     /// Minds 6: running total of sugar this agent has pilfered from others'
     /// caches (the whole take, under either loot rule). For Inspect only:
     /// not hashed, never draws.
@@ -298,6 +309,8 @@ pub struct Agent {
     /// and where it delivers its loads; set by `World::insert_agent`, `None`
     /// in every other world. Never hashed, like `rate`.
     pub home: Option<Pos>,
+    /// Minds 9: fixed founder traits and episode-local spatial hoarding state.
+    pub spatial: Option<crate::minds::spatial_hoarding::state::SpatialState>,
     /// Minds 5, central-place foraging: good 0 gathered since the agent
     /// last left home (the load it's carrying back); 0 in other worlds.
     /// Never hashed.
@@ -367,9 +380,13 @@ impl Agent {
             lab_allocation: None,
             caching_rule: config.caching.rule,
             cheater: false,
+            watches: false,
+            seen: BTreeMap::new(),
             stolen_by_me: 0.0,
             stolen_from_me: 0.0,
             home: None,
+            spatial: None,
+            protection: None,
             load_trip: 0.0,
             delivery_rate: 0.0,
             last_load: 0.0,

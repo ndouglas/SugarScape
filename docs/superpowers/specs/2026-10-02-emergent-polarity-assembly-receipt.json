@@ -1,0 +1,147 @@
+{
+  "assembled_records": 28520,
+  "assembled_sessions_sha256": "5bec80a14527597742182da4aab1d037f30fddcf42d30669eca2240accb5d802",
+  "assembled_utc": "2026-10-03T05:28:42.545844+00:00",
+  "assembly_rule": "Preserve original full record order and literal raw bytes for all 28,200 non-sequential records; replace every sequential record with same registered arm/seed record from corrected full 16-arm \u00d7 20-seed rerun. No replacements or selected failed-seed reruns.",
+  "assembly_script_sha256": "8fc714b97b8792f4ccd42a3ad38137aec1fa76e501bb497c5aa5384cef0dbca8",
+  "assembly_script_source": "import datetime,hashlib,json\nfrom pathlib import Path\nout=Path('survey/out');original=out/'polarity-telemetry-sessions.jsonl';corrected=out/'polarity-sequential-sessions.jsonl';destination=out/'polarity-final-sessions.jsonl'\ndef sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()\ndef strict(s):return json.loads(s,parse_constant=lambda v:(_ for _ in ()).throw(ValueError(v)))\nm=strict(Path('survey/polarity/studies.json').read_text());resolution=strict((out/'polarity-sequential-resolved.json').read_text());prior=strict((out/'polarity-telemetry-resolved.json').read_text());assert resolution==prior\ncfg={a['id']:a['config'] for a in resolution['arms']};ids={a for a,c in cfg.items() if c['update']=='sequential'};assert len(ids)==16\nretained_update_values=sorted({c['update'] for aid,c in cfg.items() if aid not in ids});assert retained_update_values==['snapshot']\nexpected={(a['id'],a['first_seed']+i) for a in m['arms'] for i in range(a['sessions'])};assert len(expected)==28520\nexpected_sequential={k for k in expected if k[0] in ids};assert len(expected_sequential)==320\n\ndef load(path,required):\n rows={};lines=[]\n for line in path.open('rb'):\n  assert line.endswith(b'\\n');r=strict(line);key=(r['arm'],r['seed']);assert key not in rows and key in required;assert r['manifest_sha256']==resolution['manifest_sha256'] and r['config']==cfg[key[0]];rows[key]=(r,line);lines.append(key)\n assert rows.keys()==required;return rows,lines\nold,order=load(original,expected);new,_=load(corrected,expected_sequential)\nvalid={k:r for k,(r,line) in old.items() if k in expected_sequential and r['outcome']['valid']};assert len(valid)==83\nmismatches=[k for k,r in valid.items() if new[k][0]!=r];assert not mismatches\ndef digest_valid(mapping):\n digest=hashlib.sha256()\n for key in sorted(valid):digest.update(json.dumps(mapping[key][0],sort_keys=True,separators=(',',':'),allow_nan=False).encode()+b'\\n')\n return digest.hexdigest()\nassert digest_valid(old)==digest_valid(new)\noldpanics=[k for k in expected_sequential if old[k][0]['outcome']['finish_reason']=='panic'];assert len(oldpanics)==237\nnewpanics=[k for k,(r,line) in new.items() if r['outcome']['finish_reason']=='panic'];assert not newpanics\nassert not destination.exists()\nwith destination.open('wb') as f:\n for key in order:f.write(new[key][1] if key in expected_sequential else old[key][1])\nassembled,_=load(destination,expected)\nunchanged_nonsequential=sum(assembled[k][1]==line for k,(r,line) in old.items() if k not in expected_sequential);assert unchanged_nonsequential==28200\nresult={'schema_version':1,'assembled_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'command':'python3 survey/out/polarity-assemble-final.py','assembly_script_sha256':sha(__file__),'assembly_script_source':Path(__file__).read_text(),'assembly_rule':'Preserve original full record order and literal raw bytes for all 28,200 non-sequential records; replace every sequential record with same registered arm/seed record from corrected full 16-arm \u00d7 20-seed rerun. No replacements or selected failed-seed reruns.','manifest_sha256':sha('survey/polarity/studies.json'),'resolved_exact_file_sha256':sha(out/'polarity-sequential-resolved.json'),'original_full_sessions_sha256':sha(original),'corrected_sequential_sessions_sha256':sha(corrected),'assembled_sessions_sha256':sha(destination),'original_full_records':28520,'corrected_sequential_records':320,'assembled_records':28520,'unchanged_nonsequential_records':unchanged_nonsequential,'retained_nonsequential_arm_count':len(cfg)-len(ids),'retained_nonsequential_resolved_update_values':retained_update_values,'scope_proof':'Every one of the 28,200 retained raw records matches its unchanged authoritative resolved config; all 556 non-sequential arms resolve update=snapshot and cannot enter world.period dispatch to the sole changed sequential combat branch.','previously_valid_sequential_records':len(valid),'previously_valid_sequential_missing':0,'previously_valid_sequential_mismatches':mismatches,'previously_valid_sequential_mismatch_count':len(mismatches),'original_previously_valid_sequential_canonical_sha256':digest_valid(old),'corrected_previously_valid_sequential_canonical_sha256':digest_valid(new),'canonical_digest_method':'Sort original 83 previously valid keys by (arm, seed), include every complete outer field including stock_diagnostics, UTF-8 JSON sort_keys=True/separators comma-colon/allow_nan=False plus LF; SHA256.','original_sequential_panics':len(oldpanics),'corrected_sequential_panics':len(newpanics),'corrected_sequential_valid':sum(r['outcome']['valid'] for r,line in new.values()),'corrected_sequential_invalid':sum(not r['outcome']['valid'] for r,line in new.values()),'per_arm':[{'id':aid,'original_valid':sum(r['outcome']['valid'] for k,(r,line) in old.items() if k[0]==aid),'original_invalid':sum(not r['outcome']['valid'] for k,(r,line) in old.items() if k[0]==aid),'corrected_valid':sum(r['outcome']['valid'] for k,(r,line) in new.items() if k[0]==aid),'corrected_invalid':sum(not r['outcome']['valid'] for k,(r,line) in new.items() if k[0]==aid)} for aid in sorted(ids)]}\n(out/'polarity-final-assembly-receipt.json').write_text(json.dumps(result,indent=2,sort_keys=True,allow_nan=False)+'\\n');print(json.dumps({k:v for k,v in result.items() if k!='assembly_script_source'},indent=2))\n",
+  "canonical_digest_method": "Sort original 83 previously valid keys by (arm, seed), include every complete outer field including stock_diagnostics, UTF-8 JSON sort_keys=True/separators comma-colon/allow_nan=False plus LF; SHA256.",
+  "command": "python3 survey/out/polarity-assemble-final.py",
+  "corrected_previously_valid_sequential_canonical_sha256": "93553ff0dffa1b98e0f13406cc0543b8f93e57f4f0bc891fde00598f5b58e84a",
+  "corrected_sequential_invalid": 0,
+  "corrected_sequential_panics": 0,
+  "corrected_sequential_records": 320,
+  "corrected_sequential_sessions_sha256": "abbc9817afa2f7735df56b945928f3ae8d8a43e7d4c57327e26902579902f4d0",
+  "corrected_sequential_valid": 320,
+  "manifest_sha256": "ce2c794b2abc3dc62983801584fee8b1c79b78bbb36936f1333879cc7f3bffbb",
+  "original_full_records": 28520,
+  "original_full_sessions_sha256": "cbca333bfbad29d1220e5d0456da1698a7de27e0c9b5fb0da03e02ebace2f3cd",
+  "original_previously_valid_sequential_canonical_sha256": "93553ff0dffa1b98e0f13406cc0543b8f93e57f4f0bc891fde00598f5b58e84a",
+  "original_sequential_panics": 237,
+  "per_arm": [
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p000.r2.update.sequential",
+      "original_invalid": 0,
+      "original_valid": 20
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p000.r3.update.sequential",
+      "original_invalid": 0,
+      "original_valid": 20
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p005.r2.update.sequential",
+      "original_invalid": 15,
+      "original_valid": 5
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p005.r3.update.sequential",
+      "original_invalid": 5,
+      "original_valid": 15
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p010.r2.update.sequential",
+      "original_invalid": 20,
+      "original_valid": 0
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p010.r3.update.sequential",
+      "original_invalid": 9,
+      "original_valid": 11
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p020.r2.update.sequential",
+      "original_invalid": 20,
+      "original_valid": 0
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p020.r3.update.sequential",
+      "original_invalid": 16,
+      "original_valid": 4
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p040.r2.update.sequential",
+      "original_invalid": 18,
+      "original_valid": 2
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p040.r3.update.sequential",
+      "original_invalid": 18,
+      "original_valid": 2
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p060.r2.update.sequential",
+      "original_invalid": 19,
+      "original_valid": 1
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p060.r3.update.sequential",
+      "original_invalid": 18,
+      "original_valid": 2
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p080.r2.update.sequential",
+      "original_invalid": 20,
+      "original_valid": 0
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p080.r3.update.sequential",
+      "original_invalid": 20,
+      "original_valid": 0
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p100.r2.update.sequential",
+      "original_invalid": 19,
+      "original_valid": 1
+    },
+    {
+      "corrected_invalid": 0,
+      "corrected_valid": 20,
+      "id": "ambiguity.p100.r3.update.sequential",
+      "original_invalid": 20,
+      "original_valid": 0
+    }
+  ],
+  "previously_valid_sequential_mismatch_count": 0,
+  "previously_valid_sequential_mismatches": [],
+  "previously_valid_sequential_missing": 0,
+  "previously_valid_sequential_records": 83,
+  "resolved_exact_file_sha256": "dedbca5ab649a18ca258edaab8562a3288f58c711f750f7b9377f4c27aced766",
+  "retained_nonsequential_arm_count": 556,
+  "retained_nonsequential_resolved_update_values": [
+    "snapshot"
+  ],
+  "schema_version": 1,
+  "scope_proof": "Every one of the 28,200 retained raw records matches its unchanged authoritative resolved config; all 556 non-sequential arms resolve update=snapshot and cannot enter world.period dispatch to the sole changed sequential combat branch.",
+  "unchanged_nonsequential_records": 28200
+}

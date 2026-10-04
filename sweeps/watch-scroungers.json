@@ -1,0 +1,13 @@
+{
+  "name": "Minds 8: the watcher advantage against the share of watchers",
+  "description": "The watcher advantage at the end of the first winter (watcher_advantage: watchers alive ÷ watcher founders − non-watchers alive ÷ non-watcher founders, the dead counting as 0; window_mean, ticks 190–200) in watch-scroungers' world (theft-winter's winter, no stumbling on caches, every agent burying half its surplus where it stands, no cheaters) against the share of agents that watch (watching.watchers): 0.1, 0.2, …, 0.9, dealt by id. Producer–scrounger theory predicts the advantage falls as watchers grow common (negative frequency dependence). Seeds 1–20.",
+  "base": { "preset": "watch-scroungers" },
+  "x": {
+    "label": "Share of watchers",
+    "path": "watching.watchers",
+    "values": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  },
+  "seeds": { "from": 1, "count": 20 },
+  "ticks": 200,
+  "metric": { "kind": "window_mean", "series": "watcher_advantage", "from": 190, "to": 200 }
+}

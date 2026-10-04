@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 379] = [
+pub const TITLES: [(&str, &str); 430] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -300,6 +300,41 @@ pub const TITLES: [(&str, &str); 379] = [
     (
         "theft-arena-8",
         "Eight agents in a room: thieves take nine tenths of the caches, and hoarders end the winter with two fifths as much in hand",
+    ),
+    (
+        "watch-winter",
+        "Everyone watches others bury: with a 7-tick memory fresh caches go twice as fast as by stumbling, and fewer survive the winter than without watching",
+    ),
+    (
+        "watch-winter-stumble",
+        "Watching and stumbling: fresh caches go three times as fast as by stumbling alone, and a quarter fewer survive the winter",
+    ),
+    (
+        "watch-half",
+        "Half never cache and everyone watches: nearly two hoarders in three die, against one cheater in six",
+    ),
+    (
+        "watch-scroungers",
+        "Half watch others bury: with a 7-tick memory watchers come out slightly ahead, and the more watch, the worse everyone does",
+    ),
+    (
+        "watch-scroungers-only",
+        "Half never cache but watch and steal: they trail the hoarders with or without watching, a little less with it",
+    ),
+    (
+        "watch-scroungers-forgo",
+        "Scroungers who forgo foraging: with a 7-tick memory they trail the hoarders further the more of them there are, mostly from scrounging rather than from never caching",
+    ),
+    (
+        "watch-ak",
+        "Owners who dig early, and everyone watching with a 7-tick memory: thieves now take more than owners dig back, and fewer hoarders survive",
+    ),
+    ("spatial-scatter", "Spatial scatter: fixed L=0, with no guard"),
+    ("spatial-larder", "Spatial larder: fixed L=1, with no guard"),
+    ("spatial-larder-guard", "Spatial larder: fixed L=1, with guarding"),
+    (
+        "watch-arena",
+        "Four agents in a room, half watching: everyone survives, and the room ends the winter poorer",
     ),
     (
         "s71-board",
@@ -1481,6 +1516,78 @@ pub const TITLES: [(&str, &str); 379] = [
         "firms-2013",
         "Axtell's 2013 settings give Zipf's law, with brief giant firms",
     ),
+    ("auctions-first-price", "Two bidders learn how much to pay"),
+    ("auctions-second-price", "The winner pays the other bidder’s bid"),
+    ("auctions-feedback", "Bidders learn from every bid they could have made"),
+    ("auctions-unused-feedback", "Bidders receive information they do not use"),
+    ("auctions-local", "Bidders try the next bid up or down"),
+    ("auctions-biased", "Bidders start with a preference for low bids"),
+    ("auctions-downward", "Bidders are nudged toward lower bids"),
+    ("auctions-nonparticipation", "Bidders can choose to sit out"),
+    ("auctions-reserve", "The seller sets a minimum bid"),
+    ("auctions-three", "Three bidders learn together"),
+    ("auctions-three-patient", "Three bidders put more weight on future rewards"),
+    ("auctions-fringe", "A random bid joins the auction"),
+    ("auctions-persistent", "Bidders keep experimenting for a hundred million auctions"),
+    (
+        "collusion-calvano",
+        "Two pricing algorithms learn to keep prices high, but not as a best response",
+    ),
+    (
+        "collusion-code",
+        "The authors' own sessions, period for period",
+    ),
+    (
+        "collusion-no-memory",
+        "Algorithms that remember nothing price even higher",
+    ),
+    (
+        "collusion-myopic",
+        "Algorithms that ignore the future still price above Nash",
+    ),
+    (
+        "collusion-two-phase",
+        "Explore at random, then never: prices settle above Nash, but not where Lambin's theorem says",
+    ),
+    (
+        "collusion-synchronous",
+        "Learning from every price brings prices down",
+    ),
+    (
+        "collusion-explore-more",
+        "Ten times slower exploration decay barely lowers prices",
+    ),
+    (
+        "collusion-every-price",
+        "Prices are cut after a rival's price rise too",
+    ),
+    (
+        "collusion-invitation",
+        "An invitation to raise prices is met with a price cut",
+    ),
+    (
+        "collusion-below-nash",
+        "On a grid with no room above Nash, prices settle at the top",
+    ),
+    ("geosim-paper", "Technology and contested fronts shape the size of wars"),
+    ("geosim-no-technology", "Fixed logistical limits constrain conflict cascades"),
+    ("geosim-no-context", "States contemplate attacks without neighborhood alerts"),
+    ("geosim-smaller-shocks", "Slower logistical expansion changes conflict clusters"),
+    ("geosim-artifact-2017", "An archived GeoSim2 bundle exposes different source readings"),
+    ("polarity-original", "Predators contest a world of independent governments"),
+    ("polarity-defense", "A stronger defense changes the struggle for territory"),
+    ("polarity-alliances", "Threatened neighbors can form defensive coalitions"),
+    ("polarity-pra", "Governments direct resources toward hostile fronts"),
+    ("polarity-two-level", "Provincial revolts challenge expanding governments"),
+    ("polarity-overextension", "Uncertain victories can limit territorial expansion"),
+
+("democratic-peace-printed-2001","Printed probability shapes the selection of cooperating states"),
+("democratic-peace-prose-probability","Superior states attack more often under the prose reading"),
+("democratic-peace-tagging","Partner tags prevent attacks between democracies"),
+("democratic-peace-alliances","Shared threats organize local defensive coalitions"),
+("democratic-peace-collective-security","Democracies open fronts against pariah states"),
+("democratic-peace-nondemocratic","Predatory states compete without democratic partners"),
+
 ];
 
 /// The title of preset `id`, or "" if it has none.

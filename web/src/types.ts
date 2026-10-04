@@ -139,7 +139,12 @@ export interface Caching {
   mixed: boolean;
   /** Minds 6: good 0 lost for each cache buried (absent from older configs: 0); live. */
   bury_cost?: number;
+  /** Minds 8b: an owner digs below half its reserve or its whole reserve (absent from older configs: half); live. */
+  dig_below?: DigBelow;
 }
+
+/** Minds 8b: below what an owner with caches digs one up. */
+export type DigBelow = 'half' | 'reserve';
 
 /** Minds 6: what a thief does with the good it pilfers. */
 export type Loot = 'eat' | 'keep';
@@ -158,6 +163,33 @@ export interface Theft {
   cheaters: number;
 }
 
+/** Minds 8: when a seen cache is a place to go. */
+export type RaidWhen = 'always' | 'hungry';
+export type RaidIf = 'better' | 'always';
+export type SeenValue = 'amount' | 'room';
+export type Who = 'share' | 'hoarders' | 'cheaters';
+export type Scrounge = 'harvest' | 'forgo';
+
+/**
+ * Minds 8's watching (absent from older configs: off). `on`, `span`, `raid_when`, `raid_if`, `value` and
+ * `scrounge` apply live; `watchers` (the share of founders who watch, by id) and `who` are reset-only.
+ */
+export interface Watching {
+  on: boolean;
+  /** Ticks a seen cache stays remembered. */
+  span: number;
+  watchers: number;
+  raid_when: RaidWhen;
+  /** Minds 8b: raid on arrival only when the remembered amount is at least the site's value, or always. */
+  raid_if: RaidIf;
+  /** Minds 8b: a seen cache's value as a candidate: the amount remembered, or the room to carry it. */
+  value: SeenValue;
+  /** Minds 8b: which founders watch (reset-only); `watchers` is ignored unless `share`. */
+  who: Who;
+  /** Minds 8b: what a scrounger holding a fresh entry does: harvest as usual, or forgo harvesting. */
+  scrounge: Scrounge;
+}
+
 /** Minds 5: central-place foraging (absent from older configs: off); reset-only. */
 export interface Central {
   enabled: boolean;
@@ -169,6 +201,14 @@ export interface Lab {
   food_first: boolean;
 }
 
+export interface SpatialHoarding {
+  enabled: boolean; larder: number; defense: number; guard: boolean; defense_slope: number; find_larder: number;
+}
+export type SpatialHoardingInspect = {
+  home: { x: number; y: number };
+  larder_trait: number; defense_trait: number; larder: number;
+  delivery: number | null; guarding: boolean; observed_larders: number;
+};
 export interface Config {
   width: number;
   height: number;
@@ -209,12 +249,14 @@ export interface Config {
   caching?: Caching;
   central?: Central;
   theft?: Theft;
+  watching?: Watching;
+  spatial_hoarding?: SpatialHoarding;
   lab?: Lab | null;
   schedule: ScheduledChange[];
 }
 
 /** The models the playground runs (milestones 9–13). */
-export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms';
+export type ModelKind = 'sugarscape' | 'schelling' | 'ring' | 'anasazi' | 'civil' | 'spatial' | 'tags' | 'culture' | 'classes' | 'ethno' | 'opinions' | 'structure' | 'dpd' | 'norms' | 'agreement' | 'image' | 'farol' | 'ants' | 'thresholds' | 'retirement' | 'punishment' | 'zi' | 'bali' | 'line' | 'tipping' | 'hoard' | 'firms' | 'collusion' | 'auctions' | 'polarity' | 'geosim' | 'democratic_peace';
 
 /** A fraction range (Schelling's preferences). */
 export interface FRange { min: number; max: number }
@@ -633,7 +675,7 @@ export interface AgreementConfig {
   stop_at: number;
 }
 
-export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig;
+export type ModelConfig = Config | SchellingConfig | RingConfig | AnasaziConfig | CivilConfig | TagsConfig | SpatialConfig | CultureConfig | ClassesConfig | EthnoConfig | OpinionsConfig | StructureConfig | DpdConfig | NormsConfig | AgreementConfig | ImageConfig | FarolConfig | AntsConfig | ThresholdsConfig | RetirementConfig | PunishmentConfig | ZiConfig | BaliConfig | LineConfig | TippingConfig | HoardConfig | FirmsConfig | CollusionConfig | AuctionsConfig | PolarityConfig | GeosimConfig | DemocraticPeaceConfig;
 
 /**
  * Arthur's El Farol bar and Challet and Zhang's minority game (milestone 23), with Challet, Marsili
@@ -1178,6 +1220,8 @@ export interface Snapshot {
   goods: { mean_holding: number; mean_metabolism: number; traded: number }[];
   pollution: number[];
   groups: number[];
+  /** Enabled spatial episode series; undefined ratios serialize as null. */
+  spatial_hoarding?: Record<string, number | null>;
   /** Under Axelrod's culture rule (milestone 14). */
   axelrod?: { distinct_cultures: number; settled: boolean };
   /** Minds 1's patch counts, on peaks maps with two or more peaks. */
@@ -1429,7 +1473,7 @@ export interface AgreementStats {
   stable_at: number;
 }
 
-export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats;
+export type ModelStats = Snapshot | SchellingStats | RingStats | AnasaziStats | CivilStats | TagsStats | SpatialStats | CultureStats | ClassesStats | EthnoStats | OpinionsStats | StructureStats | DpdStats | NormsStats | AgreementStats | ImageStats | FarolStats | AntsStats | ThresholdsStats | RetirementStats | PunishmentStats | ZiStats | BaliStats | HoardStats | FirmsStats | CollusionStats | AuctionsStats | PolarityStats | GeosimStats | DemocraticPeaceStats;
 
 export interface SiteView {
   x: number;
@@ -1443,7 +1487,7 @@ export interface SiteView {
   caches?: SiteCacheView[];
 }
 /** Minds 5–6: a cache at a site: its owner, what it holds, and whether its owner is a cheater. */
-export interface SiteCacheView { owner: number; amount: number; cheater_owner: boolean }
+export interface SiteCacheView { owner: number; amount: number; cheater_owner: boolean; kind?: 'scatter' | 'larder' }
 
 /** Bits of each site's flags in `cache_sites`: a hoarder's cache, a cheater's, a larder (the core's `CACHE_*`). */
 export const CACHE_HOARDER = 1;
@@ -1477,7 +1521,7 @@ export interface MindsView {
   /** Whether the tick just computed (tick − 1) was a winter tick; null unless `seasons.mode` is global. */
   winter: boolean | null;
   /** Central worlds: every agent's home and what its larder holds. */
-  homes: { id: number; x: number; y: number; larder: number }[];
+  homes: { id: number; x: number; y: number; larder: number; guarding?: boolean }[];
   lab: LabView | null;
 }
 export interface LinkView { id: number; alive: boolean }
@@ -1534,6 +1578,19 @@ export interface AgentView {
   central?: CentralView | null;
   /** Minds 6: theft state, while theft is on (`theft.find` or `theft.cheaters` above 0). */
   theft?: TheftView | null;
+  /** Minds 8: watching state, while `watching.on`. */
+  watching?: WatchingView | null;
+  spatial_hoarding?: SpatialHoardingInspect;
+}
+/**
+ * Minds 8: whether the agent watches, whether it is a scrounger (watches and never buries), and the
+ * caches it remembers seeing buried. Only while `watching.on`.
+ */
+export interface WatchingView {
+  watches: boolean;
+  scrounger: boolean;
+  /** Each `site` is an index (`y * width + x`). */
+  seen: { site: number; owner: number; amount: number; age: number }[];
 }
 /** Minds 6: whether the agent cheats, what it has stolen and lost to thieves, and loot in its stomach. */
 export interface TheftView { cheater: boolean; stolen_by_me: number; stolen_from_me: number; fed: number }
@@ -1691,6 +1748,102 @@ export interface FirmsInspection {
   firm: FirmsFirmView | null;
   member: FirmsMemberView | null;
   /** Always null: cells are read where they are. */
+  agent: null;
+}
+/**
+ * Calvano, Calzolari, Denicolò & Pastorello's algorithmic collusion: n firms pricing with Q-learning on
+ * a grid of prices until their strategies settle; the critics' tests as switches. One tick is a period.
+ */
+export interface CollusionConfig {
+  model: 'collusion';
+  firms: number;
+  prices: number;
+  grid: 'calvano' | 'symmetric' | 'below_nash';
+  xi: number;
+  below_top: number;
+  cost: number;
+  /** Firm 2's cost, or null for the same as the others. */
+  cost2: number | null;
+  quality: number;
+  outside: number;
+  mu: number;
+  memory: number;
+  alpha: number;
+  beta: number;
+  delta: number;
+  exploration: 'decaying' | 'constant' | 'boltzmann' | 'two_phase';
+  epsilon: number;
+  temperature: number;
+  cooling: number;
+  explore_for: number;
+  update: 'asynchronous' | 'synchronous';
+  q_init: 'calvano' | 'zero' | 'random';
+  q_low: number;
+  q_high: number;
+  ties: 'lowest' | 'random';
+  rng: 'ours' | 'calvano';
+  cap: number;
+  window: number;
+  equilibrium_check: 'best_response' | 'one_shot';
+  impulse: 'best_response_down' | 'every_price' | 'invitation' | 'up';
+  best_response_to: 'path' | 'code';
+  invitation_hold: number;
+  /** Periods a tick runs (charts count ticks). */
+  periods_per_tick: number;
+}
+
+/** A charted period; the session's results are null until it has finished. */
+export interface CollusionStats {
+  tick: number;
+  price_1: number | null;
+  price_2: number | null;
+  profit_gain: number | null;
+  greedy_price: number | null;
+  epsilon: number | null;
+  explored: number | null;
+  greedy_changes: number;
+  stable: number;
+  converged: number | null;
+  cycle_length: number | null;
+  cycle_gain: number | null;
+  window_gain: number | null;
+  discounted_gain: number | null;
+  equilibrium_on_path: number | null;
+  punishment_like: number | null;
+  rp_complete: number | null;
+  periods: number | null;
+}
+
+export interface CollusionStateView { state: number; prices: number[][]; q: number[][]; greedy: number[]; visits: number }
+export interface CollusionOutcome {
+  converged: boolean;
+  periods: number;
+  cycle: { states: number[]; actions: number[][]; profits: number[]; prices: number[] };
+  gains: number[];
+  gain: number;
+  window_gain: number;
+  discounted_gain: number;
+  equilibrium: { on_path: boolean; off_path_share: number; all_share: number };
+  punishment_like: number | null;
+  rp_complete: boolean;
+  stale_greedy: number;
+  fumbling: number | null;
+  touched: number;
+}
+
+/** A cell of the collusion frame: a strategy map's state, the price panel, or the response panel. */
+export interface CollusionInspection {
+  x: number;
+  y: number;
+  panel: 'strategy' | 'prices' | 'response' | null;
+  firm: number | null;
+  state: CollusionStateView | null;
+  tick: number;
+  period: number;
+  nash: number[];
+  monopoly: number[];
+  outcome: CollusionOutcome | null;
+  /** Always null: there are no agents to follow, only firms. */
   agent: null;
 }
 /** A point of his plane: Red and Blue inside, and whether the most tolerant of each would all be content there. */
@@ -2061,7 +2214,7 @@ export interface AgreementInspection {
   agent: null;
 }
 
-export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection;
+export type AnyInspection = Inspection | SchellingInspection | RingInspection | AnasaziInspection | CivilInspection | TagsInspection | SpatialInspection | CultureInspection | ClassesInspection | EthnoInspection | OpinionsInspection | StructureInspection | DpdInspection | NormsInspection | AgreementInspection | ImageInspection | FarolInspection | AntsInspection | ThresholdsInspection | RetirementInspection | PunishmentInspection | ZiInspection | BaliInspection | LineInspection | TippingInspection | HoardInspection | FirmsInspection | CollusionInspection | AuctionsInspection | PolarityInspection | GeosimInspection | DemocraticPeaceInspection;
 
 /**
  * A sugarscape color mode, or (Schelling) `color`, `satisfaction`, `preference`, or (the anasazi)
@@ -2071,6 +2224,20 @@ export type AnyInspection = Inspection | SchellingInspection | RingInspection | 
  * `payoff`.
  */
 export type ColorMode =
+  | 'governing_regime'
+  | 'latent_regime'
+  | 'alliances'
+  | 'pariahs'
+  | 'capacity'
+  | 'technology'
+  | 'alert'
+  | 'wars'
+  | 'territory'
+  | 'resources'
+  | 'coalitions'
+  | 'bids'
+  | 'late'
+  | 'values'
   | 'tribe'
   | 'wealth'
   | 'sex'
@@ -2107,6 +2274,7 @@ export type ColorMode =
   | 'provocability'
   | 'strategy'
   | 'caching_rule'
+  | 'watching'
   | 'surrounded'
   | 'agents'
   | 'uncertainty'
@@ -2138,7 +2306,9 @@ export type ColorMode =
   | 'founder'
   | 'theta'
   | 'effort'
-  | 'income';
+  | 'income'
+  | 'price'
+  | 'visits';
 export type Layer = `resource:${number}` | `capacity:${number}` | `pollution:${number}` | `slice:${number}`;
 
 /** WASM calls throw a JSON string of FieldError[]; anything else becomes one error. */
@@ -2151,4 +2321,228 @@ export function parseErrors(e: unknown, field = 'config'): FieldError[] {
     // not JSON
   }
   return [{ field, message: text }];
+}
+
+/** Fixed-horizon, memoryless bidding (Banchio & Skrzypacz 2022). */
+export interface AuctionsConfig {
+  model: 'auctions'; bidders: number; bids: number;
+  auction: 'first_price' | 'second_price' | 'mixture'; auction_alpha: number;
+  reserve: number; reserve_payment: 'floor' | 'eligibility_only'; out_bids: number; fringe: 'none' | 'uniform';
+  learning_rate: number; discount: number; feedback: 'outcome' | 'rival_bids'; update: 'chosen' | 'all';
+  auction_ties: 'sampled' | 'expected'; hindsight_ties: 'expected' | 'realized';
+  greedy_ties: 'lowest' | 'highest' | 'random' | 'incumbent'; q_tolerance: number;
+  q_init: 'optimistic' | 'constant' | 'biased'; optimism: 'discounted' | 'stage'; q_scale: number; q_level: number;
+  bias_bid: number; bias_q: number; bias_rest: number; exploration: 'decaying' | 'constant'; epsilon: number; beta: number;
+  exploration_set: 'all' | 'other' | 'neighbors'; neighbor_boundary: 'available' | 'clamp';
+  period_origin: 'zero' | 'one'; convergence_phase: 'post_update' | 'pre_update';
+  downward_trigger: 'off' | 'stable' | 'period'; downward_at: number; downward_clock: 'activation' | 'global';
+  downward_chi: number; downward_beta: number; downward_gap: number; horizon: number; window: number; periods_per_tick: number;
+}
+export interface AuctionsStats {
+  tick: number; bid_1: number | null; bid_2: number | null; bid_3: number | null;
+  greedy_1: number | null; greedy_2: number | null; greedy_3: number | null;
+  revenue: number | null; profit_1: number | null; profit_2: number | null; profit_3: number | null;
+  epsilon: number | null; explored: number | null; downward: number | null; greedy_changes: number; stable: number;
+  converged: number | null; terminal_revenue: number | null; terminal_deviation_gain: number | null; top_profile: number | null; periods: number | null;
+}
+export interface AuctionLearnerView { q: number[]; greedy: number; chosen: number[]; updated: number[] }
+export interface AuctionsOutcome {
+  periods: number; converged: boolean; stable: number; greedy: number[]; greedy_actions: number[];
+  terminal_revenue: number; terminal_profits: number[]; deviation_gain: number[];
+  top_profile: boolean; below_top: boolean; low_non_nash: boolean;
+  whole_revenue: number; late_revenue: number; whole_profits: number[]; late_profits: number[];
+  occupancy: number[]; late_occupancy: number[]; grid: number[]; whole_count: number; late_count: number; activation: number | null;
+}
+export interface AuctionsInspection {
+  x: number; y: number; panel: 'bids' | 'values'; bidder: number | null; action: number | null;
+  count: number | null; frequency: number | null; q: number | null; chosen: number | null; updated: number | null;
+  hypothetical_reward: number | null; tick: number; period: number; horizon: number; grid: number[];
+  greedy: number[]; played: number[]; shares: number[]; fringe_bid: number | null; fringe_share: number | null; payment: number; epsilon: number; stable: number;
+  occupancy: number[]; late_occupancy: number[]; whole_count: number; late_count: number; learners: AuctionLearnerView[];
+  equilibria: number[][]; outcome: AuctionsOutcome | null; agent: null;
+}
+
+/** Cederman 1994/1997 reconstruction; every control requires reset. */
+export interface PolarityConfig {
+  model: 'polarity'; variant: 'epm' | 'two_level' | 'overextension'; source_profile: 'chapter4' | 'chapter5';
+  width: number; height: number; topology: 'bounded' | 'torus'; predator_share: number; placement: 'exact_count' | 'bernoulli';
+  initial_mean: number; initial_sd: number; harvest_mean: number; harvest_sd: number; resource_distribution: 'normal' | 'bounded_uniform';
+  superiority: number; victory: number; damage_rate: number; asymmetric_damage: 'source' | 'on' | 'off'; allocation: 'equal' | 'pra';
+  action_memory: 'previous_action' | 'war_until_victory'; schlieffen_gate: 'own_current_defections' | 'previous_hostilities' | 'unresolved_war';
+  pra_alliance_support: 'front_commitments' | 'stocks';
+  combat_path: 'stored_episode' | 'redraw_each_period'; tie_break: 'lowest_id' | 'random'; path_collision: 'lowest_id' | 'random';
+  pra_active: 'either_defection' | 'mutual_defection'; victory_timing: 'before_damage' | 'after_damage' | 'after_harvest';
+  update: 'snapshot' | 'sequential'; locking: 'affected_cells' | 'affected_states'; capital_capture: 'collapse_only' | 'capture_and_fragment';
+  province_transfer: 'equal_share' | 'primitive_stock_only'; resource_policy: 'signed' | 'floor_zero' | 'reject_nonpositive';
+  alliances: boolean; trust_initial: number; threat_threshold: number; negative_trust_rate: number; positive_trust_rate: number;
+  threat_observation: 'neighbor_aggression' | 'dyadic_aggression'; obligation_timing: 'same_period' | 'next_period'; pra_attack_rule: 'diagram' | 'literal_prose';
+  tax_rate: number; tax_discount: number; tax_distance: 'manhattan' | 'territorial_path'; stochastic_threshold: number; stochastic_exponent: number;
+  stochastic_resolution: 'single_draw' | 'independent_draws'; horizon: number; stop_at_hegemony: boolean; periods_per_tick: number;
+  event_log: boolean; event_log_limit: number;
+}
+export interface PolarityStats {
+  tick: number; period: number; periods: number; last_tick_periods: number; finish_reason: string | null; invalidity: string | null;
+  sovereign_count: number; largest_territory: number; second_largest_territory: number; predator_capital_share: number;
+  total_stock: number | null; capital_stock: number | null; province_stock: number | null; nonpositive_stocks: number; destruction: number | null; signed_creation: number | null;
+  attacks: number; dd_encounters: number; conquests: number; capital_collapses: number; disconnections: number; revolts: number; coalitions: number; open_episodes: number;
+  harvest: number | null; taxes: number | null; transfers: number | null; clipping: number | null; stale_claims: number; locked_claims: number; double_successes: number; path_collisions: number;
+}
+export interface PolarityCoalition {
+  threat: number;
+  members: number[];
+}
+export interface PolarityInspection {
+  model: 'polarity'; period?: number; periods?: number; horizon?: number; finish_reason?: string | null; invalidity?: string | null;
+  event_log_limit?: number; events_dropped?: number; events?: unknown[];
+  cell: { id: number; capital: number; predator: boolean; stock: number | null }; capital: number; province_stock: number | null; corporate_stock: number | null; members: number[]; neighbors: number[];
+  trust: unknown; threat: number | null; coalition: PolarityCoalition | null; foreign_fronts: unknown; domestic_fronts: unknown; last_event: unknown;
+  agent: null;
+}
+
+/** Resolved GeoSim readings; alternative values remain serialized even when inactive. */
+export interface GeosimConfig {
+  model: 'geosim'; width: number; height: number; initial_states: number;
+  initialization_periods: number; observation_periods: number; periods_per_tick: number;
+  resource_adjustment: number; mobile_share: number; campaign_drop_probability: number;
+  attack_probability: number; deactivation_probability: number; superiority_threshold: number;
+  victory_threshold: number; superiority_exponent: number; victory_exponent: number;
+  damage_fraction: number; distance_offset: number; distance_threshold: number; distance_exponent: number;
+  shock_probability: number; shock_shift: number; war_shadow: number; context_activation: boolean;
+  event_log: boolean; event_log_limit: number;
+  topology: 'bounded' | 'torus'; founder_growth: 'ordered_round_robin' | 'shuffled_round_robin';
+  initial_capacity: 'extracted_capacity' | 'artifact_random_100_1'; distance_metric: 'euclidean' | 'manhattan';
+  distance_formula: 'decreasing' | 'printed_increasing'; enemy_total: 'active_fronts' | 'all_fronts';
+  initiation_guard: 'literal_precedence' | 'global_no_action'; campaign_drop_timing: 'each_decision' | 'after_battle';
+  path_sampling: 'target_first' | 'attacker_first'; attack_projection: 'respective_states' | 'initiator_curve';
+  damage_basis: 'opponent_projected' | 'own_commitment'; damage_feedback: 'subtract_losses' | 'add_losses';
+  damage_incidence: 'attacked_party' | 'acting_party'; severity_damage: 'all_damaged_fronts' | 'mutual_only';
+  victory_draws: 'independent_defender_priority' | 'exclusive'; defender_threshold: 'reciprocal' | 'same_threshold';
+  capital_capture: 'capture_and_fragment' | 'collapse_only'; locking: 'affected_cells' | 'affected_states';
+  technology_inheritance: 'reset_on_reemergence' | 'retain_cell_threshold';
+  cluster_linkage: 'conflict_edges' | 'adjacent_active_states'; retired_participants: 'retain_shadow' | 'drop_immediately';
+  count_boundary: 'after_initialization' | 'at_initialization'; severity_export: 'raw_damage' | 'java_int100';
+  completed_export: 'all_completed' | 'one_per_period'; numerical_policy: 'reject_nonpositive' | 'floor_zero';
+}
+export interface GeosimStateId { capital_cell: number; sovereignty_generation: number }
+export interface GeosimCell { id: number; owner: GeosimStateId; last_threshold: number | null; next_generation: number }
+export interface GeosimState {
+  id: GeosimStateId; capacity: number | null; threshold: number | null; alert: boolean;
+  campaign: GeosimStateId | null; previous_damage: number | null; newly_independent: boolean;
+  extracted_yield: number | null; recurrence_residual: number | null;
+}
+export interface GeosimFront {
+  states: [GeosimStateId, GeosimStateId]; previous: [boolean,boolean]; actions: [boolean,boolean];
+  old_commitments: [number | null,number | null]; commitments: [number | null,number | null];
+  path: [number,number] | null; initiator: number | null; last_damage: [number | null,number | null];
+  last_victory_probabilities: [number | null,number | null];
+}
+export interface GeosimWar {
+  id: number; parents: number[]; start_period: number; end_period: number | null;
+  last_active_period: number; active_periods: number; elapsed_periods: number;
+  raw_severity: number | null; exported_severity: number | null;
+  participants: {state: GeosimStateId; last_fighting_period: number}[];
+  end_cause: string | null; java_saturated: boolean; java_subunit_zero: boolean; fighting_periods: number[];
+}
+export interface GeosimEvent { id: number; period: number; kind: string; states: GeosimStateId[]; cells: number[] }
+export interface GeosimResourceUpdate {
+  state: GeosimStateId; period: number; old_capacity: number | null; extracted_yield: number | null;
+  applied_damage: number | null; target_capacity: number | null; new_capacity: number | null;
+  clipping: number | null; residual: number | null; reset: boolean;
+}
+export interface GeosimLedger {
+  attacks: number; fighting_front_periods: number; mutual_front_periods: number; conquests: number;
+  collapses: number; disconnections: number; stale_claims: number; locked_claims: number; double_successes: number;
+  path_collisions: number; shocks: number; damage: number | null; measured_damage: number | null;
+  capacity_increase: number | null; capacity_decrease: number | null; clipping: number | null;
+  retirement_capacity: number | null; reemergence_capacity: number | null; recurrence_residual: number | null;
+}
+export interface GeosimOutcome {
+  config: Omit<GeosimConfig, 'model'>; seed: number; rng_mode: string; periods: number; attempted_period: number;
+  counting_start: number; valid: boolean; state_available: boolean; finish_reason: string; invalid_reason: string | null;
+  completed_wars: GeosimWar[]; censored_wars: GeosimWar[]; legacy_visible_wars: GeosimWar[];
+  exporter_backlog: GeosimWar[]; merges: {period: number; survivor: number; absorbed: number}[];
+  retired_states: GeosimStateId[]; sovereign_count: number; states: GeosimState[]; cells: GeosimCell[];
+  ledger: GeosimLedger; fronts: GeosimFront[]; resource_updates: GeosimResourceUpdate[];
+  partial_period_fights: [GeosimStateId, GeosimStateId, number | null][];
+}
+export interface GeosimStats {
+  tick: number; period: number; periods: number; attempted_period: number; last_tick_periods: number;
+  sovereign_count: number; total_capacity: number | null; largest_territory: number; alerted_states: number;
+  mean_threshold: number | null; completed_wars: number; active_wars: number; collector_backlog: number;
+  damage: number | null; conquests: number; shocks: number; finish_reason: string | null; invalidity: string | null;
+}
+export interface GeosimInspection {
+  model: 'geosim'; cell: GeosimCell; state: GeosimState; members: number[]; distance: number | null;
+  projection: number | null; resource_recurrence: GeosimResourceUpdate | null; fronts: GeosimFront[];
+  wars: GeosimWar[]; period: number; periods: number; attempted_period: number; counting_start: number;
+  finish_reason: string | null; invalidity: string | null; outcome: GeosimOutcome | null;
+  last_structural_event: GeosimEvent | null; events: GeosimEvent[]; events_dropped: number; agent: null;
+}
+
+/** Cederman 2001 democratic peace reconstruction; source periods are distinct from display ticks. */
+export interface DemocraticPeaceConfig {
+  model: 'democratic_peace'; width: number; height: number;
+  initial_democratic_share: number; initial_resourced_share: number; mobile_share: number;
+  superiority_threshold: number; superiority_exponent: number; victory_threshold: number; victory_exponent: number;
+  stalemate_probability: number; tax_rate: number; distance_gradient: number; min_threat: number;
+  horizon_periods: number; periods_per_tick: number; event_recording: boolean; event_limit: number;
+  mechanism: 'tagging' | 'alliances' | 'collective_security';
+  probability_direction: 'printed_decreasing' | 'prose_increasing';
+  zero_ratio: 'equal_zero_neutral' | 'reject_zero_denominator';
+  assignment: 'independent_bernoulli' | 'rounded_quota';
+  distance_metric: 'euclidean' | 'manhattan' | 'territorial_path';
+  enemy_total: 'active_fronts' | 'all_fronts';
+  inactive_commitment: 'per_front_opponent' | 'first_inactive_opponent';
+  latent_regime: 'persistent_cell_tags' | 'overwrite_on_conquest';
+  capital_capture: 'collapse_only' | 'capture_and_fragment';
+  claim_locking: 'affected_cells' | 'affected_states';
+  opposing_victories: 'independent_claims' | 'single_draw';
+  alliance_maintenance: 'rebuild_each_period' | 'persist_while_threatened';
+  threat_ties: 'lowest_state_id' | 'random_tie';
+  obligation_observation: 'prior_actions' | 'current_plans_once';
+  security_scope: 'all_democracies' | 'same_alliance';
+  clustering_exposure: 'unique_state_neighbors' | 'border_edges';
+  clustering_weights: 'territory_weighted' | 'equal_states';
+}
+export interface DemocraticPeaceStats {
+  tick: number; period: number; periods: number; completed_periods: number; attempted_period: number; last_tick_periods: number;
+  finish_reason: string | null; invalidity: string | null; invalid_phase: string | null;
+  democratic_share: number; clustering_ratio: number | null; clustering_reason: string | null; sovereign_count: number; democratic_states: number;
+  predatory_states: number; conflict_fronts: number; alliance_count: number; pariah_count: number;
+  metrics: DemocraticPeaceMetrics;
+}
+export interface DemocraticPeaceStateId { capital_cell: number; sovereignty_generation: number }
+export type DemocraticPeaceRegime = 'democratic' | 'predatory';
+export interface DemocraticPeaceCell { id: number; owner: DemocraticPeaceStateId; initial_regime: DemocraticPeaceRegime; latent_regime: DemocraticPeaceRegime; next_generation: number }
+export interface DemocraticPeaceState { id: DemocraticPeaceStateId; regime: DemocraticPeaceRegime; resources: number; members: number[] }
+export interface DemocraticPeaceRatio { numerator: number; denominator: number; tag: string; value: number | null }
+export interface DemocraticPeaceAllocation { fixed: number; mobile_pool: number; eligible_fronts: number; old_opposing: number; enemy_total: number; inactive_term: number; active: boolean }
+export interface DemocraticPeaceFront {
+  states: [DemocraticPeaceStateId, DemocraticPeaceStateId]; previous: [boolean, boolean]; actions: [boolean, boolean];
+  old_commitments: [number, number]; commitments: [number, number]; allocations: [DemocraticPeaceAllocation, DemocraticPeaceAllocation];
+  initiations: [boolean, boolean]; previous_initiations: [boolean, boolean]; obligations: [string[], string[]];
+  path: [number, number] | null; path_proposer: DemocraticPeaceStateId | null;
+  attack_probabilities: [number | null, number | null]; attack_ratios: [DemocraticPeaceRatio | null, DemocraticPeaceRatio | null];
+  victory_probabilities: [number | null, number | null]; victory_ratios: [DemocraticPeaceRatio | null, DemocraticPeaceRatio | null]; claims: [boolean, boolean];
+}
+export interface DemocraticPeaceAlliance { threat_id: DemocraticPeaceStateId; creation_period: number; serial: number; members: DemocraticPeaceStateId[]; pooled_resources: number }
+export interface DemocraticPeaceCounters { initiated_fronts: number; mutual_d_front_periods: number; completed_victory_battles: number; completed_stalemate_battles: number; opposing_claims: number; successful_claims: number; stale_claims: number; locked_claims: number; retired_states: number; released_states: number }
+export interface DemocraticPeaceMetrics {
+  democratic_cells: number; total_cells: number; democratic_share: number; sovereign_count: number; democratic_states: number; predatory_states: number;
+  democratic_mean_size: number | null; predatory_mean_size: number | null; democratic_max_size: number | null; predatory_max_size: number | null;
+  democratic_size_reason: string | null; predatory_size_reason: string | null; democratic_exposure: number | null; clustering_ratio: number | null; clustering_reason: string | null;
+  conflict_fronts: number; alliance_count: number; pariah_count: number; democratic_extinction: boolean; all_democratic: boolean; first_extinction_period: number | null; first_all_democratic_period: number | null;
+}
+export interface DemocraticPeaceOutcome { valid: boolean; finish_reason: string; invalid_reason: string | null; invalid_phase: string | null; attempted_period: number; completed_periods: number; final_metrics: DemocraticPeaceMetrics | null; census: DemocraticPeaceCounters }
+export interface DemocraticPeaceEvent { period: number; kind: string; states: DemocraticPeaceStateId[]; cells: number[] }
+export interface DemocraticPeaceExtraction { state: DemocraticPeaceStateId; resources_before: number; resources_after: number; province_terms: [number, number, number][] }
+export interface DemocraticPeaceInspection {
+  model: 'democratic_peace'; config: Omit<DemocraticPeaceConfig, 'model'>; seed: number;
+  cell: DemocraticPeaceCell; state: DemocraticPeaceState; members: number[];
+  fronts: DemocraticPeaceFront[]; alliances: DemocraticPeaceAlliance[]; extraction: DemocraticPeaceExtraction | null;
+  distance: number; pariah_sources: DemocraticPeaceStateId[]; metrics: DemocraticPeaceMetrics;
+  setup: { initial_democratic_cells: number; initial_resourced_cells: number; total_cells: number };
+  period: number; periods: number; completed_periods: number; attempted_period: number; last_tick_periods: number; horizon_periods: number;
+  finish_reason: string | null; invalidity: string | null; invalid_phase: string | null; outcome: DemocraticPeaceOutcome | null;
+  census: DemocraticPeaceCounters; last_structural_event: DemocraticPeaceEvent | null; events: DemocraticPeaceEvent[]; events_dropped: number; path_priority: string; agent: null;
 }

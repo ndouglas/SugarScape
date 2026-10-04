@@ -2,6 +2,8 @@
 //! line (milestone 5). Exit codes: 0 success, 1 I/O error, 2 usage or
 //! validation error (printed as `field: message`, one per line).
 
+mod burrow;
+mod burrow_access;
 mod deduction;
 
 use std::path::{Path, PathBuf};
@@ -31,6 +33,10 @@ enum Command {
     Deduction(deduction::DeductionArgs),
     /// List the presets of every model (id, source, name, title).
     Presets,
+    /// Run a checked standalone excavation replay.
+    Burrow(burrow::BurrowArgs),
+    /// Run a checked structural resource-access replay.
+    BurrowAccess(burrow_access::BurrowAccessArgs),
     /// List the built-in sweeps (id, name).
     Sweeps,
     /// Run one world and write its statistics.
@@ -69,9 +75,18 @@ struct RunArgs {
     /// Write the config as loaded (normalized JSON).
     #[arg(long, value_name = "PATH")]
     config_out: Option<PathBuf>,
+    /// Write the democratic-peace terminal outcome, retaining undefined metric reasons.
+    #[arg(long, value_name = "PATH")]
+    outcome_out: Option<PathBuf>,
+    /// Write the democratic-peace complete current state and source clocks.
+    #[arg(long, value_name = "PATH")]
+    state_out: Option<PathBuf>,
     /// Print the final world's fingerprint as 0x%016x.
     #[arg(long)]
     fingerprint: bool,
+    /// Write tick zero and every completed tick's fingerprint as JSON rows.
+    #[arg(long, value_name = "PATH")]
+    fingerprint_trace: Option<PathBuf>,
 }
 
 #[derive(Debug, Args)]
@@ -177,6 +192,8 @@ fn run(cli: Cli) -> Result<(), Failure> {
             }
             Ok(())
         }
+        Command::Burrow(args) => burrow::run(args),
+        Command::BurrowAccess(args) => burrow_access::run(args),
         Command::Run(args) => run_world(args),
         Command::Sweep(args) => run_sweep(args),
         Command::Shot(args) => run_shot(args),
@@ -208,9 +225,74 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
         (None, None) => unreachable!("clap requires --preset or --config"),
     };
     let mut world = ModelWorld::new(config.clone(), args.seed)?;
-    world.model_mut().run(args.ticks);
+    if let Some(path) = &args.fingerprint_trace {
+        let mut trace = vec![serde_json::json!({
+            "tick": world.model().tick(),
+            "fingerprint": format!("{:#018x}", world.model().fingerprint()),
+        })];
+        for _ in 0..args.ticks {
+            if world.model().finished() {
+                break;
+            }
+            let before = world.model().tick();
+            world.model_mut().run(1);
+            if world.model().tick() == before {
+                break;
+            }
+            trace.push(serde_json::json!({
+                "tick": world.model().tick(),
+                "fingerprint": format!("{:#018x}", world.model().fingerprint()),
+            }));
+        }
+        let json = serde_json::to_string(&trace).expect("fingerprint trace serializes");
+        write(path, &(json + "\n"))?;
+    } else {
+        world.model_mut().run(args.ticks);
+    }
+    if args.outcome_out.is_some() || args.state_out.is_some() {
+        let ModelWorld::DemocraticPeace(dp) = &world else {
+            return Err(vec![FieldError::new(
+                "export",
+                "--outcome-out and --state-out require democratic_peace",
+            )]
+            .into());
+        };
+        if let Some(path) = &args.outcome_out {
+            write(
+                path,
+                &(serde_json::to_string_pretty(&dp.outcome()).expect("finite outcome serializes")
+                    + "\n"),
+            )?;
+        }
+        if let Some(path) = &args.state_out {
+            write(path, &(dp.state_json() + "\n"))?;
+        }
+    }
     let world = world.model();
-    if world.finished() && world.tick() < u64::from(args.ticks) {
+    if world.finished()
+        && matches!(
+            config.kind(),
+            ModelKind::Polarity | ModelKind::Geosim | ModelKind::DemocraticPeace
+        )
+    {
+        let latest: serde_json::Value =
+            serde_json::from_str(&world.latest_json()).expect("core snapshot is JSON");
+        let periods = latest["periods"].as_u64().unwrap_or(0);
+        let reason = latest["finish_reason"].as_str().unwrap_or("endpoint");
+        eprintln!(
+            "finished at tick {} ({periods} completed periods, {reason})",
+            world.tick()
+        );
+        if let Some(invalidity) = latest["invalidity"].as_str() {
+            if config.kind() == ModelKind::DemocraticPeace {
+                let attempted = latest["attempted_period"].as_u64().unwrap_or(periods);
+                let phase = latest["invalid_phase"].as_str().unwrap_or("unknown phase");
+                eprintln!("invalid reconstruction at attempted period {attempted} ({periods} completed), {phase}: {invalidity}");
+            } else {
+                eprintln!("invalid reconstruction: {invalidity}");
+            }
+        }
+    } else if world.finished() && world.tick() < u64::from(args.ticks) {
         // The anasazi stops at its end year; civil violence when a group is gone;
         // the tags model at its last generation; Axelrod's culture and bounded
         // confidence once stable, a sugarscape under his rule once its cultures
@@ -245,6 +327,16 @@ fn run_world(args: RunArgs) -> Result<(), Failure> {
             ModelKind::Bali => "its last year",
             ModelKind::Hoard => "its last generation",
             ModelKind::Firms => "its last period",
+            ModelKind::Auctions => "its last auction",
+            // A session stops when its strategies settle, or at its cap.
+            ModelKind::DemocraticPeace => "its source horizon",
+            ModelKind::Collusion => {
+                if world.latest_value("converged") == Some(0.0) {
+                    "its cap"
+                } else {
+                    "it converged"
+                }
+            }
             ModelKind::Retirement => match &config {
                 ModelConfig::Retirement(c)
                     if c.stop_at_norm

@@ -7,7 +7,7 @@
 //! - **Bury(q)** (`bury`) at the agent's current site: holdings −= q, cache
 //!   += q. It costs no tick. Minds 6's `caching.bury_cost` c takes q × c more
 //!   from holdings, counted as eaten (`events.bury_cost`), and q is clamped
-//!   so that q × (1 + c) fits in holdings. Under theft (`theft.is_on()`),
+//!   so that q × (1 + c) fits in holdings. Under theft or watching (`pilfering_on()`),
 //!   each burial opens a fate record (`fates`), closed by a dig, a pilfer or
 //!   the owner's death; other worlds keep no log.
 //! - **Dig** (`dig`, called by `movement::go_and_gather`): arriving at its own
@@ -29,6 +29,9 @@
 //! - **Theft** (Minds 6, `theft`): under `theft.find` > 0 an arriving agent
 //!   may find and pilfer other agents' caches; under `theft.owner_memory:
 //!   off` its own caches aren't candidates and it finds them only by chance.
+//! - **Watching** (Minds 8, `watching`): under `watching.on`, watchers who
+//!   see a burial remember the cache, go to it as a candidate and raid it
+//!   on arrival.
 //!
 //! Sugar is conserved exactly across bury and dig: Σ sites + Σ holdings +
 //! Σ caches + eaten (bury cost included). Nothing here draws.
@@ -38,8 +41,10 @@ pub mod fates;
 pub mod lab;
 pub mod rules;
 pub mod theft;
+pub mod watching;
 
 use crate::agent::AgentId;
+use crate::config::DigBelow;
 use crate::geometry::Pos;
 use crate::rules::movement::lattice_distance;
 use crate::world::World;
@@ -72,14 +77,21 @@ pub(crate) fn surplus(world: &World, id: AgentId) -> f64 {
 /// central-place world the threshold stays R, one tick's need: an agent
 /// holding between R / 2 and R that didn't dig would eat below zero and die.
 /// False, without computing R, for an agent with no caches. The survey's
-/// probe `World::probe_dig_at_reserve` sets the threshold at R everywhere.
+/// probe `World::probe_dig_at_reserve` sets the threshold at R everywhere,
+/// as `caching.dig_below: reserve` does (Minds 8b, the probe as a setting).
 pub(crate) fn hungry(world: &World, id: AgentId) -> bool {
     let a = world.agent(id).expect("live agent");
-    if a.caches.is_empty() {
+    if a.caches.is_empty()
+        && !(world.config.spatial_hoarding.enabled
+            && a.spatial.as_ref().is_some_and(|s| s.larder > 0.0))
+    {
         return false;
     }
     let r = reserve(world, id);
-    let threshold = if world.config.central.enabled || world.probe_dig_at_reserve {
+    let threshold = if world.config.central.enabled
+        || world.probe_dig_at_reserve
+        || world.config.caching.dig_below == DigBelow::Reserve
+    {
         r
     } else {
         r / 2.0
@@ -122,8 +134,46 @@ pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) -> f64 {
     a.cache_since.entry(site).or_insert(now);
     world.events.buried += q;
     world.events.bury_cost += cost;
+    if let Some(e) = super::spatial_hoarding::stores::events(
+        world,
+        super::spatial_hoarding::state::StoreKind::Scatter,
+    ) {
+        e.buried += q;
+        e.bury_cost += cost;
+    }
     fates::open(world, id, site, q);
     theft::note(world, id, site, true);
+    watching::see(world, id, site, q);
+    let was_prepared = world
+        .agent(id)
+        .and_then(|a| a.protection.as_ref())
+        .is_some_and(|s| s.sources.contains_key(&site));
+    super::protection::lab::note_prepared_deposit(world, id, site, q);
+    let prepared = !was_prepared
+        && world
+            .agent(id)
+            .and_then(|a| a.protection.as_ref())
+            .is_some_and(|s| s.sources.contains_key(&site));
+    super::protection::ledger::update(world, id, |l| {
+        if prepared {
+            l.prepare(site, q)?;
+        } else {
+            l.outflow(q, super::protection::ledger::Outflow::Deposit { site })?;
+        }
+        l.outflow(cost, super::protection::ledger::Outflow::BurialCost)
+    });
+    if world.config.protection_lab.is_some() {
+        let exposed = super::protection::controller::perceived_exposure(world, id);
+        if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+            a.gross_buried += q;
+            a.burial_cost += cost;
+            a.perceived_exposure = Some(exposed);
+            if prepared {
+                a.source = Some(site);
+            }
+        }
+    }
+    super::protection::ledger::reconcile_world(world);
     q
 }
 
@@ -154,6 +204,17 @@ pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
     e.dug += take;
     e.digs += 1;
     e.dig_ages_sum += now.saturating_sub(since);
+    if let Some(e) = super::spatial_hoarding::stores::events(
+        world,
+        super::spatial_hoarding::state::StoreKind::Scatter,
+    ) {
+        e.dug += take;
+        e.digs += 1;
+    }
+    super::protection::ledger::update(world, id, |l| l.withdraw(site, take));
+    if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+        a.gross_dug += take;
+    }
     // The fate log reads `cache_since` (for a backfill), so it goes after.
     fates::close_dug(world, id, site, take);
     if emptied {
@@ -194,6 +255,28 @@ pub(crate) fn join_caches(
         return;
     }
     let a = world.agent(id).expect("live agent");
+    join_sites(
+        world,
+        id,
+        a.caches.iter().map(|(&i, &amount)| (i, amount)),
+        out,
+        start,
+    );
+}
+
+/// Joins `sites` (site index, value), in the order given, to `id`'s
+/// candidates at `start` by `join_caches`'s rules: the same sites skipped,
+/// a site listed before `start` merged by the larger value, and the rest
+/// inserted at `start` (a remembered entry moved there and merged).
+/// `watching::join_seen` joins seen caches the same way.
+pub(crate) fn join_sites(
+    world: &World,
+    id: AgentId,
+    sites: impl Iterator<Item = (u32, f64)>,
+    out: &mut Vec<(Pos, u32, f64)>,
+    start: &mut usize,
+) {
+    let a = world.agent(id).expect("live agent");
     let torus = world.torus;
     let pos = a.pos;
     let failed = a
@@ -201,7 +284,7 @@ pub(crate) fn join_caches(
         .target
         .filter(|&t| a.plan.path.is_empty() && t != pos);
     let mut extra = Vec::new();
-    for (&i, &amount) in &a.caches {
+    for (i, amount) in sites {
         let q = torus.pos(i as usize);
         if world.is_wall(q)
             || world.walled_apart(pos, q)
@@ -285,6 +368,43 @@ mod tests {
         assert!(hungry(&w, id));
         w.agent_mut(id).unwrap().holdings[0] = 10.0;
         assert!(!hungry(&w, id), "at R it doesn't dig");
+    }
+
+    #[test]
+    fn dig_below_reserve_moves_the_threshold_as_the_probe_does() {
+        let mut w = blank_world(11, 11);
+        let id = caching_agent(&mut w, 7.0, 0);
+        w.agent_mut(id).unwrap().caches.insert(3, 4.0);
+        assert_eq!(w.config.caching.dig_below, DigBelow::Half, "the default");
+        assert!(!hungry(&w, id));
+        w.config.caching.dig_below = DigBelow::Reserve;
+        assert!(hungry(&w, id));
+        w.agent_mut(id).unwrap().holdings[0] = 10.0;
+        assert!(!hungry(&w, id), "at R it doesn't dig");
+    }
+
+    #[test]
+    fn dig_below_reserve_runs_exactly_as_the_probe() {
+        // theft-winter-half at find 0.02, 200 ticks from seed 1: the setting
+        // and the survey probe give the same world; the default gives the
+        // preset's.
+        let mut c = crate::presets::by_id("theft-winter-half").unwrap().config;
+        c.theft.find = 0.02;
+        let run = |c: &crate::config::Config, probe: bool| {
+            let mut w = World::new(c.clone(), 1).unwrap();
+            w.probe_dig_at_reserve = probe;
+            w.run(200);
+            w.fingerprint()
+        };
+        let half = run(&c, false);
+        let probe = run(&c, true);
+        let mut r = c.clone();
+        r.caching.dig_below = DigBelow::Reserve;
+        assert_eq!(run(&r, false), probe);
+        assert_ne!(half, probe);
+        let mut h = c.clone();
+        h.caching.dig_below = DigBelow::Half;
+        assert_eq!(run(&h, false), half);
     }
 
     #[test]

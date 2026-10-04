@@ -1,0 +1,88 @@
+{
+  "classification": "postmeasurement_reporting_source_replay_no_worlds",
+  "base": "a318d1f78fc7f0f8f13489f20d7e686737fc13d1",
+  "source_fix_patch_sha256": "b4345b53a49c6076bd19bdad36d7e9f37fbe1952e9feac75ca6ed80858392736",
+  "commands": [
+    {
+      "command": [
+        "git",
+        "archive",
+        "--format=tar",
+        "a318d1f78fc7f0f8f13489f20d7e686737fc13d1"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace",
+      "exit": 0
+    },
+    {
+      "command": [
+        "git",
+        "init",
+        "--quiet"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-reporting-amendment-2026-10-04/replay-a318d1f",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "apply",
+        "--check",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task4-reporting/source-fix.patch"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-reporting-amendment-2026-10-04/replay-a318d1f",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "apply",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task4-reporting/source-fix.patch"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace/survey/out/democratic-peace-reporting-amendment-2026-10-04/replay-a318d1f",
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "source_images": [
+    {
+      "path": "docs/superpowers/plans/2026-10-03-democratic-peace/amendments/2026-10-04-task4-reporting/derive_findings.py",
+      "old_sha256": null,
+      "new_sha256": "1ab1e187e641cd619e3ae4873b7a92d0b64c281548def820bf660418665f2df4",
+      "bytes": 12908,
+      "mode": 420,
+      "fresh_replay_equal": true
+    },
+    {
+      "path": "survey/democratic_peace/contrasts.py",
+      "old_sha256": "f668fb0865035ecd3b5b20f1efedb0a9852673503ad58aab91d398671e852b57",
+      "new_sha256": "afcfb1f8fa49327ab7e1cb8dba03adf3a054be50495a86b62c95f8dd8fbfd2e0",
+      "bytes": 2860,
+      "mode": 420,
+      "fresh_replay_equal": true
+    },
+    {
+      "path": "survey/democratic_peace/test_contrasts.py",
+      "old_sha256": null,
+      "new_sha256": "bfd6570544218fb4f169eb26aa65ea24d82453c4acd1eb043ce9dc3dd39a3d0f",
+      "bytes": 3241,
+      "mode": 420,
+      "fresh_replay_equal": true
+    },
+    {
+      "path": "survey/democratic_peace/test_reporting_amendment.py",
+      "old_sha256": null,
+      "new_sha256": "95f6b9994e8d8baba7b4f739bd3c8d7cba3c309f347643f5ee03243f52f1284a",
+      "bytes": 5690,
+      "mode": 420,
+      "fresh_replay_equal": true
+    }
+  ],
+  "worlds_executed": 0,
+  "inferential_analyses_executed": 0,
+  "original_packets_changed": false
+}

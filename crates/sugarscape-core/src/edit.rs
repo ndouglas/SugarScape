@@ -57,6 +57,8 @@ pub struct SiteCacheView {
     pub amount: f64,
     /// Whether its owner is a Minds 6 cheater (`Agent.cheater`).
     pub cheater_owner: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<&'static str>,
 }
 
 /// Minds 5–6: the small part of what the page draws of a Minds world beyond
@@ -89,6 +91,8 @@ pub struct HomeView {
     pub x: u32,
     pub y: u32,
     pub larder: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub guarding: Option<bool>,
 }
 
 /// Minds 5: where a lab world is in its schedule (`minds::caching::lab`),
@@ -208,6 +212,30 @@ pub struct TheftView {
     pub fed: f64,
 }
 
+/// Minds 8: one cache a watcher remembers having seen buried.
+#[derive(Clone, Debug, Serialize)]
+pub struct SeenView {
+    /// The site's index.
+    pub site: u32,
+    /// Who buried it.
+    pub owner: u64,
+    /// What the watcher saw buried.
+    pub amount: f64,
+    /// Ticks since it saw the burial.
+    pub age: u64,
+}
+
+/// Minds 8: an agent's watching state, for Inspect.
+#[derive(Clone, Debug, Serialize)]
+pub struct WatchView {
+    /// Whether this agent watches (and so remembers burials it sees).
+    pub watches: bool,
+    /// Whether it is a scrounger: watches and never buries (`cheater`).
+    pub scrounger: bool,
+    /// The caches it remembers (fresh entries only), by site then owner.
+    pub seen: Vec<SeenView>,
+}
+
 /// Minds 5: a central-place forager's state, for Inspect.
 #[derive(Clone, Debug, Serialize)]
 pub struct CentralView {
@@ -275,8 +303,25 @@ pub struct AgentView {
     /// Minds 5: central-place foraging state. `Some` only while
     /// `central.enabled`.
     pub central: Option<CentralView>,
-    /// Minds 6: theft state. `Some` only while `theft.is_on()`.
+    /// Minds 6: theft state. `Some` only while `pilfering_on()` (theft, or
+    /// Minds 8's watching).
     pub theft: Option<TheftView>,
+    /// Minds 8: watching state. `Some` only while `watching.on`.
+    pub watching: Option<WatchView>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub spatial_hoarding: Option<SpatialHoardingInspect>,
+}
+
+/// Extension-only inspection; pending delivery remains in ordinary holdings.
+#[derive(Clone, Debug, Serialize)]
+pub struct SpatialHoardingInspect {
+    pub home: Pos,
+    pub larder_trait: f64,
+    pub defense_trait: f64,
+    pub larder: f64,
+    pub delivery: Option<f64>,
+    pub guarding: bool,
+    pub observed_larders: usize,
 }
 
 /// Minds 3: what an agent remembers, for display.
@@ -568,11 +613,43 @@ impl World {
                 home: a.home.map_or([a.pos.x, a.pos.y], |p| [p.x, p.y]),
                 last_load: a.last_load,
             }),
-            theft: self.config.theft.is_on().then_some(TheftView {
+            theft: self.config.pilfering_on().then_some(TheftView {
                 cheater: a.cheater,
                 stolen_by_me: a.stolen_by_me,
                 stolen_from_me: a.stolen_from_me,
                 fed: a.fed,
+            }),
+            spatial_hoarding: a
+                .spatial
+                .as_ref()
+                .filter(|_| self.config.spatial_hoarding.enabled)
+                .map(|s| SpatialHoardingInspect {
+                    home: s.home,
+                    larder_trait: s.traits.larder,
+                    defense_trait: s.traits.defense,
+                    larder: s.larder,
+                    delivery: s.delivery.map(|d| d.amount),
+                    guarding: s.guarding,
+                    observed_larders: s
+                        .seen_larders
+                        .values()
+                        .filter(|v| crate::minds::caching::watching::fresh(self, v.tick))
+                        .count(),
+                }),
+            watching: self.config.watching.on.then(|| WatchView {
+                watches: a.watches,
+                scrounger: a.watches && a.cheater,
+                seen: a
+                    .seen
+                    .iter()
+                    .filter(|(_, c)| crate::minds::caching::watching::fresh(self, c.tick))
+                    .map(|(&(site, owner), c)| SeenView {
+                        site,
+                        owner,
+                        amount: c.amount,
+                        age: self.tick.saturating_sub(c.tick),
+                    })
+                    .collect(),
             }),
         });
         Ok(Inspection {
@@ -586,12 +663,28 @@ impl World {
                 caches: {
                     let site = self.torus.index(pos) as u32;
                     self.agents()
-                        .filter_map(|a| {
-                            a.caches.get(&site).map(|&amount| SiteCacheView {
+                        .flat_map(|a| {
+                            let scatter = a.caches.get(&site).map(|&amount| SiteCacheView {
                                 owner: a.id,
                                 amount,
                                 cheater_owner: a.cheater,
-                            })
+                                kind: self.config.spatial_hoarding.enabled.then_some("scatter"),
+                            });
+                            let larder = a
+                                .spatial
+                                .as_ref()
+                                .filter(|s| {
+                                    self.config.spatial_hoarding.enabled
+                                        && self.torus.index(s.home) as u32 == site
+                                        && s.larder > 0.0
+                                })
+                                .map(|s| SiteCacheView {
+                                    owner: a.id,
+                                    amount: s.larder,
+                                    cheater_owner: a.cheater,
+                                    kind: Some("larder"),
+                                });
+                            scatter.into_iter().chain(larder)
                         })
                         .collect()
                 },
@@ -617,6 +710,19 @@ impl World {
                         x: p.x,
                         y: p.y,
                         larder: a.caches.get(&site).copied().unwrap_or(0.0),
+                        guarding: None,
+                    })
+                })
+                .collect()
+        } else if self.config.spatial_hoarding.enabled {
+            self.agents()
+                .filter_map(|a| {
+                    a.spatial.as_ref().map(|s| HomeView {
+                        id: a.id,
+                        x: s.home.x,
+                        y: s.home.y,
+                        larder: s.larder,
+                        guarding: Some(s.guarding),
                     })
                 })
                 .collect()
@@ -1051,6 +1157,47 @@ mod tests {
         w.config.movement.mode = crate::config::MoveMode::Walk;
         w.config.decision.rule = crate::config::DecisionRule::Mvt;
         assert_eq!(w.inspect(2, 2).unwrap().agent.unwrap().rate, Some(1.25));
+    }
+
+    #[test]
+    fn inspect_shows_watching_only_when_on_and_lists_fresh_seen_caches() {
+        use crate::minds::caching::watching::SeenCache;
+        let mut w = blank_world(10, 10);
+        let id = spawn(&mut w, 2, 2);
+        let owner = spawn(&mut w, 5, 5);
+        assert!(w.inspect(2, 2).unwrap().agent.unwrap().watching.is_none());
+        w.config.watching.on = true;
+        w.config.watching.span = 5;
+        w.tick = 20;
+        let (near, old) = (
+            w.torus.index(Pos::new(3, 3)) as u32,
+            w.torus.index(Pos::new(4, 4)) as u32,
+        );
+        let a = w.agent_mut(id).unwrap();
+        a.watches = true;
+        a.cheater = true;
+        a.seen.insert(
+            (near, owner),
+            SeenCache {
+                amount: 7.0,
+                tick: 18,
+            },
+        );
+        a.seen.insert(
+            (old, owner),
+            SeenCache {
+                amount: 9.0,
+                tick: 10,
+            },
+        );
+        let v = w.inspect(2, 2).unwrap().agent.unwrap().watching.unwrap();
+        assert!(v.watches && v.scrounger);
+        assert_eq!(v.seen.len(), 1, "expired entries are not listed");
+        assert_eq!((v.seen[0].site, v.seen[0].owner), (near, owner));
+        assert_eq!((v.seen[0].amount, v.seen[0].age), (7.0, 2));
+        w.agent_mut(id).unwrap().cheater = false;
+        let v = w.inspect(2, 2).unwrap().agent.unwrap().watching.unwrap();
+        assert!(v.watches && !v.scrounger);
     }
 
     #[test]

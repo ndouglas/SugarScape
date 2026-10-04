@@ -1,4 +1,7 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 import { comparePresetStates, COMPARE_PRESETS } from './compare-presets';
 import { copyWorld, Lockstep } from './compare/lockstep';
@@ -19,6 +22,12 @@ import type {
   ZiConfig,
   BaliConfig,
   FirmsConfig,
+  CollusionConfig,
+  AuctionsConfig,
+  AuctionsInspection,
+  AuctionsStats,
+  CollusionInspection,
+  CollusionStats,
   FirmsInspection,
   FirmsStats,
   BaliInspection,
@@ -77,7 +86,7 @@ import type {
 } from './types';
 import { InspectPanel } from './ui/inspect-panel';
 import { MODEL_CHARTS } from './ui/series-data';
-import { config_series_names, initSync, model_schemas_json, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
+import { Sim, protection_config_json, protection_episode_json, config_series_names, initSync, model_schemas_json, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
 // Built by `npm run build` (wasm-pack) before `npm test`.
 const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
@@ -640,7 +649,8 @@ describe('preset titles', () => {
 describe('model charts', () => {
   it('draw only series their model records', () => {
     for (const [model, charts] of Object.entries(MODEL_CHARTS)) {
-      const preset = presets.find((p) => modelOf(p.config) === model)!;
+      // Auctions declare three bidder lines, unavailable in their two-bidder default.
+      const preset = presets.find((p) => modelOf(p.config) === model && (model !== 'auctions' || (p.config as AuctionsConfig).bidders === 3))!;
       const names = JSON.parse(config_series_names(JSON.stringify(preset.config))) as string[];
       for (const c of charts) for (const line of c.lines) expect(names, `${model}: ${c.title}`).toContain(line.key);
     }
@@ -810,6 +820,31 @@ describe('the firms model through the engine', () => {
     // The size plot starts 8 pixels right of the 600-pixel rows.
     await e.select(700, 50);
     expect((e.inspection!.view as FirmsInspection).panel).toBe('sizes');
+  });
+});
+
+describe('the collusion model through the engine', () => {
+  it('finishes when its strategies settle and inspects a strategy cell and the session', async () => {
+    const r = presets.find((p) => p.id === 'collusion-calvano')!;
+    // Fast exploration decay and a short window: a session in a few seconds.
+    const config = { ...structuredClone(r.config as CollusionConfig), beta: 2e-4, window: 2000 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    e.setDisplay({ colorMode: 'price' });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    while (!e.finished) await e.advance(5_000);
+    const s = e.latest as CollusionStats;
+    expect([e.finished, ends, s.converged]).toEqual([true, 1, 1]);
+    expect(s.cycle_gain).toBeGreaterThan(-1);
+    // The top-left cell of firm 1's map: its own lowest price against the rival's highest.
+    await e.select(0, 0);
+    const v = e.inspection!.view as CollusionInspection;
+    expect([v.panel, v.firm]).toEqual(['strategy', 0]);
+    expect(v.state!.q).toHaveLength(2);
+    expect(v.outcome!.converged).toBe(true);
+    // The price panel starts 8 pixels right of the second firm's 120-pixel map.
+    await e.select(260, 50);
+    expect((e.inspection!.view as CollusionInspection).panel).toBe('prices');
   });
 });
 
@@ -1560,3 +1595,160 @@ describe('civil violence’s schedule and ramps reach the page', () => {
   });
 });
 
+
+
+describe('Q-learning auctions through the engine', () => {
+  it('runs the fixed horizon including a partial tick and exports both views', async () => {
+    const preset = presets.find((p) => p.id === 'auctions-first-price');
+    expect(preset).toBeDefined();
+    const config = { ...structuredClone(preset!.config as AuctionsConfig), horizon: 15, window: 3, periods_per_tick: 7 };
+    const e = await Engine.create({ config, seed: 1 }, { presets, transport: inline() });
+    let ends = 0;
+    e.on('finished', () => ends++);
+    await e.advance(2);
+    expect([e.tick, e.finished, (e.latest as AuctionsStats).periods]).toEqual([2, false, 14]);
+    await e.advance(8);
+    expect([e.tick, e.finished, ends, (e.latest as AuctionsStats).periods]).toEqual([3, true, 1, 15]);
+    await e.select(0, 0);
+    const bids = e.inspection!.view as AuctionsInspection;
+    expect(bids.whole_count).toBe(15);
+    expect(bids.late_count).toBe(3);
+    expect(bids.outcome?.periods).toBe(15);
+    e.setDisplay({ colorMode: 'values' });
+    await e.select(12, 0);
+    const values = e.inspection!.view as AuctionsInspection;
+    expect([values.bidder, values.action]).toEqual([0, 1]);
+    expect(values.learners[0].q).toHaveLength(19);
+    const fp = e.tick;
+    await e.advance(1);
+    expect([e.tick, (e.latest as AuctionsStats).periods]).toEqual([fp, 15]);
+  });
+});
+
+async function withNativeTraceDirectory(check: (directory: string) => Promise<void>): Promise<void> {
+  const directory = mkdtempSync(`${tmpdir()}/sugarscape-native-parity-`);
+  try {
+    await check(directory);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+describe('native trace directory cleanup', () => {
+  it('removes the directory and trace after a successful check', async () => {
+    let directory = '';
+    try {
+      await withNativeTraceDirectory(async path => {
+        directory = path;
+        writeFileSync(`${path}/final-fix-cleanup-test.json`, '[]');
+        expect(existsSync(path)).toBe(true);
+        expect(path.startsWith(`${tmpdir()}/sugarscape-native-parity-`)).toBe(true);
+      });
+      expect(existsSync(directory)).toBe(false);
+    } finally {
+      rmSync(`${directory}/final-fix-cleanup-test.json`, { force: true });
+    }
+  });
+
+  it('removes the directory and trace when a check throws', async () => {
+    let directory = '';
+    try {
+      await expect(withNativeTraceDirectory(async path => {
+        directory = path;
+        writeFileSync(`${path}/final-fix-cleanup-test.json`, '[]');
+        throw new Error('trace check failed');
+      })).rejects.toThrow('trace check failed');
+      expect(existsSync(directory)).toBe(false);
+    } finally {
+      rmSync(`${directory}/final-fix-cleanup-test.json`, { force: true });
+    }
+  });
+
+  it('gives overlapping checks distinct directories', async () => {
+    await withNativeTraceDirectory(async first => {
+      await withNativeTraceDirectory(async second => {
+        expect(second).not.toBe(first);
+      });
+    });
+  });
+});
+
+describe('spatial episode presets', () => {
+  // npm pretest builds this binary from the current checkout; each case
+  // generates an independent native trace rather than frozen WASM output.
+  for (const id of ['spatial-scatter', 'spatial-larder', 'spatial-larder-guard']) {
+    it(`matches the native ${id} fingerprint at every tick from zero through 200`, async () => {
+      const root = fileURLToPath(new URL('../../', import.meta.url));
+      await withNativeTraceDirectory(async scratch => {
+        const tracePath = `${scratch}/task-7-native-${id}.json`;
+        execFileSync(`${root}target/release/sugarscape`, [
+          'run', '--preset', id, '--seed', '1', '--ticks', '200',
+          '--fingerprint-trace', tracePath,
+        ], { cwd: root, encoding: 'utf8' });
+        const trace = JSON.parse(readFileSync(tracePath, 'utf8')) as { tick: number; fingerprint: string }[];
+        expect(trace.map(row => row.tick)).toEqual(Array.from({ length: 201 }, (_, tick) => tick));
+        const preset = presets.find(p => p.id === id)!;
+        const e = await Engine.create({ config: structuredClone(preset.config), seed: 1 }, { presets, transport: inline() });
+        for (const row of trace) {
+          if (row.tick > 0) await e.advance(1);
+          expect(e.tick).toBe(row.tick);
+          expect(await e.fingerprint(), `${id} tick ${row.tick}`).toBe(row.fingerprint);
+        }
+      });
+    });
+  }
+  it('offers the three fixed ordinary-world episodes through real WASM', () => {
+    const presets = JSON.parse(presets_json()) as { id: string }[];
+    const spatialPresetIds = presets.map(p => p.id).filter(id => id.startsWith('spatial-'));
+    expect(spatialPresetIds).toEqual(['spatial-scatter', 'spatial-larder', 'spatial-larder-guard']);
+  });
+});
+
+describe('protection checked WASM boundary', () => {
+  const lab = (policy: string, observed: boolean) => JSON.stringify({ policy, fixture: { kind: 'single', initial_observed: true, redeposit_observed: observed }, mirrored: false, reburial_cost: 0.25, discovery: 0, exposure_span: 64, observer_span: 64 });
+  it('rejects nondecimal and overflowing seeds and invalid rigs', () => {
+    for (const seed of ['', '-1', '+7', '7.0', ' 7', '18446744073709551616']) expect(() => protection_episode_json(lab('selective', false), seed)).toThrow();
+    expect(() => protection_config_json(lab('selective', false).replace('0.25', '-1'))).toThrow();
+  });
+  it('retains withdrawn food when a constructed blocker cancels transport', () => {
+    const sim = new Sim(protection_config_json(lab('selective', false)), 7, null);
+    try {
+      sim.step(9); // retrieve completed; destination remains (3,2).
+      const before = JSON.parse(sim.inspect(3, 3));
+      sim.place_agent(3, 2, JSON.stringify({ vision: 0, metabolism: 0, sugar: 100 }));
+      sim.step(1);
+      expect(Array.from(sim.locate(1)!)).toEqual([3, 3]);
+      const after = JSON.parse(sim.inspect(3, 3));
+      expect(after.agent.holdings[0]).toBe(before.agent.holdings[0] - 1);
+      expect(JSON.parse(sim.inspect(3, 2)).site.caches).toEqual([]);
+      sim.step(1);
+      expect(JSON.parse(sim.inspect(3, 2)).site.caches).toEqual([]);
+    } finally { sim.free(); }
+  });
+  for (const [policy, observed] of [['selective', true], ['selective', false], ['erased', false], ['indiscriminate', false]] as const) {
+    it(`replays ${policy} with observed redeposit=${observed} against native ticks and cohort records`, async () => {
+      const root = fileURLToPath(new URL('../../', import.meta.url));
+      const config = JSON.parse(protection_config_json(lab(policy, observed)));
+      const episode = JSON.parse(protection_episode_json(lab(policy, observed), '7'));
+      expect(episode.ledger_errors).toEqual([]);
+      expect(episode.fixture_errors).toEqual([]);
+      expect(Object.keys(episode.cohorts.cohorts)).toHaveLength(1);
+      const actions = episode.frames.flatMap((frame: { actions: { action: string }[] }) => frame.actions.map(a => a.action));
+      if (policy === 'erased') expect(actions).not.toContain('retrieve');
+      else expect(actions).toContain('retrieve');
+      await withNativeTraceDirectory(async scratch => {
+        const configPath = `${scratch}/config.json`, tracePath = `${scratch}/trace.json`;
+        writeFileSync(configPath, JSON.stringify(config));
+        execFileSync(`${root}target/release/sugarscape`, ['run', '--config', configPath, '--seed', '7', '--ticks', '64', '--fingerprint-trace', tracePath], { cwd: root, encoding: 'utf8' });
+        const trace = JSON.parse(readFileSync(tracePath, 'utf8')) as { tick: number; fingerprint: string }[];
+        expect(trace.map(row => row.tick)).toEqual(Array.from({ length: 65 }, (_, t) => t));
+        const e = await Engine.create({ config, seed: 7 }, { presets, transport: inline() });
+        for (const row of trace) {
+          if (row.tick > 0) await e.advance(1);
+          expect(await e.fingerprint()).toBe(row.fingerprint);
+          expect(`0x${episode.frames[row.tick].fingerprint}`).toBe(row.fingerprint);
+        }
+      });
+    });
+  }
+});

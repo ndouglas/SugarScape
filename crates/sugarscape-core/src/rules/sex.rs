@@ -121,9 +121,14 @@ fn birth(world: &mut World, a_id: AgentId, b_id: AgentId, cradle: Pos) {
         caching_rule: a.caching_rule,
         // Minds 6: and cheats if that parent does.
         cheater: a.cheater,
+        // Minds 8: watchers are founders only.
+        watches: false,
+        seen: std::collections::BTreeMap::new(),
         stolen_by_me: 0.0,
         stolen_from_me: 0.0,
         home: None,
+        spatial: None,
+        protection: None,
         load_trip: 0.0,
         delivery_rate: 0.0,
         last_load: 0.0,

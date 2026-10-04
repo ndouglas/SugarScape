@@ -1,0 +1,17 @@
+diff --git a/survey/src/main.rs b/survey/src/main.rs
+index 5991187..5615ce0 100644
+--- a/survey/src/main.rs
++++ b/survey/src/main.rs
+@@ -149,6 +149,12 @@ mod tests {
+         Claim { id, item: "x", source: Source::App, citation: "", text: "", check }
+     }
+ 
++    #[test]
++    fn the_registered_auction_baseline_can_be_selected_without_running_it() {
++        let selected = select(claims::all(), Some("auctions.bs.baseline-direction")).unwrap();
++        assert_eq!(selected[0].id, "auctions.bs.baseline-direction");
++    }
++
+     #[test]
+     fn a_panicking_check_is_an_error_not_a_crash() {
+         let c = fake("x.boom", |_| panic!("empty population"));

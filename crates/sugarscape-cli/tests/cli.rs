@@ -200,6 +200,31 @@ fn presets_and_sweeps_are_listed() {
         "firms-hiring",
         "firms-readings",
         "firms-population",
+        "collusion-table-i",
+        "collusion-alpha-beta",
+        "collusion-delta",
+        "collusion-memory",
+        "collusion-myopic",
+        "collusion-two-phase",
+        "collusion-every-price",
+        "collusion-below-nash",
+        "collusion-invitation",
+        "collusion-synchronous",
+        "collusion-exploration",
+        "collusion-timescale",
+        "collusion-rp-complete",
+        "auctions-formats",
+        "auctions-feedback",
+        "auctions-initialization",
+        "auctions-ties",
+        "auctions-hindsight",
+        "auctions-local",
+        "auctions-biased",
+        "auctions-downward",
+        "auctions-market",
+        "auctions-bidders",
+        "auctions-persistent",
+        "auctions-duration",
     ] {
         assert!(
             text.lines().any(|l| l.starts_with(&format!("{id}\t"))),
@@ -656,6 +681,50 @@ fn a_firms_run_stops_at_its_last_period() {
 }
 
 #[test]
+fn an_auction_session_finishes_its_partial_final_batch() {
+    let dir = scratch("auctions");
+    let config = dir.join("auctions.json");
+    std::fs::write(
+        &config,
+        r#"{"model":"auctions","horizon":23,"window":5,"periods_per_tick":7}"#,
+    )
+    .unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "100",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert_eq!(stderr(&out), "finished at tick 4 (its last auction)\n");
+}
+
+#[test]
+fn a_collusion_session_stops_when_it_converges() {
+    let dir = scratch("collusion");
+    let config = dir.join("collusion.json");
+    std::fs::write(
+        &config,
+        r#"{"model": "collusion", "beta": 0.0002, "window": 2000}"#,
+    )
+    .unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        config.to_str().unwrap(),
+        "--ticks",
+        "5000",
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let err = stderr(&out);
+    assert!(
+        err.starts_with("finished at tick ") && err.ends_with(" (it converged)\n"),
+        "{err}"
+    );
+}
+
+#[test]
 fn a_bali_run_stops_at_its_last_year() {
     let dir = scratch("bali");
     let config = dir.join("bali.json");
@@ -782,5 +851,153 @@ fn a_civil_run_stops_when_a_group_is_gone() {
     assert!(
         err.starts_with("finished at tick ") && err.ends_with(" (a group has died out)\n"),
         "{err}"
+    );
+}
+
+#[test]
+fn polarity_cli_reports_economic_periods_instead_of_only_batched_ticks() {
+    let dir = scratch("polarity");
+    let config = dir.join("polarity.json");
+    std::fs::write(&config, r#"{"model":"polarity","width":2,"height":2,"predator_share":0,"horizon":15,"periods_per_tick":7}"#).unwrap();
+    let out = sugarscape(&["run", "--config", path(&config), "--ticks", "100"]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(
+        stderr(&out).contains("15 completed periods"),
+        "{}",
+        stderr(&out)
+    );
+}
+
+#[test]
+fn fingerprint_trace_records_tick_zero_and_each_completed_tick() {
+    let dir = scratch("fingerprint-trace");
+    let trace = dir.join("trace.json");
+    let out = sugarscape(&[
+        "run",
+        "--preset",
+        "spatial-larder-guard",
+        "--ticks",
+        "2",
+        "--fingerprint",
+        "--fingerprint-trace",
+        path(&trace),
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let rows: Vec<serde_json::Value> = serde_json::from_str(&read(&trace)).unwrap();
+    assert_eq!(
+        rows.iter()
+            .map(|r| r["tick"].as_u64().unwrap())
+            .collect::<Vec<_>>(),
+        vec![0, 1, 2]
+    );
+    for (tick, row) in rows.iter().enumerate() {
+        // The unchanged final-only CLI route is an independent reference.
+        let direct = sugarscape(&[
+            "run",
+            "--preset",
+            "spatial-larder-guard",
+            "--ticks",
+            &tick.to_string(),
+            "--fingerprint",
+        ]);
+        assert!(direct.status.success(), "{}", stderr(&direct));
+        assert_eq!(row["fingerprint"].as_str().unwrap(), stdout(&direct).trim());
+    }
+    assert_eq!(
+        rows[2]["fingerprint"].as_str().unwrap(),
+        stdout(&out).trim()
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn fingerprint_trace_ends_at_a_models_actual_stop_tick() {
+    let dir = scratch("fingerprint-trace-stop");
+    let config = dir.join("config.json");
+    let trace = dir.join("trace.json");
+    std::fs::write(&config, r#"{"model":"bali","stop_at":2}"#).unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        path(&config),
+        "--ticks",
+        "1000",
+        "--fingerprint",
+        "--fingerprint-trace",
+        path(&trace),
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    let rows: Vec<serde_json::Value> = serde_json::from_str(&read(&trace)).unwrap();
+    assert_eq!(rows.len(), 25);
+    assert_eq!(rows.last().unwrap()["tick"], 24);
+    assert_eq!(stderr(&out), "finished at tick 24 (its last year)\n");
+    let direct = sugarscape(&[
+        "run",
+        "--config",
+        path(&config),
+        "--ticks",
+        "1000",
+        "--fingerprint",
+    ]);
+    assert!(direct.status.success(), "{}", stderr(&direct));
+    assert_eq!(stdout(&out), stdout(&direct));
+    assert_eq!(
+        rows.last().unwrap()["fingerprint"].as_str().unwrap(),
+        stdout(&direct).trim()
+    );
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn fingerprint_trace_reports_write_errors() {
+    let dir = scratch("fingerprint-trace-error");
+    let out = sugarscape(&[
+        "run",
+        "--preset",
+        "spatial-scatter",
+        "--ticks",
+        "0",
+        "--fingerprint-trace",
+        path(&dir),
+    ]);
+    assert_eq!(out.status.code(), Some(1));
+    assert!(stderr(&out).contains(path(&dir)), "{}", stderr(&out));
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn geosim_cli_reports_source_clock_and_resolves_inactive_readings() {
+    let dir = scratch("geosim");
+    let config = dir.join("config.json");
+    let resolved = dir.join("resolved.json");
+    let trace = dir.join("trace.json");
+    std::fs::write(&config, r#"{"model":"geosim","width":2,"height":2,"initial_states":1,"initialization_periods":2,"observation_periods":13,"periods_per_tick":7,"defender_threshold":"same_threshold","damage_incidence":"acting_party"}"#).unwrap();
+    let out = sugarscape(&[
+        "run",
+        "--config",
+        path(&config),
+        "--ticks",
+        "100",
+        "--config-out",
+        path(&resolved),
+        "--fingerprint-trace",
+        path(&trace),
+    ]);
+    assert!(out.status.success(), "{}", stderr(&out));
+    assert!(
+        stderr(&out).contains("15 completed periods"),
+        "{}",
+        stderr(&out)
+    );
+    let value: serde_json::Value = serde_json::from_str(&read(&resolved)).unwrap();
+    assert_eq!(value["defender_threshold"], "same_threshold");
+    assert_eq!(value["damage_incidence"], "acting_party");
+    assert_eq!(value["attack_projection"], "respective_states");
+    let rows: Vec<serde_json::Value> = serde_json::from_str(&read(&trace)).unwrap();
+    assert_eq!(
+        rows.iter()
+            .map(|r| r["tick"].as_u64().unwrap())
+            .collect::<Vec<_>>(),
+        vec![0, 1, 2, 3]
     );
 }

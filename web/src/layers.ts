@@ -1,4 +1,4 @@
-import { cachingOn, COLOR_MODES, hasCaches, isSugar, MODEL_OVERLAYS, modelOf } from './models';
+import { cachingOn, COLOR_MODES, hasCaches, isSugar, MODEL_OVERLAYS, modelOf, watcherSplit, watchingOn } from './models';
 import { OVERLAYS, type DisplayState, type Overlay } from './protocol';
 import type { ColorMode, Config, Layer, ModelConfig } from './types';
 
@@ -55,12 +55,15 @@ const someRemember = (c: Config): boolean => (c.memory?.span ?? 0) > 0 && (c.mem
 
 /**
  * A sugarscape's own color mode for `config`: what actually tells its agents apart. In order:
+ * Watching where watching is on and tells agents apart (some but not all watch, or some are cheaters:
+ * watchers, scroungers, others);
  * Strategy where some are cheaters; Caching rule under mixed rules; Memory where only some agents
  * remember (the `cache-winter-*` worlds under one rule, theft without cheaters); Caching rule where
  * one burying rule is on (one color; a carrying limit alone, as in the central worlds, doesn't count); else Tribe (whose groups are random in the Minds
  * worlds). Loading a preset picks it; `clampDisplay` falls back to it.
  */
 export function defaultColorMode(config: Config): ColorMode {
+  if (watchingOn(config) && (watcherSplit(config) || hasCheaters(config))) return 'watching';
   if (hasCheaters(config)) return 'strategy';
   if (config.caching?.mixed === true) return 'caching_rule';
   if (someRemember(config)) return 'memory';
@@ -77,7 +80,7 @@ export function defaultColorMode(config: Config): ColorMode {
  */
 export function loadedDisplay(d: DisplayState, config: ModelConfig, cachesOff = false): DisplayState {
   if (!isSugar(config)) return d;
-  const defaults: ColorMode[] = ['tribe', 'strategy', 'caching_rule', 'memory'];
+  const defaults: ColorMode[] = ['tribe', 'strategy', 'caching_rule', 'memory', 'watching'];
   const colorMode = defaults.includes(d.colorMode) ? defaultColorMode(config) : d.colorMode;
   const caches = overlayAvailable('caches', config) && !cachesOff;
   if (colorMode === d.colorMode && caches === d.overlays.caches) return d;
@@ -93,6 +96,8 @@ function colorModeAvailable(mode: ColorMode, config: Config): boolean {
       return hasCheaters(config);
     case 'caching_rule':
       return cachingOn(config);
+    case 'watching':
+      return watchingOn(config);
     case 'memory':
       return (config.memory?.span ?? 0) > 0;
     default:
@@ -103,7 +108,7 @@ function colorModeAvailable(mode: ColorMode, config: Config): boolean {
 /**
  * `d` kept valid for `config` (the host applies it to every snapshot). In a sugarscape: a layer the
  * world lacks falls back to good 0's level; another model's color mode, Disease with disease off,
- * Strategy without cheaters, Caching rule with caching off or Memory with memory off falls back to
+ * Strategy without cheaters, Watching with watching off, Caching rule with caching off or Memory with memory off falls back to
  * `defaultColorMode`; an overlay the world cannot show (`overlayAvailable`) is turned off. In
  * another model: a color mode it lacks falls back to its first, an overlay it does not draw
  * (`MODEL_OVERLAYS`) is off and the layer is kept (unused). Returns `d` itself when nothing changes.

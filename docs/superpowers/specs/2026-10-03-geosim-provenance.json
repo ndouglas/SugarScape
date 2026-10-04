@@ -1,0 +1,2266 @@
+{
+  "classification": "registered_findings_provenance",
+  "execution_source_head": "d64d3becd3682df4edeab90e62a1ee9f0526e1d5",
+  "source_inventory_sha256": "5d7f78abd30f8dee86abb63f11f110b36a7119f554c0ae0d663a9aab7f579181",
+  "method_contract_sha256": "56ce49b6b77808c7cbfef0b9a182f6a573ab097925590cec78c8ed88567a10a0",
+  "binding": {
+    "manifest_sha256": "7e6baf8445230187f1d4169b114fecb9bd698b3569a3af79188230b41eb287d4",
+    "binary_sha256": "d2144adf6d4b24c12239d08d05b3aa7ea8596c08724009d53a9be2f8da9f24ff",
+    "source_inventory_sha256": "5d7f78abd30f8dee86abb63f11f110b36a7119f554c0ae0d663a9aab7f579181",
+    "build_receipt_sha256": "3dada7cf7217b57296dc78f258bd0b7f37912722a519283dcdb199ac2770deb8",
+    "resolved_configs_sha256": "176583d2823ced2f898adcddbe486ab86fde68f6188a5c077f5769f0fde46f75"
+  },
+  "resolved_authoritative_path": "survey/out/geosim-execution-task4/resolved.json",
+  "build_receipt_actual_path": "survey/out/geosim-execution-task4/build-receipt.json",
+  "registered_sessions_actual_path": "survey/out/geosim-execution-task5/sessions.jsonl",
+  "evidence": [
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-findings.json",
+      "bytes": 24626615,
+      "sha256": "9aca8f622576cd6ca6c39bea3b3c424f5b4d25a6e16860b74c91b3adc871ca09"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-findings.md",
+      "bytes": 57117,
+      "sha256": "a8854a283793a15a6fdf6825bc46deb6b3ec4691ee481316a4f7d2f991660686"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-manifest.json",
+      "bytes": 99541,
+      "sha256": "7e6baf8445230187f1d4169b114fecb9bd698b3569a3af79188230b41eb287d4"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-source-table.json",
+      "bytes": 21367,
+      "sha256": "44a7d45d5206081ed179febae5285546924a894e55ebfb25e93222e59a1ed976"
+    },
+    {
+      "path": "survey/out/geosim-build/release/geosim",
+      "bytes": 1698848,
+      "sha256": "d2144adf6d4b24c12239d08d05b3aa7ea8596c08724009d53a9be2f8da9f24ff"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/00-checkpoint6-pre-freeze.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/00-checkpoint6-pre-freeze.stdout.log",
+      "bytes": 89,
+      "sha256": "3106069c6d88ce5669acf98307e843900eacc64b7d646306866e3b3214402f7a"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/01-provisional.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/01-provisional.stdout.log",
+      "bytes": 94,
+      "sha256": "8b5a210e15403882c8a4580a060e9ec807dbdec46c6571d46d0dd77382580b26"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/02-freeze.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/02-freeze.stdout.log",
+      "bytes": 110,
+      "sha256": "00db281fd657308ca4bfed711eb877c6eca9f590727172f33bee309eafb77f46"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/03-exact-declaration-cmp.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/03-exact-declaration-cmp.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/04-prebuild-inventory.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/04-prebuild-inventory.stdout.log",
+      "bytes": 157,
+      "sha256": "70ff1efa29e7106d1a100a4a67cd1a13eb967f8bfe24b55bb9abee8cce0cea8a"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/05-actual-release-build.stderr.log",
+      "bytes": 1049,
+      "sha256": "d41fb9038be973416d025602bc69e7fe7c4636ad33e367670825a7b171184609"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/05-actual-release-build.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/06-postbuild-receipt.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/06-postbuild-receipt.stdout.log",
+      "bytes": 1209,
+      "sha256": "3dada7cf7217b57296dc78f258bd0b7f37912722a519283dcdb199ac2770deb8"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/07-native-zero-world-validation.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/07-native-zero-world-validation.stdout.log",
+      "bytes": 74,
+      "sha256": "2047e9aae162fa29539fcb85e473d1b7925c32cfc9ab1c332dfcbc5c4a960c67"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/08-exact-resolved-zero-history.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/08-exact-resolved-zero-history.stdout.log",
+      "bytes": 388,
+      "sha256": "0f866c82d795c3729c7e687413e09eaccddeecc45c7bf8f873784853ecbfe683"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/09-checkpoint6-after-build-before-plan-edit.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/09-checkpoint6-after-build-before-plan-edit.stdout.log",
+      "bytes": 89,
+      "sha256": "3106069c6d88ce5669acf98307e843900eacc64b7d646306866e3b3214402f7a"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/10-final-self-review.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/10-final-self-review.stdout.log",
+      "bytes": 308,
+      "sha256": "c1aabbfa359a54ae2eb949e275d61777bab62278cd77044724e3e214ea278e0f"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/11-diff-check.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/11-diff-check.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/12-plan-diff.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/12-plan-diff.stdout.log",
+      "bytes": 520,
+      "sha256": "7c8e6eaf7813e96cbbc17479ed7d1302d25c568c13baf1b1221118bd5f403cbe"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/13-stage-frozen-declaration.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/13-stage-frozen-declaration.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/14-staged-diff-check.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/14-staged-diff-check.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/15-staged-stat.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/15-staged-stat.stdout.log",
+      "bytes": 194,
+      "sha256": "f6124440d9f975bdec5a3592f4a9a698d3ad0877f477aed678f86b45fa031b1c"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/16-freeze-commit.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/16-freeze-commit.stdout.log",
+      "bytes": 223,
+      "sha256": "5291dc32daefbb4e60e87b819884e839dd7b4b8d8cbd6df9e5054bc7b13a793b"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/17-final-head.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/17-final-head.stdout.log",
+      "bytes": 41,
+      "sha256": "0649b2fb15d957d608b5f8166a199b2f7658fdbab506a9c00724cbc3e53ad18d"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/18-final-status.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/18-final-status.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/19-final-commit-scope.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/19-final-commit-scope.stdout.log",
+      "bytes": 523,
+      "sha256": "3918dafc1cdde6cff7e9021d688aa01837a36123f88c33850561c1749216adcf"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/build-receipt.json",
+      "bytes": 1209,
+      "sha256": "3dada7cf7217b57296dc78f258bd0b7f37912722a519283dcdb199ac2770deb8"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/capture.py",
+      "bytes": 9692,
+      "sha256": "e6e704d96c150a3b06e82ee5d8c4b188179ca36ed18945031874c94880b3db88"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/commands.json",
+      "bytes": 22578,
+      "sha256": "634154e9eefa795302d2eabc68536085344aeabb562d0aa63b304a6750ce8863"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/environment.json",
+      "bytes": 1516,
+      "sha256": "ed80b835b35b58c05808400bf5083197f457096a96cb6d6799e5e0997c1d5f60"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/evidence-manifest.json",
+      "bytes": 11109,
+      "sha256": "8f9d067dd8e0cd5d926e69542d6aeec804164bc00b378852725d8209bda2a03e"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/finish.py",
+      "bytes": 10816,
+      "sha256": "a485ae6f937d47998e83afa5f5d8bc822ec77d96666dde1a36672658ec4fe2ca"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/postbuild-source-inventory.json",
+      "bytes": 54349,
+      "sha256": "b8f1eb09c612081acf303dfdeaa214001d084f59abd9490ddc2440f0a5e6a8b1"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/postbuild-source-sha.txt",
+      "bytes": 65,
+      "sha256": "d9e98c4ce184308e2f317b35f0d345966d9be5d0a4a72f561982362841a12ac8"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/prebuild-source-inventory.json",
+      "bytes": 54349,
+      "sha256": "b8f1eb09c612081acf303dfdeaa214001d084f59abd9490ddc2440f0a5e6a8b1"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/prebuild-source-sha.txt",
+      "bytes": 65,
+      "sha256": "d9e98c4ce184308e2f317b35f0d345966d9be5d0a4a72f561982362841a12ac8"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/provisional-manifest.json",
+      "bytes": 41897,
+      "sha256": "b2b371a9ed66b713974396c2daee0ce1490b0c58bc7c4a8abe658ab00818a7a5"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/resolved-configs.payload.json",
+      "bytes": 56549,
+      "sha256": "176583d2823ced2f898adcddbe486ab86fde68f6188a5c077f5769f0fde46f75"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/self-review.json",
+      "bytes": 665,
+      "sha256": "a98cfb8727a2ffebd4e53aa80d834e973a8b1d807ae2556dee24da4a7a7f0b04"
+    },
+    {
+      "path": "survey/out/geosim-execution-task4/zero-world-verification.json",
+      "bytes": 388,
+      "sha256": "0f866c82d795c3729c7e687413e09eaccddeecc45c7bf8f873784853ecbfe683"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/analysis-driver.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/analysis-driver.stdout.log",
+      "bytes": 1517,
+      "sha256": "8a2ab0c94e2a408e3b3059eb88932109adb73aef969571ebd4c19044acbe214a"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/analysis-receipt.json",
+      "bytes": 1517,
+      "sha256": "8a2ab0c94e2a408e3b3059eb88932109adb73aef969571ebd4c19044acbe214a"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/analysis-start.json",
+      "bytes": 979,
+      "sha256": "94c5a578b9fe2bc56b121c9ffeb13a8277e3c567a016ff5bfcde8d9b821dcb7e"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/analysis.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/analysis.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/artifact.reference_2017/process-receipt.json",
+      "bytes": 1049,
+      "sha256": "adcdd35a29786b8ea136494f4d3c94f42be3b925f4f781d86ee7eee8ba88164e"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/artifact.reference_2017/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/artifact.reference_2017/sessions.jsonl",
+      "bytes": 14058397,
+      "sha256": "afa252fe93537c4bdc8d17fd66a68612c2d151e5d1a490262ea0da0fecf30027"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/artifact.reference_2017/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/artifact.reference_2017/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.base/process-receipt.json",
+      "bytes": 1009,
+      "sha256": "335221ab7323ca2622b4b75f156d3ab1136495863f9faa48a73c37819f351eca"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.base/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.base/sessions.jsonl",
+      "bytes": 17579616,
+      "sha256": "bbde9e32595db79c091edc93bce0bd2b98839c694060c992f89a496096863dd8"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.base/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.base/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.context_off/process-receipt.json",
+      "bytes": 1038,
+      "sha256": "bcfa9da86176d01a1e16616e23e395a72811db591c777da8f6eab946e4caa8d1"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.context_off/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.context_off/sessions.jsonl",
+      "bytes": 30169184,
+      "sha256": "e0359a5d36f29c5e73a228d233ad08c3ab2f772ce002a9fefb3534e1ca814433"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.context_off/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.context_off/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.distance_exponent5/process-receipt.json",
+      "bytes": 1064,
+      "sha256": "4cfee609cc9daee8f79f330485305cbb700251355fa3fc030debd7edbeebc87f"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.distance_exponent5/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.distance_exponent5/sessions.jsonl",
+      "bytes": 19195832,
+      "sha256": "22587b78c50ebe37440bc998731417180bd12f0813fac917cd4166a33d955e21"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.distance_exponent5/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.distance_exponent5/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.distance_offset0_2/process-receipt.json",
+      "bytes": 1065,
+      "sha256": "71d87439848ad801e9685777fd7f9fe5ebea286669a9578f592f6557b3e241fe"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.distance_offset0_2/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.distance_offset0_2/sessions.jsonl",
+      "bytes": 16930408,
+      "sha256": "2ca664cd9ad965920085db838c74601e62e0187452fff5cd6595e556b3d0f798"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.distance_offset0_2/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.distance_offset0_2/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.grid75/process-receipt.json",
+      "bytes": 1017,
+      "sha256": "0f1a06082750d11296ba00aeb064a45e3ba66a6973ef2e1c1e71ff0681c13336"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.grid75/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.grid75/sessions.jsonl",
+      "bytes": 39714326,
+      "sha256": "926c6c4b981a79ac6f375534b81d558ce539c7961eca9165830b827dbbfd529e"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.grid75/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.grid75/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.mobile0_9/process-receipt.json",
+      "bytes": 1029,
+      "sha256": "674036943fa7522aade1cb6604c5394514de44fceb474586656a7cd8c65de044"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.mobile0_9/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.mobile0_9/sessions.jsonl",
+      "bytes": 16704169,
+      "sha256": "64051e6a75e324d83b6e04c8e33320080fcb1956d465ccd9d0e7f77b6afaa408"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.mobile0_9/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.mobile0_9/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shadow10/process-receipt.json",
+      "bytes": 1025,
+      "sha256": "8ebf2241fbf7175b941cd8ad2fc121c5443c0b3d5ea57f694d0f614253e22ffb"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shadow10/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shadow10/sessions.jsonl",
+      "bytes": 23974769,
+      "sha256": "554e58db03fca92c4eb67aa1bb8a5f21e820fcbd32c962084ddee6b7facf1edc"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shadow10/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shadow10/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shadow40/process-receipt.json",
+      "bytes": 1024,
+      "sha256": "2706b1d96970fb25e592554c8439291e6535c617c210d6238d4a36f95e580fa5"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shadow40/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shadow40/sessions.jsonl",
+      "bytes": 14179991,
+      "sha256": "0ebbd5bc120ed1175606615ffcad3b22cc8a1925ed1e626c9e9e81007450952c"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shadow40/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shadow40/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shock0/process-receipt.json",
+      "bytes": 1017,
+      "sha256": "2df757d2f0acea5674228c6908092df90b306d67b498d993aeee6bbe03f89867"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shock0/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shock0/sessions.jsonl",
+      "bytes": 12752765,
+      "sha256": "ee5625766144a391a7ff59f688e58e0a2655dd6ff49a9d60ec83307b40e8bf70"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shock0/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shock0/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shock10/process-receipt.json",
+      "bytes": 1021,
+      "sha256": "9076a57b2a32e3ea9b7f46da787912f0cbb673d5e0f17b298eca2fa12f9b54cc"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shock10/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shock10/sessions.jsonl",
+      "bytes": 19853161,
+      "sha256": "cd26215506c55c36095d84cf2cc3b54b4e49bb6ee2d9bd35e26ce1de473a9df8"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shock10/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.shock10/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.thresholds2_5_shock10/process-receipt.json",
+      "bytes": 1077,
+      "sha256": "bba484f3d8f6121cd2fc395bbba62e1dfb1b365ec5d6285c983f20e87c8d42e9"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.thresholds2_5_shock10/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.thresholds2_5_shock10/sessions.jsonl",
+      "bytes": 19915481,
+      "sha256": "37df5975112b9702ab7922f8b5554ffb949cb42db9a5fd0a93b07e2b260de0d4"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.thresholds2_5_shock10/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/original.thresholds2_5_shock10/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.base/process-receipt.json",
+      "bytes": 1016,
+      "sha256": "0e96e9a04c630b7326fb2093d63dd4e5e1b2985f38abb40ba0fdefeb3b63e146"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.base/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.base/sessions.jsonl",
+      "bytes": 114483656,
+      "sha256": "8c54c26929e0d33e6c580c53bb937c2d2e5399bfea62f57a1935794169edde87"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.base/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.base/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.context_off/process-receipt.json",
+      "bytes": 1044,
+      "sha256": "934ad5562cf6165934f4150f8d0f11f197f5d50b0287fed3562d40f6662b80f4"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.context_off/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.context_off/sessions.jsonl",
+      "bytes": 202232589,
+      "sha256": "eebe933fda1a32f7dd51807f81ccb608e7dfa2b143aa20a4967de994263440ad"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.context_off/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.context_off/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.distance_exponent5/process-receipt.json",
+      "bytes": 1072,
+      "sha256": "89f820e5362f01d9fabe30636c4881ffdec84cd9053beecbbf0487d53c9b0b8a"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.distance_exponent5/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.distance_exponent5/sessions.jsonl",
+      "bytes": 126625893,
+      "sha256": "d88ef4253d75608cfd600daa8a12cff6c04c46c4af83c77e8ac2bdee670b122a"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.distance_exponent5/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.distance_exponent5/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.distance_offset0_2/process-receipt.json",
+      "bytes": 1072,
+      "sha256": "3afd3ee5c8ed4dba5211eaa47c900617391b37e2aa9b58c32f8bd98332ee7909"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.distance_offset0_2/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.distance_offset0_2/sessions.jsonl",
+      "bytes": 111830024,
+      "sha256": "cab995bdc000a22e4a4105f2d75814484d751876a6272e0b51673b25371cbc6a"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.distance_offset0_2/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.distance_offset0_2/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.grid75/process-receipt.json",
+      "bytes": 1024,
+      "sha256": "dd532c91566a768b31df8397aa031928805e062fa1bb64e27998161217816f47"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.grid75/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.grid75/sessions.jsonl",
+      "bytes": 263890627,
+      "sha256": "d3e7418aeb12cac25341587f3daa9da3bfb9a2ba1c91130e1b65e765f0b0d543"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.grid75/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.grid75/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.mobile0_9/process-receipt.json",
+      "bytes": 1035,
+      "sha256": "b9c8d95c95d0bae3950cf0894d4925194a0221c97f8fab504ed98697675243f8"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.mobile0_9/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.mobile0_9/sessions.jsonl",
+      "bytes": 111898212,
+      "sha256": "74b41e39cab9bc20f875d7e646a813434e36a92479d6f252de8046297fb26ed0"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.mobile0_9/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.mobile0_9/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shadow10/process-receipt.json",
+      "bytes": 1032,
+      "sha256": "ddc6fcc4d3d456bf386843b457968f5edbf5d5ea19e939fe0597a8fb4c5dfea6"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shadow10/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shadow10/sessions.jsonl",
+      "bytes": 156971019,
+      "sha256": "45f410afb5983f35e34f8a6ae41b4adfa812cf7ad1ed52ce43831393618f44b7"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shadow10/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shadow10/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shadow40/process-receipt.json",
+      "bytes": 1032,
+      "sha256": "ca2608b2e6af496d77683a2aa59334fa8c3bdab2c43c734b3d87fde8513b35aa"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shadow40/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shadow40/sessions.jsonl",
+      "bytes": 94933381,
+      "sha256": "f15e23ef120aac278d93c4919535937f019220f31132d512a6de8c5cd2455548"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shadow40/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shadow40/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shock0/process-receipt.json",
+      "bytes": 1024,
+      "sha256": "75789ef827a06a659f6026122ac315c1b5658da9f7125504928c40245b0bd695"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shock0/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shock0/sessions.jsonl",
+      "bytes": 83560561,
+      "sha256": "a9824e6ba1e64eea0eed6b322d0a034e158b1cc8dcc5207d5591a50110125c33"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shock0/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shock0/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shock10/process-receipt.json",
+      "bytes": 1026,
+      "sha256": "f597b00b86f084d11bca536a8844190aa53c202ac419f0fb54cfbbeb8e54cef9"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shock10/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shock10/sessions.jsonl",
+      "bytes": 133441109,
+      "sha256": "70227d78c03744e14369f459db62414ecfb54e6ad1a5251943eed024d2b713cf"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shock10/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.shock10/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.thresholds2_5_shock10/process-receipt.json",
+      "bytes": 1084,
+      "sha256": "27bf75ebe60cd4c5ff96a189ccc7a502f35ba2997bf8f5210aa084cc0d5c1486"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.thresholds2_5_shock10/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.thresholds2_5_shock10/sessions.jsonl",
+      "bytes": 133553232,
+      "sha256": "b365200c9616306d1e478779de56e84f5f28fbb58053bfd67ece8e1392362401"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.thresholds2_5_shock10/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/precision.thresholds2_5_shock10/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.add_losses/process-receipt.json",
+      "bytes": 1028,
+      "sha256": "0d95cbeda2474799f3b89d844f81d8cb215e93715a1344c537e46a49a336495e"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.add_losses/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.add_losses/sessions.jsonl",
+      "bytes": 17364185,
+      "sha256": "91f9f5aac01bb136f9cdb5119166de5800c90ebfa579ad8efa91c1b99716cee9"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.add_losses/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.add_losses/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.adjacent_active_states/process-receipt.json",
+      "bytes": 1077,
+      "sha256": "11392fa818a78a32b3fb5008237291b3b546615b6d1822e93bb27f0ad74f1e12"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.adjacent_active_states/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.adjacent_active_states/sessions.jsonl",
+      "bytes": 12221751,
+      "sha256": "302e456f94c50010a3b8fb89726d7d6f44f0af375d7d9fb85736a8c28f7bba75"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.adjacent_active_states/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.adjacent_active_states/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.affected_states/process-receipt.json",
+      "bytes": 1049,
+      "sha256": "7b2397f3bf4688df0dc0372cf9365f11aebf0926f60dbdb8af3a8316cdf0ba7d"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.affected_states/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.affected_states/sessions.jsonl",
+      "bytes": 18454532,
+      "sha256": "878d8d1a369cd574019803d53c1efff0aab52078c07788ca13725670876cea05"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.affected_states/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.affected_states/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.all_fronts/process-receipt.json",
+      "bytes": 1030,
+      "sha256": "1e73234c208c9549fe0ef4ac8051ade84d595cbb1e7d039d9af56ea8f3662bf5"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.all_fronts/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.all_fronts/sessions.jsonl",
+      "bytes": 18920118,
+      "sha256": "9448db8dd8cff287811d7b570267f9f82c96c5300181872e5c90304c14fa33ad"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.all_fronts/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.all_fronts/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.attacker_first/process-receipt.json",
+      "bytes": 1045,
+      "sha256": "03bd1762d780a2f509431b871be7ac80dac8940e9f0527e8f8f87ea82c277e79"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.attacker_first/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.attacker_first/sessions.jsonl",
+      "bytes": 16809625,
+      "sha256": "27e3753a72a779b8ee9cae96daa69b0a70d4a5131a7a49d3f36a3d604f77adca"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.attacker_first/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.attacker_first/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.collapse_only/process-receipt.json",
+      "bytes": 1041,
+      "sha256": "a8a654414276b69761a6988e9bd4ce02591a94ebedd5dde73b4ab226d8e14924"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.collapse_only/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.collapse_only/sessions.jsonl",
+      "bytes": 17834152,
+      "sha256": "8dbb22af3916c10f8a89fbf7725ab12c0e21144cf00a60a9fcebe1cb9bc4f3cb"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.collapse_only/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.collapse_only/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.exclusive/process-receipt.json",
+      "bytes": 1025,
+      "sha256": "0d7652b2836e19657ca9c20ba2121e3c7767cf4b7d3613cf71afa432c3ef2efb"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.exclusive/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.exclusive/sessions.jsonl",
+      "bytes": 16607655,
+      "sha256": "6a3412ec7d0aca318c17e6d3245e501f00ff9d1232cfafe157b52447ba47faa4"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.exclusive/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.exclusive/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.global_no_action/process-receipt.json",
+      "bytes": 1053,
+      "sha256": "aa77d4647e9fea36a3807ee55c9e12940b87620f7f6e70bba1295ab38a55e6c8"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.global_no_action/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.global_no_action/sessions.jsonl",
+      "bytes": 17302311,
+      "sha256": "83c84c852c71bbc925809759661b46de4717c02f6b3f3a4e77f0d536552cdda4"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.global_no_action/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.global_no_action/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.initiator_curve/process-receipt.json",
+      "bytes": 1048,
+      "sha256": "e33b232b6ce6fdd6fe4539fbe2399cb304ccd65467f7581e38b687d07a552d6a"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.initiator_curve/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.initiator_curve/sessions.jsonl",
+      "bytes": 17862945,
+      "sha256": "81c863c6dbdd6d743c62b954dd7ba6465f8de7e3e5810b1e228d9da3adda0ed6"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.initiator_curve/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.initiator_curve/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.java_int100/process-receipt.json",
+      "bytes": 1033,
+      "sha256": "2b64214eab377bd4d2a27fa7b2b5216d2674a38ad6c9f44fc4a2676a21dfc2fd"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.java_int100/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.java_int100/sessions.jsonl",
+      "bytes": 17584197,
+      "sha256": "512b8212404db2c48ac26f9d0b42e04160393a2ab8e661681de1cf176903b02e"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.java_int100/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.java_int100/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.manhattan/process-receipt.json",
+      "bytes": 1025,
+      "sha256": "3b1977539cde21ad527a82e56ea076997ebb898bddf8b4cbde30715c58a5f0d3"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.manhattan/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.manhattan/sessions.jsonl",
+      "bytes": 17886101,
+      "sha256": "fabe2e2a38c472610f1aa3c8daa3d22e79e641b1b2e42ae2d916050b16bfae02"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.manhattan/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.manhattan/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.mutual_only/process-receipt.json",
+      "bytes": 1033,
+      "sha256": "9b0419d2f8d12511e0f0a544986becf771e881ec0c4509cc79db1fe5dd4d2389"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.mutual_only/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.mutual_only/sessions.jsonl",
+      "bytes": 14466441,
+      "sha256": "3e7dc86c38a4679aefcb0bdd34ae2ca012c69573dad953796b913cda23bb5d3e"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.mutual_only/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.mutual_only/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.own_commitment/process-receipt.json",
+      "bytes": 1045,
+      "sha256": "f827d2da02e40967970b67e94ff30881ec7093a86d2d9c07e12bd3c4c095d693"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.own_commitment/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.own_commitment/sessions.jsonl",
+      "bytes": 18000488,
+      "sha256": "de9eb6cbb073447b0c357dceea202bca79501da3df54666725e38a3eb56cefe9"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.own_commitment/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.own_commitment/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.printed_increasing/process-receipt.json",
+      "bytes": 1080,
+      "sha256": "90c2ce0536ffdbe3d84822846262a16c22999b9f31924e5e8a731cd56fda489f"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.printed_increasing/resolved.json",
+      "bytes": 143778,
+      "sha256": "8c17439878df6d6b8ddac4a5c85a1937b7bc9cfff71134359b274b576c5a0c68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.printed_increasing/sessions.jsonl",
+      "bytes": 16137282,
+      "sha256": "4e9ed58da2d061b27d466a7e91d4f7a916100f77a5f645e56c2636a845ca64f8"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.printed_increasing/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/arms/reading.printed_increasing/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/compact-omissions.json",
+      "bytes": 1526031,
+      "sha256": "ff081a10e7fa0181fbc5845dac124885222e0ae7fd09b45c62d37dbac90a7730"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/execution-start.json",
+      "bytes": 190,
+      "sha256": "62bc720fe9983466ddd3007b2c7ee44efb427f1e296edd16f20ea4676412366c"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/findings-summary.json",
+      "bytes": 9726,
+      "sha256": "c27dde50a7d3a55cc87f6fca6092f517aaa2ff634363894e95dad330d6ff3b9b"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/findings.json",
+      "bytes": 107899719,
+      "sha256": "5d6d3c26710d9d454f2d41386c62734de83ef34e133f554b840ca99b8e103ee4"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/findings.md",
+      "bytes": 55246,
+      "sha256": "fde9a064dbcf8f6adcdb98ce5e7d747397d167e8d1911d7683f2ccee07184a1b"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/implementation-plan-before-task5.md",
+      "bytes": 969,
+      "sha256": "ce44ca31fb13adb56f9dc91335c7a7e4f12c58c085cdb458e407d020dadbc068"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/native-clocks.json",
+      "bytes": 2329,
+      "sha256": "423f0cdf08e9753d479662eecc8f051c15d08fcf1da93fa43a803de0537db0d2"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/native-progress.json",
+      "bytes": 43404,
+      "sha256": "a44b5ea89b42014b1eb2632ded449857e165b4422d07332b4c1b73d84df48b68"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/native-scheduler-attempt2.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/native-scheduler-attempt2.stdout.log",
+      "bytes": 38352,
+      "sha256": "2e2b929e2c3a4fd1ce69e8f7bf857008ce66716f403e32eb0173c562bed20b6e"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/native-scheduler.stderr.log",
+      "bytes": 341,
+      "sha256": "4e78f12e1c4aaf7357daeaa292b06c5e3f1bb40410985d39eab23d38e563ce6d"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/native-scheduler.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/native-summary.json",
+      "bytes": 43933,
+      "sha256": "2c875f01715e0fbf834080942baa0cc04a942ea9621681d35ac06d1fabda7839"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/original-evidence/cederman-2003-apsr-modeling-the-size-of-wars.pdf",
+      "bytes": 2989512,
+      "sha256": "9fe7ef6b369d1c58e43c0551fe924e9e87d0cf57d8398f59532c97392887a495"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/original-evidence/cederman-girardin-weidmann-icr-2017-growlab-0.9.5-source-geosim-geocontest.zip",
+      "bytes": 39561246,
+      "sha256": "2f20146bc34f9521302f251ffd6388443c4bbd21e8db47a527c120d220e98a5c"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/original-evidence/clauset-2018-sciadv-trends-fluctuations-severity-interstate-wars.pdf",
+      "bytes": 703902,
+      "sha256": "89b4815a873cad8cd51339356d3d05d60a39cfe1fd31cfc15b57de3789c8acbd"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/package_findings.py",
+      "bytes": 7011,
+      "sha256": "74f30ceaf56965ebf2d1160d6f4a396e6771c7775dd22d8a73589ebb1f9a0aa0"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/packaging.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/packaging.stdout.log",
+      "bytes": 8708,
+      "sha256": "b54d6eeaee14676cb857054cf3e40d6679cc608b37558aac166f9311a80eb54c"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/preserved-evidence-snapshot.json",
+      "bytes": 35842,
+      "sha256": "7ade849e7a02d3e38e58b26e0945e38d93f2246bb9d6c1202c49f3751cd39483"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/run_analysis.py",
+      "bytes": 1755,
+      "sha256": "81206bdebdae86b1d95cfe9aa040783fe844323c9d283e9b99f4aca765876654"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/run_registered.py",
+      "bytes": 4252,
+      "sha256": "8452ee59b49f8180215cc393930f60361f50447eb4062d8ec101d5124d4b8da5"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/runtime-benchmark-command.py",
+      "bytes": 2546,
+      "sha256": "ef917fed1608e6a1f531aeff8e7d63ebc4a8af207e4b604acebe01153cc6d5f1"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/runtime-build-receipt.json",
+      "bytes": 1209,
+      "sha256": "f6e1b269e54fe4a36f43f175bef52c4975e35274591d2f4bc996d8ba5a08ad93"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/runtime-manifest.json",
+      "bytes": 89392,
+      "sha256": "4ad0517ebcb6590e9afb814ad63dcb1537bd902e24924d81823226a8e2c49fa3"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/runtime-only.jsonl",
+      "bytes": 1215988,
+      "sha256": "67ca826b6c1555484d61698d96f8a8dc0494c96dfe2ab416b0fb31f9d22f45cc"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/runtime-orchestration-issues.json",
+      "bytes": 1090,
+      "sha256": "b522b52265319aa8f073e1f358ea350d4ac74457be0cb56622f037cc8cf54a48"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/runtime-receipt.json",
+      "bytes": 302,
+      "sha256": "8f76a54ad9e0d690f9644fd64beb915349a3c8888bc2a742e4b080df3dc825f1"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/runtime-resolved.json",
+      "bytes": 4436,
+      "sha256": "9f45aee818f92e023c07feda8759814cb1d5e132da307c3b97acdc87023d5954"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/sessions.jsonl",
+      "bytes": 2015900185,
+      "sha256": "6388068c85f2525d18b781d011a3c605686ca73456f3c9b6239ff92a3ecae4ad"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/snapshot_evidence.py",
+      "bytes": 1400,
+      "sha256": "b78a45f8c1c19420e75c7eb22b428e7326ff7c84fbf3824872fe68565228e4d4"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/verify_findings.py",
+      "bytes": 3040,
+      "sha256": "4532dec5855bebcca9919ea67a06294b0233d36c4eb8a19851a7cab18bf53228"
+    },
+    {
+      "path": "survey/out/geosim-execution-task5/write_report.py",
+      "bytes": 13027,
+      "sha256": "8289b5a7e41ff11921af7567f91cb55ef59a5a5c5ab217ab39a0918c87aa54b8"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-digitization-receipt.json",
+      "bytes": 300,
+      "sha256": "c23ba62a9831caa8c1ddf42d421d2057b8fee565eef6a7f5f6a6c1d9ea7d5bda"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/cutoff-reference-results.json",
+      "bytes": 412,
+      "sha256": "da91d0d78018eb71af015543f169ed9505e9b339ebadcc58248445174b671e5e"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/cutoff-reference.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/cutoff-reference.stdout.log",
+      "bytes": 412,
+      "sha256": "da91d0d78018eb71af015543f169ed9505e9b339ebadcc58248445174b671e5e"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/cutoff_reference.py",
+      "bytes": 1630,
+      "sha256": "bcd86ea475647a7ef29e06559527ebb8df0568f1d5bb6f4e5ccc3fb347af09cc"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/environment-and-local-docs.json",
+      "bytes": 55126,
+      "sha256": "eba401136a68609160acdb2e1b15dc01f8a1ab7990f34c8ecb92333afe5149ce"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/preparation-receipt.json",
+      "bytes": 12429,
+      "sha256": "c258a3962c4d52be34d7733439728bc9c0e0729e0840991de5dff76346fa87e7"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/prepare-first.py",
+      "bytes": 14602,
+      "sha256": "ca4faf00a161ddaec51ccda84b8163ad918ef79928b0a1c132370498a8a5fdac"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/prepare-second.py",
+      "bytes": 14914,
+      "sha256": "9f52533016ed901310c5f8985ea5b23113d2e70a25b75e77ac98a0a55f38b387"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/prepare-third.py",
+      "bytes": 14980,
+      "sha256": "40119a8f8bd8231474352630d12d08280a862c04fa64e586a72d28efb7fb18cd"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/prepare.py",
+      "bytes": 15269,
+      "sha256": "c8e4f8e1ab719160691977086346bc39c69055ceaabda5d774105ed2ba471026"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/reference-results-second.json",
+      "bytes": 5183,
+      "sha256": "d601508a1771ca9448a760692e9694d0af91684c66103f06edceaeffb76e5c5a"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/reference-results-third.json",
+      "bytes": 5120,
+      "sha256": "58a0b26ac79f98b7b35d30694bdfc193adbf48beb2d6990a1e465a70cdb91c6f"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/reference-results.json",
+      "bytes": 5120,
+      "sha256": "e129c51e435e369db9da545a6258555dca02891c260a548e6572027cc67eae42"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/reference.stderr-second.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/reference.stderr-third.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/reference.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/reference.stdout-second.log",
+      "bytes": 5183,
+      "sha256": "d601508a1771ca9448a760692e9694d0af91684c66103f06edceaeffb76e5c5a"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/reference.stdout-third.log",
+      "bytes": 5120,
+      "sha256": "58a0b26ac79f98b7b35d30694bdfc193adbf48beb2d6990a1e465a70cdb91c6f"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/reference.stdout.log",
+      "bytes": 5120,
+      "sha256": "e129c51e435e369db9da545a6258555dca02891c260a548e6572027cc67eae42"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/reference_checks.py",
+      "bytes": 6237,
+      "sha256": "99f161bb23d8fb1be7c0b9e9d82bae870a5f8db676054590cb88134be77e41f5"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/Rcode_README.txt",
+      "bytes": 7989,
+      "sha256": "9adb733ab684344923ce51e24ce7c1cc8aaa85c51cbe59adfd9eeb5675c7c523"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/author-lrt.tgz",
+      "bytes": 26557,
+      "sha256": "aa7208281067d423eec40afe30051857e8982eadb8f088eca2863b33844775cf"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/csn.pdf",
+      "bytes": 2285458,
+      "sha256": "b73aede05194f26b2446bd7003129f4d2caeaa5d9a0c47e5a652d3387ec2ac9f"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/csn.txt",
+      "bytes": 178206,
+      "sha256": "0db5e85d64c136f69d48e9cb01e505915fcd65b05750fec545d366b019ea09b6"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/download-receipt.json",
+      "bytes": 1157,
+      "sha256": "afb5c88174bf721671e26690c8a34ab94cb67f27d3b1b52e922c47cd7401e2bf"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/exp.R",
+      "bytes": 2988,
+      "sha256": "1b977a25e61f87465145bd7be8ba440772018c30e158002086a2285428758ffa"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/lnorm.R",
+      "bytes": 6030,
+      "sha256": "48dd4d5ca789d84898ada3259477d9b232b10ca0c92d65e252ba7fb7182a767a"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/pdf-receipt.json",
+      "bytes": 532,
+      "sha256": "36a39bc5c90e9f19d6a8b8a024c76fa094ba2b34ce6e61326b2c7b123cb2b6c5"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/plfit.m",
+      "bytes": 10180,
+      "sha256": "c1f92eb7b57dac9f0212a120cf647887c2b7e8e1076da3317de3cd38ff9be55f"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/plpva.m",
+      "bytes": 11266,
+      "sha256": "6740485dce069a6323f44d759c195755e0ed3d79f22038ee25ee5b33504ce131"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/power-law-test.R",
+      "bytes": 9840,
+      "sha256": "22c3df82d8e5a12090bfaa31502e342c33ef8ed19786ffe7123bb16c78af685e"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/powerexp.R",
+      "bytes": 13164,
+      "sha256": "c1cd0a59489f2a8f0f8e4147f5807e36ccb3b063dc9a813aa2e08620a22ee8fd"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/self-liang-p605.png",
+      "bytes": 552123,
+      "sha256": "8eb0653d1b35663651c997b3ae2db5b50c6998c611dfbffd4625488131aeaeb2"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/self-liang-p606.png",
+      "bytes": 566622,
+      "sha256": "41a9c71847a7ea8c4c499b91b7e4d256a1f0b9401f218980dbd75e1881c469f7"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/self-liang-p607.png",
+      "bytes": 594072,
+      "sha256": "b810c31e497b7c96ae71a306262a8f79833f9696809905d4dea40cad9720f161"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/self-liang-p608.png",
+      "bytes": 374136,
+      "sha256": "656fc372de083cea3ee1886d3be318d5d6216c3fc867d81ff383cbfc4ad9f276"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/self-liang.pdf",
+      "bytes": 843416,
+      "sha256": "bdc5665061c781e293b55197cb6b57c44ddfb7a3adf5a9676efe71260c41ecdb"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/self-liang.txt",
+      "bytes": 1740,
+      "sha256": "c75bfd9c154872ffd32ee0c879ff42c37fb8b4165a9034d7c453810d542214b3"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/references/weibull.R",
+      "bytes": 8091,
+      "sha256": "d25fdcf0108d8f308ede0b0accec8b56d842e05d6296f6d9bb6464effa873b54"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/results-first.json",
+      "bytes": 45571,
+      "sha256": "33994ae6926f7b529000533dc29c2ee195d29de0d9ef8d4b6de2f143960d12ee"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/results-second.json",
+      "bytes": 45574,
+      "sha256": "3ce1c4376220376ebd67e938fe19be7c8a754b930735e183f267a315048d323b"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/results-third.json",
+      "bytes": 45581,
+      "sha256": "46527aef6323afd46ed3b78a81d2b845d150d0e86b6f1aa447bd99b4182df0c4"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/results.json",
+      "bytes": 42049,
+      "sha256": "67c4d6697ce9cd6934aa9d31d6efdebadca2d700e5fc66636c487c44a28ea973"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/run.stderr-first.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/run.stderr-second.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/run.stderr-third.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/run.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/run.stdout-first.log",
+      "bytes": 2846,
+      "sha256": "3e1133d2ca3b82883ca0b36757d534d658a04e7a5dabcd2ecf77fde012abf4d4"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/run.stdout-second.log",
+      "bytes": 2849,
+      "sha256": "2254579c02ded7ee2c383e893e23ff51f18b04702ab59125edcbbe949fc3af1f"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/run.stdout-third.log",
+      "bytes": 2851,
+      "sha256": "ae6b0bae28ca203695daeebeeee14db2039357228711f5f8cb266a664648c866"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-numeric-fixtures/run.stdout.log",
+      "bytes": 2848,
+      "sha256": "0b53c1935eedee6e9f62f0a4e6e7ebfbf4999e0cfb50ce11fe55976bb30c06ad"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-preparation-build-receipt.json",
+      "bytes": 1219,
+      "sha256": "64464e6c92602fac1e1b98ef1cbd85d35d90bee61a5c7eb8268bdcc4f5a7f294"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-preparation-completed-ledger.md",
+      "bytes": 1633,
+      "sha256": "7fb54ea5788cdbd604725cc4458e0f6bfb9f879341aa32f279f84e5f5b6df5be"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-preparation-frozen-manifest.json",
+      "bytes": 96684,
+      "sha256": "c984743ce12f3a2433221a43f6db04e7b43f33e5f022a3e1f581b128f5d82cc2"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-preparation-ledger.md",
+      "bytes": 4163,
+      "sha256": "826cf7f9eac9b7e5387815f26227826f92910fddc4078b17968f51451c5c569e"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-preparation-prebuild-sha.txt",
+      "bytes": 65,
+      "sha256": "40ffa09ca6bd098b3a125811a2bb4e6e4ae53559cb39e40cce4e465665501732"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-preparation-provisional-manifest.json",
+      "bytes": 39041,
+      "sha256": "ef17580d3a38a42c3e584c739ac71e2050c05cddc56b12cb731b91a29e93247f"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-preparation-resolved.json",
+      "bytes": 143778,
+      "sha256": "ab253c1bab7a89b7d564d164818c4b4a633e2ab3578ee8715054dc905d1ec3c3"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-preparation-runtime-build-receipt.json",
+      "bytes": 1219,
+      "sha256": "04e630f0c3aba460987b9ef2443bb1a34c4bd74e571a2e90a686142eaf21f02c"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-preparation-runtime-manifest.json",
+      "bytes": 86535,
+      "sha256": "9e8c9d054aa9a722eb63f6b55b2e5fcbfb8260b687996e22df0b3b3647a9a208"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-preparation-runtime-only.jsonl",
+      "bytes": 1198060,
+      "sha256": "20600e8aa43f6c1e96b1d0e2ea5638d49bb8e3ccef67d2dc80186bc4f57ac823"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-preparation-runtime-receipt.json",
+      "bytes": 324,
+      "sha256": "68609576f60335432770c72263dd59e95990294db7c73de75992c7dc7ddced01"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-preparation-runtime-resolved.json",
+      "bytes": 4436,
+      "sha256": "bf7e7687cd37bd142e82fd1dfaf30fb8706a158d70c4e6df12e1ecf4165778ac"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-preparation-validation-receipt.json",
+      "bytes": 700,
+      "sha256": "1175331db1d5544b0a1459c295d095064f30556f9a8eeefeb948791135310d33"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/Inter-StateWarData_v4.0.csv",
+      "bytes": 31698,
+      "sha256": "2535e30b145141c331a07d12d91e498ad8bdd3db32ba8d3bd88c4fda54817731"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/Inter-StateWars_Codebook.pdf",
+      "bytes": 82241,
+      "sha256": "875bf75f8f3df5f1ac418a03eeaa6dd9b9a81a3b4d112bd6832040cffc26a1be"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/clauset-datacode.html",
+      "bytes": 13705,
+      "sha256": "93a086f2b1dadd7bb912b244fa0f7d5db6457454096d9ece43cd0416a3d89004"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/clauset-home.html",
+      "bytes": 7327,
+      "sha256": "19b357ed8c97a4254e7dfab1b7ac28d9d52b713b8a967fb2545ca9b82ba4d517"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/clauset-powerlaws.html",
+      "bytes": 14603,
+      "sha256": "f78d7c006fd42995730321ae146ddd61bb36356f1147c59159a1f97889db6789"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/clauset-research.html",
+      "bytes": 49249,
+      "sha256": "01a0b5b392f8d12c2f972a2363a3825074a42e97f87f41aa20a9addbcb688f51"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/clauset2018.xml",
+      "bytes": 111886,
+      "sha256": "ae196eed44f943972af9d73cfa805b535cfacdf1bd6b04aca9729a263a542b94"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/cow-input-audit.json",
+      "bytes": 508,
+      "sha256": "73aa4676b84a34446089aeb369eef48c06d8c9eb29448ec79b2460a903d0dccb"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/cow-page.html",
+      "bytes": 126024,
+      "sha256": "6bfb49a0c2b130c89ce68ec3b250b770e3b7d911f152ac71c96a486ed0a45785"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/downloads.json",
+      "bytes": 860,
+      "sha256": "47eeaa9a1259e89ac05a6841b2036bd193622dc2fadd1f4eb5c55465b1246cf7"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/europepmc-static-attempt.log",
+      "bytes": 87,
+      "sha256": "08b43db292f13240c64a0a2e9f489f5e6683814f56aeced6c97608504705c41f"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/fitting-code-downloads.json",
+      "bytes": 648,
+      "sha256": "ee956b25d0d095613e1ff454708b1b867baa7d67cc096c36940e69d8c483835b"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/manifest.json",
+      "bytes": 4218,
+      "sha256": "717446d96e7bb822be8b77e2c10d6608bdd3dbc5d08c61bd2a10f68646cf4b09"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/older-cow-attempt-1.log",
+      "bytes": 135,
+      "sha256": "42622469d85198ef42abb55d5a3b8d0d23a926ac61d5bfea40d69fed20339a8b"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/older-cow-attempt-2.log",
+      "bytes": 86,
+      "sha256": "086905ce4111a6f98230024870cda2ed3d47cec9207dbd2ddcda58ced2eedb20"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/older-cow-attempt-3.log",
+      "bytes": 197,
+      "sha256": "f9ce8934d32177c357c6a0a8810f983bb15c94c4cdca9de4639c3c66de7bf7ee"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/plfit.m",
+      "bytes": 10180,
+      "sha256": "c1f92eb7b57dac9f0212a120cf647887c2b7e8e1076da3317de3cd38ff9be55f"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/plpva.m",
+      "bytes": 11266,
+      "sha256": "6740485dce069a6323f44d759c195755e0ed3d79f22038ee25ee5b33504ce131"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/plvar.m",
+      "bytes": 10247,
+      "sha256": "c4f611d49d314bb8f766c3c1b6c5b95c9ce452863fe38a6246912f886ce17234"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/static-blob-attempt.log",
+      "bytes": 106,
+      "sha256": "9bb34c89fa53162b8c5a40618d3ada56ede095370a0b902f36ae18af051a71ae"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/supplement-attempt-1.log",
+      "bytes": 109,
+      "sha256": "07a458d127030b9a6c8dcac45f675a10a3dc39172e0f3e1a4d5d007b5a96aa22"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/supplement-attempt-2-response",
+      "bytes": 1817,
+      "sha256": "e3531df264f683bb0f902dfe2d00b1252f3f22a476b8b2c42a0bca9e333bcaf7"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/supplement-attempt-2.log",
+      "bytes": 156,
+      "sha256": "37b57ceefb7cbd5d8466ea788254468ce151b0e8e385af3bd8a97dc1e5e81f9c"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-empirical/supplement-attempt-3.log",
+      "bytes": 108,
+      "sha256": "4b3d01db0d05e12d771d0b33198506df4cb8d6d8eb794a994614a22fb31f027c"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-preparation.md",
+      "bytes": 19515,
+      "sha256": "e5e48ddcf96283bcd1ae3b37af18c3df3c4ced08d9204fc76fbf4ebbe4198468"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/2026-10-03-before-duplicate-key-fix/archive-members.json",
+      "bytes": 8945,
+      "sha256": "9bf9d9cec55679fb099963ef7e1b992dde86496533dcade1685caf40f76e126a"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/2026-10-03-before-duplicate-key-fix/completed-wrapper.log",
+      "bytes": 16118,
+      "sha256": "84a47489547e608e047ce4bd506033c154075fe4ddd86f2b5fdc13fc6750490c"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/2026-10-03-before-duplicate-key-fix/preservation-receipt.json",
+      "bytes": 1687,
+      "sha256": "9f60de3e5e767c833bb373e03e624536273844edfe3278cc6a25336c4f8ee8a3"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/2026-10-03-before-duplicate-key-fix/runtime-manifest.json",
+      "bytes": 9121,
+      "sha256": "ab2cb7c63c9386f7b9d298485f682ff766a0c6044dece0055f8c30a11cc4d89b"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/2026-10-03-before-duplicate-key-fix/runtime-version.txt",
+      "bytes": 158,
+      "sha256": "42a7cc673edfb4df1649add8bb6469e37e0b05fa2875c5b0402da69b93273835"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/2026-10-03-before-duplicate-key-fix/seed5-reference-trace.jsonl",
+      "bytes": 13233,
+      "sha256": "e4b9a971791b5449171ae46fcf3ffebdfa43c56c9cc17d43796ef96ef33b29b1"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/2026-10-03-before-duplicate-key-fix/wrapper-tests.log",
+      "bytes": 229,
+      "sha256": "5276dfa5d0ba5d53e071bbab147d0182d8662c8a9b19d7c7519abab4c3f52995"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/archive-members.json",
+      "bytes": 8945,
+      "sha256": "9bf9d9cec55679fb099963ef7e1b992dde86496533dcade1685caf40f76e126a"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/attempt-1.log",
+      "bytes": 1161,
+      "sha256": "b94638326be31f855c303652c7043124df22ab50340913303a57008858ff1790"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/attempt-2-wrapper.log",
+      "bytes": 15854,
+      "sha256": "b5ccde98fcf54c91687a4e3f1165bdacc591c00923f76402c7d1fbdfdfc10b7e"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/binary-bytecode.txt",
+      "bytes": 410997,
+      "sha256": "6f74ca6172dc6737e4bd9f393400ea273e010eb177e88ffa00f7e3a8b1584da7"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/certification-audit-manifest.json",
+      "bytes": 1388,
+      "sha256": "1e03d758c4847275b4833229a1badbe5ed0b5121358ef66a8e6a851010d3011d"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/certification-smoke.log",
+      "bytes": 770,
+      "sha256": "7f26f29f00234243149d6fc058a915061b5ab035427c5c02f6c570a1ad34196d"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/completed-wrapper.log",
+      "bytes": 16118,
+      "sha256": "84a47489547e608e047ce4bd506033c154075fe4ddd86f2b5fdc13fc6750490c"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/current-wrapper-10500.log",
+      "bytes": 15726,
+      "sha256": "b2f36fd2fe2f921177cabdebc9c002543ec1e2cab9beb6cbdfc90eefbdd58985"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/current-wrapper-10500.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/current-wrapper-runtime-manifest.json",
+      "bytes": 9667,
+      "sha256": "327cbac5f8919fd7d7d5a39fc31cc15dc857f0a5af160a98307c158c8016dbe1"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/current-wrapper-seed5-trace.jsonl",
+      "bytes": 13233,
+      "sha256": "e4b9a971791b5449171ae46fcf3ffebdfa43c56c9cc17d43796ef96ef33b29b1"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/extraction-receipt.json",
+      "bytes": 8020,
+      "sha256": "6a7d8b6d2f7fe42a09d04f6f3364e2b30781cae0c024a115488e5856593182b7"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/geosim2/classes/ch/ethz/icr/growlab/model/geosim2/Actor.class",
+      "bytes": 17019,
+      "sha256": "1d8f99044fc17a0ad67a4edf901819830f392f7e41c8c0114e87984cc228e40e"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/geosim2/classes/ch/ethz/icr/growlab/model/geosim2/Alliance.class",
+      "bytes": 3971,
+      "sha256": "5fc0feeb6c9d58997fba1c4218f82d8622107d636caf6badf5313607eab5919f"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/geosim2/classes/ch/ethz/icr/growlab/model/geosim2/BordersRenderer.class",
+      "bytes": 2791,
+      "sha256": "26d0f65fe0e56bad9ddaa12eb8fc3eff9b793465a68ef266d2a8286a3e7b7dc2"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/geosim2/classes/ch/ethz/icr/growlab/model/geosim2/CapitalRenderer.class",
+      "bytes": 2222,
+      "sha256": "68d1dd792e39f73542f6897454ccf2335d8ffd10a56e4228841dc822b89fa5c8"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/geosim2/classes/ch/ethz/icr/growlab/model/geosim2/Geosim2Lab$1.class",
+      "bytes": 1624,
+      "sha256": "173cc834c730338142e7cafaf0c2b2639eec92db873e893629fedd059f4ccaac"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/geosim2/classes/ch/ethz/icr/growlab/model/geosim2/Geosim2Lab$2.class",
+      "bytes": 1877,
+      "sha256": "fbac531e9a02b92291008b307eebd2da91d8ff2a162c74655888b2a9190ba394"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/geosim2/classes/ch/ethz/icr/growlab/model/geosim2/Geosim2Lab$PowerPoint.class",
+      "bytes": 1100,
+      "sha256": "e2fafc7abc9edda1303828398bcac9374d88d24705242076db084a3cf794fdf1"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/geosim2/classes/ch/ethz/icr/growlab/model/geosim2/Geosim2Lab.class",
+      "bytes": 15981,
+      "sha256": "71ebce320ac7aacc44f87ae4185a516f5d5e312e136911429ac38a7cdc9d9b45"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/geosim2/classes/ch/ethz/icr/growlab/model/geosim2/Geosim2Model.class",
+      "bytes": 24252,
+      "sha256": "b2021d3255269140b69a8609f7be95012d54e41bd68b762056d68145a78c63ef"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/geosim2/classes/ch/ethz/icr/growlab/model/geosim2/ProvinceRenderer.class",
+      "bytes": 2323,
+      "sha256": "81c7b884edfb7488ddde026419ffb18af8790f4202c43a4f6181018539c96727"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/geosim2/classes/ch/ethz/icr/growlab/model/geosim2/Relation.class",
+      "bytes": 2892,
+      "sha256": "d1d505061998207396b3dce69093311443f5961059b71ec00a3b270f7c5caa06"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/geosim2/classes/ch/ethz/icr/growlab/model/geosim2/War.class",
+      "bytes": 7849,
+      "sha256": "a7bfb5caeb5f36aec24fce1fb389751bc36813a19868af5dbde8c288cedd871b"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/colt.jar",
+      "bytes": 929233,
+      "sha256": "1ddfab3ac5da626eabef51f818cba47e61f1a623f4f3e7c5b5668465eaddbe3a"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/commons-collections-generic.jar",
+      "bytes": 531557,
+      "sha256": "cf3d652dd439b3d70cab12c325764b1e5edd648acfb22889f6f2184881bec1f0"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/commons-lang.jar",
+      "bytes": 252582,
+      "sha256": "c6d675e6a7d2b10804e23846f20e12fdbc72a2d8a77bb651e6b0ed079a280ee0"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/commons-logging.jar",
+      "bytes": 38047,
+      "sha256": "da255392b586ea17a63a475c4ea74910fef03e4158b77c953a63909b712ddad5"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/forms_rt.jar",
+      "bytes": 333393,
+      "sha256": "2fd67eaed30eb984ceb4cc948c253f516de24fdb1246d2f205a2d165c893937b"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/groovy-engine.jar",
+      "bytes": 12078,
+      "sha256": "ae6afdc364c8be5fdc1b03d2a4235f1439f2887b0c142a5f256cbac6ce52e094"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/groovy.jar",
+      "bytes": 3798673,
+      "sha256": "0281010aeba458b2d18386aa8d5fab29d669149a8f67d69c6fde7d3143b91002"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/growlab.jar",
+      "bytes": 6566348,
+      "sha256": "74596ee06ff26b319f92ef9f829af4132ed19f27618cd89eaac18e1ae77e185d"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/icr-util.jar",
+      "bytes": 36728,
+      "sha256": "ae4242e64fc92d099390acc1876431e528d78493826226b9cb8210847ff1b14e"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/j3dcore.jar",
+      "bytes": 2847226,
+      "sha256": "9863151ee996025dd2dca3228975845abc4568457bdf3a5d9c638beaf1931280"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/j3dutils.jar",
+      "bytes": 1675815,
+      "sha256": "deca3108645b2cfeb314b77d96ed263b8c191255cc09ddfce42a98bf9fee95ae"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/jcommon.jar",
+      "bytes": 307860,
+      "sha256": "8cd9a73761b55310e6e22fc46b88d4c784cd24a1bb33cd626b2802b79d2c0ca5"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/jfreechart.jar",
+      "bytes": 1311979,
+      "sha256": "182809171e8cecd09cf5f6048aae2f0284a4186588aef7c978d45359c72a10c8"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/jogamp-fat.jar",
+      "bytes": 9439826,
+      "sha256": "51876d4f11fd50a49d7550e8eeac7adfb4be8cb0f1a6f703ed6cd071df078bae"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/jpf.jar",
+      "bytes": 202416,
+      "sha256": "f3729b3c610255515121aff4edf857cb64b631be8a4693ed607395d90de3c4a2"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/macrofocus-data.jar",
+      "bytes": 509433,
+      "sha256": "6808aa3d9d6745b2e3275a269a842128e7b5721c86a6f0afc6b2f81369d947e7"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/macrofocus-docking.jar",
+      "bytes": 75542,
+      "sha256": "cd7694f754d98e235ebad63122b5954be6c745ecbb19d4fdcdb63f75f0e2bf5c"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/macrofocus-swing.jar",
+      "bytes": 638765,
+      "sha256": "726d800a6b30ee7496a4b4db929883d175a9f4c9bf86e9237227b24d62217175"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/macrofocus-udm.jar",
+      "bytes": 201913,
+      "sha256": "9b70d8c199f6af2587c552fba7d0421ab6455de1c04b4956fe6868a6c393eaa7"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/macrofocus-util.jar",
+      "bytes": 301848,
+      "sha256": "240ccc1a29d3f745397c35d1c6eb9774e266107860e7483e4d02288a10038200"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/swingx.jar",
+      "bytes": 1740083,
+      "sha256": "a7716a24e2cd6a544585facb8675dd6d1fd1a5b5157da4630ba8d9e4cfc62621"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/lib/vecmath.jar",
+      "bytes": 314362,
+      "sha256": "526c85471a76900d30e1ca1e34fe298c9d472b999c0e7fd3a8d70c381a57a9d2"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/repeat-wrapper.log",
+      "bytes": 15855,
+      "sha256": "4ed6f51d37c48e3f55b337f028cd3ce025f470f9fc3030e1114492f1917a0683"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/runtime-manifest.json",
+      "bytes": 9121,
+      "sha256": "ab2cb7c63c9386f7b9d298485f682ff766a0c6044dece0055f8c30a11cc4d89b"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/runtime-version.txt",
+      "bytes": 158,
+      "sha256": "42a7cc673edfb4df1649add8bb6469e37e0b05fa2875c5b0402da69b93273835"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/seed5-reference-trace.jsonl",
+      "bytes": 13233,
+      "sha256": "e4b9a971791b5449171ae46fcf3ffebdfa43c56c9cc17d43796ef96ef33b29b1"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/wrapper-classes/GeoSimReferenceProbe$1.class",
+      "bytes": 2077,
+      "sha256": "049fe31b0646f7caa1112d368826d21891cc4b5e5410f6e22747bf79bc62c88b"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/wrapper-classes/GeoSimReferenceProbe.class",
+      "bytes": 5059,
+      "sha256": "6e32587ef261c15fe0a676089c2dc037d2676b98d47040e50d99aa6093d7ed74"
+    },
+    {
+      "path": "survey/out/geosim-preserved-preparation/scratch-out/geosim-reference-runtime/wrapper-tests.log",
+      "bytes": 229,
+      "sha256": "5276dfa5d0ba5d53e071bbab147d0182d8662c8a9b19d7c7519abab4c3f52995"
+    },
+    {
+      "path": "survey/out/geosim-venv/lib/python3.13/site-packages/numpy-2.4.6.dist-info/METADATA",
+      "bytes": 6608,
+      "sha256": "b082c52ccbe3b880bae177c35171b52ed6c947f3ad71e3762f2723f60a411de0"
+    },
+    {
+      "path": "survey/out/geosim-venv/lib/python3.13/site-packages/numpy-2.4.6.dist-info/licenses/LICENSE.txt",
+      "bytes": 46826,
+      "sha256": "649a589ab31076e79e9ce62ba24eae9959598124176640dbc95f87bd10f34fcf"
+    },
+    {
+      "path": "survey/out/geosim-venv/lib/python3.13/site-packages/scipy-1.17.1.dist-info/LICENSE.txt",
+      "bytes": 46841,
+      "sha256": "60a7d05d729ed5c763852a324a1cb4223d665d4ad3f4b8a0c130ae5c60c93e49"
+    },
+    {
+      "path": "survey/out/geosim-venv/lib/python3.13/site-packages/scipy-1.17.1.dist-info/METADATA",
+      "bytes": 62145,
+      "sha256": "b1cd2c784f6e003c6c71af4c5ee57f6370ee467d17b656250d9fd38cf579d7d0"
+    }
+  ],
+  "compact_omission": {
+    "rule": "source_OLS_fit_points_arrays_only_recursive",
+    "arrays": 8940,
+    "points": 740047,
+    "manifest": "survey/out/geosim-execution-task5/compact-omissions.json",
+    "all_full_arrays_retained": "survey/out/geosim-execution-task5/findings.json"
+  },
+  "relocation": "Original preparation receipts retain their historical paths; evidence entries name actual retained files under survey/out/geosim-preserved-preparation/scratch-out. Original paper/archive bytes copied from main workspace papers/geopolitics into Task5 original-evidence; no contents transformed. Reference and empirical files are evidence, not additional analysis inputs.",
+  "postmeasurement_amendment": {
+    "classification": "recorder_boundary_and_manual_presentation_only",
+    "date": "2026-10-03",
+    "normative_amendment": {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-postmeasurement-recorder-amendment.md",
+      "bytes": 8703,
+      "sha256": "716891d8208453ff3e4f3b589be34c0a64a3b66dcc54fa95239a727c2965c94b"
+    },
+    "new_recorder_code_commit": "6e601c922cfc69b6f78007b54f9b054c3ea40093",
+    "new_build_receipt": {
+      "path": "survey/out/geosim-postmeasurement-fix/postmeasurement-build-receipt.json",
+      "bytes": 2356,
+      "sha256": "27154855148f0dcd73cfefcd982bd188d2c154399ad1bec5b89aa0f097056712"
+    },
+    "new_source_inventory_sha256": "5a4c8c65cfc69c9a9f59860a751ccb617a4f8cbe90f55e5e134e93c146349a66",
+    "new_binary_sha256": "794d9fca4fb89337b3d77e6fca82d3b34e42aa04a9e6ea4e73c8238409787685",
+    "corrected_presentation": {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-findings.md",
+      "bytes": 57117,
+      "sha256": "a8854a283793a15a6fdf6825bc46deb6b3ec4691ee481316a4f7d2f991660686"
+    },
+    "original_committed_presentation": {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-findings.md",
+      "bytes": 56614,
+      "sha256": "3f4f986254692c4c38eeb1aa32a8cc17d2d0009b122f9c5a4a91abcc942276bd",
+      "git_commit": "6a1b36f03fb603f7d231d9895692f928e7325640",
+      "preserved_path": "survey/out/geosim-execution-task6/pre-fix-source-seal/files/docs/superpowers/specs/2026-10-03-geosim-findings.md"
+    },
+    "original_generated_presentation": {
+      "path": "survey/out/geosim-execution-task5/findings.md",
+      "bytes": 55246,
+      "sha256": "fde9a064dbcf8f6adcdb98ce5e7d747397d167e8d1911d7683f2ccee07184a1b"
+    },
+    "original_provenance": {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-provenance.json",
+      "bytes": 96450,
+      "sha256": "768695266d0561dac10154c459eb218fb0c602ada0458fd764ee49a8e2a91138",
+      "git_commit": "6a1b36f03fb603f7d231d9895692f928e7325640",
+      "preserved_path": "survey/out/geosim-execution-task6/pre-fix-source-seal/files/docs/superpowers/specs/2026-10-03-geosim-provenance.json"
+    },
+    "original_measured_source_image": "survey/out/geosim-execution-task6/pre-fix-source-seal/measured-source-d64d3be.tar",
+    "registered_runs_or_full_analysis_rerun": false,
+    "old_measurement_bindings_unchanged": true,
+    "applicability": "Observed registered destinations are distinct and all attempts are completed or arithmetic-invalid. Old rows remain generated by the original archived source/binary; the new recorder certifies no old row.",
+    "presentation_changes": [
+      "eight available source.grid75 reason labels",
+      "reserved child-job slots versus eligible resamples clarification",
+      "dated manual presentation notice"
+    ]
+  }
+}

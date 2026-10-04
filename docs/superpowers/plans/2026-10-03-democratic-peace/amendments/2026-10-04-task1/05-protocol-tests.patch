@@ -1,0 +1,588 @@
+diff --git a/survey/democratic_peace/test_analysis.py b/survey/democratic_peace/test_analysis.py
+new file mode 100644
+index 0000000..b14779a
+--- /dev/null
++++ b/survey/democratic_peace/test_analysis.py
+@@ -0,0 +1,35 @@
++import unittest
++from survey.democratic_peace import analysis, manifest, source
++
++
++class AnalysisTests(unittest.TestCase):
++    def test_registered_report_cannot_accept_small_fixture_draws(self):
++        value = manifest.build_manifest(source.fixture_table())
++        with self.assertRaisesRegex(ValueError, 'fixture'):
++            analysis.report(value, source.fixture_table(), {}, fixture_draws=10)
++
++    def test_missing_fixture_keys_are_retained_and_never_registered_findings(self):
++        table = source.fixture_table('absent_source_point')
++        value = manifest.build_unregistered_manifest(table, None,
++            configurations=[{'width': 2, 'height': 2, 'horizon_periods': 2}], sessions=2)
++        result = analysis.report(value, table, {}, fixture_draws=10)
++        self.assertEqual(result['classification'], 'synthetic_fixture')
++        self.assertEqual(result['history_status_counts'], {'missing': 2})
++        self.assertEqual(len(result['histories']), 2)
++        self.assertEqual(len(result['source']['targets']), 105)
++        self.assertEqual(result['primary_contrasts']['family_size'], 6)
++        self.assertEqual(result['secondary_contrasts']['family_size'], 6)
++
++    def test_unregistered_keys_and_changed_jobs_are_rejected(self):
++        table = source.fixture_table()
++        value = manifest.build_unregistered_manifest(table, None,
++            configurations=[{'width': 2, 'height': 2, 'horizon_periods': 2}])
++        with self.assertRaises(ValueError):
++            analysis.report(value, table, {('unknown', 1): {}}, fixture_draws=10)
++        value['analysis_jobs'][0]['state_u32'][0] += 1
++        with self.assertRaises(ValueError):
++            analysis.report(value, table, {}, fixture_draws=10)
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/survey/democratic_peace/test_manifest.py b/survey/democratic_peace/test_manifest.py
+new file mode 100644
+index 0000000..d21b4e8
+--- /dev/null
++++ b/survey/democratic_peace/test_manifest.py
+@@ -0,0 +1,51 @@
++import copy
++import unittest
++from survey.democratic_peace import manifest, source
++
++
++class ManifestTests(unittest.TestCase):
++    def test_complete_original_and_disjoint_precision_populations(self):
++        table = source.fixture_table()
++        original = manifest.build_manifest(table)
++        full = manifest.build_manifest(table, precision_registered=True)
++        self.assertEqual(len(manifest.expected_keys(original)), 3240)
++        keys = manifest.expected_keys(full)
++        self.assertEqual(len(keys), 14040)
++        self.assertEqual(len({seed for _, seed in keys}), 14040)
++        self.assertEqual(full['arms'][108]['canonical_index'], 0)
++        self.assertEqual(full['arms'][108]['index'], 108)
++        self.assertEqual(full['arms'][108]['first_seed'], 390000001)
++        self.assertEqual(len(full['analysis_jobs']), 129)
++
++    def test_reduced_or_changed_registered_arm_rejected(self):
++        value = manifest.build_manifest(source.fixture_table())
++        for field, wrong in [('sessions', 29), ('first_seed', 400000001), ('canonical_index', 1)]:
++            mutated = copy.deepcopy(value)
++            mutated['arms'][0][field] = wrong
++            with self.assertRaises(ValueError):
++                manifest.expected_keys(mutated)
++        value['arms'][0]['config_overrides']['unknown_field'] = True
++        with self.assertRaises(ValueError):
++            manifest.expected_keys(value)
++
++    def test_all_source_slots_remain_even_without_readings(self):
++        table = source.fixture_table('absent_source_point')
++        self.assertEqual(len(source.validate_table(table)['slots']), 105)
++        table['slots'][1]['id'] = table['slots'][0]['id']
++        with self.assertRaises(ValueError):
++            source.validate_table(table)
++
++
++if __name__ == '__main__':
++    unittest.main()
++
++class UnregisteredModeTests(unittest.TestCase):
++    def test_native_fixture_is_bounded_and_never_registered(self):
++        value = manifest.build_unregistered_manifest(source.fixture_table(), None,
++            configurations=[{'width': 2, 'height': 2, 'horizon_periods': 2}], sessions=2)
++        self.assertEqual(value['execution_mode'], 'fixture')
++        self.assertEqual(len(manifest.expected_keys(value)), 2)
++        self.assertGreaterEqual(value['arms'][0]['first_seed'], 400000000)
++        with self.assertRaises(ValueError):
++            manifest.build_unregistered_manifest(source.fixture_table(), None,
++                configurations=[{'width': 5, 'height': 2, 'horizon_periods': 2}])
+diff --git a/survey/democratic_peace/test_numerics.py b/survey/democratic_peace/test_numerics.py
+new file mode 100644
+index 0000000..ec68fda
+--- /dev/null
++++ b/survey/democratic_peace/test_numerics.py
+@@ -0,0 +1,54 @@
++import unittest
++import numpy as np
++from survey.democratic_peace import numerics
++
++
++class NumericalTests(unittest.TestCase):
++    def test_interval_maximization_covers_inclusive_jumps_and_gaps(self):
++        samples = [0., 0., 1., 2., 2.]
++        result = numerics.maximize_interval_p(samples, [.25, .75])
++        self.assertEqual(result['p'], 1.)
++        self.assertEqual(result['maximizer_kind'], 'open_interval')
++        self.assertEqual(numerics.inclusive_p(samples, -1.), 2 / 6)
++
++    def test_holm_preserves_absent_family_slots(self):
++        values = [.0001] + [None] * 104
++        self.assertEqual(numerics.fixed_holm(values, 105)[0], .0105)
++        self.assertIsNone(numerics.fixed_holm(values, 105)[1])
++
++    def test_extinction_draws_are_undefined_not_zero_or_replaced(self):
++        values = [2., 4.] + [None] * 98
++        result = numerics.predictive(values, np.random.default_rng(4), draws=50, minimum_defined=1)
++        self.assertEqual(result['defined_draws'] + result['undefined_draws'], 50)
++        self.assertGreater(result['undefined_draws'], 0)
++        self.assertTrue(all(2 <= x <= 4 for x in result['replicates']))
++
++    def test_all_extinction_retains_every_undefined_draw_without_replacement(self):
++        result = numerics.predictive([None] * 100, np.random.default_rng(2), draws=50)
++        self.assertEqual(result['reason'], 'insufficient_conditional_reference')
++        self.assertEqual(result['attempted_draws'], 50)
++        self.assertEqual(result['defined_draws'], 0)
++        self.assertEqual(result['undefined_draws'], 50)
++        self.assertEqual(result['undefined_fraction'], 1.)
++
++    def test_one_survivor_retains_draw_mass_but_reference_remains_unavailable(self):
++        result = numerics.predictive([1.] + [None] * 99, np.random.default_rng(2),
++            draws=50, minimum_defined=1)
++        self.assertEqual(result['reason'], 'insufficient_conditional_reference')
++        self.assertEqual(result['attempted_draws'], 50)
++        self.assertGreater(result['defined_draws'], 0)
++        self.assertGreater(result['undefined_draws'], 0)
++        self.assertEqual(result['defined_draws'] + result['undefined_draws'], 50)
++        self.assertEqual(result['undefined_fraction'], result['undefined_draws'] / 50)
++        self.assertTrue(all(value == 1. for value in result['replicates']))
++
++    def test_contrast_uses_whole_independent_groups_and_exact_quantiles(self):
++        result = numerics.contrast([1.] * 100, [0.] * 100,
++            np.random.default_rng(1), np.random.default_rng(2), draws=20)
++        self.assertEqual(result['estimate'], 1.)
++        self.assertEqual(result['interval'], [1., 1.])
++        self.assertEqual(result['p'], 1 / 21)
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/survey/democratic_peace/test_provenance.py b/survey/democratic_peace/test_provenance.py
+new file mode 100644
+index 0000000..8a7db55
+--- /dev/null
++++ b/survey/democratic_peace/test_provenance.py
+@@ -0,0 +1,64 @@
++import hashlib
++import json
++from pathlib import Path
++import tempfile
++import unittest
++from survey.democratic_peace import provenance, records, manifest, source
++from survey.democratic_peace.methods import canonical_bytes
++
++
++def source_tree(root):
++    for directory in ('crates/sugarscape-core/tests', 'survey/tests'):
++        (root / directory).mkdir(parents=True, exist_ok=True)
++    for name in provenance.REQUIRED_FILES:
++        path = root / name
++        path.parent.mkdir(parents=True, exist_ok=True)
++        path.write_bytes(b'fixture source\n')
++    for name in ['crates/sugarscape-core/src/lib.rs', 'survey/democratic_peace/provenance.py']:
++        path = root / name
++        path.parent.mkdir(parents=True, exist_ok=True)
++        path.write_bytes(b'abc')
++
++
++class ProvenanceTests(unittest.TestCase):
++    def test_omitted_sources_and_changed_bytes_fail_even_with_consistent_digest(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root = Path(tmp)
++            source_tree(root)
++            inventory = provenance.source_inventory(root)
++            self.assertEqual(records.verify_source_inventory(root, inventory), hashlib.sha256(canonical_bytes(inventory)).hexdigest())
++            with self.assertRaises(ValueError):
++                records.verify_source_inventory(root, inventory[1:])
++            (root / 'survey/democratic_peace/provenance.py').write_bytes(b'changed')
++            with self.assertRaises(ValueError):
++                records.verify_source_inventory(root, inventory)
++
++    def test_registered_freeze_rejects_synthetic_or_pending_source_audit(self):
++        table = source.fixture_table()
++        data = json.dumps(table).encode()
++        value = manifest.build_manifest(table, data)
++        with self.assertRaisesRegex(ValueError, 'source audit'):
++            provenance.freeze_manifest(value, Path('.'), data)
++
++    def test_symlinks_are_not_scientific_source_bytes(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root = Path(tmp)
++            source_tree(root)
++            path = root / 'survey/democratic_peace/methods.json'
++            path.unlink()
++            path.symlink_to(root / 'Cargo.toml')
++            with self.assertRaisesRegex(ValueError, 'symlink'):
++                provenance.source_inventory(root)
++
++
++if __name__ == '__main__':
++    unittest.main()
++
++class SourceReviewTests(unittest.TestCase):
++    def test_actual_review_binds_slots_and_rejects_changed_envelope(self):
++        root = Path(__file__).resolve().parents[2]
++        table = records.strict_json((root / provenance.TABLE).read_bytes())
++        provenance.verify_source_review(root, table)
++        table['slots'][0]['interval'][1] += .0001
++        with self.assertRaisesRegex(ValueError, 'slot digest'):
++            provenance.verify_source_review(root, table)
+diff --git a/survey/democratic_peace/test_records.py b/survey/democratic_peace/test_records.py
+new file mode 100644
+index 0000000..1393138
+--- /dev/null
++++ b/survey/democratic_peace/test_records.py
+@@ -0,0 +1,161 @@
++import copy
++import hashlib
++import json
++import unittest
++from survey.democratic_peace import records, manifest, source
++
++
++def science(config=None, seed=380000001, democratic_cells=0):
++    config = config or {'width': 2, 'height': 2, 'horizon_periods': 2,
++        'periods_per_tick': 1, 'initial_democratic_share': .1}
++    total = config['width'] * config['height']
++    extinct = democratic_cells == 0
++    metric = {'democratic_cells': democratic_cells, 'total_cells': total,
++        'democratic_share': democratic_cells / total, 'sovereign_count': total,
++        'democratic_states': democratic_cells, 'predatory_states': total - democratic_cells,
++        'democratic_mean_size': None if extinct else 1.,
++        'predatory_mean_size': None if democratic_cells == total else 1.,
++        'democratic_max_size': None if extinct else 1,
++        'predatory_max_size': None if democratic_cells == total else 1,
++        'democratic_size_reason': 'no_surviving_states' if extinct else None,
++        'predatory_size_reason': 'no_surviving_states' if democratic_cells == total else None,
++        'democratic_exposure': None if extinct else 1.,
++        'clustering_ratio': None if extinct else 1 / config['initial_democratic_share'],
++        'clustering_reason': 'undefined_extinction' if extinct else None,
++        'conflict_fronts': 0, 'alliance_count': 0, 'pariah_count': 0,
++        'democratic_extinction': extinct, 'all_democratic': democratic_cells == total,
++        'first_extinction_period': 0 if extinct else None,
++        'first_all_democratic_period': 0 if democratic_cells == total else None}
++    counters = dict.fromkeys(records.COUNTER_FIELDS, 0)
++    terminal = {'valid': True, 'finish_reason': 'complete', 'invalid_reason': None,
++        'invalid_phase': None, 'attempted_period': config['horizon_periods'],
++        'completed_periods': config['horizon_periods'], 'final_metrics': metric,
++        'census': counters}
++    return {'model': 'democratic_peace', 'config': config, 'seed': seed,
++        'period': config['horizon_periods'], 'periods': config['horizon_periods'],
++        'attempted_period': config['horizon_periods'], 'completed_periods': config['horizon_periods'],
++        'tick': config['horizon_periods'], 'last_tick_periods': 1,
++        'setup': {'initial_democratic_cells': democratic_cells,
++            'initial_resourced_cells': 0, 'total_cells': total},
++        'current_metrics': metric, 'census': counters, 'outcome': terminal,
++        'final_state_hash': '0123456789abcdef'}
++
++
++class RecordTests(unittest.TestCase):
++    def test_duplicate_nonfinite_and_float_overflow_json_rejected(self):
++        for text in ('{"a":1,"a":2}', '{"a":NaN}', '{"a":1e999}'):
++            with self.assertRaises(ValueError):
++                records.strict_json(text)
++
++    def test_complete_extinction_remains_complete_with_undefined_clustering(self):
++        value = science()
++        records.validate_science(value)
++        result = records.history_metrics({'attempt': {'status': 'completed'}, 'outcome': value})
++        self.assertTrue(result['complete'])
++        self.assertIsNone(result['metrics']['clustering_ratio'])
++
++    def test_invalid_partial_never_supplies_final_metrics(self):
++        value = science()
++        value.update(period=1, periods=1, completed_periods=1)
++        value['outcome'].update(valid=False, finish_reason='invalid', invalid_reason='fixture',
++            invalid_phase='decision', completed_periods=1, final_metrics=None)
++        records.validate_science(value)
++        result = records.history_metrics({'attempt': {'status': 'invalid'}, 'outcome': value})
++        self.assertFalse(result['complete'])
++        self.assertIsNone(result['metrics'])
++        self.assertIsNotNone(result['partial_metrics'])
++
++    def test_forged_counts_and_undefined_reason_rejected(self):
++        value = science()
++        for field, wrong in [('democratic_share', .5), ('clustering_reason', None), ('democratic_cells', True)]:
++            forged = copy.deepcopy(value)
++            forged['current_metrics'][field] = wrong
++            with self.assertRaises(ValueError):
++                records.validate_science(forged)
++
++    def test_first_passage_zero_is_preserved_and_unknown_null_is_not_zero(self):
++        value = science(democratic_cells=1)
++        records.validate_science(value)
++        self.assertIsNone(value['current_metrics']['first_extinction_period'])
++        forged = copy.deepcopy(value)
++        forged['current_metrics']['first_extinction_period'] = 3
++        with self.assertRaises(ValueError):
++            records.validate_science(forged)
++
++    def test_exact_resolved_payload_hash_and_type_equality(self):
++        payload = '[{"id":"fixture","config":{"width":2}}]'
++        value = {'arms': json.loads(payload), 'resolved_configs_json': payload,
++            'resolved_configs_sha256': hashlib.sha256(payload.encode()).hexdigest()}
++        records.resolved_payload(value)
++        value['arms'][0]['config']['width'] = 2.
++        with self.assertRaises(ValueError):
++            records.resolved_payload(value)
++
++
++if __name__ == '__main__':
++    unittest.main()
++
++class PartialAndEnvelopeTests(unittest.TestCase):
++    def test_panic_preserves_last_committed_science_without_terminal_outcome(self):
++        value = science()
++        value.update(period=1, periods=1, completed_periods=1)
++        value['outcome'] = None
++        records.validate_science(value, allow_partial=True)
++        history = records.history_metrics({'attempt': {'status': 'implementation_panic',
++            'panic_context': 'fixture panic'}, 'outcome': value})
++        self.assertFalse(history['complete'])
++        self.assertIsNotNone(history['partial_metrics'])
++
++    def test_regime_reemergence_retains_historical_first_extinction(self):
++        value = science(democratic_cells=1)
++        value['current_metrics']['first_extinction_period'] = 0
++        records.validate_science(value)
++        self.assertFalse(value['current_metrics']['democratic_extinction'])
++
++    def test_record_mode_and_provenance_cannot_drift(self):
++        value = science(seed=400000001)
++        arm = {'id': 'fixture.case0', 'index': 0, 'canonical_index': 0, 'sessions': 1,
++            'first_seed': 400000001, 'family': 'fixture', 'execution_mode': 'fixture',
++            'config': value['config']}
++        binding = dict.fromkeys(records.BINDING_FIELDS, 'a' * 64)
++        row = {**binding, 'schema_version': 1, 'model': 'democratic_peace',
++            'arm': arm['id'], 'arm_index': 0, 'canonical_index': 0, 'repeat_index': 0,
++            'family': 'fixture', 'execution_mode': 'fixture', 'seed': 400000001,
++            'config': value['config'], 'outcome': value,
++            'attempt': {'status': 'completed', 'construction_errors': [],
++                'panic_context': None, 'recorder_error': None}}
++        records.validate_record(row, arm, binding)
++        for field, wrong in [('execution_mode', 'registered'), ('binary_sha256', 'b' * 64), ('repeat_index', 1)]:
++            forged = copy.deepcopy(row)
++            forged[field] = wrong
++            with self.assertRaises(ValueError):
++                records.validate_record(forged, arm, binding)
++
++class SessionFileTests(unittest.TestCase):
++    def test_duplicate_and_interrupted_attempts_are_rejected(self):
++        import tempfile
++        from pathlib import Path
++        table = source.fixture_table()
++        value = manifest.build_unregistered_manifest(table, None,
++            configurations=[{'width': 2, 'height': 2, 'horizon_periods': 2}])
++        arm = value['arms'][0]
++        payload = json.dumps([{'id': arm['id'], 'config': science()['config']}], separators=(',', ':'))
++        binding = dict.fromkeys(records.BINDING_FIELDS, 'a' * 64)
++        binding['resolved_configs_sha256'] = hashlib.sha256(payload.encode()).hexdigest()
++        resolved = {**binding, 'arms': json.loads(payload), 'resolved_configs_json': payload}
++        row = {**binding, 'schema_version': 1, 'model': 'democratic_peace',
++            'arm': arm['id'], 'arm_index': 0, 'canonical_index': 0, 'repeat_index': 0,
++            'family': 'fixture', 'execution_mode': 'fixture', 'seed': arm['first_seed'],
++            'config': science()['config'], 'outcome': science(seed=arm['first_seed']),
++            'attempt': {'status': 'completed', 'construction_errors': [], 'panic_context': None, 'recorder_error': None}}
++        line = json.dumps(row) + '\n'
++        with tempfile.TemporaryDirectory() as tmp:
++            path = Path(tmp) / 'sessions.jsonl'
++            path.write_text(line)
++            self.assertEqual(len(records.read_sessions(path, value, resolved, binding)), 1)
++            path.write_text(line + line)
++            with self.assertRaisesRegex(ValueError, 'duplicate registered key'):
++                records.read_sessions(path, value, resolved, binding)
++            path.write_text(line.rstrip('\n'))
++            with self.assertRaisesRegex(ValueError, 'missing final newline'):
++                records.read_sessions(path, value, resolved, binding)
+diff --git a/survey/democratic_peace/test_run.py b/survey/democratic_peace/test_run.py
+new file mode 100644
+index 0000000..d8b0a1a
+--- /dev/null
++++ b/survey/democratic_peace/test_run.py
+@@ -0,0 +1,45 @@
++import json
++from pathlib import Path
++import subprocess
++import tempfile
++import unittest
++from survey.democratic_peace import run
++
++
++class RunTests(unittest.TestCase):
++    def dummy(self, root, code=0):
++        path = root / 'dummy-native'
++        path.write_text('#!/usr/bin/env python3\nimport json,sys\nprint(json.dumps(sys.argv[1:]))\nsys.exit(' + str(code) + ')\n')
++        path.chmod(0o755)
++        return path
++
++    def test_validation_never_supplies_execution_output_or_constructs_world(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root = Path(tmp)
++            result = run.run_native(self.dummy(root), root / 'manifest', validate=True,
++                resolved_out=root / 'resolved', source_root=root)
++            args = json.loads(result.stdout)
++            self.assertIn('--validate-only', args)
++            self.assertIn('--repo', args)
++            self.assertNotIn('--out', args)
++            self.assertFalse((root / 'resolved').exists())
++
++    def test_execution_requires_explicit_receipt_and_output(self):
++        with self.assertRaises(ValueError):
++            run.run_native('/absent', '/absent', resolved_out='/absent')
++
++    def test_nonzero_native_exit_is_not_reported_as_success(self):
++        with tempfile.TemporaryDirectory() as tmp:
++            root = Path(tmp)
++            with self.assertRaises(subprocess.CalledProcessError):
++                run.run_native(self.dummy(root, 7), root / 'manifest', validate=True,
++                    resolved_out=root / 'resolved', source_root=root)
++
++    def test_failed_build_never_creates_receipt(self):
++        with self.assertRaises(ValueError):
++            run.make_build_receipt('/absent', '/absent', '/absent', prebuild_inventory_sha256='0' * 64,
++                build_command=['cargo'], build_exit_code=1, toolchain={}, lockfile_paths=[])
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/survey/democratic_peace/test_source.py b/survey/democratic_peace/test_source.py
+new file mode 100644
+index 0000000..1f3ed74
+--- /dev/null
++++ b/survey/democratic_peace/test_source.py
+@@ -0,0 +1,68 @@
++import copy
++import unittest
++from survey.democratic_peace import manifest, source
++
++
++def histories(table):
++    result = {}
++    for slot in table['slots']:
++        suffix = manifest.arm_suffix(slot['mobile_share'], slot['mechanism'], slot['initial_democratic_share'])
++        for family, count in [('original', 30), ('precision', 100)]:
++            result[family + '.' + suffix] = [{'complete': True, 'metrics': {
++                'democratic_share': .5, 'clustering_ratio': 1.,
++                'democratic_extinction': False, 'all_democratic': False}}
++                for _ in range(count)]
++    return result
++
++
++class SourceTests(unittest.TestCase):
++    def setUp(self):
++        self.table = source.fixture_table()
++        self.jobs = {j['id']: j for j in manifest.build_manifest(self.table)['analysis_jobs']}
++        self.histories = histories(self.table)
++
++    def result(self, **kwargs):
++        return source.source_findings(self.table, self.histories, self.jobs,
++            precision_registered=True, draws=20, minimum_defined=2, fixture=True, **kwargs)
++
++    def test_missing_original_history_prevents_precision_inference(self):
++        arm = 'original.' + manifest.arm_suffix(.5, 'tagging', .1)
++        self.histories[arm].pop()
++        result = self.result()
++        target = next(t for t in result['targets'] if t['id'] == 'fig9.tagging.density0_1')
++        self.assertIsNone(target['p'])
++        self.assertEqual(target['unavailable_reason'], 'incomplete_original_history_population')
++
++    def test_invalid_precision_history_is_not_dropped(self):
++        arm = 'precision.' + manifest.arm_suffix(.5, 'tagging', .1)
++        self.histories[arm][0] = {'complete': False, 'metrics': None}
++        target = next(t for t in self.result()['targets'] if t['id'] == 'fig9.tagging.density0_1')
++        self.assertEqual(target['precision_census']['invalid_count'], 1)
++        self.assertIsNone(target['p'])
++
++    def test_all_extinction_preserves_territory_inference_but_not_clustering(self):
++        for family in ('original', 'precision'):
++            arm = family + '.' + manifest.arm_suffix(.5, 'tagging', .1)
++            for h in self.histories[arm]:
++                h['metrics'].update(democratic_share=0., clustering_ratio=None, democratic_extinction=True)
++        targets = {t['id']: t for t in self.result()['targets']}
++        self.assertIsNotNone(targets['fig9.tagging.density0_1']['p'])
++        self.assertEqual(targets['fig10.tagging.density0_1']['unavailable_reason'], 'insufficient_conditional_reference')
++        self.assertEqual(targets['fig10.tagging.density0_1']['original_census']['extinction_count'], 30)
++
++    def test_zero_readable_scope_never_vacuously_compatible(self):
++        for slot in self.table['slots']:
++            slot.update(read_status='absent_source_point', interval=None)
++        result = self.result()
++        self.assertEqual(result['scopes']['all']['conditional_verdict'], 'Unresolved')
++        self.assertEqual(result['scopes']['all']['reason'], 'no_readable_source_targets')
++        self.assertEqual(len(result['targets']), 105)
++
++    def test_original_only_never_substitutes_thirty_for_hundred(self):
++        result = source.source_findings(self.table, self.histories, self.jobs,
++            precision_registered=False, draws=20, fixture=True)
++        self.assertTrue(all(t['unavailable_reason'] == 'precision_not_registered' for t in result['targets']))
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/survey/tests/democratic_peace_native.rs b/survey/tests/democratic_peace_native.rs
+new file mode 100644
+index 0000000..ecbc160
+--- /dev/null
++++ b/survey/tests/democratic_peace_native.rs
+@@ -0,0 +1,62 @@
++//! Boundary tests execute the actual native recorder, never a mocked world.
++use std::{
++    fs,
++    process::Command,
++    sync::atomic::{AtomicU64, Ordering},
++};
++static SERIAL: AtomicU64 = AtomicU64::new(0);
++fn directory() -> std::path::PathBuf {
++    let p = std::env::temp_dir().join(format!(
++        "democratic-peace-native-{}-{}",
++        std::process::id(),
++        SERIAL.fetch_add(1, Ordering::Relaxed)
++    ));
++    fs::create_dir_all(&p).unwrap();
++    p
++}
++#[test]
++fn duplicate_manifest_fields_are_rejected_before_resolved_export() {
++    let d = directory();
++    let manifest = d.join("manifest.json");
++    let resolved = d.join("resolved.json");
++    fs::write(
++        &manifest,
++        r#"{"model":"democratic_peace","model":"democratic_peace"}"#,
++    )
++    .unwrap();
++    let result = Command::new(env!("CARGO_BIN_EXE_democratic_peace"))
++        .args([
++            "--manifest",
++            manifest.to_str().unwrap(),
++            "--resolved",
++            resolved.to_str().unwrap(),
++            "--validate-only",
++        ])
++        .output()
++        .unwrap();
++    assert!(!result.status.success());
++    assert!(String::from_utf8_lossy(&result.stderr).contains("duplicate JSON field"));
++    assert!(!resolved.exists());
++    fs::remove_dir_all(d).unwrap();
++}
++#[test]
++fn malformed_manifest_is_rejected_before_output_creation() {
++    let d = directory();
++    let manifest = d.join("manifest.json");
++    let out = d.join("sessions.jsonl");
++    fs::write(&manifest, b"{not JSON}").unwrap();
++    let result = Command::new(env!("CARGO_BIN_EXE_democratic_peace"))
++        .args([
++            "--manifest",
++            manifest.to_str().unwrap(),
++            "--out",
++            out.to_str().unwrap(),
++            "--resolved",
++            d.join("resolved.json").to_str().unwrap(),
++        ])
++        .output()
++        .unwrap();
++    assert!(!result.status.success());
++    assert!(!out.exists());
++    fs::remove_dir_all(d).unwrap();
++}

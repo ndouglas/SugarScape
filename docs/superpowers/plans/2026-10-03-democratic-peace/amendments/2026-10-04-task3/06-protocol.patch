@@ -1,0 +1,3797 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index c7c23e20bff1142338c4814b1c97634f462fad62..1d13e0c821f898fddd6f15296ca9aeed8759f332 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -1,10 +1,8 @@
+ name: CI
+-
+ on:
+   push:
+     branches: [main]
+   pull_request:
+-
+ jobs:
+   # The Rust checks run as parallel jobs; the run takes as long as the slowest.
+   lint:
+@@ -17,7 +15,6 @@ jobs:
+       - uses: Swatinem/rust-cache@v2
+       - run: cargo fmt --all --check
+       - run: cargo clippy --all-targets -- -D warnings
+-
+   test:
+     runs-on: ubuntu-latest
+     steps:
+@@ -26,7 +23,6 @@ jobs:
+       - uses: Swatinem/rust-cache@v2
+       # Optimized with checks on: see [profile.test] in Cargo.toml.
+       - run: cargo test --workspace
+-
+   book:
+     runs-on: ubuntu-latest
+     steps:
+@@ -35,7 +31,6 @@ jobs:
+       - uses: Swatinem/rust-cache@v2
+       - run: cargo run --release -p sugarscape-cli -- sweep --builtin fig-iv-10-11 --seeds 1 --ticks 100 --quiet > /dev/null
+       - run: cargo test -p sugarscape-core --release --test book -- --ignored
+-
+   wasm:
+     runs-on: ubuntu-latest
+     steps:
+@@ -51,7 +46,6 @@ jobs:
+           # fails, and v0.9.1 cannot read workspace-inherited Cargo.toml fields.
+           version: v0.15.0
+       - run: wasm-pack test --node crates/sugarscape-wasm
+-
+   web:
+     runs-on: ubuntu-latest
+     defaults:
+@@ -75,9 +69,10 @@ jobs:
+           cache-dependency-path: web/package-lock.json
+       - run: npm ci
+       - run: npm run build
++      - run: cargo build --release -p sugarscape-cli
++        working-directory: .
+       - run: npm test
+-
+-  # Tiny native/estimator fixtures only; registered histories stay outside CI.
++  # Tiny GeoSim/democratic-peace fixtures only; registered histories stay outside CI.
+   geosim:
+     runs-on: ubuntu-latest
+     env:
+@@ -99,3 +94,5 @@ jobs:
+       - run: python -m pip install -r survey/geosim/requirements.txt
+       - run: cargo test --manifest-path survey/Cargo.toml --bin geosim --test geosim_native
+       - run: python -m unittest discover -s survey/geosim -p 'test_*.py'
++      - run: cargo test --locked --manifest-path survey/Cargo.toml --bin democratic_peace --test democratic_peace_native
++      - run: python -m unittest discover -s survey/democratic_peace -p 'test_*.py'
+diff --git a/.gitignore b/.gitignore
+index ce39d2d41f52bc45ff3308aad8ec1870d17483dd..d80b5845ab71398730fbdc3282ab2a9d973bab55 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -41,3 +41,6 @@ survey/out/polarity-*
+ 
+ # GeoSim raw sessions, reference dependencies and execution receipts stay local
+ survey/out/geosim-*
++
++# Democratic-peace scratch, runtime-only and registered evidence.
++survey/out/democratic-peace-*
+diff --git a/survey/democratic_peace/.python-version b/survey/democratic_peace/.python-version
+new file mode 100644
+index 0000000000000000000000000000000000000000..86f8c02eb210e162e13395323abd0d02e8d7d223
+--- /dev/null
++++ b/survey/democratic_peace/.python-version
+@@ -0,0 +1 @@
++3.13.5
+diff --git a/survey/democratic_peace/NUMERICAL_METHODS.md b/survey/democratic_peace/NUMERICAL_METHODS.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..adcc690cb975c29ee15401034fadad18a7109e9a
+--- /dev/null
++++ b/survey/democratic_peace/NUMERICAL_METHODS.md
+@@ -0,0 +1,15 @@
++# Democratic peace numerical methods
++
++The canonical `methods.json` template is consumed by Python and native Rust. Its digest is frozen with all source and executable bindings before any registered period. It pins Python3.13.5, NumPy2.4.6, root2026100302 and129 deterministic child jobs:105 source predictions and independent permutation/bootstrap jobs for12 contrast components. Fixture tolerances for derived census metrics are absolute1e-12. These are premeasurement choices.
++
++Territorial means retain every complete history, including zero democratic territory. Clustering means condition on final democratic survival and preserve legitimate undefined values. Initial density0 is undefined; final extinction is undefined; neither is a model invalidity. First extinction can precede later democratic reemergence under persistent latent tags, so historical first-passage times do not determine final survival.
++
++Source inference requires all30 original histories complete, all100 precision histories complete and a readable audited source interval. Each100000-attempt prediction resamples30 precision histories with replacement. Clustering carries extinction masks through sampling, reports undefined draws and conditions on defined replicates. At least two surviving precision histories and10000 defined draws are required. All-extinction resamples are never replaced or assigned zero. Original-only registration never substitutes30 histories for100.
++
++Inclusive equal-tail p-values use plus-one correction. Exact interval maximization considers every predictive sample knot inside the closed source interval, both endpoints and every open gap. Open-gap tail counts are computed analytically, including adjacent floating-point endpoints with no representable midpoint; no favorable coarse grid is used. Holm correction retains all105 potential slots, using internal p1 for unavailable values while exporting null p-values and reasons. Scope with zero readable targets remains Unresolved.
++
++Primary and secondary contrasts each have six tests, independent group histories,100000 uniform pooled200-history permutations split100/100, and100000 independent within-group bootstrap draws. Permutation p-values use inclusive absolute differences and plus-one correction. Percentile intervals select sorted indices floor(.025×(B−1)) and ceil(.975×(B−1)); no interpolation changes the registered quantile rule. Holm at.05 applies separately to the two six-test families.
++
++Missing/invalid histories block registered inference. Constructed, partial, panicked and unavailable attempts remain in the key census. Complete-count and clustering-survivor/extinction denominators remain visible. Values outside finite bootstrap support are not impossible model events. Neither source matching nor these lattice contrasts establish historical democratic-peace causality or original executable/RNG identity.
++
++Python tests exercise fixed populations, unavailable source slots, atomic partial outcomes, extinction masks, first-passage availability, interval jumps/open gaps, multiplicity, independent contrasts, duplicate/nonfinite JSON and identity drift using deterministic small synthetic fixtures. Fixture draw overrides cannot enter a registered report.
+diff --git a/survey/democratic_peace/README.md b/survey/democratic_peace/README.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..68cfb7d5917ed3142a6b7d6041709fde5245a4ab
+--- /dev/null
++++ b/survey/democratic_peace/README.md
+@@ -0,0 +1,21 @@
++# Democratic peace offline survey
++
++This package prepares and audits the prospective Cederman2001 reconstruction study. It never activates populations or freezes sources on import. No registered histories or measured scientific findings accompany implementation.
++
++Native Rust resolves every configuration from the printed2001 preset. Python supplies partial overrides and consumes the exact native resolved payload, never substitutes independently guessed defaults. Original108×30 histories and optional precision108×100 histories have disjoint fixed seeds. The runtime gate must select the entire original population or the entire original plus precision population before measurement. No alternative reading is included silently.
++
++Source extraction is in `extraction.py`; its figure table and report live in `docs/superpowers/specs/`. Audit every interval and readable mask before freeze. The105 source slots retain absent/overlap reasons, with three undefined density-zero exclusions outside the family. Source equivalence remains Unresolved.
++
++Run small deterministic Python fixtures with:
++
++```bash
++python3 -m unittest discover -s survey/democratic_peace -p 'test_*.py'
++```
++
++The analysis runtime is Python3.13.5 with NumPy2.4.6, reusing the existing scientific environment. No new scientific library is required. Reduced draws are only accepted by explicit bounded fixture manifests, and fixture reports are labeled synthetic_fixture. Registered source draws, permutation counts and contrast bootstrap counts remain100000.
++
++For preparation, `python3 -m survey.democratic_peace.manifest --source TABLE --output MANIFEST` creates a provisional original-only manifest. The explicit `--precision-registered` flag prepares both populations; it does not itself authorize a scientific run. `provenance.freeze_manifest` requires audited sources and all writers stopped. Fixture/probe builders and `bind_unregistered_manifest` preserve bounded nonregistered identities. The native recorder rejects oversized fixture/probe populations, unknown fields, duplicate keys, nonfinite values, provenance drift and interrupted appends.
++
++Native command contract: `--manifest PATH --resolved PATH --repo ROOT --validate-only` validates without world construction. Execution additionally requires `--out PATH --receipt PATH`. A build receipt binds actual binary, pre/post source inventories, commands, toolchains and both Cargo locks. The resolved export retains exact no-newline UTF8 array bytes in resolved_configs_json; its SHA binds the full decoded config payload. Raw rows retain one attempt per exact key with family/mode, canonical and sequential arm indices, resolved config, attempt context, full finite science output and five provenance identities.
++
++Do not run registered periods or analyze/resample a measured population until explicitly authorized with a frozen manifest. Runtime probes use seeds400000001 onward, remain separately classified, and cannot select scientific defaults or judges. Evidence belongs under the explicitly verified ignored `survey/out/democratic-peace-*` prefix; do not assume another prefix is ignored.
+diff --git a/survey/democratic_peace/analysis.py b/survey/democratic_peace/analysis.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..6bfffb15c7c4c2a7db8cc105116ab98da2c45344
+--- /dev/null
++++ b/survey/democratic_peace/analysis.py
+@@ -0,0 +1,163 @@
++"""Auditable complete census and fixed families; registered draws cannot shrink."""
++from collections import Counter
++import hashlib
++import json
++from pathlib import Path
++from . import manifest as population, source, contrasts
++from .methods import canonical_bytes, method_contract, contract_sha256
++from .records import history_metrics, validate_record, validate_science, resolved_payload
++
++
++def validate_output_destinations(inputs, outputs):
++    """Reject both derived destinations before directory creation or writes."""
++    protected = [Path(path).resolve() for path in inputs]
++    seen = []
++    for output in outputs:
++        path = Path(output).resolve()
++        if path.is_dir():
++            raise ValueError('output is a directory')
++        for other in protected + seen:
++            if path == other or (path.exists() and other.exists() and path.samefile(other)):
++                raise ValueError('output aliases input or another output')
++        seen.append(path)
++
++
++def report(manifest, table, records, resolved=None, binding=None, *, fixture_draws=None, data_sha256=None):
++    mode = manifest['execution_mode']
++    fixture = mode == 'fixture'
++    if fixture_draws is not None and not fixture:
++        raise ValueError('fixture draw overrides require explicit fixture manifest')
++    if fixture_draws is not None and (type(fixture_draws) is not int or not 1 <= fixture_draws <= 1000):
++        raise ValueError('synthetic fixture draw count exceeds bounded gate')
++    if manifest['method_contract'] != method_contract() or manifest['method_contract_sha256'] != contract_sha256() or manifest['method_contract_json'] != canonical_bytes(method_contract()).decode('utf-8'):
++        raise ValueError('method contract differs from frozen implementation')
++    if any(manifest[name] != 100000 for name in ('source_draws', 'permutation_draws', 'contrast_draws')):
++        raise ValueError('fixed registered draw counts changed')
++    source.validate_table(table)
++    if mode == 'registered':
++        source.validate_registered_table(table)
++        if manifest['provenance_status'] != 'frozen' or resolved is None or binding is None or data_sha256 is None:
++            raise ValueError('registered analysis requires frozen complete provenance')
++        if table['extraction'].get('classification') == 'synthetic_fixture':
++            raise ValueError('synthetic source cannot activate registered judgments')
++    keys = population.expected_keys(manifest)
++    if set(records) - set(keys):
++        raise ValueError('unregistered raw session keys')
++    expected_jobs = population.analysis_jobs(manifest)
++    if manifest['analysis_jobs'] != expected_jobs:
++        raise ValueError('fixed analysis job payload mismatch')
++    jobs = {job['id']: job for job in expected_jobs}
++    indexed = {}
++    if resolved is not None:
++        resolved_payload(resolved)
++        if binding is None or any(resolved[name] != binding[name] for name in binding):
++            raise ValueError('resolved/config binding mismatch')
++        configs = {arm['id']: arm['config'] for arm in resolved['arms']}
++        if len(configs) != len(resolved['arms']) or set(configs) != {a['id'] for a in manifest['arms']}:
++            raise ValueError('resolved arm family mismatch')
++        indexed = {a['id']: {**a, 'config': configs[a['id']], 'execution_mode': mode} for a in manifest['arms']}
++    histories = {arm['id']: [] for arm in manifest['arms']}
++    history_rows = []
++    for arm, seed in keys:
++        row = records.get((arm, seed))
++        if row is None:
++            history_rows.append({'arm': arm, 'seed': seed, 'status': 'missing',
++                'complete': False, 'metrics': None, 'partial_metrics': None})
++            continue
++        if indexed:
++            if validate_record(row, indexed[arm], binding) != (arm, seed):
++                raise ValueError('raw dictionary key differs from envelope')
++        else:
++            if mode == 'registered':
++                raise ValueError('registered record validation requires native resolution')
++            if row['arm'] != arm or row['seed'] != seed:
++                raise ValueError('fixture key differs from envelope')
++            if row.get('outcome') is not None:
++                validate_science(row['outcome'], allow_partial=row['attempt']['status'] in ('implementation_panic', 'incomplete'))
++        history = history_metrics(row)
++        histories[arm].append(history)
++        history_rows.append({'arm': arm, 'seed': seed, **history})
++    draws = fixture_draws or (20 if fixture else 100000)
++    if mode == 'runtime_probe':
++        # Runtime evidence never becomes inference, even with source-arm labels.
++        precision_registered = False
++    else:
++        precision_registered = manifest['precision_registered']
++    source_result = source.source_findings(table, histories, jobs,
++        precision_registered=precision_registered, draws=draws,
++        minimum_defined=2 if fixture else 10000, fixture=fixture)
++    comparisons = contrasts.findings(histories, jobs,
++        precision_registered=precision_registered, draws=draws)
++    return {'schema_version': 1, 'model': 'democratic_peace',
++        'classification': 'synthetic_fixture' if fixture else 'unregistered_runtime_probe' if mode == 'runtime_probe' else 'registered_offline_findings',
++        'execution_mode': mode, 'precision_registered': precision_registered,
++        'registered_histories': len(keys) if mode == 'registered' else 0,
++        'attempted_slots': len(keys), 'received_histories': len(records),
++        'history_status_counts': dict(Counter(h['status'] for h in history_rows)),
++        'histories': history_rows, 'source': source_result,
++        'primary_contrasts': comparisons['primary'], 'secondary_contrasts': comparisons['secondary'],
++        'analysis_jobs': expected_jobs, 'draws': {'source': draws, 'permutation': draws, 'contrast': draws},
++        'method_contract_sha256': contract_sha256(), 'source_equivalence': 'Unresolved',
++        'provenance': {'data_sha256': data_sha256, 'binding': binding,
++            'source_table_sha256': manifest['source_table_sha256']},
++        'limits': ['source_curves_are_inferred_values_not_raw_history_means',
++            'dependent_lattice_histories_do_not_establish_historical_causality',
++            'outside_bootstrap_support_is_not_impossible_model_event',
++            'printed_probability_primary_prose_variant_unmeasured',
++            'original_executable_rng_and_statistic_identity_unresolved']}
++
++
++def main():
++    import argparse
++    import platform
++    import numpy as np
++    from .records import strict_json, verify_source_inventory, validate_build_receipt, read_sessions
++    from .run import sha256_file
++    from .reporting import serialize_report, markdown_report
++    parser = argparse.ArgumentParser(description=__doc__)
++    for name in ('manifest', 'source', 'sessions', 'resolved', 'build-receipt', 'binary', 'source-root', 'output'):
++        parser.add_argument('--' + name, required=True, type=Path)
++    args = parser.parse_args()
++    manifest_bytes = args.manifest.read_bytes()
++    value = strict_json(manifest_bytes)
++    from .provenance import safe_source_path
++    protected = [args.manifest, args.source, args.sessions, args.resolved,
++        args.build_receipt, args.binary]
++    protected += [safe_source_path(args.source_root, entry['path'])
++        for entry in value.get('source_inventory') or []]
++    destinations = [args.output.with_suffix('.json'), args.output.with_suffix('.md')]
++    validate_output_destinations(protected, destinations)
++    actual = {'python': platform.python_version(), 'numpy': np.__version__}
++    if actual != method_contract()['runtime']:
++        raise ValueError(f'analysis runtime differs from pinned contract: {actual}')
++    source_bytes = args.source.read_bytes()
++    if hashlib.sha256(source_bytes).hexdigest() != value['source_table_sha256']:
++        raise ValueError('source table byte SHA256 mismatch')
++    if value['execution_mode'] == 'registered':
++        from .provenance import verify_source_review
++        verify_source_review(args.source_root, strict_json(source_bytes))
++    inventory = verify_source_inventory(args.source_root, value['source_inventory'])
++    if inventory != value['source_inventory_sha256']:
++        raise ValueError('source inventory digest mismatch')
++    manifest_hash = hashlib.sha256(manifest_bytes).hexdigest()
++    binary_hash = sha256_file(args.binary)
++    receipt_bytes = args.build_receipt.read_bytes()
++    validate_build_receipt(strict_json(receipt_bytes), manifest_hash, binary_hash, inventory, args.source_root)
++    resolved = strict_json(args.resolved.read_bytes())
++    binding = {'manifest_sha256': manifest_hash, 'binary_sha256': binary_hash,
++        'source_inventory_sha256': inventory, 'build_receipt_sha256': hashlib.sha256(receipt_bytes).hexdigest(),
++        'resolved_configs_sha256': resolved['resolved_configs_sha256']}
++    data_hash = sha256_file(args.sessions)
++    records = read_sessions(args.sessions, value, resolved, binding)
++    if sha256_file(args.sessions) != data_hash:
++        raise ValueError('raw dataset changed during validation')
++    result = report(value, strict_json(source_bytes), records, resolved, binding, data_sha256=data_hash)
++    if verify_source_inventory(args.source_root, value['source_inventory']) != inventory:
++        raise ValueError('scientific source changed during analysis')
++    args.output.parent.mkdir(parents=True, exist_ok=True)
++    destinations[0].write_text(serialize_report(result))
++    destinations[1].write_text(markdown_report(result))
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/survey/democratic_peace/contrasts.py b/survey/democratic_peace/contrasts.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..70c1c9170e33aa632d505d94f5c6c4086144797f
+--- /dev/null
++++ b/survey/democratic_peace/contrasts.py
+@@ -0,0 +1,59 @@
++"""Two prespecified six-test families, with independent whole-history groups."""
++from .manifest import contrast_definitions, job_rng
++from . import numerics
++from .source import population_summary
++
++
++def verdict(estimate, adjusted):
++    if estimate is None or adjusted is None:
++        return 'Unresolved'
++    if adjusted < .05 and estimate > 0:
++        return 'Holds'
++    if adjusted < .05 and estimate < 0:
++        return 'Fails'
++    return 'Inconclusive'
++
++
++def aggregate(components):
++    outcomes = [component['verdict'] for component in components]
++    if 'Fails' in outcomes:
++        return 'Fails'
++    if all(outcome == 'Holds' for outcome in outcomes):
++        return 'Holds'
++    if 'Unresolved' in outcomes:
++        return 'Unresolved'
++    return 'Inconclusive'
++
++
++def findings(histories, jobs, *, precision_registered, draws=100000):
++    families = {'primary': [], 'secondary': []}
++    for definition in contrast_definitions():
++        left = histories.get(definition['left'], [])
++        right = histories.get(definition['right'], [])
++        left_census = population_summary(left, 100)
++        right_census = population_summary(right, 100)
++        reason = 'precision_not_registered' if not precision_registered else None
++        if reason is None and (not left_census['population_complete'] or not right_census['population_complete']):
++            reason = 'incomplete_precision_history_population'
++        result = None
++        if reason is None:
++            metric = definition['metric']
++            result = numerics.contrast([h['metrics'][metric] for h in left],
++                [h['metrics'][metric] for h in right],
++                job_rng(jobs['permutation.' + definition['id']]),
++                job_rng(jobs['bootstrap.' + definition['id']]), draws=draws)
++        families[definition['family']].append({**definition,
++            'left_census': left_census, 'right_census': right_census,
++            'estimate': None if result is None else result['estimate'],
++            'p': None if result is None else result['p'], 'holm_p': None,
++            'interval': None if result is None else result['interval'],
++            'result': result, 'unavailable_reason': reason})
++    output = {}
++    for family, components in families.items():
++        for component, adjusted in zip(components, numerics.fixed_holm([c['p'] for c in components], 6)):
++            component['holm_p'] = adjusted
++            component['verdict'] = verdict(component['estimate'], adjusted)
++        output[family] = {'family_size': 6, 'components': components,
++            'aggregate_verdict': aggregate(components), 'source_direction': 'positive',
++            'interpretation': 'conditional_model_mechanism_not_historical_causal_inference'}
++    return output
+diff --git a/survey/democratic_peace/extraction.py b/survey/democratic_peace/extraction.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..0be7eb560968bd74540a153b5fd36457312e1d0c
+--- /dev/null
++++ b/survey/democratic_peace/extraction.py
+@@ -0,0 +1,134 @@
++"""Reproducible raster evidence and visually audited manual curve envelopes.
++
++Coordinates were read independently from the printed curves and checked against
++pixel neighborhoods. This digitizes inferred curve values, not original means.
++"""
++import argparse
++from collections import Counter
++import hashlib
++import json
++from pathlib import Path
++import subprocess
++from .source import PAPER_SHA256, fixture_table, validate_table
++from .manifest import DENSITIES
++
++# Full-page pixel coordinates at pdftoppm -scale-to 1800. None means no
++# independently attributable trace at that target; no numeric value is imputed.
++READINGS = {
++    9: {
++        'tagging': [892, None, 800, 746, 751, 806, 795, 638, 466, 388, None, 310],
++        'alliances': [892, None, 714, 585, 393, 377, 324, 327, 327, 320, None, 310],
++        'collective_security': [892, 797, 506, 367, 319, 317, 314, 314, 313, 312, None, 310]},
++    10: {
++        'tagging': [None, 658, 692, 712, 725, 758, 750, None, None, None, None, 817],
++        'alliances': [None, 619, 628, 689, None, None, None, None, None, None, None, 817],
++        'collective_security': [None, 490, 552, 639, None, None, None, None, None, None, None, 817]},
++    11: {
++        'tagging': [793, 777, 763, None, 766, 775, None, None, None, 730, 570, 300],
++        'alliances': [793, 767, 735, 704, 673, 666, 641, 550, 439, 373, 320, 300],
++        'collective_security': [793, 740, 657, 530, 431, 331, 340, 315, 319, 328, 306, 300]},
++}
++AXES = {9: {'x': [326, 884], 'y': [892, 310], 'maximum': 1.},
++        10: {'x': [329, 798], 'y': [852, 337], 'maximum': 15.},
++        11: {'x': [317, 759], 'y': [793, 300], 'maximum': 1.}}
++# Wider envelopes at steep/faint/interpolated dashed segments preserve line,
++# horizontal calibration and image uncertainty instead of invented precision.
++EXTRA_BANDS = {(9, 'collective_security', .1): 22,
++    (9, 'collective_security', .15): 12, (9, 'alliances', .15): 32,
++    (11, 'collective_security', .1): 22, (11, 'collective_security', .15): 20,
++    (11, 'collective_security', .2): 18, (11, 'tagging', .1): 9,
++    (11, 'tagging', .2): 9, (11, 'tagging', .25): 9,
++    (10, 'collective_security', .1): 20, (10, 'collective_security', .15): 14}
++
++
++def build_table(image_root, paper):
++    image_root = Path(image_root)
++    if hashlib.sha256(Path(paper).read_bytes()).hexdigest() != PAPER_SHA256:
++        raise ValueError('source PDF SHA256 mismatch')
++    table = fixture_table()
++    table['extraction'] = {'classification': 'visually_audited_premeasurement',
++        'date': '2026-10-03', 'method': 'manual_curve_trace_with_conservative_pixel_envelope',
++        'sampling_identity': 'inferred_curve_value_not_raw_original_mean',
++        'measurement_used': False,
++        'endpoint_policy': 'shared_visually_traceable_endpoints_read_as_curve_values_with_pixel_envelopes',
++        'overlap_policy': 'null_target_when_individual_curve_not_separable',
++        'missing_policy': 'null_target_when_scan_trace_absent_no_interpolation_imputed'}
++    for figure, page in ((9, 17), (10, 19), (11, 20)):
++        image = image_root / f'page-{page}.png'
++        data = image.read_bytes()
++        # PNG IHDR width/height avoids adding a runtime image dependency.
++        if data[:8] != b'\x89PNG\r\n\x1a\n':
++            raise ValueError('source render is not PNG')
++        size = [int.from_bytes(data[16:20], 'big'), int.from_bytes(data[20:24], 'big')]
++        if size != [1120, 1800]:
++            raise ValueError('source render geometry changed')
++        axis = AXES[figure]
++        traces = {mechanism: [[axis['x'][0] + density * (axis['x'][1] - axis['x'][0]), y]
++            for density, y in zip(DENSITIES, values) if y is not None]
++            for mechanism, values in READINGS[figure].items()}
++        table['figures'].append({'id': f'fig{figure}', 'printed_page': page + 469,
++            'pdf_page_1based': page, 'image_path': f'survey/out/democratic-peace-preparation/page-{page}.png',
++            'image_sha256': hashlib.sha256(data).hexdigest(), 'image_size': size,
++            'render_command': ['pdftoppm', '-f', str(page), '-l', str(page), '-scale-to', '1800',
++                '-png', str(Path(paper).resolve()), 'survey/out/democratic-peace-preparation/page'],
++            'axis_landmarks': {'x_pixels': axis['x'], 'x_values': [0., 1.],
++                'y_pixels': axis['y'], 'y_values': [0., axis['maximum']]},
++            'axis_uncertainty_pixels': 2, 'minimum_line_envelope_pixels': 4,
++            'traces': traces,
++            'independent_visual_check': {'first_reader_audit': 'full original render plus enlarged chart and local dark-pixel neighborhoods; 2026-10-03', 'second_reader_status': 'pending'},
++            'curve_identity': {'tagging': 'thin solid', 'alliances': 'thick dashed',
++                'collective_security': 'upper thin solid', 'neutral_response': 'reference diagonal excluded'}
++                if figure != 10 else {'tagging': 'lower thin solid before merge',
++                    'alliances': 'thick dashed before merge', 'collective_security': 'upper solid before merge',
++                    'same_as_initial': 'horizontal reference excluded'}})
++    for slot in table['slots']:
++        figure = slot['figure']
++        density = slot['initial_democratic_share']
++        mechanism = slot['mechanism']
++        di = DENSITIES.index(density)
++        y = READINGS[figure][mechanism][di]
++        slot['calibration_id'] = f'fig{figure}'
++        slot['attribution'] = 'inferred_curve_value'
++        if y is None:
++            absent = figure == 11 and mechanism == 'tagging' and density == .15
++            slot.update(read_status='absent_source_point' if absent else 'unreadable_overlap',
++                interval=None, pixel_reading=None,
++                note='Faint scan gap at target; no independently visible point and no interpolated target imputed.'
++                    if absent else 'Individual mechanism trace merges with another curve or axis at target; no numeric target imputed.')
++            continue
++        axis = AXES[figure]
++        x = axis['x'][0] + density * (axis['x'][1] - axis['x'][0])
++        band = EXTRA_BANDS.get((figure, mechanism, density), 8 if mechanism == 'alliances' else 7)
++        ylo, yhi = y - band, y + band
++        # Evaluate both ordinate envelopes against all +/-2px axis calibrations.
++        candidates = [(bottom - yy) / (bottom - top) * axis['maximum']
++            for yy in (ylo, yhi) for bottom in (axis['y'][0] - 2, axis['y'][0] + 2)
++            for top in (axis['y'][1] - 2, axis['y'][1] + 2)]
++        maximum = 1. if figure != 10 else 1 / density
++        slot.update(read_status='readable', interval=[max(0., min(candidates)), min(maximum, max(candidates))],
++            pixel_reading={'x_center': x, 'x_envelope': [x - 2, x + 2],
++                'y_center': y, 'y_envelope': [ylo, yhi], 'line_and_horizontal_uncertainty_pixels': band},
++            note='Shared endpoint visibly traceable to each mechanism; inferred curve value with clamped pixel envelope, not exact raw source mean.'
++                if density in (0., 1.) else 'Visually attributed curve ordinate; envelope includes thickness, calibration and steep/dashed/faint trace uncertainty.')
++    return validate_table(table)
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--paper', required=True, type=Path)
++    parser.add_argument('--image-root', required=True, type=Path)
++    parser.add_argument('--output', required=True, type=Path)
++    parser.add_argument('--render', action='store_true')
++    args = parser.parse_args()
++    if args.render:
++        args.image_root.mkdir(parents=True, exist_ok=True)
++        for page in (17, 19, 20):
++            subprocess.run(['pdftoppm', '-f', str(page), '-l', str(page), '-scale-to', '1800',
++                '-png', str(args.paper), str(args.image_root / 'page')], check=True)
++    table = build_table(args.image_root, args.paper)
++    args.output.write_text(json.dumps(table, indent=2, allow_nan=False) + '\n')
++    print(dict(Counter(slot['read_status'] for slot in table['slots'])))
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/survey/democratic_peace/manifest.py b/survey/democratic_peace/manifest.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..8f9462f54102b175e48be03c3cf08ba4eb87dbbf
+--- /dev/null
++++ b/survey/democratic_peace/manifest.py
+@@ -0,0 +1,206 @@
++"""Exact prospective populations; Rust resolves all model defaults."""
++from copy import deepcopy
++import hashlib
++import json
++import numpy as np
++from .methods import canonical_bytes, contract_sha256, method_contract
++
++MOBILES = (.15, .5, .85)
++MECHANISMS = ('tagging', 'alliances', 'collective_security')
++DENSITIES = (0., .05, .1, .15, .2, .25, .3, .4, .5, .6, .7, 1.)
++ROOT_SEED = 2026100302
++MANIFEST_FIELDS = {'schema_version', 'model', 'execution_mode', 'provenance_status', 'spec',
++    'precision_registered', 'runtime_gate', 'analysis_seed', 'source_draws', 'permutation_draws',
++    'contrast_draws', 'source_table_sha256', 'method_contract', 'method_contract_json',
++    'method_contract_sha256', 'source_inventory', 'source_inventory_sha256', 'arms', 'analysis_jobs'}
++
++
++def number_id(value):
++    return format(value, 'g').replace('.', '_')
++
++
++def arm_suffix(mobile, mechanism, density):
++    return f'mobile{number_id(mobile)}.{mechanism}.density{number_id(density)}'
++
++
++def canonical_arms(precision_registered):
++    arms = []
++    families = [('original', 30, 380000001)]
++    if precision_registered:
++        families.append(('precision', 100, 390000001))
++    for family, sessions, seed_base in families:
++        for mi, mobile in enumerate(MOBILES):
++            for ki, mechanism in enumerate(MECHANISMS):
++                for di, density in enumerate(DENSITIES):
++                    canonical = ((mi * 3 + ki) * 12 + di)
++                    arms.append({'id': f'{family}.{arm_suffix(mobile, mechanism, density)}',
++                        'family': family, 'index': len(arms), 'canonical_index': canonical,
++                        'mobile_index': mi, 'mechanism_index': ki, 'density_index': di,
++                        'preset': 'printed_2001', 'config_overrides': {
++                            'mobile_share': mobile, 'mechanism': mechanism,
++                            'initial_democratic_share': density, 'periods_per_tick': 100},
++                        'sessions': sessions, 'first_seed': seed_base + canonical * 10000})
++    return arms
++
++
++def contrast_definitions():
++    result = []
++    for density in (.1, .3):
++        for name, left, right, metric in (
++            ('alliances_minus_tagging', 'alliances', 'tagging', 'democratic_share'),
++            ('security_minus_alliances', 'collective_security', 'alliances', 'democratic_share'),
++            ('security_minus_tagging', 'collective_security', 'tagging', 'all_democratic')):
++            result.append({'id': f'primary.{name}.density{number_id(density)}',
++                'family': 'primary', 'metric': metric,
++                'left': 'precision.' + arm_suffix(.5, left, density),
++                'right': 'precision.' + arm_suffix(.5, right, density)})
++    for density in (.1, .3):
++        for mechanism in MECHANISMS:
++            result.append({'id': f'secondary.mobile0_15_minus_0_85.{mechanism}.density{number_id(density)}',
++                'family': 'secondary', 'metric': 'democratic_share',
++                'left': 'precision.' + arm_suffix(.15, mechanism, density),
++                'right': 'precision.' + arm_suffix(.85, mechanism, density)})
++    return result
++
++
++def analysis_jobs(manifest):
++    from .source import slot_roster
++    ids = ['predictive.source.' + slot['id'] for slot in slot_roster()]
++    for contrast in contrast_definitions():
++        ids += ['permutation.' + contrast['id'], 'bootstrap.' + contrast['id']]
++    return [{'index': i, 'id': name, 'root_entropy': ROOT_SEED, 'spawn_key': [i],
++        'state_u32': np.random.SeedSequence(ROOT_SEED, spawn_key=(i,)).generate_state(4).tolist()}
++        for i, name in enumerate(ids)]
++
++
++def job_rng(job):
++    if job['root_entropy'] != ROOT_SEED or job['spawn_key'] != [job['index']]:
++        raise ValueError('analysis seed derivation mismatch')
++    seed = np.random.SeedSequence(ROOT_SEED, spawn_key=(job['index'],))
++    if job['state_u32'] != seed.generate_state(4).tolist():
++        raise ValueError('analysis child seed state mismatch')
++    return np.random.Generator(np.random.PCG64(seed))
++
++
++def build_manifest(source, source_bytes=None, *, precision_registered=False):
++    from .source import validate_table
++    validate_table(source)
++    if type(precision_registered) is not bool:
++        raise ValueError('precision registration must be an explicit boolean')
++    from .records import strict_json, _same_json_types
++    if source_bytes is not None and not _same_json_types(strict_json(source_bytes), source):
++        raise ValueError('source table bytes differ from parsed table')
++    result = {'schema_version': 1, 'model': 'democratic_peace',
++        'execution_mode': 'registered', 'provenance_status': 'provisional_unfrozen',
++        'spec': 'docs/superpowers/specs/2026-10-03-democratic-peace-design.md',
++        'precision_registered': precision_registered,
++        'runtime_gate': 'full_precision' if precision_registered else 'original_only',
++        'analysis_seed': ROOT_SEED, 'source_draws': 100000,
++        'permutation_draws': 100000, 'contrast_draws': 100000,
++        'source_table_sha256': None if source_bytes is None else hashlib.sha256(source_bytes).hexdigest(),
++        'method_contract': method_contract(),
++        'method_contract_json': canonical_bytes(method_contract()).decode('utf-8'),
++        'method_contract_sha256': contract_sha256(),
++        'source_inventory': None, 'source_inventory_sha256': None,
++        'arms': canonical_arms(precision_registered)}
++    result['analysis_jobs'] = analysis_jobs(result)
++    return result
++
++
++def expected_keys(manifest):
++    if set(manifest) != MANIFEST_FIELDS or type(manifest['schema_version']) is not int or manifest['schema_version'] != 1:
++        raise ValueError('unknown or missing manifest fields/version')
++    for key, value in [('analysis_seed', ROOT_SEED), ('source_draws', 100000), ('permutation_draws', 100000), ('contrast_draws', 100000)]:
++        if type(manifest[key]) is not int or manifest[key] != value:
++            raise ValueError('fixed manifest analysis contract changed')
++    if manifest.get('model') != 'democratic_peace' or type(manifest.get('precision_registered')) is not bool:
++        raise ValueError('invalid registered model or precision flag')
++    if manifest.get('execution_mode') != 'registered':
++        return unregistered_keys(manifest)
++    expected = canonical_arms(manifest['precision_registered'])
++    from .records import _same_json_types
++    if not _same_json_types(manifest['arms'], expected):
++        raise ValueError('registered arm/config/key contract changed')
++    if manifest.get('runtime_gate') != ('full_precision' if manifest['precision_registered'] else 'original_only'):
++        raise ValueError('runtime gate differs from registered population')
++    keys = [(arm['id'], arm['first_seed'] + r) for arm in expected for r in range(arm['sessions'])]
++    if len(keys) != (14040 if manifest['precision_registered'] else 3240) or len(set(keys)) != len(keys):
++        raise ValueError('registered population is incomplete or duplicated')
++    return keys
++
++
++
++CONFIG_FIELDS = {'width', 'height', 'superiority_exponent', 'victory_exponent',
++    'horizon_periods', 'periods_per_tick', 'event_limit', 'initial_democratic_share',
++    'initial_resourced_share', 'mobile_share', 'superiority_threshold', 'victory_threshold',
++    'stalemate_probability', 'tax_rate', 'distance_gradient', 'min_threat', 'event_recording',
++    'mechanism', 'probability_direction', 'zero_ratio', 'assignment', 'distance_metric',
++    'enemy_total', 'inactive_commitment', 'latent_regime', 'capital_capture', 'claim_locking',
++    'opposing_victories', 'alliance_maintenance', 'threat_ties', 'obligation_observation',
++    'security_scope', 'clustering_exposure', 'clustering_weights'}
++
++
++def build_unregistered_manifest(source, source_bytes, *, configurations, mode='fixture', sessions=1, presets=None):
++    result = build_manifest(source, source_bytes)
++    if mode not in ('fixture', 'runtime_probe'):
++        raise ValueError('unknown nonregistered mode')
++    presets = presets or ['printed_2001'] * len(configurations)
++    if len(presets) != len(configurations):
++        raise ValueError('one named preset required per unregistered arm')
++    result.update(execution_mode=mode, provenance_status=mode + '_unregistered', arms=[])
++    for i, (config, preset) in enumerate(zip(configurations, presets)):
++        result['arms'].append({'id': f'{mode}.case{i}', 'family': mode, 'index': i,
++            'canonical_index': i, 'mobile_index': 0, 'mechanism_index': 0, 'density_index': 0,
++            'preset': preset, 'config_overrides': deepcopy(config), 'sessions': sessions,
++            'first_seed': 400000001 + i * 10000})
++    unregistered_keys(result)
++    return result
++
++
++def unregistered_keys(manifest):
++    mode = manifest.get('execution_mode')
++    if mode not in ('fixture', 'runtime_probe') or manifest.get('provenance_status') != mode + '_unregistered' or manifest['precision_registered']:
++        raise ValueError('nonregistered mode/provenance mismatch')
++    arms = manifest['arms']
++    maximum = 4 if mode == 'fixture' else 8
++    if not 1 <= len(arms) <= maximum:
++        raise ValueError('unregistered arm count exceeds bounded gate')
++    keys = []
++    for i, arm in enumerate(arms):
++        if set(arm) != set(canonical_arms(False)[0]) or arm['index'] != i or arm['family'] != mode:
++            raise ValueError('invalid unregistered arm fields or family')
++        c = arm['config_overrides']
++        if set(c) - CONFIG_FIELDS or arm['preset'] not in ('printed_2001', 'prose_probability'):
++            raise ValueError('unknown configuration override or reading')
++        if mode == 'fixture':
++            bounded = 2 <= c.get('width', 15) <= 4 and 2 <= c.get('height', 15) <= 4 and 1 <= c.get('horizon_periods', 1000) <= 20
++        else:
++            bounded = c.get('width', 15) == 15 and c.get('height', 15) == 15 and c.get('horizon_periods', 1000) == 1000
++        if any(type(c[key]) is not int for key in ('width', 'height', 'horizon_periods') if key in c):
++            raise ValueError('nonregistered dimensions/horizon must be integers')
++        if not bounded or type(arm['sessions']) is not int or not 1 <= arm['sessions'] <= (2 if mode == 'fixture' else 1) or type(arm['first_seed']) is not int or arm['first_seed'] < 400000000:
++            raise ValueError('unregistered dimensions/horizon/seeds exceed bounded gate')
++        keys.extend((arm['id'], arm['first_seed'] + r) for r in range(arm['sessions']))
++    if len({seed for _, seed in keys}) != len(keys) or len({arm['id'] for arm in arms}) != len(arms):
++        raise ValueError('duplicate unregistered arm or seed')
++    return keys
++
++
++def main():
++    import argparse
++    from pathlib import Path
++    from .records import strict_json
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--source', required=True, type=Path)
++    parser.add_argument('--output', required=True, type=Path)
++    parser.add_argument('--precision-registered', action='store_true')
++    args = parser.parse_args()
++    data = args.source.read_bytes()
++    result = build_manifest(strict_json(data), data, precision_registered=args.precision_registered)
++    args.output.parent.mkdir(parents=True, exist_ok=True)
++    args.output.write_text(json.dumps(result, indent=2, allow_nan=False) + '\n')
++    print('Provisional manifest only; runtime gate and post-writer source freeze required before execution')
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/survey/democratic_peace/methods.json b/survey/democratic_peace/methods.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..0712f976fb7cfccdd95f1e81870ea4bc37d30945
+--- /dev/null
++++ b/survey/democratic_peace/methods.json
+@@ -0,0 +1 @@
++{"availability":{"extinction":"territory_zero_clustering_undefined","invalid":"retained_partial_no_final_inference","missing":"retained_key_no_seed_replacement","source_equivalence":"Unresolved"},"contrasts":{"bootstrap_draws":100000,"groups":"independent_whole_histories_100_each","p":"(1+absolute_exceedances)/(B+1)","permutation":"uniform_permutation_pooled_200_split_100","permutations":100000,"primary_family":6,"reject_below":0.05,"secondary_family":6},"fixture_tolerance":{"derived_metrics_absolute":1e-12},"interval":{"indices":"floor(.025*(B-1)),ceil(.975*(B-1))","level":0.95},"revision":"democratic-peace-offline-v1-premeasurement","rng":{"child":"SeedSequence(root,spawn_key=(fixed_job_index,))","contrast_bootstrap_batch":256,"contrast_bootstrap_order":"left_indices_then_right_indices","generator":"PCG64","jobs":129,"predictive_batch":512,"root":2026100302},"runtime":{"numpy":"2.4.6","python":"3.13.5"},"source":{"clustering":"mean_conditioned_on_surviving_democracies","draws":100000,"family_size":105,"interval_p":"inclusive_plus_one_exact_knots_and_open_intervals","minimum_defined_draws":10000,"minimum_surviving_precision":2,"original_histories":30,"precision_histories":100,"reject_below":0.05,"unavailable_family_slots":"internal_p_one_report_null"}}
+\ No newline at end of file
+diff --git a/survey/democratic_peace/methods.py b/survey/democratic_peace/methods.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..b8a4b89303083a6420d4ff878b0ff59df89cda5b
+--- /dev/null
++++ b/survey/democratic_peace/methods.py
+@@ -0,0 +1,21 @@
++"""Prospective numerical contract, independent of measured histories."""
++from copy import deepcopy
++import hashlib
++import json
++
++from pathlib import Path
++
++METHOD_CONTRACT = json.loads(Path(__file__).with_name('methods.json').read_bytes())
++
++
++def canonical_bytes(value):
++    return json.dumps(value, sort_keys=True, separators=(',', ':'),
++                      ensure_ascii=False, allow_nan=False).encode('utf-8')
++
++
++def method_contract():
++    return deepcopy(METHOD_CONTRACT)
++
++
++def contract_sha256():
++    return hashlib.sha256(canonical_bytes(METHOD_CONTRACT)).hexdigest()
+diff --git a/survey/democratic_peace/numerics.py b/survey/democratic_peace/numerics.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..6bd8ec12b3817ebe8e04d67a50872fa2e4d3ffa3
+--- /dev/null
++++ b/survey/democratic_peace/numerics.py
+@@ -0,0 +1,120 @@
++"""Whole-history predictive draws and independent treatment contrasts."""
++import bisect
++import math
++import numpy as np
++
++
++def inclusive_p(sorted_draws, target):
++    if not sorted_draws:
++        raise ValueError('empty predictive distribution')
++    n = len(sorted_draws)
++    left = bisect.bisect_right(sorted_draws, target)
++    right = n - bisect.bisect_left(sorted_draws, target)
++    return min(1., 2 * (1 + min(left, right)) / (n + 1))
++
++
++def maximize_interval_p(sorted_draws, interval):
++    lo, hi = interval
++    if not all(math.isfinite(x) for x in (lo, hi)) or lo > hi:
++        raise ValueError('invalid source interval')
++    if not sorted_draws or any(not math.isfinite(x) for x in sorted_draws):
++        raise ValueError('invalid predictive distribution')
++    if any(a > b for a, b in zip(sorted_draws, sorted_draws[1:])):
++        raise ValueError('predictive distribution must be sorted')
++    a = bisect.bisect_left(sorted_draws, lo)
++    b = bisect.bisect_right(sorted_draws, hi)
++    knots = sorted(set([lo, hi] + sorted_draws[a:b]))
++    candidates = [(inclusive_p(sorted_draws, x), 'point', x) for x in knots]
++    n = len(sorted_draws)
++    # No sample lies strictly between consecutive knots. Compute the open-gap
++    # tails directly, even when adjacent float endpoints have no float midpoint.
++    for left, right in zip(knots, knots[1:]):
++        below = bisect.bisect_right(sorted_draws, left)
++        above = n - bisect.bisect_left(sorted_draws, right)
++        p = min(1., 2 * (1 + min(below, above)) / (n + 1))
++        candidates.append((p, 'open_interval', [left, right]))
++    maximum = max(candidate[0] for candidate in candidates)
++    winner = next(candidate for candidate in reversed(candidates) if candidate[0] == maximum)
++    return {'p': maximum, 'maximizer_kind': winner[1], 'maximizer': winner[2],
++            'tested_point_count': len(knots), 'tested_open_interval_count': max(0, len(knots) - 1)}
++
++
++def fixed_holm(values, family_size):
++    if len(values) != family_size:
++        raise ValueError('fixed hypothesis family size mismatch')
++    internal = [1. if value is None else value for value in values]
++    if any(not math.isfinite(p) or not 0 <= p <= 1 for p in internal):
++        raise ValueError('invalid p-value')
++    adjusted = [None] * family_size
++    running = 0.
++    for rank, i in enumerate(sorted(range(family_size), key=lambda i: (internal[i], i))):
++        running = min(1., max(running, (family_size - rank) * internal[i]))
++        if values[i] is not None:
++            adjusted[i] = running
++    return adjusted
++
++
++def percentile_interval(values):
++    if not values:
++        raise ValueError('empty interval sample')
++    ordered = sorted(values)
++    return [ordered[math.floor(.025 * (len(ordered) - 1))],
++            ordered[math.ceil(.975 * (len(ordered) - 1))]]
++
++
++def predictive(values, rng, *, draws=100000, minimum_defined=10000):
++    if len(values) != 100 or type(draws) is not int or draws <= 0:
++        raise ValueError('one hundred histories and positive draw count required')
++    if type(minimum_defined) is not int or minimum_defined <= 0:
++        raise ValueError('positive conditional sufficiency count required')
++    mask = np.asarray([x is not None for x in values], dtype=bool)
++    finite = np.asarray([0. if x is None else x for x in values], dtype=float)
++    if not np.all(np.isfinite(finite)):
++        raise ValueError('nonfinite history statistic')
++    conditional = not np.all(mask)
++    result = {'status': 'Unavailable', 'reason': None, 'requested_draws': draws,
++        'attempted_draws': 0, 'defined_draws': 0, 'undefined_draws': 0,
++        'surviving_precision_histories': int(mask.sum()), 'replicates': [],
++        'predictive_interval': None, 'conditional': conditional}
++    blocks = []
++    for start in range(0, draws, 512):
++        indices = rng.integers(0, 100, size=(min(512, draws - start), 30), dtype=np.int64)
++        counts = mask[indices].sum(axis=1)
++        sums = finite[indices].sum(axis=1)
++        defined = counts > 0
++        blocks.append((sums[defined] / counts[defined]).tolist())
++    samples = sorted(x for block in blocks for x in block)
++    result.update(attempted_draws=draws, defined_draws=len(samples),
++        undefined_draws=draws - len(samples),
++        undefined_fraction=(draws - len(samples)) / draws, replicates=samples)
++    if conditional and (mask.sum() < 2 or len(samples) < minimum_defined):
++        result['reason'] = 'insufficient_conditional_reference'
++        return result
++    result.update(status='Available', predictive_interval=percentile_interval(samples))
++    return result
++
++
++def contrast(left, right, permutation_rng, bootstrap_rng, *, draws=100000):
++    if len(left) != 100 or len(right) != 100 or type(draws) is not int or draws <= 0:
++        raise ValueError('two complete independent hundred-history groups required')
++    left = np.asarray(left, dtype=float)
++    right = np.asarray(right, dtype=float)
++    if not np.all(np.isfinite(left)) or not np.all(np.isfinite(right)):
++        raise ValueError('nonfinite contrast statistic')
++    observed = float(left.mean() - right.mean())
++    pooled = np.concatenate((left, right))
++    exceedances = 0
++    for _ in range(draws):
++        shuffled = permutation_rng.permutation(pooled)
++        difference = float(shuffled[:100].mean() - shuffled[100:].mean())
++        exceedances += abs(difference) >= abs(observed)
++    bootstrap = []
++    for start in range(0, draws, 256):
++        count = min(256, draws - start)
++        il = bootstrap_rng.integers(0, 100, size=(count, 100), dtype=np.int64)
++        ir = bootstrap_rng.integers(0, 100, size=(count, 100), dtype=np.int64)
++        bootstrap.extend((left[il].mean(axis=1) - right[ir].mean(axis=1)).tolist())
++    return {'estimate': observed, 'p': (1 + int(exceedances)) / (draws + 1),
++        'permutation_exceedances': int(exceedances), 'permutations': draws,
++        'bootstrap_draws': draws, 'interval': percentile_interval(bootstrap),
++        'resampling': 'independent_whole_history'}
+diff --git a/survey/democratic_peace/provenance.py b/survey/democratic_peace/provenance.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..ebac5e233eb377ebc0ed93ef0376335f00719793
+--- /dev/null
++++ b/survey/democratic_peace/provenance.py
+@@ -0,0 +1,147 @@
++"""Complete scientific inventory and explicit post-writer identity binding."""
++from copy import deepcopy
++import hashlib
++from pathlib import Path
++from .methods import canonical_bytes
++
++TABLE = 'docs/superpowers/specs/2026-10-03-democratic-peace-source-table.json'
++SPEC = 'docs/superpowers/specs/2026-10-03-democratic-peace-design.md'
++REQUIRED_FILES = ('Cargo.toml', 'Cargo.lock', 'crates/sugarscape-core/Cargo.toml',
++    'crates/sugarscape-core/assets/sugar-map.txt', 'survey/Cargo.toml', 'survey/Cargo.lock',
++    'survey/src/bin/democratic_peace.rs', TABLE, SPEC,
++    'docs/superpowers/specs/2026-10-03-democratic-peace-source-review.json',
++    'survey/democratic_peace/methods.json', 'survey/democratic_peace/.python-version',
++    'survey/democratic_peace/requirements.txt', 'survey/democratic_peace/README.md',
++    'survey/democratic_peace/NUMERICAL_METHODS.md',
++    *('docs/superpowers/specs/2026-10-03-democratic-peace-' + name + '.md' for name in
++      ('source-extraction', 'mechanics-reading-notes', 'author-and-followup-reading-notes', 'reading-notes')))
++
++
++def safe_source_path(root, name):
++    root = Path(root).resolve()
++    if not isinstance(name, str) or not name or any(c in name for c in ('\\', '\0', '\n', '\r')):
++        raise ValueError('unsafe source inventory path')
++    path = Path(name)
++    if path.is_absolute() or '..' in path.parts or path.as_posix() != name:
++        raise ValueError('unsafe source inventory path')
++    current = root
++    for component in path.parts:
++        current = current / component
++        if current.is_symlink():
++            raise ValueError(f'source symlink forbidden: {name}')
++    if not current.is_file():
++        raise ValueError(f'missing inventory source: {name}')
++    return current
++
++
++def required_inventory_paths(root):
++    root = Path(root).resolve()
++    result = set(REQUIRED_FILES)
++    for directory, suffixes in (
++        ('crates/sugarscape-core/src', {'.rs'}),
++        ('crates/sugarscape-core/tests', {'.rs'}),
++        ('survey/democratic_peace', {'.py', '.json'}),
++        ('survey/tests', {'.rs'})):
++        base = root / directory
++        if not base.is_dir():
++            raise ValueError(f'missing scientific source directory: {directory}')
++        for path in base.rglob('*'):
++            if '__pycache__' in path.parts:
++                continue
++            if path.is_symlink():
++                raise ValueError('source symlink forbidden')
++            if path.is_file() and path.suffix in suffixes:
++                result.add(path.relative_to(root).as_posix())
++    for name in ('.cargo/config', '.cargo/config.toml', 'rust-toolchain', 'rust-toolchain.toml',
++                 'build.rs', 'crates/sugarscape-core/build.rs', 'survey/build.rs'):
++        if (root / name).exists() or (root / name).is_symlink():
++            result.add(name)
++    for name in result:
++        safe_source_path(root, name)
++    return sorted(result)
++
++
++def source_inventory(root):
++    result = []
++    for name in required_inventory_paths(root):
++        data = safe_source_path(root, name).read_bytes()
++        result.append({'path': name, 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()})
++    return result
++
++
++def verify_source_review(root, table):
++    from .records import strict_json
++    receipts = set()
++    for figure in table['figures']:
++        check = figure['independent_visual_check']
++        name = check.get('review_receipt')
++        data = safe_source_path(root, name).read_bytes()
++        if hashlib.sha256(data).hexdigest() != check.get('review_receipt_sha256'):
++            raise ValueError('source review receipt SHA256 mismatch')
++        receipt = strict_json(data)
++        if receipt.get('paper_sha256') != table['paper_sha256'] or receipt.get('slots_sha256') != hashlib.sha256(canonical_bytes(table['slots'])).hexdigest():
++            raise ValueError('source review paper/slot digest mismatch')
++        if receipt.get('decision') != 'accepted_as_inferred_curve_values_with_reported_envelopes' or receipt.get('registered_histories') != 0:
++            raise ValueError('source review is not a premeasurement acceptance')
++        reviewed = {item['id']: item for item in receipt['figures']}
++        if figure['id'] not in reviewed or reviewed[figure['id']]['image_sha256'] != figure['image_sha256'] or reviewed[figure['id']]['axis_landmarks'] != figure['axis_landmarks']:
++            raise ValueError('source review raster/calibration mismatch')
++        receipts.add(name)
++    return receipts
++
++
++def _bind(manifest, root, source_bytes, registered):
++    from .manifest import build_manifest, expected_keys
++    from .records import strict_json
++    from .source import validate_registered_table
++    table = strict_json(source_bytes)
++    expected_keys(manifest)
++    if registered:
++        validate_registered_table(table)
++        verify_source_review(root, table)
++        if manifest != build_manifest(table, source_bytes, precision_registered=manifest['precision_registered']):
++            raise ValueError('provisional manifest differs from exact registered contract')
++    else:
++        expected_keys(manifest)
++        if manifest['execution_mode'] not in ('fixture', 'runtime_probe'):
++            raise ValueError('unregistered binding cannot activate registered population')
++    if safe_source_path(root, TABLE).read_bytes() != source_bytes:
++        raise ValueError('source table/root bytes mismatch')
++    if hashlib.sha256(source_bytes).hexdigest() != manifest['source_table_sha256']:
++        raise ValueError('source table SHA256 differs from manifest')
++    result = deepcopy(manifest)
++    inventory = source_inventory(root)
++    result.update(source_inventory=inventory,
++        source_inventory_sha256=hashlib.sha256(canonical_bytes(inventory)).hexdigest())
++    if registered:
++        result['provenance_status'] = 'frozen'
++    return result
++
++
++def freeze_manifest(provisional, root, source_bytes):
++    """Registered freeze only after all writers stop and source audit is complete."""
++    return _bind(provisional, root, source_bytes, True)
++
++
++def bind_unregistered_manifest(manifest, root, source_bytes):
++    """Identity binding for bounded fixtures/probes; never a scientific freeze."""
++    return _bind(manifest, root, source_bytes, False)
++
++
++def main():
++    import argparse
++    import json
++    from .records import strict_json
++    parser = argparse.ArgumentParser(description=__doc__)
++    for name in ('manifest', 'source', 'source-root', 'output'):
++        parser.add_argument('--' + name, required=True, type=Path)
++    args = parser.parse_args()
++    value = strict_json(args.manifest.read_bytes())
++    binder = freeze_manifest if value['execution_mode'] == 'registered' else bind_unregistered_manifest
++    result = binder(value, args.source_root, args.source.read_bytes())
++    args.output.write_text(json.dumps(result, indent=2, allow_nan=False) + '\n')
++    print(f"Bound {len(result['source_inventory'])} sources for {result['execution_mode']}; no histories executed")
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/survey/democratic_peace/records.py b/survey/democratic_peace/records.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..73a3f44c94b09995458be08229441fb7bbfd45c6
+--- /dev/null
++++ b/survey/democratic_peace/records.py
+@@ -0,0 +1,337 @@
++"""Strict native envelopes, atomic completion and defined science availability."""
++import hashlib
++import json
++import math
++import re
++from pathlib import Path
++from .methods import canonical_bytes
++
++BINDING_FIELDS = ('manifest_sha256', 'binary_sha256', 'source_inventory_sha256',
++                  'build_receipt_sha256', 'resolved_configs_sha256')
++RECORD_FIELDS = {'schema_version', 'model', 'arm', 'seed', 'arm_index', 'canonical_index',
++    'repeat_index', 'family', 'execution_mode', 'config', 'attempt', 'outcome', *BINDING_FIELDS}
++ATTEMPT_FIELDS = {'status', 'construction_errors', 'panic_context', 'recorder_error'}
++ATTEMPT_STATUSES = {'completed', 'invalid', 'construction_error', 'construction_panic',
++                    'implementation_panic', 'incomplete'}
++COUNTER_FIELDS = {'initiated_fronts', 'mutual_d_front_periods', 'completed_victory_battles',
++    'completed_stalemate_battles', 'opposing_claims', 'successful_claims', 'stale_claims',
++    'locked_claims', 'retired_states', 'released_states'}
++METRIC_FIELDS = {'democratic_cells', 'total_cells', 'democratic_share', 'sovereign_count',
++    'democratic_states', 'predatory_states', 'democratic_mean_size', 'predatory_mean_size',
++    'democratic_max_size', 'predatory_max_size', 'democratic_size_reason',
++    'predatory_size_reason', 'democratic_exposure', 'clustering_ratio', 'clustering_reason',
++    'conflict_fronts', 'alliance_count', 'pariah_count', 'democratic_extinction',
++    'all_democratic', 'first_extinction_period', 'first_all_democratic_period'}
++SCIENCE_FIELDS = {'model', 'config', 'seed', 'period', 'periods', 'attempted_period',
++    'completed_periods', 'tick', 'last_tick_periods', 'setup', 'current_metrics',
++    'census', 'outcome', 'final_state_hash'}
++TERMINAL_FIELDS = {'valid', 'finish_reason', 'invalid_reason', 'invalid_phase',
++    'attempted_period', 'completed_periods', 'final_metrics', 'census'}
++RECEIPT_FIELDS = {'schema_version', 'model', 'manifest_sha256', 'source_inventory_sha256',
++    'prebuild_inventory_sha256', 'postbuild_inventory_sha256', 'binary_sha256',
++    'build_command', 'cwd', 'target', 'rustc_version', 'cargo_version',
++    'lockfile_hashes', 'features', 'build_flags'}
++
++
++def strict_json(text):
++    def pairs(items):
++        result = {}
++        for key, value in items:
++            if key in result:
++                raise ValueError(f'duplicate JSON field: {key}')
++            result[key] = value
++        return result
++    def constant(value):
++        raise ValueError(f'nonfinite JSON number: {value}')
++    def finite_float(value):
++        parsed = float(value)
++        if not math.isfinite(parsed):
++            raise ValueError('nonfinite JSON numeric exponent')
++        return parsed
++    try:
++        return json.loads(text, object_pairs_hook=pairs, parse_constant=constant, parse_float=finite_float)
++    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
++        raise ValueError(f'invalid JSON: {exc}') from exc
++
++
++def _uint(value):
++    return type(value) is int and 0 <= value <= 2**64 - 1
++
++
++def _number(value):
++    return type(value) in (int, float) and math.isfinite(value)
++
++
++def _same_json_types(value, expected):
++    if type(value) is not type(expected):
++        return False
++    if isinstance(value, dict):
++        return set(value) == set(expected) and all(_same_json_types(value[k], v) for k, v in expected.items())
++    if isinstance(value, list):
++        return len(value) == len(expected) and all(_same_json_types(a, b) for a, b in zip(value, expected))
++    return value == expected
++
++
++def _fields(value, expected, label):
++    if not isinstance(value, dict) or set(value) != set(expected):
++        raise ValueError(f'{label}: unknown or missing fields')
++
++
++def validate_metrics(metrics, config, completed_periods):
++    _fields(metrics, METRIC_FIELDS, 'metrics')
++    integer_fields = ('democratic_cells', 'total_cells', 'sovereign_count', 'democratic_states',
++        'predatory_states', 'conflict_fronts', 'alliance_count', 'pariah_count')
++    if any(not _uint(metrics[k]) for k in integer_fields):
++        raise ValueError('metrics: invalid integer census')
++    total = config['width'] * config['height']
++    democratic = metrics['democratic_cells']
++    if metrics['total_cells'] != total or democratic > total or not 1 <= metrics['sovereign_count'] <= total:
++        raise ValueError('metrics: grid/count mismatch')
++    if metrics['democratic_states'] + metrics['predatory_states'] != metrics['sovereign_count']:
++        raise ValueError('metrics: regime counts do not conserve sovereigns')
++    if not _number(metrics['democratic_share']) or abs(metrics['democratic_share'] - democratic / total) > 1e-12:
++        raise ValueError('metrics: share differs from authoritative integer cells')
++    for regime, cells in [('democratic', democratic), ('predatory', total - democratic)]:
++        count = metrics[regime + '_states']
++        mean = metrics[regime + '_mean_size']
++        maximum = metrics[regime + '_max_size']
++        reason = metrics[regime + '_size_reason']
++        if count == 0:
++            if cells != 0 or mean is not None or maximum is not None or reason != 'no_surviving_states':
++                raise ValueError('metrics: missing-regime availability mismatch')
++        elif not (count <= cells and _number(mean) and abs(mean - cells / count) <= 1e-12
++                  and _uint(maximum) and mean <= maximum <= cells and reason is None):
++            raise ValueError('metrics: invalid regime state-size census')
++    for key, expected in [('democratic_extinction', democratic == 0), ('all_democratic', democratic == total)]:
++        if type(metrics[key]) is not bool or metrics[key] != expected:
++            raise ValueError('metrics: endpoint indicator disagrees with census')
++    for time_field, indicator in [('first_extinction_period', 'democratic_extinction'),
++                                  ('first_all_democratic_period', 'all_democratic')]:
++        value = metrics[time_field]
++        if value is not None and (not _uint(value) or value > completed_periods):
++            raise ValueError('metrics: invalid first-passage clock')
++        # Persistent latent tags can allow reemergence after first extinction;
++        # an observed first passage need not equal the current endpoint status.
++        if metrics[indicator] and value is None:
++            raise ValueError('metrics: reached endpoint lacks first passage')
++    exposure = metrics['democratic_exposure']
++    ratio = metrics['clustering_ratio']
++    density = config['initial_democratic_share']
++    expected_reason = 'undefined_initial_density' if density == 0 else 'undefined_extinction' if democratic == 0 else None
++    if metrics['clustering_reason'] != expected_reason:
++        raise ValueError('metrics: invalid clustering availability reason')
++    if democratic == 0:
++        if exposure is not None:
++            raise ValueError('metrics: extinct population has exposure')
++    elif not _number(exposure) or not 0 <= exposure <= 1:
++        raise ValueError('metrics: invalid democratic exposure')
++    if expected_reason is not None:
++        if ratio is not None:
++            raise ValueError('metrics: undefined clustering was imputed')
++    elif not _number(ratio) or abs(ratio - exposure / density) > 1e-12:
++        raise ValueError('metrics: clustering ratio disagrees with exposure/configured density')
++
++
++def validate_counters(counters):
++    _fields(counters, COUNTER_FIELDS, 'counters')
++    if any(not _uint(value) for value in counters.values()):
++        raise ValueError('invalid battle/structural counter')
++
++
++def validate_science(science, *, allow_partial=False):
++    _fields(science, SCIENCE_FIELDS, 'science')
++    if science['model'] != 'democratic_peace' or not _uint(science['seed']):
++        raise ValueError('invalid science model or seed')
++    config = science['config']
++    for key in ('width', 'height', 'horizon_periods', 'periods_per_tick'):
++        if not _uint(config.get(key)) or config[key] == 0:
++            raise ValueError('invalid resolved science configuration')
++    if not _number(config.get('initial_democratic_share')) or not 0 <= config['initial_democratic_share'] <= 1:
++        raise ValueError('invalid configured democratic density')
++    clocks = ('period', 'periods', 'completed_periods', 'attempted_period', 'tick', 'last_tick_periods')
++    if any(not _uint(science[key]) for key in clocks):
++        raise ValueError('invalid science clock')
++    completed = science['completed_periods']
++    attempted = science['attempted_period']
++    horizon = config['horizon_periods']
++    if science['period'] != completed or science['periods'] != completed or not completed <= attempted <= min(horizon, completed + 1):
++        raise ValueError('atomic attempted/completed clocks disagree')
++    if science['last_tick_periods'] > config['periods_per_tick']:
++        raise ValueError('display tick exceeds configured grouping')
++    setup = science['setup']
++    _fields(setup, {'initial_democratic_cells', 'initial_resourced_cells', 'total_cells'}, 'setup')
++    total = config['width'] * config['height']
++    if any(not _uint(value) for value in setup.values()) or setup['total_cells'] != total or any(
++        setup[key] > total for key in ('initial_democratic_cells', 'initial_resourced_cells')
++    ):
++        raise ValueError('invalid setup census')
++    validate_metrics(science['current_metrics'], config, completed)
++    validate_counters(science['census'])
++    terminal = science['outcome']
++    if terminal is None and allow_partial:
++        if completed > horizon:
++            raise ValueError('partial science exceeds source horizon')
++        if not isinstance(science['final_state_hash'], str) or not re.fullmatch('[0-9a-f]{16}', science['final_state_hash']):
++            raise ValueError('invalid partial committed state hash')
++        return science
++    _fields(terminal, TERMINAL_FIELDS, 'terminal outcome')
++    if type(terminal['valid']) is not bool or terminal['completed_periods'] != completed or terminal['attempted_period'] != attempted:
++        raise ValueError('terminal/science availability clocks disagree')
++    if not _same_json_types(terminal['census'], science['census']):
++        raise ValueError('terminal/science census differs')
++    if terminal['valid']:
++        if terminal['finish_reason'] != 'complete' or completed != horizon or attempted != horizon or terminal['invalid_reason'] is not None or terminal['invalid_phase'] is not None:
++            raise ValueError('complete outcome is not a valid full horizon')
++        if not _same_json_types(terminal['final_metrics'], science['current_metrics']):
++            raise ValueError('complete final metrics differ from committed census')
++    elif terminal['finish_reason'] != 'invalid' or not isinstance(terminal['invalid_reason'], str) or not terminal['invalid_reason'] or not isinstance(terminal['invalid_phase'], str) or not terminal['invalid_phase'] or terminal['final_metrics'] is not None:
++        raise ValueError('invalid outcome must retain context and unavailable final metrics')
++    if not isinstance(science['final_state_hash'], str) or not re.fullmatch('[0-9a-f]{16}', science['final_state_hash']):
++        raise ValueError('invalid committed full state hash')
++    return science
++
++
++def history_metrics(row):
++    status = row['attempt']['status']
++    science = row.get('outcome')
++    if science is None:
++        return {'status': status, 'complete': False, 'metrics': None, 'partial_metrics': None}
++    terminal = science['outcome']
++    complete = status == 'completed' and terminal is not None and terminal['valid']
++    return {'status': status, 'complete': complete,
++        'metrics': terminal['final_metrics'] if complete else None,
++        'partial_metrics': None if complete else science['current_metrics'],
++        'setup': science['setup'], 'final_state_hash': science['final_state_hash'],
++        'completed_periods': science['completed_periods'], 'attempted_period': science['attempted_period'],
++        'census': science['census'], 'invalid_reason': terminal['invalid_reason'] if terminal else row['attempt'].get('panic_context') or row['attempt'].get('recorder_error'),
++        'invalid_phase': terminal['invalid_phase'] if terminal else None}
++
++
++def resolved_payload(export):
++    payload = export.get('resolved_configs_json')
++    if not isinstance(payload, str) or payload.endswith('\n'):
++        raise ValueError('missing exact native resolved payload without newline')
++    if hashlib.sha256(payload.encode('utf-8')).hexdigest() != export.get('resolved_configs_sha256'):
++        raise ValueError('native resolved payload SHA256 mismatch')
++    parsed = strict_json(payload)
++    if not _same_json_types(parsed, [{'id': arm['id'], 'config': arm['config']} for arm in export['arms']]):
++        raise ValueError('native resolved payload/config type equality mismatch')
++    return parsed
++
++
++def validate_record(row, arm, binding):
++    _fields(row, RECORD_FIELDS, 'record')
++    if type(row['schema_version']) is not int or row['schema_version'] != 1 or row['model'] != 'democratic_peace':
++        raise ValueError('invalid record/model version')
++    if any(row[key] != binding[key] for key in BINDING_FIELDS):
++        raise ValueError('record provenance mismatch')
++    repeat = row['repeat_index']
++    if row['family'] != arm['family'] or row['execution_mode'] != arm.get('execution_mode', 'registered'):
++        raise ValueError('record family or execution mode mismatch')
++    if row['arm'] != arm['id'] or any(not _uint(row[key]) for key in ('seed', 'arm_index', 'canonical_index', 'repeat_index')) or row['arm_index'] != arm['index'] or row['canonical_index'] != arm['canonical_index'] or repeat >= arm['sessions'] or row['seed'] != arm['first_seed'] + repeat:
++        raise ValueError('record key differs from exact registered arm')
++    if not _same_json_types(row['config'], arm['config']):
++        raise ValueError('record config differs from authoritative native config')
++    attempt = row['attempt']
++    _fields(attempt, ATTEMPT_FIELDS, 'attempt')
++    if attempt['status'] not in ATTEMPT_STATUSES or not isinstance(attempt['construction_errors'], list):
++        raise ValueError('invalid attempt status or construction errors')
++    for error in attempt['construction_errors']:
++        _fields(error, {'field', 'message'}, 'construction error')
++        if any(not isinstance(error[key], str) or not error[key] for key in error):
++            raise ValueError('invalid construction error context')
++    for key in ('panic_context', 'recorder_error'):
++        if attempt[key] is not None and (not isinstance(attempt[key], str) or not attempt[key]):
++            raise ValueError('invalid failure context')
++    status = attempt['status']
++    if status == 'construction_error' and not attempt['construction_errors']:
++        raise ValueError('construction error lacks context')
++    if status.endswith('_panic') and not attempt['panic_context']:
++        raise ValueError('panic lacks context')
++    if status == 'incomplete' and not attempt['recorder_error']:
++        raise ValueError('incomplete recording lacks context')
++    science = row['outcome']
++    if science is None:
++        if status not in ('construction_error', 'construction_panic', 'implementation_panic', 'incomplete'):
++            raise ValueError('missing science without explicit unavailable attempt')
++    else:
++        validate_science(science, allow_partial=status in ('implementation_panic', 'incomplete'))
++        if not _same_json_types(science['config'], arm['config']) or science['seed'] != row['seed']:
++            raise ValueError('science config or seed differs from envelope')
++        if status == 'completed' and (not science['outcome']['valid'] or attempt['panic_context'] is not None or attempt['construction_errors'] or attempt['recorder_error'] is not None):
++            raise ValueError('completed attempt contains unavailable state or error')
++        if status == 'invalid' and science['outcome']['valid']:
++            raise ValueError('invalid attempt contains complete outcome')
++        if status in ('construction_error', 'construction_panic'):
++            raise ValueError('construction failure unexpectedly contains science')
++    return row['arm'], row['seed']
++
++
++def read_sessions(path, manifest, resolved, binding):
++    from .manifest import expected_keys
++    resolved_payload(resolved)
++    if any(resolved[key] != binding[key] for key in BINDING_FIELDS):
++        raise ValueError('resolved export provenance mismatch')
++    expected_keys(manifest)
++    configs = {arm['id']: arm['config'] for arm in resolved['arms']}
++    if len(configs) != len(resolved['arms']) or set(configs) != {arm['id'] for arm in manifest['arms']}:
++        raise ValueError('resolved arm family mismatch or duplicate')
++    arms = {arm['id']: {**arm, 'config': configs[arm['id']], 'execution_mode': manifest['execution_mode']} for arm in manifest['arms']}
++    result = {}
++    with Path(path).open(encoding='utf-8', newline='') as file:
++        for number, line in enumerate(file, 1):
++            try:
++                if not line.endswith('\n'):
++                    raise ValueError('interrupted append: missing final newline')
++                row = strict_json(line)
++                if row['arm'] not in arms:
++                    raise ValueError('unregistered raw arm')
++                key = validate_record(row, arms[row['arm']], binding)
++                if key in result:
++                    raise ValueError('duplicate registered key')
++                result[key] = row
++            except (KeyError, TypeError, ValueError) as exc:
++                raise ValueError(f'raw line {number}: {exc}') from exc
++    return result
++
++
++def verify_source_inventory(root, inventory):
++    from .provenance import required_inventory_paths, safe_source_path
++    if not isinstance(inventory, list) or not inventory:
++        raise ValueError('source inventory must be nonempty')
++    previous = None
++    seen = set()
++    for entry in inventory:
++        _fields(entry, {'path', 'bytes', 'sha256'}, 'inventory entry')
++        name = entry['path']
++        if previous is not None and previous >= name:
++            raise ValueError('source inventory must be unique and sorted')
++        previous = name
++        seen.add(name)
++        data = safe_source_path(root, name).read_bytes()
++        if type(entry['bytes']) is not int or len(data) != entry['bytes'] or hashlib.sha256(data).hexdigest() != entry['sha256']:
++            raise ValueError(f'source bytes/SHA256 mismatch: {name}')
++    if not set(required_inventory_paths(root)) <= seen:
++        raise ValueError('source inventory omits required scientific sources')
++    return hashlib.sha256(canonical_bytes(inventory)).hexdigest()
++
++
++def validate_build_receipt(receipt, manifest_sha256, binary_sha256, source_inventory_sha256, source_root=None):
++    _fields(receipt, RECEIPT_FIELDS, 'build receipt')
++    if type(receipt['schema_version']) is not int or receipt['schema_version'] != 1 or receipt['model'] != 'democratic_peace':
++        raise ValueError('invalid build receipt model')
++    for field, value in [('manifest_sha256', manifest_sha256), ('binary_sha256', binary_sha256),
++        ('source_inventory_sha256', source_inventory_sha256), ('prebuild_inventory_sha256', source_inventory_sha256),
++        ('postbuild_inventory_sha256', source_inventory_sha256)]:
++        if receipt[field] != value:
++            raise ValueError(f'build receipt {field} mismatch')
++    if not receipt['build_command'] or any(not isinstance(x, str) for x in receipt['build_command']):
++        raise ValueError('explicit build command required')
++    if not {'Cargo.lock', 'survey/Cargo.lock'} <= set(receipt['lockfile_hashes']):
++        raise ValueError('build receipt omits required Cargo locks')
++    if source_root is not None:
++        from .provenance import safe_source_path
++        for name, digest in receipt['lockfile_hashes'].items():
++            if hashlib.sha256(safe_source_path(source_root, name).read_bytes()).hexdigest() != digest:
++                raise ValueError('build receipt lockfile SHA256 mismatch')
++    return True
+diff --git a/survey/democratic_peace/reporting.py b/survey/democratic_peace/reporting.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..5c95cdaafbd8053adaf04c104f5fccaaf4348502
+--- /dev/null
++++ b/survey/democratic_peace/reporting.py
+@@ -0,0 +1,42 @@
++"""Strict JSON and readable presentation; never computes scientific judges."""
++import json
++import math
++
++
++def serialize_report(report):
++    return json.dumps(report, indent=2, allow_nan=False) + '\n'
++
++
++def markdown_report(report):
++    def cell(value):
++        return 'Unavailable' if value is None else str(value).replace('|', '\\|').replace('\n', ' ')
++    lines = ['# Democratic peace offline findings', '',
++        f"Classification: {report['classification']}. Received {report['received_histories']}/{report['attempted_slots']} attempted history slots.", '',
++        'Exact source equivalence remains Unresolved. Source curve readings and conditional reconstruction compatibility are distinct.', '',
++        f"Source readings: {report['source']['readable_count']}/105 potential slots. All105 remain in multiplicity; density-zero clustering exclusions are outside that family.", '',
++        '| Scope | Conditional verdict | Readable/potential | Reason |', '|---|---|---:|---|']
++    for name, scope in report['source']['scopes'].items():
++        lines.append(f"| {name} | {scope['conditional_verdict']} | {scope['readable_count']}/{scope['potential_count']} | {cell(scope['reason'])} |")
++    lines += ['', '| Source target | Read status | Source envelope | Original mean | Original complete/registered | Original clustering defined/extinct | Predictive interval | Defined/attempted draws | Raw p | Holm p | Availability |',
++        '|---|---|---|---:|---:|---:|---|---:|---:|---:|---|']
++    for target in report['source']['targets']:
++        original = target['original_census']
++        prediction = target['result'] or {}
++        values = [target['id'], target['read_status'], target['interval'], target['original'],
++            f"{original['complete_count']}/{original['registered_count']}",
++            f"{original['clustering_defined_count']}/{original['extinction_count']}",
++            prediction.get('predictive_interval'),
++            f"{prediction.get('defined_draws', 0)}/{prediction.get('attempted_draws', 0)}",
++            target['p'], target['holm_p'], target['unavailable_reason'] or 'Available']
++        lines.append('| ' + ' | '.join(cell(v) for v in values) + ' |')
++    for family in ('primary_contrasts', 'secondary_contrasts'):
++        group = report[family]
++        lines += ['', f"{family}: separate six-test family; aggregate {group['aggregate_verdict']}.", '',
++            '| Contrast | Verdict | Estimate | 95% whole-history interval | Raw p | Holm p | Reason |',
++            '|---|---|---:|---|---:|---:|---|']
++        for component in group['components']:
++            values = [component['id'], component['verdict'], component['estimate'], component['interval'],
++                component['p'], component['holm_p'], component['unavailable_reason'] or 'Available']
++            lines.append('| ' + ' | '.join(cell(v) for v in values) + ' |')
++    lines += ['', 'Missing, invalid and legitimately undefined histories remain in their censuses. Clustering predictions condition on defined resamples and preserve extinction draws. Original and precision histories are never pooled or seed-paired. Bootstrap support does not establish impossible model events; these lattice results do not establish historical causal democratic peace.', '']
++    return '\n'.join(lines)
+diff --git a/survey/democratic_peace/requirements.txt b/survey/democratic_peace/requirements.txt
+new file mode 100644
+index 0000000000000000000000000000000000000000..e2bcc240c39b4a502858cb035bbc1b24e41ec451
+--- /dev/null
++++ b/survey/democratic_peace/requirements.txt
+@@ -0,0 +1,2 @@
++# Offline survey only; existing numerical environment, no new dependencies.
++numpy==2.4.6
+diff --git a/survey/democratic_peace/run.py b/survey/democratic_peace/run.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..510957d869e53eab619253e037cb31a0bf06ef05
+--- /dev/null
++++ b/survey/democratic_peace/run.py
+@@ -0,0 +1,76 @@
++"""Exact native invocation and build receipts; never builds or silently runs."""
++import argparse
++import hashlib
++from pathlib import Path
++import subprocess
++from .records import strict_json, verify_source_inventory
++
++
++def sha256_file(path):
++    digest = hashlib.sha256()
++    with Path(path).open('rb') as file:
++        for chunk in iter(lambda: file.read(1024 * 1024), b''):
++            digest.update(chunk)
++    return digest.hexdigest()
++
++
++def run_native(binary, manifest, out=None, *, validate=False, resolved_out,
++               build_receipt=None, source_root=None):
++    command = [str(Path(binary).resolve()), '--manifest', str(Path(manifest).resolve()),
++        '--resolved', str(Path(resolved_out).resolve()),
++        '--repo', str(Path(source_root or '.').resolve())]
++    if validate:
++        command.append('--validate-only')
++    else:
++        if out is None or build_receipt is None:
++            raise ValueError('native execution requires explicit output and bound build receipt')
++        command += ['--out', str(Path(out).resolve())]
++    if build_receipt is not None:
++        command += ['--receipt', str(Path(build_receipt).resolve())]
++    return subprocess.run(command, capture_output=True, text=True, check=True)
++
++
++def make_build_receipt(manifest_path, binary_path, source_root, *, prebuild_inventory_sha256,
++        build_command, build_exit_code, toolchain, lockfile_paths, features=None, build_flags=None):
++    if build_exit_code != 0:
++        raise ValueError('failed build cannot produce binding receipt')
++    value = strict_json(Path(manifest_path).read_bytes())
++    if value['model'] != 'democratic_peace' or (value['execution_mode'] == 'registered' and value['provenance_status'] != 'frozen'):
++        raise ValueError('registered build receipt requires frozen democratic-peace sources')
++    root = Path(source_root).resolve()
++    post = verify_source_inventory(root, value['source_inventory'])
++    if post != prebuild_inventory_sha256 or post != value['source_inventory_sha256']:
++        raise ValueError('pre/post build source inventory changed')
++    if not build_command or any(not isinstance(x, str) for x in build_command):
++        raise ValueError('explicit successful build command required')
++    if not {'Cargo.lock', 'survey/Cargo.lock'} <= set(lockfile_paths):
++        raise ValueError('receipt omits required Cargo locks')
++    from .provenance import safe_source_path
++    locks = {name: sha256_file(safe_source_path(root, name)) for name in lockfile_paths}
++    return {'schema_version': 1, 'model': 'democratic_peace',
++        'manifest_sha256': sha256_file(manifest_path), 'source_inventory_sha256': post,
++        'prebuild_inventory_sha256': prebuild_inventory_sha256, 'postbuild_inventory_sha256': post,
++        'binary_sha256': sha256_file(binary_path), 'build_command': list(build_command),
++        'cwd': str(root), 'target': toolchain['target'], 'rustc_version': toolchain['rustc_version'],
++        'cargo_version': toolchain['cargo_version'], 'lockfile_hashes': locks,
++        'features': features or [], 'build_flags': build_flags or []}
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    for name in ('binary', 'manifest', 'resolved', 'source-root'):
++        parser.add_argument('--' + name, required=True, type=Path)
++    parser.add_argument('--out', type=Path)
++    parser.add_argument('--receipt', type=Path)
++    parser.add_argument('--validate-only', action='store_true')
++    args = parser.parse_args()
++    result = run_native(args.binary, args.manifest, args.out, validate=args.validate_only,
++        resolved_out=args.resolved, build_receipt=args.receipt, source_root=args.source_root)
++    print(result.stdout, end='')
++    if result.stderr:
++        import sys
++        print(result.stderr, end='', file=sys.stderr)
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/survey/democratic_peace/source.py b/survey/democratic_peace/source.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..57805512a3eefc7439c905f78d5b06a35dd7d82e
+--- /dev/null
++++ b/survey/democratic_peace/source.py
+@@ -0,0 +1,198 @@
++"""Fixed figure slots, honest source availability and conditional comparisons."""
++import math
++from .manifest import MECHANISMS, DENSITIES, arm_suffix, number_id
++from . import numerics
++
++PAPER_SHA256 = '069ad22da938727b2020c5d2c3a52aa383687c74085f5bc0af8cea74817b5215'
++READ_STATUSES = {'readable', 'unreadable_overlap', 'absent_source_point'}
++SLOT_FIELDS = {'id', 'figure', 'printed_page', 'pdf_page_1based', 'mobile_share',
++    'mechanism', 'initial_democratic_share', 'metric', 'read_status', 'interval',
++    'attribution', 'pixel_reading', 'calibration_id', 'note'}
++
++
++def slot_roster():
++    result = []
++    for figure, page, mobile, metric, densities in (
++        (9, 486, .5, 'democratic_share', DENSITIES),
++        (10, 488, .5, 'clustering_ratio', DENSITIES[1:]),
++        (11, 489, .85, 'democratic_share', DENSITIES)):
++        for mechanism in MECHANISMS:
++            for density in densities:
++                result.append({'id': f'fig{figure}.{mechanism}.density{number_id(density)}',
++                    'figure': figure, 'printed_page': page, 'pdf_page_1based': page - 469,
++                    'mobile_share': mobile, 'mechanism': mechanism,
++                    'initial_democratic_share': density, 'metric': metric})
++    return result
++
++
++def structural_exclusions():
++    return [{'id': f'fig10.{mechanism}.density0', 'figure': 10,
++        'mechanism': mechanism, 'initial_democratic_share': 0.,
++        'read_status': 'undefined_density_zero', 'interval': None,
++        'in_family': False, 'reason': 'ratio_divides_by_initial_density'}
++        for mechanism in MECHANISMS]
++
++
++def fixture_table(read_status='readable'):
++    slots = [{**slot, 'read_status': read_status,
++        'interval': [0., 1.] if read_status == 'readable' else None,
++        'attribution': 'synthetic_fixture', 'pixel_reading': None,
++        'calibration_id': f"fig{slot['figure']}", 'note': 'Synthetic test only'}
++        for slot in slot_roster()]
++    return {'schema_version': 1, 'model': 'democratic_peace',
++        'paper': 'papers/geopolitics/cederman-2001-jcr-democratic-peace-kantian-selection-process.pdf',
++        'paper_sha256': PAPER_SHA256, 'source_equivalence': 'Unresolved',
++        'extraction': {'classification': 'synthetic_fixture'}, 'figures': [],
++        'slots': slots, 'structural_exclusions': structural_exclusions()}
++
++
++def validate_table(table):
++    fields = {'schema_version', 'model', 'paper', 'paper_sha256', 'source_equivalence',
++        'extraction', 'figures', 'slots', 'structural_exclusions'}
++    if set(table) != fields or type(table['schema_version']) is not int or table['schema_version'] != 1 or table['model'] != 'democratic_peace':
++        raise ValueError('unknown or missing source table fields')
++    if table['paper_sha256'] != PAPER_SHA256 or table['source_equivalence'] != 'Unresolved':
++        raise ValueError('source identity or equivalence changed')
++    roster = slot_roster()
++    if len(table['slots']) != 105:
++        raise ValueError('fixed source table requires 105 slots')
++    from .records import _same_json_types
++    for slot, expected in zip(table['slots'], roster):
++        if set(slot) != SLOT_FIELDS or any(not _same_json_types(slot[k], v) for k, v in expected.items()):
++            raise ValueError('source slot roster, ordering or fields changed')
++        if slot['read_status'] not in READ_STATUSES:
++            raise ValueError('invalid source read status')
++        interval = slot['interval']
++        if slot['read_status'] != 'readable':
++            if interval is not None:
++                raise ValueError('unreadable or absent source slot has numeric target')
++        else:
++            maximum = 1. if slot['metric'] == 'democratic_share' else 1 / slot['initial_democratic_share']
++            if not isinstance(interval, list) or len(interval) != 2 or any(
++                type(x) not in (int, float) or not math.isfinite(x) for x in interval
++            ) or not 0 <= interval[0] <= interval[1] <= maximum:
++                raise ValueError('invalid source extraction envelope')
++    if table['structural_exclusions'] != structural_exclusions():
++        raise ValueError('density-zero clustering exclusions changed')
++    if table['extraction'].get('classification') != 'synthetic_fixture':
++        validate_extraction_metadata(table)
++    return table
++
++
++def validate_extraction_metadata(table):
++    figures = table['figures']
++    if [f['id'] for f in figures] != ['fig9', 'fig10', 'fig11']:
++        raise ValueError('missing figure calibration')
++    for figure in figures:
++        for key in ('image_path', 'image_sha256', 'image_size', 'render_command',
++                    'axis_landmarks', 'axis_uncertainty_pixels', 'traces', 'independent_visual_check'):
++            if key not in figure:
++                raise ValueError(f'missing source calibration {key}')
++        if not figure['independent_visual_check']:
++            raise ValueError('source calibration lacks visual audit')
++    for slot in table['slots']:
++        if slot['read_status'] == 'readable' and (
++            slot['pixel_reading'] is None or slot['attribution'] != 'inferred_curve_value'
++        ):
++            raise ValueError('readable curve value lacks pixels or honest attribution')
++
++
++def validate_registered_table(table):
++    validate_table(table)
++    if table['extraction'].get('classification') != 'visually_audited_premeasurement' or any(
++        not isinstance(figure['independent_visual_check'], dict) or
++        figure['independent_visual_check'].get('second_reader_status') != 'reviewed'
++        for figure in table['figures']
++    ):
++        raise ValueError('registered source audit is synthetic or lacks independent review')
++    return table
++
++
++def population_summary(histories, expected):
++    complete = [h for h in histories if h['complete']]
++    survivors = [h for h in complete if h['metrics']['clustering_ratio'] is not None]
++    result = {'registered_count': expected, 'received_count': len(histories),
++        'complete_count': len(complete), 'invalid_count': len(histories) - len(complete),
++        'missing_count': max(0, expected - len(histories)),
++        'extinction_count': sum(h['metrics']['democratic_extinction'] for h in complete),
++        'clustering_defined_count': len(survivors),
++        'clustering_undefined_count': len(complete) - len(survivors),
++        'population_complete': len(histories) == expected and len(complete) == expected,
++        'democratic_share_mean': None, 'clustering_ratio_mean': None,
++        'all_democratic_probability': None, 'extinction_probability': None}
++    if result['population_complete']:
++        result['democratic_share_mean'] = math.fsum(h['metrics']['democratic_share'] for h in complete) / expected
++        result['all_democratic_probability'] = sum(h['metrics']['all_democratic'] for h in complete) / expected
++        result['extinction_probability'] = result['extinction_count'] / expected
++        if survivors:
++            result['clustering_ratio_mean'] = math.fsum(h['metrics']['clustering_ratio'] for h in survivors) / len(survivors)
++    return result
++
++
++def scope_verdict(targets):
++    readable = [t for t in targets if t['read_status'] == 'readable']
++    if any(t['holm_p'] is not None and t['holm_p'] < .05 for t in readable):
++        return {'conditional_verdict': 'Incompatible', 'reason': None}
++    if not readable:
++        return {'conditional_verdict': 'Unresolved', 'reason': 'no_readable_source_targets'}
++    if all(t['p'] is not None for t in readable):
++        return {'conditional_verdict': 'Compatible', 'reason': None}
++    return {'conditional_verdict': 'Unresolved', 'reason': 'ineligible_readable_source_targets'}
++
++
++def source_findings(table, histories, jobs, *, precision_registered, draws=100000, minimum_defined=10000, fixture=False):
++    from .manifest import job_rng
++    validate_table(table)
++    if fixture:
++        if type(draws) is not int or not 1 <= draws <= 1000:
++            raise ValueError('synthetic source fixture exceeds bounded draw gate')
++    else:
++        validate_registered_table(table)
++        if draws != 100000 or minimum_defined != 10000:
++            raise ValueError('registered source resampling contract changed')
++    summaries = {arm: population_summary(values, 30 if arm.startswith('original.') else 100)
++                 for arm, values in histories.items()}
++    targets = []
++    for slot in table['slots']:
++        suffix = arm_suffix(slot['mobile_share'], slot['mechanism'], slot['initial_democratic_share'])
++        original = summaries.get('original.' + suffix, population_summary([], 30))
++        precision = summaries.get('precision.' + suffix, population_summary([], 100))
++        metric = slot['metric']
++        target = {**slot, 'source_equivalence': 'Unresolved',
++            'original': original[metric + '_mean'], 'original_census': original,
++            'precision_census': precision if precision_registered else None,
++            'result': None, 'p': None, 'holm_p': None, 'unavailable_reason': None}
++        reason = None
++        if slot['read_status'] != 'readable':
++            reason = slot['read_status']
++        elif not precision_registered:
++            reason = 'precision_not_registered'
++        elif not original['population_complete']:
++            reason = 'incomplete_original_history_population'
++        elif not precision['population_complete']:
++            reason = 'incomplete_precision_history_population'
++        else:
++            values = [h['metrics'][metric] for h in histories['precision.' + suffix]]
++            prediction = numerics.predictive(values, job_rng(jobs['predictive.source.' + slot['id']]),
++                draws=draws, minimum_defined=minimum_defined)
++            target['result'] = {k: v for k, v in prediction.items() if k != 'replicates'}
++            target['result']['conditional'] = metric == 'clustering_ratio'
++            if prediction['status'] != 'Available':
++                reason = prediction['reason']
++            else:
++                target['result'].update(numerics.maximize_interval_p(prediction['replicates'], slot['interval']))
++                target['p'] = target['result']['p']
++        target['unavailable_reason'] = reason
++        targets.append(target)
++    for target, adjusted in zip(targets, numerics.fixed_holm([t['p'] for t in targets], 105)):
++        target['holm_p'] = adjusted
++    scopes = {'all': scope_verdict(targets)}
++    for figure in (9, 10, 11):
++        scopes[f'fig{figure}'] = scope_verdict([t for t in targets if t['figure'] == figure])
++    for name in scopes:
++        subset = targets if name == 'all' else [t for t in targets if 'fig' + str(t['figure']) == name]
++        scopes[name].update(source_equivalence='Unresolved', readable_count=sum(t['read_status'] == 'readable' for t in subset), potential_count=len(subset))
++    return {'family_size': 105, 'readable_count': sum(t['read_status'] == 'readable' for t in targets),
++        'targets': targets, 'scopes': scopes, 'populations': summaries,
++        'structural_exclusions': table['structural_exclusions'],
++        'finite_support_limit': 'outside_bootstrap_values_are_not_impossible_model_events'}
+diff --git a/survey/democratic_peace/test_analysis.py b/survey/democratic_peace/test_analysis.py
+index b14779a5b600874782d01f5421bf20e23fd4fb12..c5a1ddd6cc610e66e83aea00384a162d473d1d36 100644
+--- a/survey/democratic_peace/test_analysis.py
++++ b/survey/democratic_peace/test_analysis.py
+@@ -33,3 +33,21 @@ class AnalysisTests(unittest.TestCase):
+ 
+ if __name__ == '__main__':
+     unittest.main()
++
++
++class OutputProtectionTests(unittest.TestCase):
++    def test_both_output_destinations_are_checked_without_creating_directories(self):
++        import os
++        import tempfile
++        from pathlib import Path
++        with tempfile.TemporaryDirectory() as tmp:
++            root = Path(tmp)
++            source = root/'input.json'; source.write_bytes(b'input sentinel')
++            alias = root/'alias.json'; os.link(source, alias)
++            untouched = root/'uncreated/report.md'
++            with self.assertRaisesRegex(ValueError, 'output aliases'):
++                analysis.validate_output_destinations([source], [untouched, alias])
++            self.assertEqual(source.read_bytes(), b'input sentinel')
++            self.assertFalse(untouched.parent.exists())
++            analysis.validate_output_destinations([source], [root/'new/report.json', root/'new/report.md'])
++            self.assertFalse((root/'new').exists())
+diff --git a/survey/democratic_peace/test_manifest.py b/survey/democratic_peace/test_manifest.py
+index d21b4e88acca0b0ea2c52b5ab083fa79b551113a..8bdc366b308bbe114be05842890c6312f7b55904 100644
+--- a/survey/democratic_peace/test_manifest.py
++++ b/survey/democratic_peace/test_manifest.py
+@@ -49,3 +49,31 @@ class UnregisteredModeTests(unittest.TestCase):
+         with self.assertRaises(ValueError):
+             manifest.build_unregistered_manifest(source.fixture_table(), None,
+                 configurations=[{'width': 5, 'height': 2, 'horizon_periods': 2}])
++
++
++class NativeRosterBindingTests(unittest.TestCase):
++    def test_native_registered_roster_digest_matches_independent_fixed_ids_and_seed_states(self):
++        import hashlib
++        import re
++        from pathlib import Path
++        import numpy as np
++        from survey.democratic_peace.methods import canonical_bytes
++        mechanisms = ('tagging', 'alliances', 'collective_security')
++        densities = ('0', '0_05', '0_1', '0_15', '0_2', '0_25', '0_3', '0_4', '0_5', '0_6', '0_7', '1')
++        names = [f'predictive.source.fig{figure}.{mechanism}.density{density}'
++            for figure in (9, 10, 11) for mechanism in mechanisms
++            for density in (densities[1:] if figure == 10 else densities)]
++        contrasts = [f'primary.{contrast}.density{density}' for density in ('0_1', '0_3')
++            for contrast in ('alliances_minus_tagging', 'security_minus_alliances', 'security_minus_tagging')]
++        contrasts += [f'secondary.mobile0_15_minus_0_85.{mechanism}.density{density}'
++            for density in ('0_1', '0_3') for mechanism in mechanisms]
++        names += [prefix + name for name in contrasts for prefix in ('permutation.', 'bootstrap.')]
++        independently_declared = [{'index': i, 'id': name, 'root_entropy': 2026100302,
++            'spawn_key': [i], 'state_u32': np.random.SeedSequence(2026100302,
++                spawn_key=(i,)).generate_state(4).tolist()} for i, name in enumerate(names)]
++        self.assertEqual(len(independently_declared), 129)
++        self.assertEqual(manifest.analysis_jobs(None), independently_declared)
++        rust = (Path(__file__).resolve().parents[1] / 'src/bin/democratic_peace.rs').read_text()
++        declared = re.search(r'const REGISTERED_ANALYSIS_JOBS_SHA256:\s*&str\s*=\s*"([0-9a-f]{64})"', rust)
++        self.assertIsNotNone(declared)
++        self.assertEqual(declared.group(1), hashlib.sha256(canonical_bytes(independently_declared)).hexdigest())
+diff --git a/survey/src/bin/democratic_peace.rs b/survey/src/bin/democratic_peace.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..aa24ea9f353d0b4b4f7cb22f39bcabac6b6f3087
+--- /dev/null
++++ b/survey/src/bin/democratic_peace.rs
+@@ -0,0 +1,1541 @@
++//! Authoritative native democratic-peace recorder; registered runs require frozen identities.
++use serde::de::{self, MapAccess, SeqAccess, Visitor};
++use serde::{Deserialize, Deserializer};
++use serde_json::{json, Value};
++use sha2::{Digest, Sha256};
++use std::fmt;
++use std::{
++    collections::{BTreeMap, BTreeSet},
++    fs::{self, OpenOptions},
++    io::{BufRead, BufReader, Write},
++    path::{Path, PathBuf},
++};
++use sugarscape_core::democratic_peace::{DemocraticPeaceConfig, DemocraticPeaceWorld};
++
++struct Strict(Value);
++impl<'de> Deserialize<'de> for Strict {
++    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
++        struct JsonVisitor;
++        impl<'de> Visitor<'de> for JsonVisitor {
++            type Value = Strict;
++            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
++                f.write_str("finite JSON with unique fields")
++            }
++            fn visit_bool<E: de::Error>(self, v: bool) -> Result<Strict, E> {
++                Ok(Strict(Value::Bool(v)))
++            }
++            fn visit_i64<E: de::Error>(self, v: i64) -> Result<Strict, E> {
++                Ok(Strict(v.into()))
++            }
++            fn visit_u64<E: de::Error>(self, v: u64) -> Result<Strict, E> {
++                Ok(Strict(v.into()))
++            }
++            fn visit_f64<E: de::Error>(self, v: f64) -> Result<Strict, E> {
++                serde_json::Number::from_f64(v)
++                    .map(|n| Strict(Value::Number(n)))
++                    .ok_or_else(|| E::custom("nonfinite JSON number"))
++            }
++            fn visit_str<E: de::Error>(self, v: &str) -> Result<Strict, E> {
++                Ok(Strict(v.into()))
++            }
++            fn visit_string<E: de::Error>(self, v: String) -> Result<Strict, E> {
++                Ok(Strict(v.into()))
++            }
++            fn visit_none<E: de::Error>(self) -> Result<Strict, E> {
++                Ok(Strict(Value::Null))
++            }
++            fn visit_unit<E: de::Error>(self) -> Result<Strict, E> {
++                Ok(Strict(Value::Null))
++            }
++            fn visit_seq<A: SeqAccess<'de>>(self, mut a: A) -> Result<Strict, A::Error> {
++                let mut values = Vec::new();
++                while let Some(v) = a.next_element::<Strict>()? {
++                    values.push(v.0);
++                }
++                Ok(Strict(Value::Array(values)))
++            }
++            fn visit_map<A: MapAccess<'de>>(self, mut a: A) -> Result<Strict, A::Error> {
++                let mut values = serde_json::Map::new();
++                while let Some(k) = a.next_key::<String>()? {
++                    if values.contains_key(&k) {
++                        return Err(de::Error::custom(format!("duplicate JSON field: {k}")));
++                    }
++                    let v = a.next_value::<Strict>()?;
++                    values.insert(k, v.0);
++                }
++                Ok(Strict(Value::Object(values)))
++            }
++        }
++        d.deserialize_any(JsonVisitor)
++    }
++}
++fn strict_json(bytes: &[u8]) -> Result<Value, String> {
++    let mut d = serde_json::Deserializer::from_slice(bytes);
++    let v = Strict::deserialize(&mut d).map_err(|e| e.to_string())?;
++    d.end().map_err(|e| e.to_string())?;
++    Ok(v.0)
++}
++fn digest(bytes: &[u8]) -> String {
++    format!("{:x}", Sha256::digest(bytes))
++}
++
++const SPEC: &str = "docs/superpowers/specs/2026-10-03-democratic-peace-design.md";
++const TABLE: &str = "docs/superpowers/specs/2026-10-03-democratic-peace-source-table.json";
++// Canonical 129-job payload from the fixed 2026100302 analysis root and
++// NumPy 2.4.6 SeedSequence states. Independently reconstructed in Python tests.
++// SHA256 covers every ID, index, entropy, spawn key and u32 word in order.
++const REGISTERED_ANALYSIS_JOBS_SHA256: &str =
++    "f878f57ebbe0cb5ff90ea72f72db343e1bc8900e39b473ce24f4169e94f091c0";
++fn require(ok: bool, message: &str) -> Result<(), String> {
++    if ok {
++        Ok(())
++    } else {
++        Err(message.into())
++    }
++}
++fn object(v: &Value) -> Result<&serde_json::Map<String, Value>, String> {
++    v.as_object().ok_or_else(|| "expected JSON object".into())
++}
++fn text<'a>(v: &'a Value, k: &str) -> Result<&'a str, String> {
++    v.get(k)
++        .and_then(Value::as_str)
++        .ok_or_else(|| format!("missing string {k}"))
++}
++fn uint(v: &Value, k: &str) -> Result<u64, String> {
++    v.get(k)
++        .and_then(Value::as_u64)
++        .ok_or_else(|| format!("missing unsigned integer {k}"))
++}
++fn array<'a>(v: &'a Value, k: &str) -> Result<&'a Vec<Value>, String> {
++    v.get(k)
++        .and_then(Value::as_array)
++        .ok_or_else(|| format!("missing array {k}"))
++}
++fn exact(v: &Value, keys: &[&str]) -> Result<(), String> {
++    let got = object(v)?
++        .keys()
++        .map(String::as_str)
++        .collect::<BTreeSet<_>>();
++    require(
++        got == keys.iter().copied().collect(),
++        "unknown or missing JSON fields",
++    )
++}
++// Explicit CLI paths may use OS aliases such as /var -> /private/var.
++// Source-inventory paths instead reject every symlink below the canonical repo.
++fn safe_path(p: &Path) -> Result<(), String> {
++    require(
++        !p.components()
++            .any(|c| matches!(c, std::path::Component::ParentDir)),
++        "parent traversal forbidden",
++    )?;
++    if let Ok(m) = fs::symlink_metadata(p) {
++        require(!m.file_type().is_symlink(), "symlink paths forbidden")?;
++    }
++    Ok(())
++}
++fn source_path(root: &Path, relative: &Path) -> Result<PathBuf, String> {
++    let mut path = root.to_path_buf();
++    for component in relative.components() {
++        require(
++            matches!(component, std::path::Component::Normal(_)),
++            "unsafe source path",
++        )?;
++        path.push(component.as_os_str());
++        safe_path(&path)?;
++    }
++    Ok(path)
++}
++fn read(p: &Path) -> Result<Vec<u8>, String> {
++    safe_path(p)?;
++    fs::read(p).map_err(|e| format!("{}: {e}", p.display()))
++}
++fn hash_json(v: &Value) -> Result<String, String> {
++    Ok(digest(&serde_json::to_vec(v).map_err(|e| e.to_string())?))
++}
++fn is_hash(s: &str) -> bool {
++    s.len() == 64
++        && s.bytes()
++            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
++}
++fn atomic_write(p: &Path, bytes: &[u8]) -> Result<(), String> {
++    safe_path(p)?;
++    let temporary = p.with_extension(format!("tmp-{}", std::process::id()));
++    safe_path(&temporary)?;
++    let mut f = OpenOptions::new()
++        .write(true)
++        .create_new(true)
++        .open(&temporary)
++        .map_err(|e| e.to_string())?;
++    f.write_all(bytes).map_err(|e| e.to_string())?;
++    f.sync_all().map_err(|e| e.to_string())?;
++    fs::rename(&temporary, p).map_err(|e| e.to_string())
++}
++fn walk_files(root: &Path, path: &Path, out: &mut BTreeSet<String>) -> Result<(), String> {
++    safe_path(path)?;
++    for entry in fs::read_dir(path).map_err(|e| e.to_string())? {
++        let entry = entry.map_err(|e| e.to_string())?;
++        let p = entry.path();
++        safe_path(&p)?;
++        if p.is_dir() {
++            walk_files(root, &p, out)?
++        } else if p
++            .extension()
++            .is_some_and(|x| x == "rs" || x == "py" || x == "json")
++        {
++            out.insert(
++                p.strip_prefix(root)
++                    .map_err(|e| e.to_string())?
++                    .to_string_lossy()
++                    .into(),
++            );
++        }
++    }
++    Ok(())
++}
++fn validate_inventory(m: &Value, root: &Path, required: bool) -> Result<Option<String>, String> {
++    let Some(entries) = m.get("source_inventory").and_then(Value::as_array) else {
++        require(!required, "source inventory required")?;
++        require(
++            m["source_inventory_sha256"].is_null(),
++            "partial inventory identity",
++        )?;
++        return Ok(None);
++    };
++    let declared = text(m, "source_inventory_sha256")?;
++    require(is_hash(declared), "invalid inventory digest")?;
++    require(
++        hash_json(&m["source_inventory"])? == declared,
++        "inventory digest mismatch",
++    )?;
++    let mut names = BTreeSet::new();
++    let mut prior = String::new();
++    for entry in entries {
++        exact(entry, &["path", "bytes", "sha256"])?;
++        let name = text(entry, "path")?;
++        let rel = Path::new(name);
++        require(
++            !rel.is_absolute()
++                && !name.contains('\\')
++                && !name.contains('\0')
++                && !name.contains('\n')
++                && !name.contains('\r'),
++            "unsafe inventory path",
++        )?;
++        require(
++            name.split('/')
++                .all(|x| !x.is_empty() && x != ".." && x != "."),
++            "unsafe inventory path",
++        )?;
++        require(
++            prior.as_str() < name,
++            "inventory paths must be unique and sorted",
++        )?;
++        prior = name.into();
++        names.insert(name.into());
++        let data = read(&source_path(root, rel)?)?;
++        require(
++            uint(entry, "bytes")? == data.len() as u64,
++            "inventory byte count mismatch",
++        )?;
++        require(
++            text(entry, "sha256")? == digest(&data),
++            "changed source inventory bytes",
++        )?;
++    }
++    let mut needed = BTreeSet::from([
++        "Cargo.toml".into(),
++        "Cargo.lock".into(),
++        "crates/sugarscape-core/Cargo.toml".into(),
++        "survey/Cargo.toml".into(),
++        "survey/Cargo.lock".into(),
++        "survey/src/bin/democratic_peace.rs".into(),
++        SPEC.into(),
++        TABLE.into(),
++        "docs/superpowers/specs/2026-10-03-democratic-peace-source-review.json".into(),
++        "docs/superpowers/specs/2026-10-03-democratic-peace-source-extraction.md".into(),
++    ]);
++    walk_files(root, &root.join("crates/sugarscape-core/src"), &mut needed)?;
++    walk_files(root, &root.join("survey/democratic_peace"), &mut needed)?;
++    require(
++        needed.is_subset(&names),
++        "source inventory omits production, methods or source evidence",
++    )?;
++    Ok(Some(declared.into()))
++}
++struct Arm {
++    id: String,
++    index: u64,
++    canonical: u64,
++    family: String,
++    sessions: u64,
++    first_seed: u64,
++    config: DemocraticPeaceConfig,
++}
++struct Prepared {
++    manifest: Value,
++    arms: Vec<Arm>,
++    payload: Vec<u8>,
++    payload_sha: String,
++    manifest_sha: String,
++    binary_sha: String,
++    inventory_sha: Option<String>,
++}
++fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String> {
++    let bytes = read(path)?;
++    let m = strict_json(&bytes)?;
++    exact(
++        &m,
++        &[
++            "schema_version",
++            "model",
++            "execution_mode",
++            "provenance_status",
++            "spec",
++            "precision_registered",
++            "runtime_gate",
++            "analysis_seed",
++            "source_draws",
++            "permutation_draws",
++            "contrast_draws",
++            "source_table_sha256",
++            "method_contract",
++            "method_contract_json",
++            "method_contract_sha256",
++            "source_inventory",
++            "source_inventory_sha256",
++            "arms",
++            "analysis_jobs",
++        ],
++    )?;
++    require(
++        uint(&m, "schema_version")? == 1 && text(&m, "model")? == "democratic_peace",
++        "unsupported manifest schema/model",
++    )?;
++    require(text(&m, "spec")? == SPEC, "wrong approved specification")?;
++    let mode = text(&m, "execution_mode")?;
++    require(
++        ["registered", "fixture", "runtime_probe"].contains(&mode),
++        "unknown execution mode",
++    )?;
++    let registered = mode == "registered";
++    let provenance = text(&m, "provenance_status")?;
++    require(
++        if registered {
++            ["provisional_unfrozen", "frozen"].contains(&provenance)
++        } else if mode == "fixture" {
++            provenance == "fixture_unregistered"
++        } else {
++            provenance == "runtime_probe_unregistered"
++        },
++        "execution/provenance disagreement",
++    )?;
++    if will_run && registered {
++        require(
++            provenance == "frozen",
++            "registered execution requires frozen provenance",
++        )?;
++    }
++    require(
++        uint(&m, "analysis_seed")? == 2026100302,
++        "wrong analysis root",
++    )?;
++    for k in ["source_draws", "permutation_draws", "contrast_draws"] {
++        require(
++            uint(&m, k)? == 100000,
++            "registered draw contract cannot change",
++        )?;
++    }
++    let contract = text(&m, "method_contract_json")?;
++    require(
++        strict_json(contract.as_bytes())? == m["method_contract"],
++        "method contract JSON mismatch",
++    )?;
++    require(
++        digest(contract.as_bytes()) == text(&m, "method_contract_sha256")?,
++        "method contract digest mismatch",
++    )?;
++    let template = strict_json(include_bytes!("../../democratic_peace/methods.json"))?;
++    require(
++        m["method_contract"] == template,
++        "method contract differs from production template",
++    )?;
++    let table = read(&root.join(TABLE))?;
++    require(
++        text(&m, "source_table_sha256")? == digest(&table),
++        "source table changed",
++    )?;
++    let table_value = strict_json(&table)?;
++    require(
++        text(&table_value, "paper_sha256")?
++            == "069ad22da938727b2020c5d2c3a52aa383687c74085f5bc0af8cea74817b5215",
++        "wrong primary source PDF identity",
++    )?;
++    require(
++        array(&table_value, "slots")?.len() == 105
++            && array(&table_value, "structural_exclusions")?.len() == 3,
++        "source target family changed",
++    )?;
++    if registered && (will_run || provenance == "frozen") {
++        require(
++            table_value["extraction"]["classification"] != json!("synthetic_fixture"),
++            "registered source cannot be synthetic",
++        )?;
++        let figures = array(&table_value, "figures")?;
++        require(
++            figures.len() == 3
++                && figures.iter().all(|f| {
++                    f["independent_visual_check"]["second_reader_status"] == json!("reviewed")
++                }),
++            "registered source lacks independent visual review",
++        )?;
++    }
++    let inventory_sha = validate_inventory(&m, root, will_run || provenance == "frozen")?;
++    let precision = m["precision_registered"]
++        .as_bool()
++        .ok_or("precision_registered must be boolean")?;
++    require(
++        text(&m, "runtime_gate")?
++            == if precision {
++                "full_precision"
++            } else {
++                "original_only"
++            },
++        "runtime gate disagreement",
++    )?;
++    let entries = array(&m, "arms")?;
++    if registered {
++        require(
++            entries.len() == if precision { 216 } else { 108 },
++            "registered population cannot be incomplete",
++        )?;
++    } else {
++        require(
++            !entries.is_empty() && entries.len() <= if mode == "fixture" { 4 } else { 8 },
++            "unregistered population exceeds bounded gate",
++        )?;
++    }
++    let mobiles = [0.15, 0.5, 0.85];
++    let densities = [
++        0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 1.0,
++    ];
++    let mechanisms = ["tagging", "alliances", "collective_security"];
++    let mut arms = Vec::new();
++    let mut ids = BTreeSet::new();
++    let mut seeds = BTreeSet::new();
++    for (i, v) in entries.iter().enumerate() {
++        exact(
++            v,
++            &[
++                "id",
++                "family",
++                "index",
++                "canonical_index",
++                "preset",
++                "mobile_index",
++                "mechanism_index",
++                "density_index",
++                "config_overrides",
++                "sessions",
++                "first_seed",
++            ],
++        )?;
++        require(uint(v, "index")? == i as u64, "arm index disagreement")?;
++        let canonical = uint(v, "canonical_index")?;
++        let id = text(v, "id")?.to_string();
++        require(
++            !id.is_empty() && ids.insert(id.clone()),
++            "empty/duplicate arm ID",
++        )?;
++        let family = text(v, "family")?.to_string();
++        require(
++            text(v, "preset")? == "printed_2001"
++                || (!registered && text(v, "preset")? == "prose_probability"),
++            "unregistered reading in primary population",
++        )?;
++        let mut config =
++            serde_json::to_value(DemocraticPeaceConfig::default()).map_err(|e| e.to_string())?;
++        if text(v, "preset")? == "prose_probability" {
++            config["probability_direction"] = json!("prose_increasing");
++        }
++        for (k, value) in object(&v["config_overrides"])? {
++            require(object(&config)?.contains_key(k), "unknown config override")?;
++            config[k] = value.clone();
++        }
++        let c: DemocraticPeaceConfig =
++            serde_json::from_value(config.clone()).map_err(|e| format!("invalid config: {e}"))?;
++        c.validate().map_err(|e| format!("{e:?}"))?;
++        let sessions = uint(v, "sessions")?;
++        let first = uint(v, "first_seed")?;
++        if registered {
++            let expected_canonical = (i % 108) as u64;
++            require(canonical == expected_canonical, "canonical index drift")?;
++            let mi = (canonical / 36) as usize;
++            let mech = ((canonical / 12) % 3) as usize;
++            let di = (canonical % 12) as usize;
++            require(
++                uint(v, "mobile_index")? == mi as u64
++                    && uint(v, "mechanism_index")? == mech as u64
++                    && uint(v, "density_index")? == di as u64,
++                "factor index disagreement",
++            )?;
++            let expected_family = if i < 108 { "original" } else { "precision" };
++            require(family == expected_family, "family order drift")?;
++            let expected_id = format!(
++                "{expected_family}.mobile{}.{}.density{}",
++                mobiles[mi].to_string().replace('.', "_"),
++                mechanisms[mech],
++                densities[di].to_string().replace('.', "_")
++            );
++            require(id == expected_id, "registered canonical arm ID drift")?;
++            require(
++                sessions == if i < 108 { 30 } else { 100 },
++                "registered sample size drift",
++            )?;
++            require(
++                first
++                    == if i < 108 {
++                        380000001 + canonical * 10000
++                    } else {
++                        390000001 + canonical * 10000
++                    },
++                "registered seeds drift",
++            )?;
++            exact(
++                &v["config_overrides"],
++                &[
++                    "mobile_share",
++                    "mechanism",
++                    "initial_democratic_share",
++                    "periods_per_tick",
++                ],
++            )?;
++            require(
++                config["mobile_share"] == json!(mobiles[mi])
++                    && config["mechanism"] == json!(mechanisms[mech])
++                    && config["initial_democratic_share"] == json!(densities[di])
++                    && config["periods_per_tick"] == json!(100),
++                "registered factor values drift",
++            )?;
++        } else {
++            require(
++                sessions > 0 && sessions <= if mode == "fixture" { 2 } else { 1 },
++                "unregistered sessions exceed bounded gate",
++            )?;
++            require(
++                first >= 400000000,
++                "unregistered seed collides with registered families",
++            )?;
++            let width = config["width"].as_u64().ok_or("missing width")?;
++            let height = config["height"].as_u64().ok_or("missing height")?;
++            let horizon = config["horizon_periods"]
++                .as_u64()
++                .ok_or("missing horizon")?;
++            require(
++                if mode == "fixture" {
++                    width <= 4 && height <= 4 && horizon <= 20
++                } else {
++                    width == 15 && height == 15 && horizon == 1000
++                },
++                "unregistered dimensions/horizon exceed bounded gate",
++            )?;
++        }
++        for r in 0..sessions {
++            let seed = first.checked_add(r).ok_or("seed overflow")?;
++            require(seeds.insert(seed), "seed families overlap")?;
++        }
++        arms.push(Arm {
++            id,
++            index: i as u64,
++            canonical,
++            family,
++            sessions,
++            first_seed: first,
++            config: c,
++        });
++    }
++    let jobs = array(&m, "analysis_jobs")?;
++    require(
++        jobs.len() == 129,
++        "analysis job family must reserve129 jobs",
++    )?;
++    let mut names = BTreeSet::new();
++    for (i, j) in jobs.iter().enumerate() {
++        exact(
++            j,
++            &["index", "id", "root_entropy", "spawn_key", "state_u32"],
++        )?;
++        require(
++            uint(j, "index")? == i as u64
++                && uint(j, "root_entropy")? == 2026100302
++                && j["spawn_key"] == json!([i]),
++            "analysis child stream drift",
++        )?;
++        require(
++            names.insert(text(j, "id")?.to_string()),
++            "duplicate analysis job",
++        )?;
++        require(
++            array(j, "state_u32")?.len() == 4
++                && array(j, "state_u32")?
++                    .iter()
++                    .all(|v| v.as_u64().is_some_and(|x| x <= u32::MAX as u64)),
++            "invalid analysis state",
++        )?;
++    }
++    if registered {
++        require(
++            hash_json(&m["analysis_jobs"])? == REGISTERED_ANALYSIS_JOBS_SHA256,
++            "registered analysis job payload drift",
++        )?;
++    }
++    let resolved = Value::Array(
++        arms.iter()
++            .map(|a| json!({"id":a.id,"config":a.config}))
++            .collect(),
++    );
++    let payload = serde_json::to_vec(&resolved).map_err(|e| e.to_string())?;
++    let payload_sha = digest(&payload);
++    let binary_sha = digest(&read(&std::env::current_exe().map_err(|e| e.to_string())?)?);
++    Ok(Prepared {
++        manifest: m,
++        arms,
++        payload,
++        payload_sha,
++        manifest_sha: digest(&bytes),
++        binary_sha,
++        inventory_sha,
++    })
++}
++fn receipt(
++    path: Option<&Path>,
++    p: &Prepared,
++    required: bool,
++    root: &Path,
++) -> Result<Option<String>, String> {
++    let Some(path) = path else {
++        require(!required, "build receipt required before execution")?;
++        return Ok(None);
++    };
++    let bytes = read(path)?;
++    let r = strict_json(&bytes)?;
++    exact(
++        &r,
++        &[
++            "schema_version",
++            "model",
++            "manifest_sha256",
++            "source_inventory_sha256",
++            "prebuild_inventory_sha256",
++            "postbuild_inventory_sha256",
++            "binary_sha256",
++            "build_command",
++            "cwd",
++            "target",
++            "rustc_version",
++            "cargo_version",
++            "lockfile_hashes",
++            "features",
++            "build_flags",
++        ],
++    )?;
++    require(
++        uint(&r, "schema_version")? == 1 && text(&r, "model")? == "democratic_peace",
++        "invalid build receipt schema",
++    )?;
++    require(
++        text(&r, "manifest_sha256")? == p.manifest_sha
++            && text(&r, "binary_sha256")? == p.binary_sha,
++        "receipt manifest/binary mismatch",
++    )?;
++    for k in [
++        "source_inventory_sha256",
++        "prebuild_inventory_sha256",
++        "postbuild_inventory_sha256",
++    ] {
++        require(
++            r[k] == json!(p.inventory_sha),
++            "receipt source inventory mismatch",
++        )?;
++    }
++    for k in ["build_command", "features", "build_flags"] {
++        require(
++            array(&r, k)?.iter().all(Value::is_string),
++            "invalid build invocation",
++        )?;
++    }
++    for k in ["cwd", "target", "rustc_version", "cargo_version"] {
++        require(!text(&r, k)?.is_empty(), "incomplete build receipt")?;
++    }
++    validate_build_invocation(&r, root)?;
++    Ok(Some(digest(&bytes)))
++}
++fn validate_attempt_context(a: &Value, science: &Value) -> Result<(), String> {
++    let status = text(a, "status")?;
++    let errors = array(a, "construction_errors")?;
++    for e in errors {
++        exact(e, &["field", "message"])?;
++        require(
++            !text(e, "field")?.is_empty() && !text(e, "message")?.is_empty(),
++            "empty construction error",
++        )?;
++    }
++    for key in ["panic_context", "recorder_error"] {
++        require(
++            a[key].is_null() || a[key].as_str().is_some_and(|s| !s.is_empty()),
++            "invalid failure context",
++        )?;
++    }
++    require(
++        status != "construction_error" || !errors.is_empty(),
++        "construction error lacks context",
++    )?;
++    require(
++        !status.ends_with("_panic") || a["panic_context"].is_string(),
++        "panic lacks context",
++    )?;
++    require(
++        status != "incomplete" || a["recorder_error"].is_string(),
++        "incomplete lacks context",
++    )?;
++    if matches!(status, "completed" | "invalid") {
++        require(
++            errors.is_empty() && a["panic_context"].is_null() && a["recorder_error"].is_null(),
++            "terminal engine attempt contains recorder errors",
++        )?;
++        require(science.is_object(), "terminal engine attempt lacks science")?;
++    }
++    if matches!(status, "construction_error" | "construction_panic") {
++        require(science.is_null(), "construction failure contains science")?;
++    }
++    Ok(())
++}
++fn validate_build_invocation(r: &Value, root: &Path) -> Result<(), String> {
++    require(
++        !array(r, "build_command")?.is_empty(),
++        "empty build command",
++    )?;
++    let locks = object(&r["lockfile_hashes"])?;
++    require(
++        locks.contains_key("Cargo.lock") && locks.contains_key("survey/Cargo.lock"),
++        "receipt omits required Cargo locks",
++    )?;
++    for (name, value) in locks {
++        let expected = value.as_str().ok_or("invalid lockfile digest")?;
++        require(is_hash(expected), "invalid lockfile digest")?;
++        require(
++            digest(&read(&source_path(root, Path::new(name))?)?) == expected,
++            "receipt lockfile SHA256 mismatch",
++        )?;
++    }
++    Ok(())
++}
++fn canonical_destination(path: &Path) -> Result<PathBuf, String> {
++    safe_path(path)?;
++    if path.exists() {
++        return fs::canonicalize(path).map_err(|e| e.to_string());
++    }
++    let absolute = if path.is_absolute() {
++        path.to_path_buf()
++    } else {
++        std::env::current_dir()
++            .map_err(|e| e.to_string())?
++            .join(path)
++    };
++    let mut ancestor = absolute.as_path();
++    let mut suffix = Vec::new();
++    while !ancestor.exists() {
++        suffix.push(ancestor.file_name().ok_or("unresolvable output ancestor")?);
++        ancestor = ancestor.parent().ok_or("unresolvable output ancestor")?;
++    }
++    require(ancestor.is_dir(), "output ancestor is not a directory")?;
++    let mut result = fs::canonicalize(ancestor).map_err(|e| e.to_string())?;
++    for part in suffix.into_iter().rev() {
++        result.push(part);
++    }
++    Ok(result)
++}
++fn same_file(left: &Path, right: &Path) -> bool {
++    #[cfg(unix)]
++    {
++        use std::os::unix::fs::MetadataExt;
++        if let (Ok(a), Ok(b)) = (fs::metadata(left), fs::metadata(right)) {
++            return a.dev() == b.dev() && a.ino() == b.ino();
++        }
++    }
++    false
++}
++fn validate_destinations(inputs: &[PathBuf], outputs: &[PathBuf]) -> Result<(), String> {
++    let protected = inputs
++        .iter()
++        .map(|p| canonical_destination(p))
++        .collect::<Result<Vec<_>, _>>()?;
++    let mut seen: Vec<PathBuf> = Vec::new();
++    for path in outputs {
++        require(!path.is_dir(), "output is a directory")?;
++        let path = canonical_destination(path)?;
++        require(
++            !protected
++                .iter()
++                .chain(seen.iter())
++                .any(|p| p == &path || same_file(p, &path)),
++            "output aliases input or another output",
++        )?;
++        seen.push(path);
++    }
++    Ok(())
++}
++fn identity(p: &Prepared, receipt: &Option<String>) -> Value {
++    json!({"manifest_sha256":p.manifest_sha,"binary_sha256":p.binary_sha,"source_inventory_sha256":p.inventory_sha,"build_receipt_sha256":receipt,"resolved_configs_sha256":p.payload_sha})
++}
++fn attempt(status: &str, errors: Value, panic: Option<String>, error: Option<String>) -> Value {
++    json!({"status":status,"construction_errors":errors,"panic_context":panic,"recorder_error":error})
++}
++fn panic_text(p: Box<dyn std::any::Any + Send>) -> String {
++    p.downcast_ref::<String>()
++        .cloned()
++        .or_else(|| p.downcast_ref::<&str>().map(|v| v.to_string()))
++        .unwrap_or_else(|| "non-string panic".into())
++}
++fn record(p: &Prepared, a: &Arm, r: u64, receipt: &Option<String>) -> Result<Value, String> {
++    let seed = a.first_seed + r;
++    let constructed = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
++        DemocraticPeaceWorld::new(a.config.clone(), seed)
++    }));
++    let (attempt, outcome) = match constructed {
++        Err(error) => (
++            attempt(
++                "construction_panic",
++                json!([]),
++                Some(panic_text(error)),
++                None,
++            ),
++            Value::Null,
++        ),
++        Ok(Err(errors)) => (
++            attempt(
++                "construction_error",
++                serde_json::to_value(errors).map_err(|e| e.to_string())?,
++                None,
++                None,
++            ),
++            Value::Null,
++        ),
++        Ok(Ok(mut world)) => {
++            let ticks = a
++                .config
++                .horizon()
++                .div_ceil(a.config.periods_per_tick as u64);
++            let result =
++                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| world.run(ticks as u32)));
++            let science =
++                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| world.science_json()));
++            let (value, error) = match science {
++                Ok(s) => (strict_json(s.as_bytes())?, None),
++                Err(e) => (Value::Null, Some(panic_text(e))),
++            };
++            let attempt = match result {
++                Err(e) => attempt(
++                    "implementation_panic",
++                    json!([]),
++                    Some(panic_text(e)),
++                    error,
++                ),
++                Ok(()) => {
++                    let status = if error.is_some() {
++                        "implementation_panic"
++                    } else if value["outcome"]["valid"] == json!(true)
++                        && value["completed_periods"] == json!(a.config.horizon())
++                    {
++                        "completed"
++                    } else if value["outcome"]["valid"] == json!(false) {
++                        "invalid"
++                    } else {
++                        "incomplete"
++                    };
++                    attempt(
++                        status,
++                        json!([]),
++                        error.clone(),
++                        if status == "incomplete" {
++                            Some(
++                                "engine returned before source horizon without invalid outcome"
++                                    .into(),
++                            )
++                        } else {
++                            None
++                        },
++                    )
++                }
++            };
++            (attempt, value)
++        }
++    };
++    let mut row = identity(p, receipt);
++    let o = row.as_object_mut().ok_or("record identity invalid")?;
++    for (k, v) in [
++        ("schema_version", json!(1)),
++        ("model", json!("democratic_peace")),
++        ("arm", json!(a.id)),
++        ("seed", json!(seed)),
++        ("arm_index", json!(a.index)),
++        ("canonical_index", json!(a.canonical)),
++        ("repeat_index", json!(r)),
++        ("family", json!(a.family)),
++        ("execution_mode", p.manifest["execution_mode"].clone()),
++        (
++            "config",
++            serde_json::to_value(&a.config).map_err(|e| e.to_string())?,
++        ),
++        ("attempt", attempt),
++        ("outcome", outcome),
++    ] {
++        o.insert(k.into(), v);
++    }
++    Ok(row)
++}
++
++fn number(v: &Value, key: &str) -> Result<f64, String> {
++    v[key]
++        .as_f64()
++        .filter(|n| n.is_finite())
++        .ok_or_else(|| format!("invalid numeric metric: {key}"))
++}
++fn validate_counters(v: &Value) -> Result<(), String> {
++    exact(
++        v,
++        &[
++            "initiated_fronts",
++            "mutual_d_front_periods",
++            "completed_victory_battles",
++            "completed_stalemate_battles",
++            "opposing_claims",
++            "successful_claims",
++            "stale_claims",
++            "locked_claims",
++            "retired_states",
++            "released_states",
++        ],
++    )?;
++    require(
++        object(v)?.values().all(|n| n.as_u64().is_some()),
++        "invalid battle/structural counter",
++    )
++}
++fn validate_metrics(
++    v: &Value,
++    config: &DemocraticPeaceConfig,
++    completed: u64,
++) -> Result<(), String> {
++    exact(
++        v,
++        &[
++            "democratic_cells",
++            "total_cells",
++            "democratic_share",
++            "sovereign_count",
++            "democratic_states",
++            "predatory_states",
++            "democratic_mean_size",
++            "predatory_mean_size",
++            "democratic_max_size",
++            "predatory_max_size",
++            "democratic_size_reason",
++            "predatory_size_reason",
++            "democratic_exposure",
++            "clustering_ratio",
++            "clustering_reason",
++            "conflict_fronts",
++            "alliance_count",
++            "pariah_count",
++            "democratic_extinction",
++            "all_democratic",
++            "first_extinction_period",
++            "first_all_democratic_period",
++        ],
++    )?;
++    for key in [
++        "democratic_cells",
++        "total_cells",
++        "sovereign_count",
++        "democratic_states",
++        "predatory_states",
++        "conflict_fronts",
++        "alliance_count",
++        "pariah_count",
++    ] {
++        uint(v, key)?;
++    }
++    let total = u64::from(config.width) * u64::from(config.height);
++    let democratic = uint(v, "democratic_cells")?;
++    let sovereigns = uint(v, "sovereign_count")?;
++    require(
++        uint(v, "total_cells")? == total
++            && democratic <= total
++            && (1..=total).contains(&sovereigns),
++        "metrics grid/count mismatch",
++    )?;
++    require(
++        uint(v, "democratic_states")?.checked_add(uint(v, "predatory_states")?) == Some(sovereigns),
++        "metrics regime counts do not conserve sovereigns",
++    )?;
++    require(
++        (number(v, "democratic_share")? - democratic as f64 / total as f64).abs() <= 1e-12,
++        "metrics share differs from authoritative integer cells",
++    )?;
++    for (regime, cells) in [
++        ("democratic", democratic),
++        ("predatory", total - democratic),
++    ] {
++        let count = uint(v, &format!("{regime}_states"))?;
++        let mean = format!("{regime}_mean_size");
++        let maximum = format!("{regime}_max_size");
++        let reason = format!("{regime}_size_reason");
++        if count == 0 {
++            require(
++                cells == 0
++                    && v[&mean].is_null()
++                    && v[&maximum].is_null()
++                    && v[&reason] == json!("no_surviving_states"),
++                "missing-regime availability mismatch",
++            )?;
++        } else {
++            let mean_value = number(v, &mean)?;
++            let maximum_value = uint(v, &maximum)?;
++            require(
++                count <= cells
++                    && (mean_value - cells as f64 / count as f64).abs() <= 1e-12
++                    && mean_value <= maximum_value as f64
++                    && maximum_value <= cells
++                    && v[&reason].is_null(),
++                "invalid regime state-size census",
++            )?;
++        }
++    }
++    for (key, expected) in [
++        ("democratic_extinction", democratic == 0),
++        ("all_democratic", democratic == total),
++    ] {
++        require(
++            v[key].as_bool() == Some(expected),
++            "endpoint indicator disagrees with census",
++        )?;
++    }
++    for (time, indicator) in [
++        ("first_extinction_period", "democratic_extinction"),
++        ("first_all_democratic_period", "all_democratic"),
++    ] {
++        if !v[time].is_null() {
++            require(uint(v, time)? <= completed, "invalid first-passage clock")?;
++        }
++        // A historical extinction may precede reemergence under persistent tags.
++        require(
++            v[indicator] != json!(true) || !v[time].is_null(),
++            "reached endpoint lacks first passage",
++        )?;
++    }
++    let density = config.initial_democratic_share;
++    let reason = if density == 0.0 {
++        json!("undefined_initial_density")
++    } else if democratic == 0 {
++        json!("undefined_extinction")
++    } else {
++        Value::Null
++    };
++    require(
++        v["clustering_reason"] == reason,
++        "invalid clustering availability reason",
++    )?;
++    if democratic == 0 {
++        require(
++            v["democratic_exposure"].is_null(),
++            "extinct population has exposure",
++        )?;
++    } else {
++        require(
++            (0.0..=1.0).contains(&number(v, "democratic_exposure")?),
++            "invalid democratic exposure",
++        )?;
++    }
++    if reason.is_null() {
++        require(
++            (number(v, "clustering_ratio")? - number(v, "democratic_exposure")? / density).abs()
++                <= 1e-12,
++            "clustering ratio disagrees with exposure/configured density",
++        )?;
++    } else {
++        require(
++            v["clustering_ratio"].is_null(),
++            "undefined clustering was imputed",
++        )?;
++    }
++    Ok(())
++}
++fn validate_science(
++    v: &Value,
++    config: &DemocraticPeaceConfig,
++    allow_partial: bool,
++) -> Result<(), String> {
++    exact(
++        v,
++        &[
++            "model",
++            "config",
++            "seed",
++            "period",
++            "periods",
++            "attempted_period",
++            "completed_periods",
++            "tick",
++            "last_tick_periods",
++            "setup",
++            "current_metrics",
++            "census",
++            "outcome",
++            "final_state_hash",
++        ],
++    )?;
++    require(
++        text(v, "model")? == "democratic_peace",
++        "invalid science model",
++    )?;
++    uint(v, "seed")?;
++    for key in [
++        "period",
++        "periods",
++        "completed_periods",
++        "attempted_period",
++        "tick",
++        "last_tick_periods",
++    ] {
++        uint(v, key)?;
++    }
++    let completed = uint(v, "completed_periods")?;
++    let attempted = uint(v, "attempted_period")?;
++    require(
++        uint(v, "period")? == completed
++            && uint(v, "periods")? == completed
++            && completed <= attempted
++            && attempted <= config.horizon().min(completed.saturating_add(1)),
++        "resume source clock mismatch: atomic attempted/completed clocks disagree",
++    )?;
++    require(
++        uint(v, "last_tick_periods")? <= u64::from(config.periods_per_tick),
++        "display tick exceeds configured grouping",
++    )?;
++    let setup = &v["setup"];
++    exact(
++        setup,
++        &[
++            "initial_democratic_cells",
++            "initial_resourced_cells",
++            "total_cells",
++        ],
++    )?;
++    let total = u64::from(config.width) * u64::from(config.height);
++    require(
++        uint(setup, "total_cells")? == total
++            && uint(setup, "initial_democratic_cells")? <= total
++            && uint(setup, "initial_resourced_cells")? <= total,
++        "invalid setup census",
++    )?;
++    validate_metrics(&v["current_metrics"], config, completed)?;
++    validate_counters(&v["census"])?;
++    let state_hash = text(v, "final_state_hash")?;
++    require(
++        state_hash.len() == 16
++            && state_hash
++                .bytes()
++                .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c)),
++        "invalid committed state hash",
++    )?;
++    let terminal = &v["outcome"];
++    if terminal.is_null() && allow_partial {
++        return Ok(());
++    }
++    exact(
++        terminal,
++        &[
++            "valid",
++            "finish_reason",
++            "invalid_reason",
++            "invalid_phase",
++            "attempted_period",
++            "completed_periods",
++            "final_metrics",
++            "census",
++        ],
++    )?;
++    let valid = terminal["valid"]
++        .as_bool()
++        .ok_or("invalid terminal availability type")?;
++    require(
++        uint(terminal, "completed_periods")? == completed
++            && uint(terminal, "attempted_period")? == attempted,
++        "terminal/science availability clocks disagree",
++    )?;
++    require(
++        terminal["census"] == v["census"],
++        "terminal/science census differs",
++    )?;
++    if valid {
++        require(
++            text(terminal, "finish_reason")? == "complete"
++                && completed == config.horizon()
++                && attempted == config.horizon()
++                && terminal["invalid_reason"].is_null()
++                && terminal["invalid_phase"].is_null(),
++            "complete outcome is not a valid full horizon",
++        )?;
++        require(
++            terminal["final_metrics"] == v["current_metrics"],
++            "complete final metrics differ from committed census",
++        )?;
++    } else {
++        require(
++            text(terminal, "finish_reason")? == "invalid"
++                && !text(terminal, "invalid_reason")?.is_empty()
++                && !text(terminal, "invalid_phase")?.is_empty()
++                && terminal["final_metrics"].is_null(),
++            "invalid outcome must retain context and unavailable final metrics",
++        )?;
++    }
++    Ok(())
++}
++
++fn validate_existing(
++    row: &Value,
++    p: &Prepared,
++    receipt: &Option<String>,
++) -> Result<(String, u64), String> {
++    exact(
++        row,
++        &[
++            "schema_version",
++            "model",
++            "arm",
++            "seed",
++            "arm_index",
++            "canonical_index",
++            "repeat_index",
++            "family",
++            "execution_mode",
++            "config",
++            "attempt",
++            "outcome",
++            "manifest_sha256",
++            "binary_sha256",
++            "source_inventory_sha256",
++            "build_receipt_sha256",
++            "resolved_configs_sha256",
++        ],
++    )?;
++    require(
++        uint(row, "schema_version")? == 1 && text(row, "model")? == "democratic_peace",
++        "resume schema/model mismatch",
++    )?;
++    let binding = identity(p, receipt);
++    for (k, v) in object(&binding)? {
++        require(row[k] == *v, "resume evidence identity mismatch")?;
++    }
++    let id = text(row, "arm")?;
++    let a = p
++        .arms
++        .iter()
++        .find(|a| a.id == id)
++        .ok_or("unexpected resume arm")?;
++    let r = uint(row, "repeat_index")?;
++    require(
++        r < a.sessions
++            && uint(row, "seed")? == a.first_seed + r
++            && uint(row, "arm_index")? == a.index
++            && uint(row, "canonical_index")? == a.canonical,
++        "resume attempted key mismatch",
++    )?;
++    require(
++        row["config"] == serde_json::to_value(&a.config).map_err(|e| e.to_string())?
++            && row["family"] == json!(a.family)
++            && row["execution_mode"] == p.manifest["execution_mode"],
++        "resume config/family mismatch",
++    )?;
++    exact(
++        &row["attempt"],
++        &[
++            "status",
++            "construction_errors",
++            "panic_context",
++            "recorder_error",
++        ],
++    )?;
++    let status = text(&row["attempt"], "status")?;
++    require(
++        [
++            "completed",
++            "invalid",
++            "construction_error",
++            "construction_panic",
++            "implementation_panic",
++            "incomplete",
++        ]
++        .contains(&status),
++        "unknown attempted outcome",
++    )?;
++    validate_attempt_context(&row["attempt"], &row["outcome"])?;
++    let science = &row["outcome"];
++    if !science.is_null() {
++        require(
++            science["model"] == json!("democratic_peace")
++                && science["config"] == row["config"]
++                && science["seed"] == row["seed"],
++            "resume engine evidence mismatch",
++        )?;
++        validate_science(
++            science,
++            &a.config,
++            matches!(status, "implementation_panic" | "incomplete"),
++        )?;
++        if status == "completed" || status == "invalid" {
++            require(
++                science["outcome"]["valid"] == json!(status == "completed"),
++                "resume completion/invalidity mismatch",
++            )?;
++        }
++    }
++    Ok((id.into(), uint(row, "seed")?))
++}
++fn run() -> Result<(), String> {
++    let mut opts = BTreeMap::new();
++    let mut validate = false;
++    let mut args = std::env::args().skip(1);
++    while let Some(k) = args.next() {
++        if k == "--validate-only" {
++            require(!validate, "duplicate validate flag")?;
++            validate = true;
++        } else {
++            require(
++                ["--manifest", "--resolved", "--out", "--receipt", "--repo"].contains(&k.as_str()),
++                "unknown command option",
++            )?;
++            let v = args
++                .next()
++                .ok_or_else(|| format!("missing value for {k}"))?;
++            require(opts.insert(k, v).is_none(), "duplicate command option")?;
++        }
++    }
++    let manifest = PathBuf::from(opts.get("--manifest").ok_or("--manifest required")?);
++    let resolved = PathBuf::from(opts.get("--resolved").ok_or("--resolved required")?);
++    let root = opts
++        .get("--repo")
++        .map(PathBuf::from)
++        .unwrap_or(std::env::current_dir().map_err(|e| e.to_string())?);
++    safe_path(&root)?;
++    let root = fs::canonicalize(root).map_err(|e| e.to_string())?;
++    let p = prepare(&manifest, &root, !validate)?;
++    let receipt_path = opts.get("--receipt").map(PathBuf::from);
++    let receipt = receipt(receipt_path.as_deref(), &p, !validate, &root)?;
++    let mut inputs = vec![
++        manifest.clone(),
++        std::env::current_exe().map_err(|e| e.to_string())?,
++    ];
++    if let Some(path) = &receipt_path {
++        inputs.push(path.clone());
++    }
++    if let Some(entries) = p.manifest["source_inventory"].as_array() {
++        for entry in entries {
++            inputs.push(source_path(&root, Path::new(text(entry, "path")?))?);
++        }
++    } else {
++        for name in [
++            SPEC,
++            TABLE,
++            "Cargo.lock",
++            "survey/Cargo.lock",
++            "survey/src/bin/democratic_peace.rs",
++        ] {
++            inputs.push(root.join(name));
++        }
++        let mut sources = BTreeSet::new();
++        walk_files(
++            &root,
++            &root.join("crates/sugarscape-core/src"),
++            &mut sources,
++        )?;
++        walk_files(&root, &root.join("survey/democratic_peace"), &mut sources)?;
++        inputs.extend(sources.into_iter().map(|name| root.join(name)));
++    }
++    let mut outputs = vec![resolved.clone()];
++    if let Some(path) = opts.get("--out") {
++        outputs.push(PathBuf::from(path));
++    }
++    validate_destinations(&inputs, &outputs)?;
++    let mut export = identity(&p, &receipt);
++    let o = export.as_object_mut().ok_or("export identity invalid")?;
++    o.insert("schema_version".into(), json!(1));
++    o.insert("model".into(), json!("democratic_peace"));
++    o.insert("arms".into(), strict_json(&p.payload)?);
++    o.insert(
++        "resolved_configs_json".into(),
++        json!(String::from_utf8(p.payload.clone()).map_err(|e| e.to_string())?),
++    );
++    if validate {
++        atomic_write(
++            &resolved,
++            &serde_json::to_vec(&export).map_err(|e| e.to_string())?,
++        )?;
++        println!(
++            "validated {} arms/{} keys without world construction; provenance={}",
++            p.arms.len(),
++            p.arms.iter().map(|a| a.sessions).sum::<u64>(),
++            text(&p.manifest, "provenance_status")?
++        );
++        return Ok(());
++    }
++    let out = PathBuf::from(opts.get("--out").ok_or("--out required for execution")?);
++    safe_path(&out)?;
++    let mut seen = BTreeSet::new();
++    if out.exists() {
++        let bytes = read(&out)?;
++        require(
++            bytes.is_empty() || bytes.last() == Some(&b'\n'),
++            "truncated final JSONL record",
++        )?;
++        for line in BufReader::new(bytes.as_slice()).lines() {
++            let line = line.map_err(|e| e.to_string())?;
++            require(!line.trim().is_empty(), "blank JSONL record")?;
++            let key = validate_existing(&strict_json(line.as_bytes())?, &p, &receipt)?;
++            require(seen.insert(key), "duplicate attempted key in resume")?;
++        }
++    }
++    // Existing rows must pass every identity/science check before either
++    // execution output is created or changed, including the resolved export.
++    atomic_write(
++        &resolved,
++        &serde_json::to_vec(&export).map_err(|e| e.to_string())?,
++    )?;
++    let mut writer = OpenOptions::new()
++        .create(true)
++        .append(true)
++        .open(out)
++        .map_err(|e| e.to_string())?;
++    for a in &p.arms {
++        for r in 0..a.sessions {
++            let key = (a.id.clone(), a.first_seed + r);
++            if seen.contains(&key) {
++                continue;
++            }
++            let row = record(&p, a, r, &receipt)?;
++            validate_existing(&row, &p, &receipt)?;
++            serde_json::to_writer(&mut writer, &row).map_err(|e| e.to_string())?;
++            writer.write_all(b"\n").map_err(|e| e.to_string())?;
++            writer.flush().map_err(|e| e.to_string())?;
++            writer.sync_data().map_err(|e| e.to_string())?;
++            seen.insert(key);
++        }
++    }
++    require(
++        seen.len() as u64 == p.arms.iter().map(|a| a.sessions).sum::<u64>(),
++        "attempted census incomplete",
++    )?;
++    println!("recorded {} attempted histories", seen.len());
++    Ok(())
++}
++fn main() {
++    if let Err(error) = run() {
++        eprintln!("democratic-peace recorder: {error}");
++        std::process::exit(1)
++    }
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn missing_panic_context_and_completed_errors_are_rejected() {
++        assert!(validate_attempt_context(
++            &attempt("construction_panic", json!([]), None, None),
++            &Value::Null
++        )
++        .is_err());
++        assert!(validate_attempt_context(
++            &attempt("completed", json!([]), Some("forged panic".into()), None),
++            &json!({"outcome":{"valid":true}})
++        )
++        .is_err());
++        assert!(validate_attempt_context(
++            &attempt("construction_error", json!([]), None, None),
++            &Value::Null
++        )
++        .is_err());
++    }
++    #[test]
++    fn explicit_construction_failure_and_partial_panic_are_retained() {
++        assert!(validate_attempt_context(
++            &attempt(
++                "construction_error",
++                json!([{"field":"setup","message":"failure"}]),
++                None,
++                None
++            ),
++            &Value::Null
++        )
++        .is_ok());
++        assert!(validate_attempt_context(
++            &attempt(
++                "implementation_panic",
++                json!([]),
++                Some("run failed".into()),
++                None
++            ),
++            &json!({"outcome":null})
++        )
++        .is_ok());
++    }
++    #[test]
++    fn forged_required_build_locks_and_empty_command_are_rejected() {
++        let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
++        let locks = json!({"Cargo.lock":digest(&fs::read(root.join("Cargo.lock")).unwrap()), "survey/Cargo.lock":digest(&fs::read(root.join("survey/Cargo.lock")).unwrap())});
++        assert!(validate_build_invocation(
++            &json!({"build_command":[],"lockfile_hashes":locks}),
++            root
++        )
++        .is_err());
++        assert!(validate_build_invocation(&json!({"build_command":["cargo","build"],"lockfile_hashes":{"Cargo.lock":"wrong","survey/Cargo.lock":"wrong"}}), root).is_err());
++        assert!(validate_build_invocation(
++            &json!({"build_command":["cargo","build"],"lockfile_hashes":locks}),
++            root
++        )
++        .is_ok());
++    }
++    #[test]
++    fn output_aliases_reject_without_creating_files() {
++        let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
++        let input = root.join("survey/Cargo.toml");
++        let missing = std::env::temp_dir().join(format!("dp-missing-{}", std::process::id()));
++        assert!(
++            validate_destinations(std::slice::from_ref(&input), std::slice::from_ref(&input))
++                .is_err()
++        );
++        assert!(validate_destinations(&[], &[missing.clone(), missing]).is_err());
++    }
++    #[test]
++    fn duplicate_nested_json_fields_are_rejected() {
++        assert!(strict_json(br#"{"outer":{"value":1,"value":2}}"#)
++            .unwrap_err()
++            .contains("duplicate JSON field"));
++    }
++    #[test]
++    fn valid_zero_and_null_json_remain_distinct() {
++        let v = strict_json(br#"{"zero":0,"undefined":null}"#).unwrap();
++        assert_eq!(v["zero"], json!(0));
++        assert!(v["undefined"].is_null());
++    }
++    #[test]
++    fn nonfinite_json_and_trailing_garbage_are_rejected() {
++        assert!(strict_json(b"{\"n\":1e999}").is_err());
++        assert!(strict_json(b"{} {}").is_err());
++    }
++    #[test]
++    fn source_inventory_paths_cannot_escape_root() {
++        let d = std::env::temp_dir();
++        assert!(safe_path(&d.join("../escape")).is_err());
++    }
++}
+diff --git a/survey/tests/democratic_peace_native.rs b/survey/tests/democratic_peace_native.rs
+index ecbc160e58c3f380d62be6e3a68bfca1e03b93f1..18a0deabc80707541d8c6e0785e361bcbdbf9af7 100644
+--- a/survey/tests/democratic_peace_native.rs
++++ b/survey/tests/democratic_peace_native.rs
+@@ -60,3 +60,466 @@ fn malformed_manifest_is_rejected_before_output_creation() {
+     assert!(!out.exists());
+     fs::remove_dir_all(d).unwrap();
+ }
++
++// Each process fixture copies only the complete scientific inventory into an
++// owned temporary repo, so even a regressed output guard cannot touch originals.
++struct Fixture {
++    dir: std::path::PathBuf,
++    repo: std::path::PathBuf,
++}
++impl Fixture {
++    fn new() -> Self {
++        let dir = directory();
++        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
++            .parent()
++            .unwrap();
++        let script = r#"
++from pathlib import Path
++import json, shutil, subprocess, sys
++from survey.democratic_peace.provenance import required_inventory_paths, bind_unregistered_manifest
++from survey.democratic_peace.manifest import build_unregistered_manifest, build_manifest
++from survey.democratic_peace.records import strict_json
++from survey.democratic_peace.run import make_build_receipt
++root, out, binary = map(Path, sys.argv[1:])
++repo = out/'repo'; repo.mkdir()
++for name in required_inventory_paths(root):
++    dest = repo/name; dest.parent.mkdir(parents=True, exist_ok=True)
++    shutil.copyfile(root/name, dest)
++source = (repo/'docs/superpowers/specs/2026-10-03-democratic-peace-source-table.json').read_bytes()
++table = strict_json(source)
++configs = [dict(width=3, height=2, horizon_periods=7, periods_per_tick=3,
++    initial_democratic_share=d) for d in (0., 1., 0.)]
++configs[-1].update(initial_resourced_share=0., zero_ratio='reject_zero_denominator')
++m = bind_unregistered_manifest(build_unregistered_manifest(table, source,
++    configurations=configs, sessions=2), repo, source)
++mp = out/'manifest.json'; mp.write_text(json.dumps(m)+'\n')
++bp = out/'recorder'; shutil.copyfile(binary, bp)
++rustc = subprocess.check_output(['rustc', '-Vv'], text=True)
++cargo = subprocess.check_output(['cargo', '--version'], text=True)
++target = next(s.split(': ',1)[1] for s in rustc.splitlines() if s.startswith('host: '))
++r = make_build_receipt(mp, bp, repo, prebuild_inventory_sha256=m['source_inventory_sha256'],
++    build_command=['cargo','test','--locked','--manifest-path','survey/Cargo.toml',
++        '--bin','democratic_peace','--test','democratic_peace_native'], build_exit_code=0,
++    toolchain=dict(target=target, rustc_version=rustc, cargo_version=cargo),
++    lockfile_paths=['Cargo.lock','survey/Cargo.lock'])
++(out/'receipt.json').write_text(json.dumps(r)+'\n')
++(out/'provisional.json').write_text(json.dumps(build_manifest(table, source, precision_registered=True))+'\n')
++"#;
++        let result = Command::new("python3")
++            .args(["-c", script])
++            .arg(root)
++            .arg(&dir)
++            .arg(env!("CARGO_BIN_EXE_democratic_peace"))
++            .current_dir(root)
++            .output()
++            .unwrap();
++        assert!(
++            result.status.success(),
++            "{}",
++            String::from_utf8_lossy(&result.stderr)
++        );
++        let fixture = Self {
++            repo: dir.join("repo"),
++            dir,
++        };
++        let result = fixture.run("manifest.json", "resolved.json", Some("sessions.jsonl"));
++        assert!(
++            result.status.success(),
++            "{}",
++            String::from_utf8_lossy(&result.stderr)
++        );
++        fixture
++    }
++    fn run(&self, manifest: &str, resolved: &str, raw: Option<&str>) -> std::process::Output {
++        let mut command = Command::new(env!("CARGO_BIN_EXE_democratic_peace"));
++        command
++            .arg("--manifest")
++            .arg(self.dir.join(manifest))
++            .arg("--resolved")
++            .arg(self.dir.join(resolved))
++            .arg("--repo")
++            .arg(&self.repo);
++        if let Some(raw) = raw {
++            command
++                .arg("--out")
++                .arg(self.dir.join(raw))
++                .arg("--receipt")
++                .arg(self.dir.join("receipt.json"));
++        } else {
++            command.arg("--validate-only");
++        }
++        command.output().unwrap()
++    }
++    fn rows(&self) -> Vec<serde_json::Value> {
++        fs::read_to_string(self.dir.join("sessions.jsonl"))
++            .unwrap()
++            .lines()
++            .map(|line| serde_json::from_str(line).unwrap())
++            .collect()
++    }
++}
++impl Drop for Fixture {
++    fn drop(&mut self) {
++        fs::remove_dir_all(&self.dir).unwrap();
++    }
++}
++
++#[test]
++fn corrupt_scientific_rows_reject_without_touching_raw_or_resolved_outputs() {
++    use serde_json::json;
++    let f = Fixture::new();
++    let baseline = f.rows();
++    let mut corruptions = Vec::new();
++    let mut add = |name: &str, index: usize, mutate: fn(&mut serde_json::Value)| {
++        let mut rows = baseline.clone();
++        mutate(&mut rows[index]);
++        corruptions.push((name.to_string(), rows));
++    };
++    add("empty-final", 0, |r| {
++        r["outcome"]["outcome"]["final_metrics"] = json!({})
++    });
++    add("unknown-science-field", 0, |r| {
++        r["outcome"]["extra"] = json!(0)
++    });
++    add("unknown-metric-field", 0, |r| {
++        r["outcome"]["current_metrics"]["extra"] = json!(0)
++    });
++    add("missing-metric-field", 0, |r| {
++        r["outcome"]["current_metrics"]
++            .as_object_mut()
++            .unwrap()
++            .remove("conflict_fronts");
++    });
++    add("unknown-counter", 0, |r| {
++        r["outcome"]["census"]["extra"] = json!(0)
++    });
++    add("fractional-counter", 0, |r| {
++        r["outcome"]["census"]["initiated_fronts"] = json!(0.0)
++    });
++    add("unknown-setup", 0, |r| {
++        r["outcome"]["setup"]["extra"] = json!(0)
++    });
++    add("setup-overflow", 0, |r| {
++        r["outcome"]["setup"]["initial_resourced_cells"] = json!(7)
++    });
++    add("unknown-terminal", 0, |r| {
++        r["outcome"]["outcome"]["extra"] = json!(0)
++    });
++    add("terminal-census", 0, |r| {
++        r["outcome"]["outcome"]["census"]["initiated_fronts"] = json!(1)
++    });
++    add("terminal-clock", 0, |r| {
++        r["outcome"]["outcome"]["attempted_period"] = json!(6)
++    });
++    add("period-clock", 0, |r| r["outcome"]["period"] = json!(6));
++    add("display-clock", 0, |r| {
++        r["outcome"]["last_tick_periods"] = json!(4)
++    });
++    add("state-hash", 0, |r| {
++        r["outcome"]["final_state_hash"] = json!("corrupt")
++    });
++    add("atomic-gap", 4, |r| {
++        r["outcome"]["attempted_period"] = json!(3);
++        r["outcome"]["outcome"]["attempted_period"] = json!(3);
++    });
++    add("invalid-context", 4, |r| {
++        r["outcome"]["outcome"]["invalid_phase"] = json!("")
++    });
++    add("terminal-bool-type", 0, |r| {
++        r["outcome"]["outcome"]["valid"] = json!(1)
++    });
++    add("share-census", 0, |r| {
++        r["outcome"]["current_metrics"]["democratic_share"] = json!(0.5);
++        r["outcome"]["outcome"]["final_metrics"] = r["outcome"]["current_metrics"].clone();
++    });
++    add("regime-census", 0, |r| {
++        r["outcome"]["current_metrics"]["predatory_states"] = json!(0);
++        r["outcome"]["outcome"]["final_metrics"] = r["outcome"]["current_metrics"].clone();
++    });
++    add("imputed-clustering", 0, |r| {
++        r["outcome"]["current_metrics"]["clustering_ratio"] = json!(0.0);
++        r["outcome"]["outcome"]["final_metrics"] = r["outcome"]["current_metrics"].clone();
++    });
++    add("regime-reason", 0, |r| {
++        r["outcome"]["current_metrics"]["democratic_size_reason"] = json!(null);
++        r["outcome"]["outcome"]["final_metrics"] = r["outcome"]["current_metrics"].clone();
++    });
++    add("first-passage", 0, |r| {
++        r["outcome"]["current_metrics"]["first_extinction_period"] = json!(8);
++        r["outcome"]["outcome"]["final_metrics"] = r["outcome"]["current_metrics"].clone();
++    });
++    add("missing-endpoint", 0, |r| {
++        r["outcome"]["current_metrics"]["first_extinction_period"] = json!(null);
++        r["outcome"]["outcome"]["final_metrics"] = r["outcome"]["current_metrics"].clone();
++    });
++    add("panic-science", 0, |r| {
++        r["attempt"]["status"] = json!("implementation_panic");
++        r["attempt"]["panic_context"] = json!("fixture");
++        r["outcome"]["outcome"] = json!(null);
++        r["outcome"]["current_metrics"] = json!({});
++    });
++    add("incomplete-science", 0, |r| {
++        r["attempt"]["status"] = json!("incomplete");
++        r["attempt"]["recorder_error"] = json!("fixture");
++        r["outcome"]["outcome"] = json!(null);
++        r["outcome"]["setup"] = json!({});
++    });
++    add("panic-envelope", 0, |r| {
++        r["attempt"]["status"] = json!("implementation_panic");
++        r["attempt"]["panic_context"] = json!("fixture");
++        r["outcome"]["seed"] = json!(0);
++    });
++    let mut failures = Vec::new();
++    for name in ["duplicate", "truncated"] {
++        let original = fs::read(f.dir.join("sessions.jsonl")).unwrap();
++        let mut bytes = original.clone();
++        if name == "duplicate" {
++            bytes.extend(format!("{}\n", baseline[0]).as_bytes());
++        } else {
++            bytes.pop();
++        }
++        for existed in [false, true] {
++            fs::write(f.dir.join("corrupt.jsonl"), &bytes).unwrap();
++            let resolved = f.dir.join("reject-resolved.json");
++            if existed {
++                fs::write(&resolved, b"existing output sentinel").unwrap();
++            }
++            let before = fs::read(&resolved).ok();
++            let result = f.run(
++                "manifest.json",
++                "reject-resolved.json",
++                Some("corrupt.jsonl"),
++            );
++            if result.status.success()
++                || fs::read(f.dir.join("corrupt.jsonl")).unwrap() != bytes
++                || fs::read(&resolved).ok() != before
++            {
++                failures.push(format!(
++                    "{name}/existing={existed}: failed write-free rejection"
++                ));
++            }
++            if resolved.exists() {
++                fs::remove_file(resolved).unwrap();
++            }
++        }
++    }
++    for (name, rows) in corruptions {
++        // Include a missing last key: acceptance would also append a history.
++        let bytes = rows[..5]
++            .iter()
++            .map(|r| format!("{r}\n"))
++            .collect::<String>();
++        for existed in [false, true] {
++            fs::write(f.dir.join("corrupt.jsonl"), &bytes).unwrap();
++            let resolved = f.dir.join("reject-resolved.json");
++            if existed {
++                fs::write(&resolved, b"existing output sentinel").unwrap();
++            }
++            let before = fs::read(&resolved).ok();
++            let result = f.run(
++                "manifest.json",
++                "reject-resolved.json",
++                Some("corrupt.jsonl"),
++            );
++            if result.status.success()
++                || fs::read(f.dir.join("corrupt.jsonl")).unwrap() != bytes.as_bytes()
++                || fs::read(&resolved).ok() != before
++            {
++                failures.push(format!(
++                    "{name}/existing={existed}: exit={:?}, stderr={}",
++                    result.status.code(),
++                    String::from_utf8_lossy(&result.stderr)
++                ));
++            }
++            if resolved.exists() {
++                fs::remove_file(resolved).unwrap();
++            }
++        }
++    }
++    assert!(failures.is_empty(), "{}", failures.join("\n"));
++}
++
++#[test]
++fn canonical_registered_arm_and_analysis_job_drift_reject_before_outputs() {
++    use serde_json::json;
++    let f = Fixture::new();
++    let baseline: serde_json::Value =
++        serde_json::from_slice(&fs::read(f.dir.join("provisional.json")).unwrap()).unwrap();
++    let mut changes = Vec::new();
++    for name in [
++        "arm-id",
++        "job-id",
++        "job-state",
++        "job-root",
++        "job-spawn",
++        "job-index",
++        "job-order",
++    ] {
++        let mut value = baseline.clone();
++        match name {
++            "arm-id" => value["arms"][0]["id"] = json!("arbitrary-noncanonical-name"),
++            "job-id" => value["analysis_jobs"][0]["id"] = json!("arbitrary-job"),
++            "job-state" => value["analysis_jobs"][0]["state_u32"][0] = json!(0),
++            "job-root" => value["analysis_jobs"][0]["root_entropy"] = json!(0),
++            "job-spawn" => value["analysis_jobs"][0]["spawn_key"] = json!([1]),
++            "job-index" => value["analysis_jobs"][0]["index"] = json!(1),
++            "job-order" => value["analysis_jobs"].as_array_mut().unwrap().swap(0, 1),
++            _ => unreachable!(),
++        }
++        changes.push((name, value));
++    }
++    let mut failures = Vec::new();
++    for (name, value) in changes {
++        fs::write(f.dir.join("changed.json"), format!("{value}\n")).unwrap();
++        let result = f.run("changed.json", "changed-resolved.json", None);
++        if result.status.success() || f.dir.join("changed-resolved.json").exists() {
++            failures.push(name);
++        }
++        if f.dir.join("changed-resolved.json").exists() {
++            fs::remove_file(f.dir.join("changed-resolved.json")).unwrap();
++        }
++    }
++    assert!(
++        failures.is_empty(),
++        "accepted or wrote outputs: {failures:?}"
++    );
++    let valid = f.run("provisional.json", "valid-resolved.json", None);
++    assert!(
++        valid.status.success(),
++        "{}",
++        String::from_utf8_lossy(&valid.stderr)
++    );
++}
++
++#[test]
++fn analysis_cli_rejects_input_and_source_aliases_before_either_write() {
++    let f = Fixture::new();
++    let script = r#"
++from pathlib import Path
++import json, os, subprocess, sys
++out, repo = map(Path, sys.argv[1:])
++m = json.loads((out/'manifest.json').read_bytes())
++inputs = [out/'manifest.json', repo/'docs/superpowers/specs/2026-10-03-democratic-peace-source-table.json',
++    out/'sessions.jsonl', out/'resolved.json', out/'receipt.json', out/'recorder']
++protected = inputs + [repo/e['path'] for e in m['source_inventory']]
++snapshots = {p:p.read_bytes() for p in protected}
++failures = []
++cases = [(name, path) for name, path in zip(('manifest','source','resolved','receipt'), (inputs[0],inputs[1],inputs[3],inputs[4]))]
++session_alias=out/'sessions-alias.json'; os.link(inputs[2],session_alias)
++cases.append(('sessions',session_alias))
++cases += [('inventory', repo/'docs/superpowers/specs/2026-10-03-democratic-peace-reading-notes.md')]
++for kind, target in [('symlink', inputs[0]), ('hardlink', inputs[0]), ('binary', inputs[-1])]:
++    link=out/(kind+'.json')
++    if kind == 'symlink': link.symlink_to(target)
++    else: os.link(target,link)
++    cases.append((kind,link))
++parent=out/'parent-link';parent.symlink_to(out, target_is_directory=True)
++cases.append(('parent-symlink',parent/'manifest.json'))
++cases.append(('absent-parent',out/'uncreated'/'..'/'manifest.json'))
++paired=out/'paired.json';paired.write_bytes(b'paired output sentinel');os.link(paired,out/'paired.md')
++cases.append(('output-hardlinks',paired))
++for name, output in cases:
++    destinations = [output.with_suffix('.json'), output.with_suffix('.md')]
++    # Preserve a sibling sentinel wherever the parent already exists.
++    sibling = destinations[1]
++    if sibling.parent.exists() and sibling not in snapshots and not sibling.exists(): sibling.write_bytes(b'sibling output sentinel')
++    before = {p:p.read_bytes() if p.exists() else None for p in destinations}
++    command=[sys.executable,'-m','survey.democratic_peace.analysis','--manifest',str(inputs[0]),
++        '--source',str(inputs[1]),'--sessions',str(inputs[2]),'--resolved',str(inputs[3]),
++        '--build-receipt',str(inputs[4]),'--binary',str(inputs[5]),'--source-root',str(repo),
++        '--output',str(output)]
++    result=subprocess.run(command,capture_output=True,text=True)
++    unchanged=all(p.read_bytes()==data for p,data in snapshots.items()) and all(
++        (p.read_bytes() if p.exists() else None)==data for p,data in before.items())
++    if result.returncode == 0 or 'output aliases input or another output' not in result.stderr or not unchanged or (out/'uncreated').exists():
++        failures.append(dict(case=name,exit=result.returncode,unchanged=unchanged,stderr=result.stderr))
++    for p,data in snapshots.items(): p.write_bytes(data)
++    for p,data in before.items():
++        if data is not None: p.write_bytes(data)
++        elif p.exists(): p.unlink()
++    if (out/'uncreated').exists(): (out/'uncreated').rmdir()
++print(json.dumps(failures, indent=2))
++assert not failures
++"#;
++    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
++        .parent()
++        .unwrap();
++    let result = Command::new("python3")
++        .args(["-c", script])
++        .arg(&f.dir)
++        .arg(&f.repo)
++        .current_dir(root)
++        .output()
++        .unwrap();
++    assert!(
++        result.status.success(),
++        "{}\n{}",
++        String::from_utf8_lossy(&result.stdout),
++        String::from_utf8_lossy(&result.stderr)
++    );
++}
++
++#[test]
++fn valid_complete_invalid_construction_and_partial_outcomes_remain_resumable() {
++    use serde_json::json;
++    let f = Fixture::new();
++    let baseline = f.rows();
++    for status in [
++        "completed",
++        "invalid",
++        "construction_error",
++        "construction_panic",
++        "implementation_panic",
++        "incomplete",
++    ] {
++        let mut rows = baseline.clone();
++        if status != "completed" && status != "invalid" {
++            rows[0]["attempt"]["status"] = json!(status);
++            match status {
++                "construction_error" => {
++                    rows[0]["attempt"]["construction_errors"] =
++                        json!([{"field":"width","message":"fixture"}]);
++                    rows[0]["outcome"] = json!(null);
++                }
++                "construction_panic" => {
++                    rows[0]["attempt"]["panic_context"] = json!("fixture");
++                    rows[0]["outcome"] = json!(null);
++                }
++                "implementation_panic" | "incomplete" => {
++                    let context = if status == "incomplete" {
++                        "recorder_error"
++                    } else {
++                        "panic_context"
++                    };
++                    rows[0]["attempt"][context] = json!("fixture");
++                    for key in [
++                        "period",
++                        "periods",
++                        "completed_periods",
++                        "attempted_period",
++                        "tick",
++                        "last_tick_periods",
++                    ] {
++                        rows[0]["outcome"][key] = json!(1);
++                    }
++                    rows[0]["outcome"]["outcome"] = json!(null);
++                }
++                _ => unreachable!(),
++            }
++        }
++        let bytes = rows.iter().map(|r| format!("{r}\n")).collect::<String>();
++        fs::write(f.dir.join("valid.jsonl"), &bytes).unwrap();
++        let result = f.run("manifest.json", "valid-resolved.json", Some("valid.jsonl"));
++        assert!(
++            result.status.success(),
++            "{status}: {}",
++            String::from_utf8_lossy(&result.stderr)
++        );
++        {
++            assert_eq!(
++                fs::read(f.dir.join("valid.jsonl")).unwrap(),
++                bytes.as_bytes()
++            );
++        }
++    }
++}

@@ -1,0 +1,26 @@
+{
+  "additional_verification_preservation": {
+    "preserved_path": "docs/superpowers/specs/2026-10-03-emergent-polarity-pre-domestic-verification-receipt.json",
+    "sha256": "a9a37a6aadfd46f0aad399480b4d2e7461fa91003e9950777c19060dff4d4bdb"
+  },
+  "preserved_utc": "2026-10-03T06:20:01.147584+00:00",
+  "reviewed_head": "9753053062dbd3e03a75566903f2761fb67ce296",
+  "summaries": {
+    "docs/superpowers/specs/2026-10-02-emergent-polarity-descriptive-summary.json": {
+      "preserved_path": "docs/superpowers/specs/2026-10-03-emergent-polarity-pre-domestic-descriptive-summary.json",
+      "sha256": "61887fa2e6c12355a7acd8c0394b88c95ced7c1224fd0efda3990b03ef9473b3"
+    },
+    "docs/superpowers/specs/2026-10-02-emergent-polarity-execution-provenance.json": {
+      "preserved_path": "docs/superpowers/specs/2026-10-03-emergent-polarity-pre-domestic-execution-provenance.json",
+      "sha256": "9882fcf46b34ccc6bd10e7bd90e1e8f2f3094354670aba30e6a9bdb8a18e7b17"
+    },
+    "docs/superpowers/specs/2026-10-02-emergent-polarity-findings.json": {
+      "preserved_path": "docs/superpowers/specs/2026-10-03-emergent-polarity-pre-domestic-findings.json",
+      "sha256": "a00964baeda919b370493fd66ae9f87f46b0b6eefceeb3ff7c4ffbf3309cc1a5"
+    },
+    "docs/superpowers/specs/2026-10-02-emergent-polarity-findings.md": {
+      "preserved_path": "docs/superpowers/specs/2026-10-03-emergent-polarity-pre-domestic-findings.md",
+      "sha256": "507e03b52f5602291ee83226bdaff8157066fe27f4a9f3225d8728858825d441"
+    }
+  }
+}

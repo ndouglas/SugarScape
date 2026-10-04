@@ -12,6 +12,15 @@ export function lineData(g: ChartGroup, offset = 0): LineData {
   return [Array.from(g.ticks, (t) => t + offset), ...g.columns.map((c) => Array.from(c, gap))];
 }
 
+/**
+ * The "Pilfers by source" table (`[raided, pilfered]`): the second column becomes what was stumbled on,
+ * `pilfered − raided` (raids are pilfers), never below 0 against rounding; a gap stays a gap.
+ */
+export function stumbledData(data: LineData): LineData {
+  const [ticks, raided, pilfered] = data as [number[], (number | null)[], (number | null)[]];
+  return [ticks as number[], raided, pilfered.map((p, i) => (p == null || raided[i] == null ? null : Math.max(0, p - raided[i]!)))];
+}
+
 /** The Trade price chart (`[mean_log_price, sd_log_price]`): the mean, mean + SD and mean − SD. */
 export function bandData(g: ChartGroup): LineData {
   const [mean, sd] = g.columns;
@@ -113,6 +122,35 @@ export interface ChartLine { key: string; label: string; color: string; referenc
 
 /** A time chart of another model: its title, lines and y range, and (civil Model II's) when it shows. */
 export interface ModelChart { title: string; lines: ChartLine[]; range?: [number, number]; shown?: (c: ModelConfig) => boolean }
+
+/** Ordinary episode charts; unavailable denominators arrive as NaN and draw as gaps. */
+export const SPATIAL_HOARDING_CHARTS: { title: string; lines: ChartLine[] }[] = [
+  ...[
+    ['cached', 'Stored food'], ['buried', 'Burials per tick'], ['dug', 'Recovery per tick'],
+    ['pilfered', 'Pilferage per tick'], ['lost', 'Food lost on death per tick'],
+    ['cache_ticks', 'Positive cache-ticks'], ['stock_ticks', 'Food-unit-ticks'],
+    ['recovery', 'Cumulative recovery share'], ['loss_rate', 'Loss per food-unit-tick'],
+  ].map(([field,title]) => ({ title: `Spatial ${title.toLowerCase()}`, lines: [
+    { key: `scatter_${field}`, label: 'Scatter', color: '--c1' },
+    { key: `larder_${field}`, label: 'Larder', color: '--c3' },
+  ] })),
+  { title: 'Spatial deliveries', lines: [
+    { key: 'delivery_starts', label: 'Starts', color: '--c1' },
+    { key: 'delivery_completions', label: 'Completions', color: '--c3' },
+    { key: 'delivery_cancellations', label: 'Cancellations', color: '--red' },
+    { key: 'delivery_return_turns', label: 'Return turns', color: '--c4' },
+  ] },
+  { title: 'Spatial guards', lines: [
+    { key: 'guard_intended', label: 'Intentions', color: '--c2' },
+    { key: 'guard_executed', label: 'Paid guard actions', color: '--c3' },
+    { key: 'guard_blocked_raids', label: 'Blocked raids', color: '--red' },
+    { key: 'guard_blocked_discoveries', label: 'Blocked discoveries', color: '--c4' },
+  ] },
+  { title: 'Spatial food consumed', lines: [
+    { key: 'metabolic_demand', label: 'Demand', color: '--c2' },
+    { key: 'metabolic_consumed', label: 'Consumed', color: '--c1' },
+  ] },
+];
 
 /** A civil config of Model II (its groups and kills have charts). */
 /** A classes config with two tags (its per-tag charts show). */
@@ -748,6 +786,70 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
   ],
   // Minds 7 charts by generation and this season's bouts (HOARD_CHARTS), not over the whole run.
   hoard: [],
+  democratic_peace: [
+    { title: 'Democratic territory', lines: [{ key: 'democratic_share', label: 'Share of cells governed democratically', color: '--c1' }], range: [0, 1] },
+    { title: 'Governments', lines: [{ key: 'democratic_states', label: 'Democratic states', color: '--c1' }, { key: 'predatory_states', label: 'Predatory states', color: '--red' }] },
+    { title: 'Clustering', lines: [{ key: 'clustering_ratio', label: 'Exposure / initial democratic share', color: '--c2' }] },
+    { title: 'Alignments and conflict', lines: [{ key: 'alliance_count', label: 'Defensive alliances', color: '--c1' }, { key: 'pariah_count', label: 'Pariahs', color: '--red' }, { key: 'conflict_fronts', label: 'Conflict fronts', color: '--c2' }] },
+    { title: 'Source clock', lines: [{ key: 'periods', label: 'Completed source periods', color: '--c1' }, { key: 'last_tick_periods', label: 'Periods in last display tick', color: '--c2' }] },
+  ],
+  geosim: [
+    { title: 'Governments and territory', lines: [{key:'sovereign_count',label:'Sovereign governments',color:'--c1'}, {key:'largest_territory',label:'Largest territory (cells)',color:'--c2'}] },
+    { title: 'Resources and technology', lines: [{key:'total_capacity',label:'Total resource capacity',color:'--c1'}, {key:'mean_threshold',label:'Mean technology threshold',color:'--c2'}] },
+    { title: 'War census', lines: [{key:'completed_wars',label:'Completed clusters',color:'--c1'}, {key:'active_wars',label:'Active clusters (censored at termination)',color:'--red'}, {key:'collector_backlog',label:'Completed awaiting export',color:'--c2'}] },
+    { title: 'Abstract conflict damage', lines: [{key:'damage',label:'Cumulative resource damage',color:'--red'}] },
+    { title: 'Source clock', lines: [{key:'periods',label:'Completed source periods',color:'--c1'}, {key:'last_tick_periods',label:'Periods in last display tick',color:'--c2'}] },
+  ],
+  polarity: [
+    { title: 'Polarity', lines: [{ key: 'sovereign_count', label: 'Sovereign states (tick end)', color: '--c1' }, { key: 'largest_territory', label: 'Largest territory', color: '--c2' }, { key: 'second_largest_territory', label: 'Second largest', color: '--c3' }] },
+    { title: 'Resources', lines: [{ key: 'total_stock', label: 'Total stock (tick end)', color: '--c1' }, { key: 'capital_stock', label: 'Capital stock', color: '--c2' }, { key: 'province_stock', label: 'Province stock', color: '--c3' }] },
+    { title: 'Combat costs', lines: [{ key: 'destruction', label: 'Positive destruction (tick sum)', color: '--red' }, { key: 'signed_creation', label: 'Signed damage creation (tick sum)', color: '--c4' }] },
+    { title: 'Structural events', lines: [{ key: 'conquests', label: 'Conquests (tick sum)', color: '--c1' }, { key: 'capital_collapses', label: 'Capital collapses', color: '--red' }, { key: 'disconnections', label: 'Disconnected provinces', color: '--c2' }, { key: 'revolts', label: 'Revolts', color: '--c3' }] },
+    { title: 'Economic clock', lines: [{ key: 'periods', label: 'Completed periods', color: '--c1' }, { key: 'last_tick_periods', label: 'Periods in last tick', color: '--c2' }] },
+  ],
+  auctions: [
+    { title: 'Bids', lines: [
+      { key: 'bid_1', label: 'Bidder 1 played (tick mean)', color: '--c1' },
+      { key: 'bid_2', label: 'Bidder 2 played (tick mean)', color: '--c2' },
+      { key: 'bid_3', label: 'Bidder 3 played (tick mean)', color: '--c3' },
+      { key: 'greedy_1', label: 'Bidder 1 greedy (tick end)', color: '--c4' },
+      { key: 'greedy_2', label: 'Bidder 2 greedy (tick end)', color: '--red' },
+      { key: 'greedy_3', label: 'Bidder 3 greedy (tick end)', color: '--muted' },
+    ] },
+    { title: 'Seller revenue', lines: [{ key: 'revenue', label: 'Realized payment (tick mean)', color: '--c1' }, { key: 'terminal_revenue', label: 'Final policy expected revenue', color: '--c4' }] },
+    { title: 'Bidder rewards', lines: [
+      { key: 'profit_1', label: 'Bidder 1 (tick mean)', color: '--c1' },
+      { key: 'profit_2', label: 'Bidder 2 (tick mean)', color: '--c2' },
+      { key: 'profit_3', label: 'Bidder 3 (tick mean)', color: '--c3' },
+    ] },
+    { title: 'Learning', lines: [
+      { key: 'epsilon', label: 'Exploration probability', color: '--c1' },
+      { key: 'explored', label: 'Exploring share (tick mean)', color: '--c2' },
+      { key: 'downward', label: 'Downward share (tick mean)', color: '--c3' },
+      { key: 'greedy_changes', label: 'Policy changes (tick count)', color: '--red' },
+      { key: 'stable', label: 'Stable periods (tick end)', color: '--c4' },
+    ] },
+  ],
+  collusion: [
+    {
+      title: 'Prices',
+      lines: [
+        { key: 'price_1', label: 'Firm 1', color: '--c1' },
+        { key: 'price_2', label: 'Firm 2', color: '--c2' },
+        { key: 'greedy_price', label: 'Greedy price (mean)', color: '--c4' },
+      ],
+    },
+    { title: 'Profit gain', lines: [{ key: 'profit_gain', label: 'Δ this period', color: '--c1' }] },
+    {
+      title: 'Learning',
+      lines: [
+        { key: 'epsilon', label: 'Exploration rate', color: '--c1' },
+        { key: 'explored', label: 'Firms exploring', color: '--c3' },
+        { key: 'greedy_changes', label: 'Strategy changes', color: '--red' },
+      ],
+    },
+    { title: 'Settling', lines: [{ key: 'stable', label: 'Periods unchanged', color: '--c2' }] },
+  ],
   firms: [
     {
       title: 'Firms',
@@ -804,7 +906,7 @@ export const MODEL_CHARTS: Record<Exclude<ModelKind, 'sugarscape'>, ModelChart[]
  * periods (ethnocentrism, HA06's word), cycles (the demographic PD, Epstein's word) or ticks.
  */
 export function timeAxisLabel(model: ModelKind): string {
-  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'retirement' || model === 'punishment' ? 'Periods' : model === 'zi' ? 'Shouts' : model === 'bali' ? 'Months' : model === 'line' ? 'Rounds' : model === 'tipping' ? 'Steps' : model === 'hoard' ? 'Bouts' : model === 'firms' ? 'Periods' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
+  return model === 'farol' ? 'Rounds' : model === 'ants' || model === 'thresholds' ? 'Steps' : model === 'retirement' || model === 'punishment' ? 'Periods' : model === 'zi' ? 'Shouts' : model === 'bali' ? 'Months' : model === 'line' ? 'Rounds' : model === 'tipping' ? 'Steps' : model === 'hoard' ? 'Bouts' : model === 'firms' ? 'Periods' : model === 'collusion' || model === 'auctions' ? 'Ticks' : model === 'anasazi' ? 'Year' : model === 'tags' || model === 'image' ? 'Generation' : model === 'culture' ? 'Events per site' : model === 'classes' || model === 'opinions' || model === 'structure' || model === 'agreement' ? 'Periods' : model === 'ethno' ? 'Period' : model === 'dpd' ? 'Cycle' : model === 'norms' ? 'Generations' : 'Tick';
 }
 
 /** A calendar-year axis's tick labels: plain years (`1000`, not `1,000`), up to 3 decimals when zoomed in. */

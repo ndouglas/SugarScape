@@ -1,0 +1,14 @@
+{
+  "command": [
+    "python3",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "survey/democratic_peace",
+    "-p",
+    "test_*.py"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 1.1119607081636786
+}

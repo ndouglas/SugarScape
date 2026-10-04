@@ -7,10 +7,13 @@ pub mod agent;
 pub mod agreement;
 pub mod anasazi;
 pub mod ants;
+pub mod auctions;
 pub mod bali;
 pub mod bits;
+pub mod burrow;
 pub mod civil;
 pub mod classes;
+pub mod collusion;
 pub mod config;
 pub mod culture;
 pub mod deduction;
@@ -21,6 +24,7 @@ pub mod ethno;
 pub mod export;
 pub mod farol;
 pub mod firms;
+pub mod foraging;
 pub mod frames;
 pub mod geometry;
 pub mod graph;
@@ -34,6 +38,7 @@ pub mod model;
 pub mod network;
 pub mod norms;
 pub mod opinions;
+pub mod polarity;
 pub mod portable;
 pub mod presets;
 pub mod punishment;
@@ -58,3 +63,6 @@ pub mod zi;
 
 #[cfg(test)]
 pub(crate) mod testkit;
+
+pub mod democratic_peace;
+pub mod geosim;

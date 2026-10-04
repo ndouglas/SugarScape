@@ -17,11 +17,12 @@ import { SweepChart } from './chart';
 import { chartData } from './chart-data';
 import { readOpened, slug, type OpenCore } from './file';
 import { FixedPanel } from './fixed-panel';
-import { defaultForm, numericPaths, sweepToForm, type SweepForm } from './form';
+import { captureExperimentBase, defaultForm, numericPaths, sweepToForm, type SweepForm } from './form';
 import { FormView } from './form-view';
 import { baseLabel } from './labels';
 import { poolSize, WorkerPool, type WorkerLike } from './pool';
 import { resultsTable } from './results-table';
+import { runAvailability } from './format';
 import type { BuiltinSweep, Point, RunResult, Summary, Sweep, SweepBase, SweepResult } from './types';
 
 /** Each worker loads its own WASM instance (Decision 19). */
@@ -203,7 +204,7 @@ export class ExperimentsView {
   /** The current world as a base: its preset when unmodified, otherwise its config (Decision 17). */
   private currentBase(): SweepBase {
     const e = this.engine;
-    return e.presetId !== null && !e.isModified() ? { preset: e.presetId } : { config: structuredClone(e.baseConfig) };
+    return captureExperimentBase(e.presetId, e.isModified(), e.baseConfig);
   }
 
   private configOf(base: SweepBase): ModelConfig | null {
@@ -309,7 +310,8 @@ export class ExperimentsView {
     }
     const summary = JSON.parse(aggregate(shown.spec, JSON.stringify(shown.runs))) as Summary;
     this.chart.draw(chartData(shown.sweep, summary));
-    this.table.replaceChildren(resultsTable(summary));
+    const availability = runAvailability(shown.runs);
+    this.table.replaceChildren(...(availability ? [h('p', { class: 'hint', role: 'status' }, availability)] : []), resultsTable(summary));
   }
 
   /**

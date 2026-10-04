@@ -1,0 +1,3304 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 8cfcb79219837f508eb99aad2d82750f3bd98eef..ddda5d8becaff7501ca228a2e1cb0ede773fd6da 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -601,6 +601,7 @@ dependencies = [
+ name = "sugarscape-core"
+ version = "0.1.0"
+ dependencies = [
++ "libm",
+  "proptest",
+  "rand 0.8.8",
+  "rand_pcg",
+diff --git a/crates/sugarscape-core/Cargo.toml b/crates/sugarscape-core/Cargo.toml
+index e52667fa4974cd6f2ad58344e6940152ea7bd47c..48e6aa21fe44a0911ea96c0028f81db273aac37d 100644
+--- a/crates/sugarscape-core/Cargo.toml
++++ b/crates/sugarscape-core/Cargo.toml
+@@ -6,6 +6,8 @@ edition.workspace = true
+ license.workspace = true
+ 
+ [dependencies]
++# Exact common software transcendentals for GeoSim native/WASM reproducibility.
++libm = { version = "=0.2.16", default-features = false, features = ["force-soft-floats"] }
+ rand.workspace = true
+ rand_pcg.workspace = true
+ serde.workspace = true
+diff --git a/crates/sugarscape-core/src/geosim/analysis.rs b/crates/sugarscape-core/src/geosim/analysis.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..5710139487b717baa1c12fe2c9c149f8325eaccd
+--- /dev/null
++++ b/crates/sugarscape-core/src/geosim/analysis.rs
+@@ -0,0 +1,72 @@
++//! Complete source census, clocks and resource recurrence accounting.
++use super::{Cell, GeosimConfig, Merge, State, StateId, War};
++use serde::{Deserialize, Serialize};
++#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
++pub struct Ledger {
++    pub attacks: u64,
++    pub fighting_front_periods: u64,
++    pub mutual_front_periods: u64,
++    pub conquests: u64,
++    pub collapses: u64,
++    pub disconnections: u64,
++    pub stale_claims: u64,
++    pub locked_claims: u64,
++    pub double_successes: u64,
++    pub path_collisions: u64,
++    pub shocks: u64,
++    pub damage: f64,
++    pub measured_damage: f64,
++    pub capacity_increase: f64,
++    pub capacity_decrease: f64,
++    pub clipping: f64,
++    pub retirement_capacity: f64,
++    pub reemergence_capacity: f64,
++    pub recurrence_residual: f64,
++}
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct Event {
++    pub id: u64,
++    pub period: u64,
++    pub kind: String,
++    pub states: Vec<StateId>,
++    pub cells: Vec<usize>,
++}
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct Outcome {
++    pub config: GeosimConfig,
++    pub seed: u64,
++    pub rng_mode: String,
++    pub periods: u64,
++    pub attempted_period: u64,
++    pub counting_start: u64,
++    pub valid: bool,
++    pub state_available: bool,
++    pub finish_reason: String,
++    pub invalid_reason: Option<String>,
++    pub completed_wars: Vec<War>,
++    pub censored_wars: Vec<War>,
++    pub legacy_visible_wars: Vec<War>,
++    pub exporter_backlog: Vec<War>,
++    pub merges: Vec<Merge>,
++    pub retired_states: Vec<StateId>,
++    pub sovereign_count: usize,
++    pub states: Vec<State>,
++    pub cells: Vec<Cell>,
++    pub ledger: Ledger,
++    pub fronts: Vec<super::Front>,
++    pub resource_updates: Vec<ResourceUpdate>,
++    pub partial_period_fights: Vec<(StateId, StateId, f64)>,
++}
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct ResourceUpdate {
++    pub state: StateId,
++    pub period: u64,
++    pub old_capacity: Option<f64>,
++    pub extracted_yield: Option<f64>,
++    pub applied_damage: Option<f64>,
++    pub target_capacity: Option<f64>,
++    pub new_capacity: Option<f64>,
++    pub clipping: f64,
++    pub residual: Option<f64>,
++    pub reset: bool,
++}
+diff --git a/crates/sugarscape-core/src/geosim/claims.rs b/crates/sugarscape-core/src/geosim/claims.rs
+index 35b2fa74fe1bbcdcf3cfda42aa8ec128840115f1..968d825df1004f93b47325b67a6e54bf747eef9d 100644
+--- a/crates/sugarscape-core/src/geosim/claims.rs
++++ b/crates/sugarscape-core/src/geosim/claims.rs
+@@ -1,3 +1,181 @@
++//! Snapshot structural claims, contiguity and sovereign identity retirement.
++use super::*;
++#[derive(Clone, Debug)]
++pub(crate) struct Claim {
++    pub states: [StateId; 2],
++    pub path: [usize; 2],
++    pub attacker: usize,
++}
++impl GeosimWorld {
++    fn prospective_owner_changes(
++        &self,
++        loser: StateId,
++        target: usize,
++        before_loser: &[usize],
++    ) -> std::collections::BTreeSet<usize> {
++        let mut changed = std::collections::BTreeSet::from([target]);
++        if target == loser.capital_cell {
++            if before_loser.len() > 1 {
++                changed.extend(before_loser.iter().copied().filter(|&cell| {
++                    cell != target || self.config.capital_capture == CapitalCapture::CollapseOnly
++                }));
++            }
++        } else {
++            let mut reached = std::collections::BTreeSet::new();
++            let mut pending = vec![loser.capital_cell];
++            while let Some(cell) = pending.pop() {
++                if !reached.insert(cell) {
++                    continue;
++                }
++                for next in super::territory::adjacent(&self.config, cell) {
++                    if next != target && self.cells[next].owner == loser && !reached.contains(&next)
++                    {
++                        pending.push(next);
++                    }
++                }
++            }
++            changed.extend(
++                before_loser
++                    .iter()
++                    .copied()
++                    .filter(|&cell| cell != target && !reached.contains(&cell)),
++            );
++        }
++        changed
++    }
++
++    fn release(&mut self, cell: usize) -> StateId {
++        self.cells[cell].next_generation += 1;
++        let id = StateId {
++            capital_cell: cell,
++            sovereignty_generation: self.cells[cell].next_generation,
++        };
++        let threshold =
++            if self.config.technology_inheritance == TechnologyInheritance::RetainCellThreshold {
++                self.cells[cell].last_threshold
++            } else {
++                self.config.distance_threshold
++            };
++        self.cells[cell].owner = id;
++        self.states.insert(
++            id,
++            State {
++                id,
++                capacity: Some(1.0),
++                threshold,
++                alert: false,
++                campaign: None,
++                previous_damage: 0.0,
++                newly_independent: false,
++                extracted_yield: 1.0,
++                recurrence_residual: 0.0,
++            },
++        );
++        self.ledger.reemergence_capacity += 1.0;
++        id
++    }
++    pub(crate) fn apply_claims(&mut self, mut claims: Vec<Claim>) -> Result<(), String> {
++        super::world::shuffle(&mut claims, &mut self.rng);
++        let mut locked = std::collections::BTreeSet::new();
++        for claim in claims {
++            let winner = claim.states[claim.attacker];
++            let loser = claim.states[1 - claim.attacker];
++            let agent = claim.path[claim.attacker];
++            let target = claim.path[1 - claim.attacker];
++            if !self.states.contains_key(&winner)
++                || !self.states.contains_key(&loser)
++                || self.cells[agent].owner != winner
++                || self.cells[target].owner != loser
++                || !super::territory::adjacent(&self.config, agent).contains(&target)
++            {
++                self.ledger.stale_claims += 1;
++                self.log_event("stale_claim", claim.states.to_vec(), claim.path.to_vec());
++                continue;
++            }
++            let before_winner = self.members[&winner].clone();
++            let before_loser = self.members[&loser].clone();
++            let prospective_changes = self.prospective_owner_changes(loser, target, &before_loser);
++            if locked.contains(&agent)
++                || prospective_changes.iter().any(|cell| locked.contains(cell))
++            {
++                self.ledger.locked_claims += 1;
++                self.log_event("locked_claim", claim.states.to_vec(), claim.path.to_vec());
++                continue;
++            }
++            let mut changed = vec![target, winner.capital_cell, loser.capital_cell];
++            if target == loser.capital_cell {
++                let old = self.states.remove(&loser).unwrap();
++                self.cells[target].last_threshold = old.threshold;
++                self.retired.push(loser);
++                self.ledger.retirement_capacity += old.capacity.unwrap_or(0.0);
++                if before_loser.len() > 1 {
++                    self.ledger.collapses += 1;
++                    for &cell in &before_loser {
++                        if cell != target
++                            || self.config.capital_capture == CapitalCapture::CollapseOnly
++                        {
++                            self.release(cell);
++                            changed.push(cell);
++                        }
++                    }
++                }
++                if before_loser.len() == 1
++                    || self.config.capital_capture == CapitalCapture::CaptureAndFragment
++                {
++                    self.cells[target].owner = winner;
++                }
++            } else {
++                self.cells[target].owner = winner;
++                let mut reached = std::collections::BTreeSet::new();
++                let mut pending = vec![loser.capital_cell];
++                while let Some(cell) = pending.pop() {
++                    if !reached.insert(cell) {
++                        continue;
++                    }
++                    for next in super::territory::adjacent(&self.config, cell) {
++                        if self.cells[next].owner == loser && !reached.contains(&next) {
++                            pending.push(next);
++                        }
++                    }
++                }
++                for cell in before_loser
++                    .iter()
++                    .copied()
++                    .filter(|&id| id != target && !reached.contains(&id))
++                {
++                    self.release(cell);
++                    changed.push(cell);
++                    self.ledger.disconnections += 1;
++                }
++            }
++            self.ledger.conquests += 1;
++            self.log_event("conquest", vec![winner, loser], changed.clone());
++            if self.config.locking == Locking::AffectedStates {
++                locked.extend(before_winner);
++                locked.extend(before_loser);
++            } else {
++                locked.extend(changed);
++            }
++            self.rebuild();
++            let states: Vec<_> = self.states.keys().copied().collect();
++            for id in states {
++                let neighbors: std::collections::BTreeSet<_> = self
++                    .fronts
++                    .keys()
++                    .filter(|k| k.contains(&id))
++                    .flat_map(|k| k.iter().copied().filter(|n| *n != id))
++                    .collect();
++                if self.states[&id]
++                    .campaign
++                    .is_some_and(|t| !neighbors.contains(&t))
++                {
++                    self.states.get_mut(&id).unwrap().campaign = None;
++                }
++            }
++        }
++        Ok(())
++    }
++}
+ #[cfg(test)]
+ mod tests {
+     use super::super::tests::prescribed;
+@@ -77,8 +255,41 @@ mod tests {
+         assert_eq!(w.ledger.stale_claims, 1);
+         assert!(!w.states.contains_key(&states[1]));
+     }
+-}
+ 
++    #[test]
++    fn later_claim_cannot_release_a_province_locked_by_an_earlier_claim() {
++        let mut w = prescribed(&[0, 0, 0, 4, 4, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7], 5);
++        let a = w.cells[0].owner;
++        let b = w.cells[4].owner;
++        let c = w.cells[7].owner;
++        let claims = vec![
++            Claim {
++                states: [a, b],
++                path: [2, 3],
++                attacker: 0,
++            },
++            Claim {
++                states: [a, c],
++                path: [2, 7],
++                attacker: 1,
++            },
++        ];
++        let seed = (0..1000)
++            .find(|&seed| {
++                let mut order = [0, 1];
++                super::super::world::shuffle(&mut order, &mut crate::rng::seeded(seed));
++                order == [0, 1]
++            })
++            .unwrap();
++        w.rng = crate::rng::seeded(seed);
++
++        w.apply_claims(claims).unwrap();
++
++        assert_eq!(w.cells[3].owner, a);
++        assert_eq!(w.ledger.locked_claims, 1);
++        assert_eq!(w.ledger.conquests, 1);
++    }
++}
+ #[cfg(test)]
+ mod reading_tests {
+     use super::super::tests::prescribed;
+diff --git a/crates/sugarscape-core/src/geosim/combat.rs b/crates/sugarscape-core/src/geosim/combat.rs
+index 337b908fb71d781052faea6a8d2c64209a4d0888..b34f7ee95a98621fb47784ca9d2fe7120729d0ed 100644
+--- a/crates/sugarscape-core/src/geosim/combat.rs
++++ b/crates/sugarscape-core/src/geosim/combat.rs
+@@ -1,3 +1,89 @@
++//! Source probability, damage and defender-priority resolution boundaries.
++use super::*;
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum Victory {
++    Undecided,
++    Attacker,
++    Defender,
++}
++pub fn contest_probability(
++    a: f64,
++    b: f64,
++    threshold: f64,
++    exponent: u32,
++    policy: NumericalPolicy,
++) -> Result<f64, String> {
++    if !a.is_finite() || !b.is_finite() || a < 0.0 || b < 0.0 {
++        return Err(format!("invalid projected commitments {a}/{b}"));
++    }
++    if policy == NumericalPolicy::FloorZero {
++        if a == 0.0 && b == 0.0 {
++            return Ok(0.5);
++        }
++        if b == 0.0 {
++            return Ok(1.0);
++        }
++        if a == 0.0 {
++            return Ok(0.0);
++        }
++    }
++    if a <= 0.0 || b <= 0.0 {
++        return Err(format!("nonpositive projected commitments {a}/{b}"));
++    }
++    let ratio = a / b;
++    if !ratio.is_finite() || ratio <= 0.0 {
++        return Err(format!("invalid ratio {a}/{b}"));
++    }
++    let p = super::resources::probability(ratio, threshold, exponent);
++    if !p.is_finite() || !(0.0..=1.0).contains(&p) {
++        Err("invalid contest probability".into())
++    } else {
++        Ok(p)
++    }
++}
++pub fn resolve_victory(prob: [f64; 2], draws: [f64; 2], mode: VictoryDraws) -> (Victory, bool) {
++    if mode == VictoryDraws::IndependentDefenderPriority {
++        let a = draws[0] < prob[0];
++        let d = draws[1] < prob[1];
++        (
++            if d {
++                Victory::Defender
++            } else if a {
++                Victory::Attacker
++            } else {
++                Victory::Undecided
++            },
++            a && d,
++        )
++    } else {
++        (
++            if draws[0] < prob[0] {
++                Victory::Attacker
++            } else if draws[0] < prob[0] + (1.0 - prob[0]) * prob[1] {
++                Victory::Defender
++            } else {
++                Victory::Undecided
++            },
++            false,
++        )
++    }
++}
++pub fn losses(
++    actions: [bool; 2],
++    commitments: [f64; 2],
++    projected: [f64; 2],
++    fraction: f64,
++    basis: DamageBasis,
++) -> [f64; 2] {
++    losses_with_incidence(
++        actions,
++        commitments,
++        projected,
++        fraction,
++        basis,
++        DamageIncidence::AttackedParty,
++    )
++}
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+@@ -74,7 +160,116 @@ mod tests {
+         );
+     }
+ }
+-
++type FightResolution = (Vec<super::claims::Claim>, Vec<(StateId, StateId, f64)>);
++impl GeosimWorld {
++    pub(crate) fn fight(&mut self) -> Result<FightResolution, String> {
++        use rand::Rng;
++        let mut claims = Vec::new();
++        let mut edges = Vec::new();
++        let keys: Vec<_> = self.fronts.keys().copied().collect();
++        for key in keys {
++            let f = self.fronts[&key].clone();
++            if !f.actions.iter().any(|a| *a) {
++                continue;
++            }
++            let path = f.path.ok_or("fighting front missing path")?;
++            let projected = [
++                f.commitments[0] * self.projection(key[0], path[0]),
++                f.commitments[1] * self.projection(key[1], path[1]),
++            ];
++            let damage = losses_with_incidence(
++                f.actions,
++                f.commitments,
++                projected,
++                self.config.damage_fraction,
++                self.config.damage_basis,
++                self.config.damage_incidence,
++            );
++            if projected
++                .iter()
++                .chain(damage.iter())
++                .any(|x| !x.is_finite() || *x < 0.0)
++            {
++                return Err(format!(
++                    "period {} front {:?}: invalid damage/projection",
++                    self.period, key
++                ));
++            }
++            self.fronts.get_mut(&key).unwrap().last_damage = damage;
++            for side in 0..2 {
++                self.states.get_mut(&key[side]).unwrap().previous_damage += damage[side];
++            }
++            self.ledger.damage += damage.iter().sum::<f64>();
++            self.ledger.fighting_front_periods += 1;
++            if f.actions == [true, true] {
++                self.ledger.mutual_front_periods += 1;
++            }
++            let severity = if self.config.severity_damage == SeverityDamage::AllDamagedFronts
++                || f.actions == [true, true]
++            {
++                damage.iter().sum()
++            } else {
++                0.0
++            };
++            edges.push((key[0], key[1], severity));
++            self.pending_fights.push((key[0], key[1], severity));
++            if self.period >= self.counting_start() {
++                self.ledger.measured_damage += severity;
++            }
++            let attacker = f.initiator.unwrap_or(usize::from(!f.actions[0]));
++            let [p_a, p_d] = victory_probabilities(projected, attacker, &self.config)
++                .map_err(|e| format!("period {} battle {:?}: {}", self.period, key, e))?;
++            self.fronts
++                .get_mut(&key)
++                .unwrap()
++                .last_victory_probabilities = [Some(p_a), Some(p_d)];
++            let draws = [
++                self.rng.gen::<f64>(),
++                if self.config.victory_draws == VictoryDraws::IndependentDefenderPriority {
++                    self.rng.gen::<f64>()
++                } else {
++                    0.0
++                },
++            ];
++            let (win, both) = resolve_victory([p_a, p_d], draws, self.config.victory_draws);
++            self.ledger.double_successes += u64::from(both);
++            if win != Victory::Undecided {
++                let current = self.fronts.get_mut(&key).unwrap();
++                current.actions = [false; 2];
++                current.initiator = None;
++                self.log_event(
++                    if win == Victory::Attacker {
++                        "attacker_victory"
++                    } else {
++                        "defender_victory"
++                    },
++                    key.to_vec(),
++                    path.to_vec(),
++                );
++                if win == Victory::Attacker {
++                    claims.push(super::claims::Claim {
++                        states: key,
++                        path,
++                        attacker,
++                    });
++                }
++                if self.config.campaign_drop_timing == CampaignDropTiming::AfterBattle {
++                    for id in key {
++                        if self.states[&id].campaign.is_some()
++                            && super::world::chance(
++                                self.config.campaign_drop_probability,
++                                &mut self.rng,
++                            )
++                        {
++                            self.states.get_mut(&id).unwrap().campaign = None;
++                        }
++                    }
++                }
++            }
++        }
++        Ok((claims, edges))
++    }
++}
+ #[cfg(test)]
+ mod integrated_tests {
+     use super::super::tests::prescribed;
+@@ -132,7 +327,34 @@ mod integrated_tests {
+         );
+     }
+ }
+-
++pub fn victory_probabilities(
++    projected: [f64; 2],
++    attacker: usize,
++    config: &GeosimConfig,
++) -> Result<[f64; 2], String> {
++    let defender = 1 - attacker;
++    let defender_threshold = if config.defender_threshold == DefenderThreshold::Reciprocal {
++        1.0 / config.victory_threshold
++    } else {
++        config.victory_threshold
++    };
++    Ok([
++        contest_probability(
++            projected[attacker],
++            projected[defender],
++            config.victory_threshold,
++            config.victory_exponent,
++            config.numerical_policy,
++        )?,
++        contest_probability(
++            projected[defender],
++            projected[attacker],
++            defender_threshold,
++            config.victory_exponent,
++            config.numerical_policy,
++        )?,
++    ])
++}
+ #[cfg(test)]
+ mod defender_threshold_tests {
+     use super::*;
+@@ -152,6 +374,32 @@ mod defender_threshold_tests {
+     }
+ }
+ 
++pub fn losses_with_incidence(
++    actions: [bool; 2],
++    commitments: [f64; 2],
++    projected: [f64; 2],
++    fraction: f64,
++    basis: DamageBasis,
++    incidence: DamageIncidence,
++) -> [f64; 2] {
++    std::array::from_fn(|side| {
++        let acting = if incidence == DamageIncidence::AttackedParty {
++            1 - side
++        } else {
++            side
++        };
++        if actions[acting] {
++            fraction
++                * if basis == DamageBasis::OpponentProjected {
++                    projected[1 - side]
++                } else {
++                    commitments[side]
++                }
++        } else {
++            0.0
++        }
++    })
++}
+ #[cfg(test)]
+ mod incidence_tests {
+     use super::*;
+diff --git a/crates/sugarscape-core/src/geosim/config.rs b/crates/sugarscape-core/src/geosim/config.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..673bf54fdf836fdaf865fdc2808a0e8838993b20
+--- /dev/null
++++ b/crates/sugarscape-core/src/geosim/config.rs
+@@ -0,0 +1,886 @@
++//! Fully resolved APSR defaults and named source/artifact interpretations.
++use crate::{
++    config::FieldError,
++    schema::{Apply, Param},
++};
++use serde::{Deserialize, Serialize};
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Topology {
++    Bounded,
++    Torus,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum FounderGrowth {
++    OrderedRoundRobin,
++    ShuffledRoundRobin,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum InitialCapacity {
++    ExtractedCapacity,
++    #[serde(rename = "artifact_random_100_1")]
++    ArtifactRandom1001,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum DistanceMetric {
++    Euclidean,
++    Manhattan,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum DistanceFormula {
++    Decreasing,
++    PrintedIncreasing,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum EnemyTotal {
++    ActiveFronts,
++    AllFronts,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum InitiationGuard {
++    LiteralPrecedence,
++    GlobalNoAction,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum CampaignDropTiming {
++    EachDecision,
++    AfterBattle,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum PathSampling {
++    TargetFirst,
++    AttackerFirst,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum AttackProjection {
++    RespectiveStates,
++    InitiatorCurve,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum DamageBasis {
++    OpponentProjected,
++    OwnCommitment,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum DamageFeedback {
++    SubtractLosses,
++    AddLosses,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum SeverityDamage {
++    AllDamagedFronts,
++    MutualOnly,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum VictoryDraws {
++    IndependentDefenderPriority,
++    Exclusive,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum CapitalCapture {
++    CaptureAndFragment,
++    CollapseOnly,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Locking {
++    AffectedCells,
++    AffectedStates,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum TechnologyInheritance {
++    ResetOnReemergence,
++    RetainCellThreshold,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ClusterLinkage {
++    ConflictEdges,
++    AdjacentActiveStates,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum RetiredParticipants {
++    RetainShadow,
++    DropImmediately,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum CountBoundary {
++    AfterInitialization,
++    AtInitialization,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum SeverityExport {
++    RawDamage,
++    JavaInt100,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum CompletedExport {
++    AllCompleted,
++    OnePerPeriod,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum NumericalPolicy {
++    RejectNonpositive,
++    FloorZero,
++}
++/// The p.148 cost wording does not uniquely determine unilateral incidence.
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum DamageIncidence {
++    AttackedParty,
++    ActingParty,
++}
++/// APSR p.148 explicitly grants the defender the reciprocal threshold.
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum DefenderThreshold {
++    Reciprocal,
++    SameThreshold,
++}
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++#[serde(default, deny_unknown_fields)]
++pub struct GeosimConfig {
++    pub width: u32,
++    pub height: u32,
++    pub initial_states: u32,
++    pub initialization_periods: u64,
++    pub observation_periods: u64,
++    pub periods_per_tick: u32,
++    pub resource_adjustment: f64,
++    pub mobile_share: f64,
++    pub campaign_drop_probability: f64,
++    pub attack_probability: f64,
++    pub deactivation_probability: f64,
++    pub superiority_threshold: f64,
++    pub victory_threshold: f64,
++    pub defender_threshold: DefenderThreshold,
++    pub superiority_exponent: u32,
++    pub victory_exponent: u32,
++    pub damage_fraction: f64,
++    pub distance_offset: f64,
++    pub distance_threshold: f64,
++    pub distance_exponent: f64,
++    pub shock_probability: f64,
++    pub shock_shift: f64,
++    pub war_shadow: u64,
++    pub context_activation: bool,
++    pub event_log: bool,
++    pub event_log_limit: usize,
++    pub topology: Topology,
++    pub founder_growth: FounderGrowth,
++    pub initial_capacity: InitialCapacity,
++    pub distance_metric: DistanceMetric,
++    pub distance_formula: DistanceFormula,
++    pub enemy_total: EnemyTotal,
++    pub initiation_guard: InitiationGuard,
++    pub campaign_drop_timing: CampaignDropTiming,
++    pub path_sampling: PathSampling,
++    pub attack_projection: AttackProjection,
++    pub damage_basis: DamageBasis,
++    pub damage_incidence: DamageIncidence,
++    pub damage_feedback: DamageFeedback,
++    pub severity_damage: SeverityDamage,
++    pub victory_draws: VictoryDraws,
++    pub capital_capture: CapitalCapture,
++    pub locking: Locking,
++    pub technology_inheritance: TechnologyInheritance,
++    pub cluster_linkage: ClusterLinkage,
++    pub retired_participants: RetiredParticipants,
++    pub count_boundary: CountBoundary,
++    pub severity_export: SeverityExport,
++    pub completed_export: CompletedExport,
++    pub numerical_policy: NumericalPolicy,
++}
++impl Default for GeosimConfig {
++    fn default() -> Self {
++        Self {
++            width: 50,
++            height: 50,
++            initial_states: 200,
++            initialization_periods: 500,
++            observation_periods: 10000,
++            periods_per_tick: 1,
++            resource_adjustment: 0.01,
++            mobile_share: 0.5,
++            campaign_drop_probability: 0.2,
++            attack_probability: 0.01,
++            deactivation_probability: 0.1,
++            superiority_threshold: 3.0,
++            victory_threshold: 3.0,
++            defender_threshold: DefenderThreshold::Reciprocal,
++            superiority_exponent: 20,
++            victory_exponent: 20,
++            damage_fraction: 0.1,
++            distance_offset: 0.1,
++            distance_threshold: 2.0,
++            distance_exponent: 3.0,
++            shock_probability: 0.0001,
++            shock_shift: 20.0,
++            war_shadow: 20,
++            context_activation: true,
++            event_log: false,
++            event_log_limit: 1000,
++            topology: Topology::Bounded,
++            founder_growth: FounderGrowth::OrderedRoundRobin,
++            initial_capacity: InitialCapacity::ExtractedCapacity,
++            distance_metric: DistanceMetric::Euclidean,
++            distance_formula: DistanceFormula::Decreasing,
++            enemy_total: EnemyTotal::ActiveFronts,
++            initiation_guard: InitiationGuard::LiteralPrecedence,
++            campaign_drop_timing: CampaignDropTiming::EachDecision,
++            path_sampling: PathSampling::TargetFirst,
++            attack_projection: AttackProjection::RespectiveStates,
++            damage_basis: DamageBasis::OpponentProjected,
++            damage_incidence: DamageIncidence::AttackedParty,
++            damage_feedback: DamageFeedback::SubtractLosses,
++            severity_damage: SeverityDamage::AllDamagedFronts,
++            victory_draws: VictoryDraws::IndependentDefenderPriority,
++            capital_capture: CapitalCapture::CaptureAndFragment,
++            locking: Locking::AffectedCells,
++            technology_inheritance: TechnologyInheritance::ResetOnReemergence,
++            cluster_linkage: ClusterLinkage::ConflictEdges,
++            retired_participants: RetiredParticipants::RetainShadow,
++            count_boundary: CountBoundary::AfterInitialization,
++            severity_export: SeverityExport::RawDamage,
++            completed_export: CompletedExport::AllCompleted,
++            numerical_policy: NumericalPolicy::RejectNonpositive,
++        }
++    }
++}
++impl GeosimConfig {
++    pub fn horizon(&self) -> u64 {
++        self.initialization_periods
++            .saturating_add(self.observation_periods)
++    }
++    pub fn artifact_2017() -> Self {
++        Self {
++            count_boundary: CountBoundary::AtInitialization,
++            technology_inheritance: TechnologyInheritance::RetainCellThreshold,
++            initiation_guard: InitiationGuard::GlobalNoAction,
++            numerical_policy: NumericalPolicy::FloorZero,
++            initial_capacity: InitialCapacity::ArtifactRandom1001,
++            attack_projection: AttackProjection::InitiatorCurve,
++            damage_feedback: DamageFeedback::AddLosses,
++            severity_damage: SeverityDamage::MutualOnly,
++            retired_participants: RetiredParticipants::DropImmediately,
++            severity_export: SeverityExport::JavaInt100,
++            completed_export: CompletedExport::OnePerPeriod,
++            ..Self::default()
++        }
++    }
++    pub fn validate(&self) -> Result<(), Vec<FieldError>> {
++        let mut errors = Vec::new();
++        if self.width < 2 || self.width > 100 {
++            errors.push(FieldError::new("width", "outside supported finite range"));
++        }
++        if self.height < 2 || self.height > 100 {
++            errors.push(FieldError::new("height", "outside supported finite range"));
++        }
++        if self.initial_states < 1 || self.initial_states > 10000 {
++            errors.push(FieldError::new(
++                "initial_states",
++                "outside supported finite range",
++            ));
++        }
++        if self.initialization_periods > 1000000 {
++            errors.push(FieldError::new(
++                "initialization_periods",
++                "outside supported finite range",
++            ));
++        }
++        if self.observation_periods < 1 || self.observation_periods > 1000000000 {
++            errors.push(FieldError::new(
++                "observation_periods",
++                "outside supported finite range",
++            ));
++        }
++        if self.periods_per_tick < 1 || self.periods_per_tick > 10000 {
++            errors.push(FieldError::new(
++                "periods_per_tick",
++                "outside supported finite range",
++            ));
++        }
++        if !self.resource_adjustment.is_finite()
++            || self.resource_adjustment < 0.0
++            || self.resource_adjustment > 1.0
++        {
++            errors.push(FieldError::new(
++                "resource_adjustment",
++                "outside supported finite range",
++            ));
++        }
++        if !self.mobile_share.is_finite() || self.mobile_share < 0.0 || self.mobile_share > 1.0 {
++            errors.push(FieldError::new(
++                "mobile_share",
++                "outside supported finite range",
++            ));
++        }
++        if !self.campaign_drop_probability.is_finite()
++            || self.campaign_drop_probability < 0.0
++            || self.campaign_drop_probability > 1.0
++        {
++            errors.push(FieldError::new(
++                "campaign_drop_probability",
++                "outside supported finite range",
++            ));
++        }
++        if !self.attack_probability.is_finite()
++            || self.attack_probability < 0.0
++            || self.attack_probability > 1.0
++        {
++            errors.push(FieldError::new(
++                "attack_probability",
++                "outside supported finite range",
++            ));
++        }
++        if !self.deactivation_probability.is_finite()
++            || self.deactivation_probability < 0.0
++            || self.deactivation_probability > 1.0
++        {
++            errors.push(FieldError::new(
++                "deactivation_probability",
++                "outside supported finite range",
++            ));
++        }
++        if !self.superiority_threshold.is_finite() || self.superiority_threshold <= 0.0 {
++            errors.push(FieldError::new(
++                "superiority_threshold",
++                "outside supported finite range",
++            ));
++        }
++        if !self.victory_threshold.is_finite() || self.victory_threshold <= 0.0 {
++            errors.push(FieldError::new(
++                "victory_threshold",
++                "outside supported finite range",
++            ));
++        }
++        if self.superiority_exponent < 1 || self.superiority_exponent > 100 {
++            errors.push(FieldError::new(
++                "superiority_exponent",
++                "outside supported finite range",
++            ));
++        }
++        if self.victory_exponent < 1 || self.victory_exponent > 100 {
++            errors.push(FieldError::new(
++                "victory_exponent",
++                "outside supported finite range",
++            ));
++        }
++        if !self.damage_fraction.is_finite()
++            || self.damage_fraction < 0.0
++            || self.damage_fraction > 1.0
++        {
++            errors.push(FieldError::new(
++                "damage_fraction",
++                "outside supported finite range",
++            ));
++        }
++        if !self.distance_offset.is_finite()
++            || self.distance_offset < 0.0
++            || self.distance_offset > 1.0
++        {
++            errors.push(FieldError::new(
++                "distance_offset",
++                "outside supported finite range",
++            ));
++        }
++        if !self.distance_threshold.is_finite() || self.distance_threshold <= 0.0 {
++            errors.push(FieldError::new(
++                "distance_threshold",
++                "outside supported finite range",
++            ));
++        }
++        if !self.distance_exponent.is_finite() || self.distance_exponent <= 0.0 {
++            errors.push(FieldError::new(
++                "distance_exponent",
++                "outside supported finite range",
++            ));
++        }
++        if !self.shock_probability.is_finite()
++            || self.shock_probability < 0.0
++            || self.shock_probability > 1.0
++        {
++            errors.push(FieldError::new(
++                "shock_probability",
++                "outside supported finite range",
++            ));
++        }
++        if !self.shock_shift.is_finite() || self.shock_shift < 0.0 {
++            errors.push(FieldError::new(
++                "shock_shift",
++                "outside supported finite range",
++            ));
++        }
++        if self.war_shadow > 10000 {
++            errors.push(FieldError::new(
++                "war_shadow",
++                "outside supported finite range",
++            ));
++        }
++        if self.event_log_limit > 1000000 {
++            errors.push(FieldError::new(
++                "event_log_limit",
++                "outside supported finite range",
++            ));
++        }
++        if u64::from(self.width) * u64::from(self.height) > 10000 {
++            errors.push(FieldError::new("width", "grid exceeds10000 cells"));
++        }
++        if u64::from(self.initial_states) > u64::from(self.width) * u64::from(self.height) {
++            errors.push(FieldError::new(
++                "initial_states",
++                "must not exceed cell count",
++            ));
++        }
++        if self
++            .initialization_periods
++            .checked_add(self.observation_periods)
++            .is_none()
++        {
++            errors.push(FieldError::new("observation_periods", "horizon overflows"));
++        }
++        if self.event_log && self.event_log_limit == 0 {
++            errors.push(FieldError::new(
++                "event_log_limit",
++                "must be positive when logging",
++            ));
++        }
++        if self.defender_threshold == DefenderThreshold::Reciprocal
++            && !(1.0 / self.victory_threshold).is_finite()
++        {
++            errors.push(FieldError::new(
++                "victory_threshold",
++                "reciprocal defender threshold must remain finite",
++            ));
++        }
++        if errors.is_empty() {
++            Ok(())
++        } else {
++            Err(errors)
++        }
++    }
++}
++pub fn schema() -> Vec<Param> {
++    vec![
++        Param::choice(
++            "Readings",
++            "damage_incidence",
++            "Damage recipient",
++            &[
++                ("attacked_party", "Attacked party (selected reconstruction)"),
++                ("acting_party", "Acting party (unmeasured p.148 reading)"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "defender_threshold",
++            "Defender threshold",
++            &[
++                ("reciprocal", "Source reciprocal threshold"),
++                ("same_threshold", "Previous same-threshold reconstruction"),
++            ],
++            Apply::Reset,
++        ),
++        Param::integer("Model", "width", "Width", (2, 100), Apply::Reset),
++        Param::integer("Model", "height", "Height", (2, 100), Apply::Reset),
++        Param::integer(
++            "Model",
++            "initial_states",
++            "Initial States",
++            (1, 10000),
++            Apply::Reset,
++        ),
++        Param::integer(
++            "Model",
++            "initialization_periods",
++            "Initialization Periods",
++            (0, 1000000),
++            Apply::Reset,
++        ),
++        Param::integer(
++            "Model",
++            "observation_periods",
++            "Observation Periods",
++            (1, 1000000000),
++            Apply::Reset,
++        ),
++        Param::integer(
++            "Model",
++            "periods_per_tick",
++            "Periods Per Tick",
++            (1, 10000),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Model",
++            "resource_adjustment",
++            "Resource Adjustment",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Model",
++            "mobile_share",
++            "Mobile Share",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Model",
++            "campaign_drop_probability",
++            "Campaign Drop Probability",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Model",
++            "attack_probability",
++            "Attack Probability",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Model",
++            "deactivation_probability",
++            "Deactivation Probability",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Model",
++            "superiority_threshold",
++            "Superiority Threshold",
++            (0.0, 1000000.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Model",
++            "victory_threshold",
++            "Victory Threshold",
++            (0.0, 1000000.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::integer(
++            "Model",
++            "superiority_exponent",
++            "Superiority Exponent",
++            (1, 100),
++            Apply::Reset,
++        ),
++        Param::integer(
++            "Model",
++            "victory_exponent",
++            "Victory Exponent",
++            (1, 100),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Model",
++            "damage_fraction",
++            "Damage Fraction",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Model",
++            "distance_offset",
++            "Distance Offset",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Model",
++            "distance_threshold",
++            "Distance Threshold",
++            (0.0, 1000000.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Model",
++            "distance_exponent",
++            "Distance Exponent",
++            (0.0, 1000000.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Model",
++            "shock_probability",
++            "Shock Probability",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Model",
++            "shock_shift",
++            "Shock Shift",
++            (0.0, 1000000.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::integer(
++            "Model",
++            "war_shadow",
++            "War Shadow",
++            (0, 10000),
++            Apply::Reset,
++        ),
++        Param::bool(
++            "Model",
++            "context_activation",
++            "Context Activation",
++            Apply::Reset,
++        ),
++        Param::bool("Model", "event_log", "Event Log", Apply::Reset),
++        Param::integer(
++            "Model",
++            "event_log_limit",
++            "Event Log Limit",
++            (0, 1000000),
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "topology",
++            "Topology",
++            &[("bounded", "bounded"), ("torus", "torus")],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "founder_growth",
++            "Founder Growth",
++            &[
++                ("ordered_round_robin", "ordered round robin"),
++                ("shuffled_round_robin", "shuffled round robin"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "initial_capacity",
++            "Initial Capacity",
++            &[
++                ("extracted_capacity", "extracted capacity"),
++                ("artifact_random_100_1", "artifact random 100 1"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "distance_metric",
++            "Distance Metric",
++            &[("euclidean", "euclidean"), ("manhattan", "manhattan")],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "distance_formula",
++            "Distance Formula",
++            &[
++                ("decreasing", "decreasing"),
++                ("printed_increasing", "printed increasing"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "enemy_total",
++            "Enemy Total",
++            &[
++                ("active_fronts", "active fronts"),
++                ("all_fronts", "all fronts"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "initiation_guard",
++            "Initiation Guard",
++            &[
++                ("literal_precedence", "literal precedence"),
++                ("global_no_action", "global no action"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "campaign_drop_timing",
++            "Campaign Drop Timing",
++            &[
++                ("each_decision", "each decision"),
++                ("after_battle", "after battle"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "path_sampling",
++            "Path Sampling",
++            &[
++                ("target_first", "target first"),
++                ("attacker_first", "attacker first"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "attack_projection",
++            "Attack Projection",
++            &[
++                ("respective_states", "respective states"),
++                ("initiator_curve", "initiator curve"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "damage_basis",
++            "Damage Basis",
++            &[
++                ("opponent_projected", "opponent projected"),
++                ("own_commitment", "own commitment"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "damage_feedback",
++            "Damage Feedback",
++            &[
++                ("subtract_losses", "subtract losses"),
++                ("add_losses", "add losses"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "severity_damage",
++            "Severity Damage",
++            &[
++                ("all_damaged_fronts", "all damaged fronts"),
++                ("mutual_only", "mutual only"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "victory_draws",
++            "Victory Draws",
++            &[
++                (
++                    "independent_defender_priority",
++                    "independent defender priority",
++                ),
++                ("exclusive", "exclusive"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "capital_capture",
++            "Capital Capture",
++            &[
++                ("capture_and_fragment", "capture and fragment"),
++                ("collapse_only", "collapse only"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "locking",
++            "Locking",
++            &[
++                ("affected_cells", "affected cells"),
++                ("affected_states", "affected states"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "technology_inheritance",
++            "Technology Inheritance",
++            &[
++                ("reset_on_reemergence", "reset on reemergence"),
++                ("retain_cell_threshold", "retain cell threshold"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "cluster_linkage",
++            "Cluster Linkage",
++            &[
++                ("conflict_edges", "conflict edges"),
++                ("adjacent_active_states", "adjacent active states"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "retired_participants",
++            "Retired Participants",
++            &[
++                ("retain_shadow", "retain shadow"),
++                ("drop_immediately", "drop immediately"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "count_boundary",
++            "Count Boundary",
++            &[
++                ("after_initialization", "after initialization"),
++                ("at_initialization", "at initialization"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "severity_export",
++            "Severity Export",
++            &[("raw_damage", "raw damage"), ("java_int100", "java int100")],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "completed_export",
++            "Completed Export",
++            &[
++                ("all_completed", "all completed"),
++                ("one_per_period", "one per period"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "numerical_policy",
++            "Numerical Policy",
++            &[
++                ("reject_nonpositive", "reject nonpositive"),
++                ("floor_zero", "floor zero"),
++            ],
++            Apply::Reset,
++        ),
++    ]
++}
+diff --git a/crates/sugarscape-core/src/geosim/decision.rs b/crates/sugarscape-core/src/geosim/decision.rs
+index 9ebc73ec35af8557b3e89b0b58ad02dfef337fff..bc4a65ea513498dbc136c8306b1941e959652e0d 100644
+--- a/crates/sugarscape-core/src/geosim/decision.rs
++++ b/crates/sugarscape-core/src/geosim/decision.rs
+@@ -1,3 +1,219 @@
++//! Double-buffered source decisions with explicit campaign and alert timing.
++use super::*;
++impl GeosimWorld {
++    pub(crate) fn allocate(&mut self) -> Result<(), String> {
++        let mut next = std::collections::BTreeMap::new();
++        for (&id, s) in &self.states {
++            let fronts: Vec<_> = self
++                .relations
++                .get(&id)
++                .into_iter()
++                .flatten()
++                .map(|&k| (k, &self.fronts[&k], usize::from(k[1] == id)))
++                .collect();
++            let n = fronts.len();
++            if n == 0 {
++                continue;
++            }
++            let capacity = s.capacity.ok_or("unavailable resource capacity")?;
++            let enemy: f64 = fronts
++                .iter()
++                .filter(|(_, f, _)| {
++                    self.config.enemy_total == EnemyTotal::AllFronts
++                        || f.previous.iter().any(|a| *a)
++                })
++                .map(|(_, f, side)| f.old_commitments[1 - side])
++                .sum();
++            for (key, f, side) in fronts {
++                let v = super::resources::commitment(
++                    capacity,
++                    self.config.mobile_share,
++                    n,
++                    f.old_commitments[1 - side],
++                    enemy,
++                    f.previous.iter().any(|a| *a),
++                );
++                if !v.is_finite() {
++                    return Err(format!(
++                        "period {} front {:?}: nonfinite allocation",
++                        self.period, key
++                    ));
++                }
++                next.entry(key).or_insert([0.0; 2])[side] = v;
++            }
++        }
++        for (key, c) in next {
++            self.fronts.get_mut(&key).unwrap().commitments = c;
++        }
++        Ok(())
++    }
++    pub(crate) fn decide(&mut self) -> Result<(), String> {
++        let mut fighting: std::collections::BTreeSet<_> = self
++            .fronts
++            .values()
++            .filter(|f| f.previous.iter().any(|a| *a))
++            .flat_map(|f| f.states)
++            .collect();
++        fighting.extend(self.prior_fighting.iter().copied());
++        for f in self.fronts.values_mut() {
++            f.actions = [f.previous.iter().any(|a| *a); 2];
++        }
++        let mut actors: Vec<_> = self.states.keys().copied().collect();
++        super::world::shuffle(&mut actors, &mut self.rng);
++        let mut new_paths = std::collections::BTreeMap::<[StateId; 2], StateId>::new();
++        for id in actors {
++            let keys = self.relations.get(&id).cloned().unwrap_or_default();
++            if keys.is_empty() {
++                continue;
++            }
++            let neighbors: Vec<_> = keys
++                .iter()
++                .map(|k| if k[0] == id { k[1] } else { k[0] })
++                .collect();
++            let neighborhood_active =
++                fighting.contains(&id) || neighbors.iter().any(|n| fighting.contains(n));
++            let s = self.states.get_mut(&id).unwrap();
++            if !self.config.context_activation {
++                s.alert = false;
++            } else if neighborhood_active {
++                s.alert = true;
++            } else if s.alert
++                && super::world::chance(self.config.deactivation_probability, &mut self.rng)
++            {
++                s.alert = false;
++            }
++            if s.campaign.is_some_and(|t| !neighbors.contains(&t)) {
++                s.campaign = None;
++            }
++            if s.campaign.is_some()
++                && self.config.campaign_drop_timing == CampaignDropTiming::EachDecision
++                && super::world::chance(self.config.campaign_drop_probability, &mut self.rng)
++            {
++                s.campaign = None;
++            }
++            let no_action = !keys
++                .iter()
++                .any(|k| self.fronts[k].actions[usize::from(k[1] == id)]);
++            let bypass = s.alert || s.campaign.is_some();
++            let eligible = match self.config.initiation_guard {
++                InitiationGuard::LiteralPrecedence => bypass || no_action,
++                InitiationGuard::GlobalNoAction => no_action,
++            };
++            if !eligible {
++                continue;
++            }
++            let contemplated =
++                bypass || super::world::chance(self.config.attack_probability, &mut self.rng);
++            if !contemplated {
++                continue;
++            }
++            let target = match self.states[&id].campaign {
++                Some(t) => t,
++                None => super::world::pick(&neighbors, &mut self.rng).unwrap(),
++            };
++            let key = if id < target {
++                [id, target]
++            } else {
++                [target, id]
++            };
++            let side = usize::from(key[1] == id);
++            let path = self
++                .select_path(key, side)
++                .ok_or("neighbor front has no valid border path")?;
++            let commits = self.fronts[&key].commitments;
++            let curve_target = self.attack_defender_projection(id, target, path[1 - side]);
++            let attack = commits[side] * self.projection(id, path[side]);
++            let defense = commits[1 - side] * curve_target;
++            let p = super::combat::contest_probability(
++                attack,
++                defense,
++                self.config.superiority_threshold,
++                self.config.superiority_exponent,
++                self.config.numerical_policy,
++            )
++            .map_err(|e| format!("period {} initiation {:?}: {}", self.period, key, e))?;
++            if super::world::chance(p, &mut self.rng) {
++                let f = self.fronts.get_mut(&key).unwrap();
++                f.actions[side] = true;
++                if new_paths.contains_key(&key) {
++                    self.ledger.path_collisions += 1;
++                }
++                if new_paths.get(&key).is_none_or(|old| id < *old) {
++                    f.path = Some(path);
++                    f.initiator = Some(side);
++                    new_paths.insert(key, id);
++                }
++                self.states.get_mut(&id).unwrap().campaign = Some(target);
++                self.ledger.attacks += 1;
++                self.log_event("attack", vec![id, target], path.to_vec());
++            }
++        }
++        let missing: Vec<_> = self
++            .fronts
++            .iter()
++            .filter(|(_, f)| f.actions.iter().any(|a| *a) && f.path.is_none())
++            .map(|(&key, f)| (key, f.initiator.unwrap_or(0)))
++            .collect();
++        for (key, side) in missing {
++            let path = self
++                .select_path(key, side)
++                .ok_or("fighting relation has no border")?;
++            let f = self.fronts.get_mut(&key).unwrap();
++            f.path = Some(path);
++            f.initiator = Some(side);
++        }
++        Ok(())
++    }
++    pub(crate) fn attack_defender_projection(
++        &self,
++        initiator: StateId,
++        target: StateId,
++        cell: usize,
++    ) -> f64 {
++        if self.config.attack_projection == AttackProjection::InitiatorCurve {
++            super::resources::distance_curve(
++                super::territory::distance(&self.config, target.capital_cell, cell),
++                self.config.distance_offset,
++                self.states[&initiator].threshold,
++                self.config.distance_exponent,
++                self.config.distance_formula == DistanceFormula::PrintedIncreasing,
++            )
++        } else {
++            self.projection(target, cell)
++        }
++    }
++    pub(crate) fn select_path(
++        &mut self,
++        states: [StateId; 2],
++        attacker: usize,
++    ) -> Option<[usize; 2]> {
++        let first = if self.config.path_sampling == PathSampling::TargetFirst {
++            1 - attacker
++        } else {
++            attacker
++        };
++        let second = 1 - first;
++        let border: Vec<_> = self.members[&states[first]]
++            .iter()
++            .copied()
++            .filter(|&id| {
++                super::territory::adjacent(&self.config, id)
++                    .iter()
++                    .any(|&j| self.cells[j].owner == states[second])
++            })
++            .collect();
++        let a = super::world::pick(&border, &mut self.rng)?;
++        let neighbors: Vec<_> = super::territory::adjacent(&self.config, a)
++            .into_iter()
++            .filter(|&id| self.cells[id].owner == states[second])
++            .collect();
++        let b = super::world::pick(&neighbors, &mut self.rng)?;
++        let mut path = [0; 2];
++        path[first] = a;
++        path[second] = b;
++        Some(path)
++    }
++}
+ #[cfg(test)]
+ mod tests {
+     use super::super::tests::prescribed;
+@@ -52,7 +268,6 @@ mod tests {
+         assert_eq!(w.fronts.values().next().unwrap().commitments, [20.0, 20.0]);
+     }
+ }
+-
+ #[cfg(test)]
+ mod reading_tests {
+     use super::super::tests::prescribed;
+@@ -93,7 +308,6 @@ mod reading_tests {
+         assert_eq!(w.states[&own].campaign, Some(other));
+     }
+ }
+-
+ #[cfg(test)]
+ mod completed_battle_memory_tests {
+     use super::super::tests::prescribed;
+@@ -113,7 +327,6 @@ mod completed_battle_memory_tests {
+         assert!(w.states.values().all(|s| s.alert));
+     }
+ }
+-
+ #[cfg(test)]
+ mod portable_index_tests {
+     use super::super::world::pick;
+diff --git a/crates/sugarscape-core/src/geosim/mod.rs b/crates/sugarscape-core/src/geosim/mod.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..419f82caea623a14c2058b342eca89982c20e358
+--- /dev/null
++++ b/crates/sugarscape-core/src/geosim/mod.rs
+@@ -0,0 +1,27 @@
++//! Cederman's GeoSim war-size reconstruction with explicit source readings.
++mod config;
++mod resources;
++#[cfg(test)]
++mod tests;
++pub use config::*;
++mod wars;
++pub use wars::{Merge, Participant, StateId, War, WarTracker};
++mod territory;
++pub use territory::{Cell, State};
++mod analysis;
++pub use analysis::{Event, Ledger, Outcome, ResourceUpdate};
++mod world;
++pub use world::GeosimWorld;
++mod stats;
++pub use stats::{series_names, GeosimSnapshot, SERIES};
++mod presets;
++mod view;
++pub use presets::presets;
++pub use world::Front;
++mod combat;
++pub use combat::{
++    contest_probability, losses, losses_with_incidence, resolve_victory, victory_probabilities,
++    Victory,
++};
++mod claims;
++mod decision;
+diff --git a/crates/sugarscape-core/src/geosim/presets.rs b/crates/sugarscape-core/src/geosim/presets.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..d7094a16e9e85575d256134f09675666bc78b9d9
+--- /dev/null
++++ b/crates/sugarscape-core/src/geosim/presets.rs
+@@ -0,0 +1,12 @@
++//! Source treatments and explicitly attributed later-port reference bundle.
++use super::*;
++use crate::{model::ModelConfig, presets::ModelPreset};
++pub fn presets() -> Vec<ModelPreset> {
++    vec![
++ ("geosim-paper","GeoSim: The Size of Wars",GeosimConfig::default()),
++ ("geosim-no-technology","No technological change",GeosimConfig{shock_shift:0.0,..Default::default()}),
++ ("geosim-no-context","No contextual activation",GeosimConfig{context_activation:false,..Default::default()}),
++ ("geosim-smaller-shocks","Smaller technological shocks",GeosimConfig{shock_shift:10.0,..Default::default()}),
++ ("geosim-artifact-2017","GeoSim2 archived-port readings",GeosimConfig::artifact_2017()),
++].into_iter().map(|(id,name,config)|ModelPreset{id,name,source:"Cederman2003 APSR97(1):135–150; explicitly labeled later GeoSim2 port",description:"Technology, resource capacity and contextual activation produce measurable conflict clusters. Resolved readings remain visible; abstract damage is not deaths, and the artifact bundle is not established as the exact publication implementation.",config:ModelConfig::Geosim(config)}).collect()
++}
+diff --git a/crates/sugarscape-core/src/geosim/resources.rs b/crates/sugarscape-core/src/geosim/resources.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..c9b300c255199b6829560e24b8213b60927f3c63
+--- /dev/null
++++ b/crates/sugarscape-core/src/geosim/resources.rs
+@@ -0,0 +1,56 @@
++//! Capacity recurrence and conditional commitments (APSR pp.146–148).
++//! GeoSim alone uses pinned libm software transcendentals for exact host parity.
++pub fn distance_curve(
++    distance: f64,
++    offset: f64,
++    threshold: f64,
++    exponent: f64,
++    increasing: bool,
++) -> f64 {
++    if distance == 0.0 {
++        return 1.0;
++    }
++    let power = libm::pow(
++        distance / threshold,
++        if increasing { -exponent } else { exponent },
++    );
++    offset + (1.0 - offset) / (1.0 + power)
++}
++pub fn capacity(old: f64, yield_capacity: f64, loss: f64, adjustment: f64, add_loss: bool) -> f64 {
++    (1.0 - adjustment) * old + adjustment * (yield_capacity + if add_loss { loss } else { -loss })
++}
++pub fn commitment(
++    capacity: f64,
++    mobile: f64,
++    neighbors: usize,
++    opposing: f64,
++    enemy: f64,
++    active: bool,
++) -> f64 {
++    if neighbors == 0 {
++        return 0.0;
++    }
++    let fixed = (1.0 - mobile) * capacity / neighbors as f64;
++    fixed
++        + mobile
++            * capacity
++            * if enemy == 0.0 {
++                1.0
++            } else if active {
++                opposing / enemy
++            } else {
++                opposing / (enemy + opposing)
++            }
++}
++pub fn probability(ratio: f64, threshold: f64, exponent: u32) -> f64 {
++    if ratio == 0.0 {
++        return 0.0;
++    }
++    let log = (libm::log(ratio) - libm::log(threshold)) * f64::from(exponent);
++    if log >= 0.0 {
++        1.0 / (1.0 + libm::exp(-log))
++    } else {
++        let x = libm::exp(log);
++        x / (1.0 + x)
++    }
++}
+diff --git a/crates/sugarscape-core/src/geosim/stats.rs b/crates/sugarscape-core/src/geosim/stats.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..ea0a19c74fd79ab767f772808f8bfeab202b73f3
+--- /dev/null
++++ b/crates/sugarscape-core/src/geosim/stats.rs
+@@ -0,0 +1,67 @@
++//! Endpoint state and source-period clocks for all model hosts.
++use crate::stats::Series;
++use serde::Serialize;
++pub const SERIES: &[&str] = &[
++    "period",
++    "periods",
++    "last_tick_periods",
++    "sovereign_count",
++    "total_capacity",
++    "largest_territory",
++    "alerted_states",
++    "mean_threshold",
++    "completed_wars",
++    "active_wars",
++    "collector_backlog",
++    "damage",
++    "conquests",
++    "shocks",
++];
++pub fn series_names() -> Vec<String> {
++    SERIES.iter().map(|s| s.to_string()).collect()
++}
++#[derive(Clone, Debug, Default, Serialize)]
++pub struct GeosimSnapshot {
++    pub tick: u64,
++    pub period: u64,
++    pub periods: u64,
++    pub attempted_period: u64,
++    pub last_tick_periods: u32,
++    pub sovereign_count: usize,
++    pub total_capacity: Option<f64>,
++    pub largest_territory: usize,
++    pub alerted_states: usize,
++    pub mean_threshold: Option<f64>,
++    pub completed_wars: usize,
++    pub active_wars: usize,
++    pub collector_backlog: usize,
++    pub damage: f64,
++    pub conquests: u64,
++    pub shocks: u64,
++    pub finish_reason: Option<String>,
++    pub invalidity: Option<String>,
++}
++impl Series for GeosimSnapshot {
++    fn tick(&self) -> u64 {
++        self.tick
++    }
++    fn value(&self, n: &str) -> Option<f64> {
++        Some(match n {
++            "tick" => self.tick as f64,
++            "period" | "periods" => self.period as f64,
++            "last_tick_periods" => self.last_tick_periods as f64,
++            "sovereign_count" => self.sovereign_count as f64,
++            "total_capacity" => return self.total_capacity,
++            "largest_territory" => self.largest_territory as f64,
++            "alerted_states" => self.alerted_states as f64,
++            "mean_threshold" => return self.mean_threshold,
++            "completed_wars" => self.completed_wars as f64,
++            "active_wars" => self.active_wars as f64,
++            "collector_backlog" => self.collector_backlog as f64,
++            "damage" => self.damage,
++            "conquests" => self.conquests as f64,
++            "shocks" => self.shocks as f64,
++            _ => return None,
++        })
++    }
++}
+diff --git a/crates/sugarscape-core/src/geosim/territory.rs b/crates/sugarscape-core/src/geosim/territory.rs
+index 6f3339429c66dea7046d707620d099637ac70d37..ff2a343b61b72e1e1a00968ad60ccf072e38b99c 100644
+--- a/crates/sugarscape-core/src/geosim/territory.rs
++++ b/crates/sugarscape-core/src/geosim/territory.rs
+@@ -1,3 +1,72 @@
++//! Fixed grid cells and generation-aware sovereign states.
++use super::{GeosimConfig, StateId};
++use serde::{Deserialize, Serialize};
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct Cell {
++    pub id: usize,
++    pub owner: StateId,
++    pub last_threshold: f64,
++    pub next_generation: u64,
++}
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct State {
++    pub id: StateId,
++    pub capacity: Option<f64>,
++    pub threshold: f64,
++    pub alert: bool,
++    pub campaign: Option<StateId>,
++    pub previous_damage: f64,
++    pub newly_independent: bool,
++    pub extracted_yield: f64,
++    pub recurrence_residual: f64,
++}
++pub fn adjacent(c: &GeosimConfig, id: usize) -> Vec<usize> {
++    let w = c.width as usize;
++    let h = c.height as usize;
++    let x = id % w;
++    let y = id / w;
++    let torus = c.topology == super::Topology::Torus;
++    let mut v = Vec::new();
++    if x > 0 {
++        v.push(id - 1);
++    } else if torus {
++        v.push(y * w + w - 1);
++    }
++    if x + 1 < w {
++        v.push(id + 1);
++    } else if torus {
++        v.push(y * w);
++    }
++    if y > 0 {
++        v.push(id - w);
++    } else if torus {
++        v.push((h - 1) * w + x);
++    }
++    if y + 1 < h {
++        v.push(id + w);
++    } else if torus {
++        v.push(x);
++    }
++    v.sort_unstable();
++    v.dedup();
++    v.retain(|&n| n != id);
++    v
++}
++pub fn distance(c: &GeosimConfig, a: usize, b: usize) -> f64 {
++    let w = c.width as usize;
++    let h = c.height as usize;
++    let mut dx = (a % w).abs_diff(b % w);
++    let mut dy = (a / w).abs_diff(b / w);
++    if c.topology == super::Topology::Torus {
++        dx = dx.min(w - dx);
++        dy = dy.min(h - dy);
++    }
++    if c.distance_metric == super::DistanceMetric::Manhattan {
++        (dx + dy) as f64
++    } else {
++        ((dx * dx + dy * dy) as f64).sqrt()
++    }
++}
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+diff --git a/crates/sugarscape-core/src/geosim/view.rs b/crates/sugarscape-core/src/geosim/view.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..4d201c4c9d65586a469f2dbca9f8658063e816ce
+--- /dev/null
++++ b/crates/sugarscape-core/src/geosim/view.rs
+@@ -0,0 +1,175 @@
++//! Read-only host adapter: rendering and inspection do not consume random draws.
++use super::*;
++use crate::{
++    config::FieldError,
++    model::{wrong_model, Model, ModelConfig, ModelKind},
++    stats::Series,
++};
++use std::fmt::Write;
++impl Model for GeosimWorld {
++    fn config(&self) -> ModelConfig {
++        ModelConfig::Geosim(self.config.clone())
++    }
++    fn run(&mut self, t: u32) {
++        GeosimWorld::run(self, t)
++    }
++    fn tick(&self) -> u64 {
++        self.tick
++    }
++    fn population(&self) -> usize {
++        self.states.len()
++    }
++    fn fingerprint(&self) -> u64 {
++        self.economic_fingerprint()
++            ^ super::world::hash(
++                &serde_json::to_vec(&(self.tick, &self.config, &self.events, self.events_dropped))
++                    .unwrap(),
++            )
++    }
++    fn size(&self) -> (u32, u32) {
++        (self.config.width * 6, self.config.height * 6)
++    }
++    fn render(&self, mode: &str, _layer: &str, buf: &mut Vec<u8>) -> Result<(), String> {
++        if !["", "territory", "capacity", "technology", "alert", "wars"].contains(&mode) {
++            return Err(format!("unknown geosim mode {mode}"));
++        }
++        let width = self.config.width as usize * 6;
++        buf.clear();
++        buf.resize(width * self.config.height as usize * 6 * 4, 255);
++        for cell in &self.cells {
++            let x = cell.id % self.config.width as usize;
++            let y = cell.id / self.config.width as usize;
++            let state = &self.states[&cell.owner];
++            let k = (cell.owner.capital_cell as u32).wrapping_mul(2654435761);
++            let mut color = [
++                70 + (k % 160) as u8,
++                70 + ((k >> 8) % 160) as u8,
++                70 + ((k >> 16) % 160) as u8,
++            ];
++            if mode == "capacity" {
++                let t = (state.capacity.unwrap_or(0.0) / 100.0).clamp(0.0, 1.0);
++                color = [30, (40.0 + 190.0 * t) as u8, 100];
++            } else if mode == "technology" {
++                let t = (state.threshold
++                    / (self.config.distance_threshold + self.config.shock_shift).max(1.0))
++                .clamp(0.0, 1.0);
++                color = [(220.0 * t) as u8, 80, (220.0 * (1.0 - t)) as u8];
++            } else if mode == "alert" {
++                color = if state.alert {
++                    [230, 100, 40]
++                } else {
++                    [70, 130, 100]
++                };
++            } else if mode == "wars" {
++                color = if self
++                    .tracker
++                    .active
++                    .values()
++                    .any(|w| w.participants.iter().any(|p| p.state == cell.owner))
++                {
++                    [230, 80, 70]
++                } else {
++                    [80, 100, 120]
++                };
++            }
++            for dy in 0..6 {
++                for dx in 0..6 {
++                    let i = ((y * 6 + dy) * width + x * 6 + dx) * 4;
++                    let border = dx == 0 || dy == 0;
++                    let pixel = if border {
++                        [20, 20, 25]
++                    } else if cell.id == cell.owner.capital_cell
++                        && (2..=3).contains(&dx)
++                        && (2..=3).contains(&dy)
++                    {
++                        [250, 250, 250]
++                    } else {
++                        color
++                    };
++                    buf[i..i + 3].copy_from_slice(&pixel);
++                }
++            }
++        }
++        Ok(())
++    }
++    fn latest_json(&self) -> String {
++        serde_json::to_string(&self.stats.latest()).unwrap()
++    }
++    fn series_names(&self) -> Vec<String> {
++        super::series_names()
++    }
++    fn series(&self, n: &str) -> Option<Vec<f64>> {
++        self.stats.series(n)
++    }
++    fn latest_value(&self, n: &str) -> Option<f64> {
++        self.stats.latest().and_then(|s| s.value(n))
++    }
++    fn series_csv(&self) -> String {
++        crate::export::history_csv(&self.series_names(), self.stats.history())
++    }
++    fn agents_csv(&self) -> String {
++        let mut out = "cell,x,y,capital,generation,capacity,threshold,alert\n".to_string();
++        for cell in &self.cells {
++            let s = &self.states[&cell.owner];
++            writeln!(
++                out,
++                "{},{},{},{},{},{},{},{}",
++                cell.id,
++                cell.id % self.config.width as usize,
++                cell.id / self.config.width as usize,
++                cell.owner.capital_cell,
++                cell.owner.sovereignty_generation,
++                s.capacity.map(|v| v.to_string()).unwrap_or_default(),
++                s.threshold,
++                s.alert
++            )
++            .unwrap();
++        }
++        out
++    }
++    fn inspect_json(&self, x: u32, y: u32) -> Result<String, String> {
++        if x >= self.config.width * 6 || y >= self.config.height * 6 {
++            return Err("outside geosim grid".into());
++        }
++        let id = ((y / 6) * self.config.width + x / 6) as usize;
++        let c = &self.cells[id];
++        let s = &self.states[&c.owner];
++        let fronts: Vec<_> = self
++            .fronts
++            .values()
++            .filter(|f| f.states.contains(&c.owner))
++            .collect();
++        let wars: Vec<_> = self
++            .tracker
++            .active
++            .values()
++            .filter(|w| w.participants.iter().any(|p| p.state == c.owner))
++            .collect();
++        Ok(serde_json::json!({"model":"geosim","cell":c,"state":s,"members":self.members[&c.owner],"distance":super::territory::distance(&self.config,c.owner.capital_cell,id),"projection":self.projection(c.owner,id),"resource_recurrence":self.resource_updates.iter().find(|r|r.state==c.owner),"fronts":fronts,"wars":wars,"period":self.completed,"periods":self.completed,"attempted_period":self.period,"counting_start":self.counting_start(),"finish_reason":self.result.as_ref().map(|o|&o.finish_reason),"invalidity":self.result.as_ref().and_then(|o|o.invalid_reason.as_ref()),"outcome":self.result,"last_structural_event":self.last_structural_event,"events":self.events,"events_dropped":self.events_dropped,"agent":null}).to_string())
++    }
++    fn locate(&self, id: u64) -> Option<(u32, u32)> {
++        (id < self.cells.len() as u64).then(|| {
++            (
++                (id as u32 % self.config.width) * 6 + 3,
++                (id as u32 / self.config.width) * 6 + 3,
++            )
++        })
++    }
++    fn set_config(&mut self, next: ModelConfig) -> Result<(), Vec<FieldError>> {
++        let ModelConfig::Geosim(c) = next else {
++            return Err(wrong_model(ModelKind::Geosim, &next));
++        };
++        c.validate()?;
++        if c == self.config {
++            Ok(())
++        } else {
++            Err(vec![FieldError::new("config", "changes only on reset")])
++        }
++    }
++    fn finished(&self) -> bool {
++        self.result.is_some()
++    }
++    fn holds_when_finished(&self) -> bool {
++        self.result.as_ref().is_some_and(|o| o.valid)
++    }
++}
+diff --git a/crates/sugarscape-core/src/geosim/wars.rs b/crates/sugarscape-core/src/geosim/wars.rs
+index 899b859c68c35f1440c2290ff9799fd819d39de4..20e338c3f1c806935b3fb6dae33263a0b3f3223e 100644
+--- a/crates/sugarscape-core/src/geosim/wars.rs
++++ b/crates/sugarscape-core/src/geosim/wars.rs
+@@ -1,3 +1,229 @@
++//! Generation-aware clusters and a complete census independent of legacy collection.
++use super::config::*;
++use serde::{Deserialize, Serialize};
++use std::collections::{BTreeMap, BTreeSet, VecDeque};
++#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
++pub struct StateId {
++    pub capital_cell: usize,
++    pub sovereignty_generation: u64,
++}
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct Participant {
++    pub state: StateId,
++    pub last_fighting_period: u64,
++}
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct War {
++    pub id: u64,
++    pub parents: Vec<u64>,
++    pub start_period: u64,
++    pub end_period: Option<u64>,
++    pub last_active_period: u64,
++    pub active_periods: u64,
++    pub elapsed_periods: u64,
++    pub raw_severity: f64,
++    pub exported_severity: f64,
++    pub participants: Vec<Participant>,
++    pub end_cause: Option<String>,
++    pub java_saturated: bool,
++    pub java_subunit_zero: bool,
++    pub fighting_periods: BTreeSet<u64>,
++}
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct Merge {
++    pub period: u64,
++    pub survivor: u64,
++    pub absorbed: u64,
++}
++#[derive(Clone, Debug, Default, Serialize, Deserialize)]
++pub struct WarTracker {
++    pub active: BTreeMap<u64, War>,
++    pub completed: Vec<War>,
++    pub legacy_visible: Vec<War>,
++    pub backlog: VecDeque<War>,
++    pub merges: Vec<Merge>,
++    pub next_id: u64,
++}
++pub fn java_int100(severity: f64) -> i32 {
++    (severity * 100.0) as i32
++}
++impl WarTracker {
++    fn alive(p: &Participant, period: u64, sov: &BTreeSet<StateId>, c: &GeosimConfig) -> bool {
++        period.saturating_sub(p.last_fighting_period) <= c.war_shadow
++            && (c.retired_participants == RetiredParticipants::RetainShadow
++                || sov.contains(&p.state))
++    }
++    fn touching(
++        &self,
++        state: StateId,
++        period: u64,
++        sov: &BTreeSet<StateId>,
++        c: &GeosimConfig,
++    ) -> Vec<u64> {
++        self.active
++            .iter()
++            .filter(|(_, w)| {
++                w.participants
++                    .iter()
++                    .any(|p| p.state == state && Self::alive(p, period, sov, c))
++            })
++            .map(|(&id, _)| id)
++            .collect()
++    }
++    fn join(&mut self, ids: &BTreeSet<u64>, period: u64) -> u64 {
++        let survivor = *ids.first().expect("nonempty merge");
++        for &id in ids.iter().skip(1) {
++            let other = self.active.remove(&id).expect("merge member");
++            let w = self.active.get_mut(&survivor).expect("merge survivor");
++            w.raw_severity += other.raw_severity;
++            w.start_period = w.start_period.min(other.start_period);
++            w.last_active_period = w.last_active_period.max(other.last_active_period);
++            w.parents.push(id);
++            w.parents.extend(other.parents);
++            w.parents.sort_unstable();
++            w.parents.dedup();
++            w.fighting_periods.extend(other.fighting_periods);
++            for p in other.participants {
++                if let Some(old) = w.participants.iter_mut().find(|q| q.state == p.state) {
++                    old.last_fighting_period = old.last_fighting_period.max(p.last_fighting_period);
++                } else {
++                    w.participants.push(p);
++                }
++            }
++            w.participants.sort_by_key(|p| p.state);
++            self.merges.push(Merge {
++                period,
++                survivor,
++                absorbed: id,
++            });
++        }
++        survivor
++    }
++    fn refresh(w: &mut War, period: u64, c: &GeosimConfig) {
++        w.elapsed_periods = period - w.start_period + 1;
++        w.active_periods = w.fighting_periods.len() as u64;
++        w.exported_severity = if c.severity_export == SeverityExport::JavaInt100 {
++            f64::from(java_int100(w.raw_severity))
++        } else {
++            w.raw_severity
++        };
++        w.java_saturated = w.raw_severity * 100.0 > f64::from(i32::MAX);
++        w.java_subunit_zero = w.raw_severity > 0.0 && java_int100(w.raw_severity) == 0;
++    }
++    pub fn advance(
++        &mut self,
++        period: u64,
++        edges: &[(StateId, StateId, f64)],
++        adjacent: &[(StateId, StateId)],
++        sovereigns: &BTreeSet<StateId>,
++        config: &GeosimConfig,
++    ) {
++        for &(a, b, damage) in edges {
++            let mut ids: BTreeSet<u64> = self
++                .touching(a, period, sovereigns, config)
++                .into_iter()
++                .chain(self.touching(b, period, sovereigns, config))
++                .collect();
++            if ids.is_empty() {
++                let id = self.next_id;
++                self.next_id += 1;
++                self.active.insert(
++                    id,
++                    War {
++                        id,
++                        parents: Vec::new(),
++                        start_period: period,
++                        end_period: None,
++                        last_active_period: period,
++                        active_periods: 0,
++                        elapsed_periods: 1,
++                        raw_severity: 0.0,
++                        exported_severity: 0.0,
++                        participants: Vec::new(),
++                        end_cause: None,
++                        java_saturated: false,
++                        java_subunit_zero: false,
++                        fighting_periods: BTreeSet::new(),
++                    },
++                );
++                ids.insert(id);
++            }
++            let id = self.join(&ids, period);
++            let w = self.active.get_mut(&id).unwrap();
++            w.raw_severity += damage;
++            w.last_active_period = period;
++            w.fighting_periods.insert(period);
++            for state in [a, b] {
++                if let Some(p) = w.participants.iter_mut().find(|p| p.state == state) {
++                    p.last_fighting_period = period;
++                } else {
++                    w.participants.push(Participant {
++                        state,
++                        last_fighting_period: period,
++                    });
++                }
++            }
++            w.participants.sort_by_key(|p| p.state);
++        }
++        if config.cluster_linkage == ClusterLinkage::AdjacentActiveStates {
++            for &(a, b) in adjacent {
++                let ids: BTreeSet<_> = self
++                    .touching(a, period, sovereigns, config)
++                    .into_iter()
++                    .chain(self.touching(b, period, sovereigns, config))
++                    .collect();
++                if ids.len() > 1 {
++                    self.join(&ids, period);
++                }
++            }
++        }
++        for w in self.active.values_mut() {
++            Self::refresh(w, period, config);
++        }
++        let done: Vec<_> = self
++            .active
++            .iter()
++            .filter(|(_, w)| {
++                !w.participants
++                    .iter()
++                    .any(|p| Self::alive(p, period, sovereigns, config))
++            })
++            .map(|(&id, _)| id)
++            .collect();
++        for id in done {
++            let mut w = self.active.remove(&id).unwrap();
++            w.end_period = Some(period);
++            w.end_cause = Some("shadow_expired_or_participants_retired".into());
++            if w.raw_severity > 0.0 {
++                self.backlog.push_back(w.clone());
++            }
++            self.completed.push(w);
++        }
++        match config.completed_export {
++            CompletedExport::AllCompleted => {
++                while let Some(w) = self.backlog.pop_front() {
++                    self.legacy_visible.push(w);
++                }
++            }
++            CompletedExport::OnePerPeriod => {
++                if let Some(w) = self.backlog.pop_front() {
++                    self.legacy_visible.push(w);
++                }
++            }
++        }
++    }
++    pub fn censored(&self, period: u64) -> Vec<War> {
++        self.active
++            .values()
++            .cloned()
++            .map(|mut w| {
++                w.elapsed_periods = period - w.start_period + 1;
++                w.end_cause = Some("horizon_censored".into());
++                w
++            })
++            .collect()
++    }
++}
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+@@ -86,7 +312,6 @@ mod tests {
+         assert_eq!(java_int100(f64::NAN), 0);
+     }
+ }
+-
+ #[cfg(test)]
+ mod reading_tests {
+     use super::*;
+diff --git a/crates/sugarscape-core/src/geosim/world.rs b/crates/sugarscape-core/src/geosim/world.rs
+index 400f52f3fe467097765231fea8ac665ad9bdba50..bdffb11dd89c4bdf59686904c39cfee9d4158c43 100644
+--- a/crates/sugarscape-core/src/geosim/world.rs
++++ b/crates/sugarscape-core/src/geosim/world.rs
+@@ -1,3 +1,589 @@
++//! Full source periods on the shared seeded portable engine.
++use super::*;
++use crate::{
++    config::FieldError,
++    rng::{self, SimRng},
++    stats::Stats,
++};
++use rand::{Rng, RngCore};
++use serde::{Deserialize, Serialize};
++use std::collections::{BTreeMap, BTreeSet};
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct Front {
++    pub states: [StateId; 2],
++    pub previous: [bool; 2],
++    pub actions: [bool; 2],
++    pub old_commitments: [f64; 2],
++    pub commitments: [f64; 2],
++    pub path: Option<[usize; 2]>,
++    pub initiator: Option<usize>,
++    pub last_damage: [f64; 2],
++    pub last_victory_probabilities: [Option<f64>; 2],
++}
++impl Front {
++    fn new(states: [StateId; 2]) -> Self {
++        Self {
++            states,
++            previous: [false; 2],
++            actions: [false; 2],
++            old_commitments: [0.0; 2],
++            commitments: [0.0; 2],
++            path: None,
++            initiator: None,
++            last_damage: [0.0; 2],
++            last_victory_probabilities: [None; 2],
++        }
++    }
++}
++#[derive(Clone)]
++pub struct GeosimWorld {
++    pub config: GeosimConfig,
++    pub tick: u64,
++    pub stats: Stats<GeosimSnapshot>,
++    pub(crate) period: u64,
++    pub(crate) completed: u64,
++    pub(crate) cells: Vec<Cell>,
++    pub(crate) states: BTreeMap<StateId, State>,
++    pub(crate) members: BTreeMap<StateId, Vec<usize>>,
++    pub(crate) fronts: BTreeMap<[StateId; 2], Front>,
++    pub(crate) relations: BTreeMap<StateId, Vec<[StateId; 2]>>,
++    pub(crate) seed: u64,
++    pub(crate) rng: SimRng,
++    pub(crate) tracker: WarTracker,
++    pub(crate) retired: Vec<StateId>,
++    pub(crate) ledger: Ledger,
++    pub(crate) result: Option<Outcome>,
++    pub(crate) events: Vec<Event>,
++    pub(crate) events_dropped: u64,
++    pub(crate) next_event: u64,
++    pub(crate) last_structural_event: Option<Event>,
++    pub(crate) last_tick_periods: u32,
++    pub(crate) pending_fights: Vec<(StateId, StateId, f64)>,
++    pub(crate) tracked_period: u64,
++    pub(crate) prior_fighting: BTreeSet<StateId>,
++    pub(crate) resource_updates: Vec<ResourceUpdate>,
++}
++pub(crate) fn hash(bytes: &[u8]) -> u64 {
++    bytes.iter().fold(14695981039346656037u64, |h, &b| {
++        (h ^ u64::from(b)).wrapping_mul(1099511628211)
++    })
++}
++pub(crate) fn shuffle<T>(v: &mut [T], rng: &mut SimRng) {
++    for i in (1..v.len()).rev() {
++        let upper = u32::try_from(i).expect("validated GeoSim shuffle bound");
++        let j = rng.gen_range(0_u32..=upper) as usize;
++        v.swap(i, j);
++    }
++}
++pub(crate) fn pick<T: Copy>(v: &[T], rng: &mut SimRng) -> Option<T> {
++    match v.len() {
++        0 => None,
++        1 => Some(v[0]),
++        n => {
++            let upper = u32::try_from(n).expect("validated GeoSim selection bound");
++            Some(v[rng.gen_range(0_u32..upper) as usize])
++        }
++    }
++}
++pub(crate) fn chance(p: f64, rng: &mut SimRng) -> bool {
++    if p == 0.0 {
++        false
++    } else if p == 1.0 {
++        true
++    } else {
++        rng.gen::<f64>() < p
++    }
++}
++impl GeosimWorld {
++    pub fn new(config: GeosimConfig, seed: u64) -> Result<Self, Vec<FieldError>> {
++        config.validate()?;
++        let n = (config.width * config.height) as usize;
++        let mut rng = rng::seeded(seed);
++        let mut order: Vec<_> = (0..n).collect();
++        shuffle(&mut order, &mut rng);
++        let founders = order[..config.initial_states as usize].to_vec();
++        let founder_set: BTreeSet<_> = founders.iter().copied().collect();
++        let mut owners: Vec<_> = (0..n)
++            .map(|i| StateId {
++                capital_cell: i,
++                sovereignty_generation: 0,
++            })
++            .collect();
++        let primitive_resources: Vec<f64> = (0..n)
++            .map(|_| {
++                if config.initial_capacity == InitialCapacity::ArtifactRandom1001 {
++                    if chance(0.2, &mut rng) {
++                        100.0
++                    } else {
++                        1.0
++                    }
++                } else {
++                    0.0
++                }
++            })
++            .collect();
++        let mut unassigned: BTreeSet<_> = (0..n).filter(|i| !founder_set.contains(i)).collect();
++        let mut growth_members: BTreeMap<_, Vec<usize>> =
++            founders.iter().map(|&f| (f, vec![f])).collect();
++        while !unassigned.is_empty() {
++            let before = unassigned.len();
++            let mut pass = founders.clone();
++            if config.founder_growth == FounderGrowth::ShuffledRoundRobin {
++                shuffle(&mut pass, &mut rng);
++            }
++            for f in pass {
++                let eligible: BTreeSet<_> = growth_members[&f]
++                    .iter()
++                    .flat_map(|&id| territory::adjacent(&config, id))
++                    .filter(|id| unassigned.contains(id))
++                    .collect();
++                let eligible: Vec<_> = eligible.into_iter().collect();
++                if let Some(id) = pick(&eligible, &mut rng) {
++                    owners[id] = owners[f];
++                    unassigned.remove(&id);
++                    growth_members.get_mut(&f).unwrap().push(id);
++                }
++            }
++            if unassigned.len() == before {
++                return Err(vec![FieldError::new(
++                    "founder_growth",
++                    "no growth progress with unassigned cells",
++                )]);
++            }
++        }
++        let cells = owners
++            .into_iter()
++            .enumerate()
++            .map(|(id, owner)| Cell {
++                id,
++                owner,
++                last_threshold: config.distance_threshold,
++                next_generation: 0,
++            })
++            .collect();
++        let mut w = Self {
++            config,
++            tick: 0,
++            stats: Stats::default(),
++            period: 0,
++            completed: 0,
++            cells,
++            states: BTreeMap::new(),
++            members: BTreeMap::new(),
++            fronts: BTreeMap::new(),
++            relations: BTreeMap::new(),
++            seed,
++            rng,
++            tracker: WarTracker::default(),
++            retired: Vec::new(),
++            ledger: Ledger::default(),
++            result: None,
++            events: Vec::new(),
++            events_dropped: 0,
++            next_event: 0,
++            last_structural_event: None,
++            last_tick_periods: 0,
++            pending_fights: Vec::new(),
++            tracked_period: 0,
++            prior_fighting: BTreeSet::new(),
++            resource_updates: Vec::new(),
++        };
++        for &f in &founders {
++            let id = w.cells[f].owner;
++            w.states.insert(
++                id,
++                State {
++                    id,
++                    capacity: Some(0.0),
++                    threshold: w.config.distance_threshold,
++                    alert: false,
++                    campaign: None,
++                    previous_damage: 0.0,
++                    newly_independent: w.config.initial_capacity
++                        == InitialCapacity::ArtifactRandom1001,
++                    extracted_yield: 0.0,
++                    recurrence_residual: 0.0,
++                },
++            );
++        }
++        w.rebuild();
++        for &f in &founders {
++            let id = w.cells[f].owner;
++            let yield_capacity = w.yield_capacity(id);
++            let initial = if w.config.initial_capacity == InitialCapacity::ArtifactRandom1001 {
++                w.members[&id].iter().map(|&i| primitive_resources[i]).sum()
++            } else {
++                yield_capacity
++            };
++            let s = w.states.get_mut(&id).unwrap();
++            s.capacity = Some(initial);
++            s.extracted_yield = yield_capacity;
++        }
++        w.record();
++        Ok(w)
++    }
++    pub(crate) fn rebuild(&mut self) {
++        self.members.clear();
++        for c in &self.cells {
++            self.members.entry(c.owner).or_default().push(c.id);
++        }
++        let mut keys = BTreeSet::new();
++        for cell in &self.cells {
++            for other in territory::adjacent(&self.config, cell.id) {
++                let owner = self.cells[other].owner;
++                if owner != cell.owner {
++                    let key = if cell.owner < owner {
++                        [cell.owner, owner]
++                    } else {
++                        [owner, cell.owner]
++                    };
++                    keys.insert(key);
++                }
++            }
++        }
++        self.relations.clear();
++        for &key in &keys {
++            self.relations.entry(key[0]).or_default().push(key);
++            self.relations.entry(key[1]).or_default().push(key);
++        }
++        self.fronts.retain(|k, _| keys.contains(k));
++        for key in keys {
++            self.fronts.entry(key).or_insert_with(|| Front::new(key));
++        }
++        for f in self.fronts.values_mut() {
++            if let Some([a, b]) = f.path {
++                if self.cells[a].owner != f.states[0]
++                    || self.cells[b].owner != f.states[1]
++                    || !territory::adjacent(&self.config, a).contains(&b)
++                {
++                    f.path = None;
++                }
++            }
++        }
++    }
++    pub(crate) fn projection(&self, state: StateId, cell: usize) -> f64 {
++        let s = &self.states[&state];
++        resources::distance_curve(
++            territory::distance(&self.config, state.capital_cell, cell),
++            self.config.distance_offset,
++            s.threshold,
++            self.config.distance_exponent,
++            self.config.distance_formula == DistanceFormula::PrintedIncreasing,
++        )
++    }
++    pub(crate) fn yield_capacity(&self, id: StateId) -> f64 {
++        self.members[&id]
++            .iter()
++            .map(|&cell| self.projection(id, cell))
++            .sum()
++    }
++    pub(crate) fn counting_start(&self) -> u64 {
++        match self.config.count_boundary {
++            CountBoundary::AfterInitialization => self.config.initialization_periods + 1,
++            CountBoundary::AtInitialization => self.config.initialization_periods.max(1),
++        }
++    }
++    pub fn run(&mut self, ticks: u32) {
++        for _ in 0..ticks {
++            if self.result.is_some() {
++                break;
++            }
++            self.last_tick_periods = 0;
++            for _ in 0..self.config.periods_per_tick {
++                if self.result.is_some() {
++                    break;
++                }
++                self.period += 1;
++                let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.step()));
++                match result {
++                    Ok(Ok(())) => {
++                        self.completed = self.period;
++                        self.last_tick_periods += 1;
++                        if self.completed == self.config.horizon() {
++                            self.finish(true, "horizon", None);
++                        }
++                    }
++                    Ok(Err(message)) => self.finish(false, "invalid", Some(message)),
++                    Err(p) => {
++                        let message = p
++                            .downcast_ref::<String>()
++                            .cloned()
++                            .or_else(|| p.downcast_ref::<&str>().map(|s| s.to_string()))
++                            .unwrap_or_else(|| "unknown period panic".into());
++                        self.invalidate_after_panic(message);
++                    }
++                }
++            }
++            self.tick += 1;
++            self.record();
++        }
++    }
++    pub(crate) fn update_resources(&mut self) -> Result<(), String> {
++        self.resource_updates.clear();
++        let ids: Vec<_> = self.states.keys().copied().collect();
++        for id in ids {
++            let yield_capacity = self.yield_capacity(id);
++            let s = self.states.get_mut(&id).unwrap();
++            let old = s.capacity.ok_or("unavailable capacity")?;
++            let loss = s.previous_damage;
++            let reset = s.newly_independent;
++            let target = yield_capacity
++                + if self.config.damage_feedback == DamageFeedback::AddLosses {
++                    loss
++                } else {
++                    -loss
++                };
++            let computed = if reset {
++                yield_capacity
++            } else {
++                resources::capacity(
++                    old,
++                    yield_capacity,
++                    loss,
++                    self.config.resource_adjustment,
++                    self.config.damage_feedback == DamageFeedback::AddLosses,
++                )
++            };
++            let mut new = computed;
++            let mut clipping = 0.0;
++            if new.is_finite()
++                && self.config.numerical_policy == NumericalPolicy::FloorZero
++                && new < 0.0
++            {
++                clipping = -new;
++                new = 0.0;
++                self.ledger.clipping += clipping;
++            }
++            let finite = |v: f64| v.is_finite().then_some(v);
++            let residual = new - computed - clipping;
++            self.resource_updates.push(ResourceUpdate {
++                state: id,
++                period: self.period,
++                old_capacity: finite(old),
++                extracted_yield: finite(yield_capacity),
++                applied_damage: finite(loss),
++                target_capacity: finite(target),
++                new_capacity: finite(new),
++                clipping,
++                residual: finite(residual),
++                reset,
++            });
++            s.previous_damage = 0.0;
++            s.newly_independent = false;
++            s.extracted_yield = yield_capacity;
++            if !new.is_finite() {
++                s.capacity = None;
++                return Err(format!(
++                    "period {} state {:?}: nonfinite capacity recurrence",
++                    self.period, id
++                ));
++            }
++            s.capacity = Some(new);
++            s.recurrence_residual = residual;
++            self.ledger.recurrence_residual += residual;
++            if new > old {
++                self.ledger.capacity_increase += new - old;
++            } else {
++                self.ledger.capacity_decrease += old - new;
++            }
++        }
++        Ok(())
++    }
++    pub(crate) fn log_event(&mut self, kind: &str, states: Vec<StateId>, cells: Vec<usize>) {
++        let event = Event {
++            id: self.next_event,
++            period: self.period,
++            kind: kind.into(),
++            states,
++            cells,
++        };
++        self.next_event += 1;
++        if kind == "conquest" {
++            self.last_structural_event = Some(event.clone());
++        }
++        if self.config.event_log {
++            if self.events.len() < self.config.event_log_limit {
++                self.events.push(event);
++            } else {
++                self.events_dropped += 1;
++            }
++        }
++    }
++    pub(crate) fn step(&mut self) -> Result<(), String> {
++        self.pending_fights.clear();
++        self.update_resources()?;
++        self.allocate()?;
++        self.decide()?;
++        let (claims, edges) = self.fight()?;
++        self.apply_claims(claims)?;
++        if self.period >= self.counting_start() {
++            let sov = self.states.keys().copied().collect();
++            let adjacent: Vec<_> = self.fronts.keys().map(|key| (key[0], key[1])).collect();
++            self.tracker
++                .advance(self.period, &edges, &adjacent, &sov, &self.config);
++            self.tracked_period = self.period;
++        }
++        self.prior_fighting = edges.iter().flat_map(|&(a, b, _)| [a, b]).collect();
++        for f in self.fronts.values_mut() {
++            f.previous = f.actions;
++            f.old_commitments = f.commitments;
++        }
++        self.shocks()?;
++        if !self.ledger.damage.is_finite()
++            || !self.ledger.measured_damage.is_finite()
++            || !self.ledger.clipping.is_finite()
++            || self
++                .tracker
++                .active
++                .values()
++                .any(|w| !w.raw_severity.is_finite())
++        {
++            return Err("nonfinite cumulative science ledger".into());
++        }
++        Ok(())
++    }
++    pub(crate) fn shocks(&mut self) -> Result<(), String> {
++        if self.period <= self.config.initialization_periods {
++            return Ok(());
++        }
++        let threshold = self.config.distance_threshold
++            + (self.period - self.config.initialization_periods) as f64 * self.config.shock_shift
++                / self.config.observation_periods as f64;
++        if !threshold.is_finite() || threshold <= 0.0 {
++            return Err(format!(
++                "period {}: nonfinite or nonpositive technology frontier",
++                self.period
++            ));
++        }
++        for s in self.states.values_mut() {
++            if chance(self.config.shock_probability, &mut self.rng) {
++                s.threshold = threshold;
++                self.cells[s.id.capital_cell].last_threshold = threshold;
++                self.ledger.shocks += 1;
++            }
++        }
++        Ok(())
++    }
++    fn finish(&mut self, valid: bool, reason: &str, invalid_reason: Option<String>) {
++        if !valid
++            && self.period >= self.counting_start()
++            && self.tracked_period < self.period
++            && !self.pending_fights.is_empty()
++        {
++            let sov = self.states.keys().copied().collect();
++            self.tracker
++                .advance(self.period, &self.pending_fights, &[], &sov, &self.config);
++            self.tracked_period = self.period;
++        }
++        self.result = Some(Outcome {
++            config: self.config.clone(),
++            seed: self.seed,
++            rng_mode: "portable_pcg64_mcg".into(),
++            periods: self.completed,
++            attempted_period: self.period,
++            counting_start: self.counting_start(),
++            valid,
++            state_available: true,
++            finish_reason: reason.into(),
++            invalid_reason,
++            completed_wars: self.tracker.completed.clone(),
++            censored_wars: self.tracker.censored(self.period),
++            legacy_visible_wars: self.tracker.legacy_visible.clone(),
++            exporter_backlog: self.tracker.backlog.iter().cloned().collect(),
++            merges: self.tracker.merges.clone(),
++            retired_states: self.retired.clone(),
++            sovereign_count: self.states.len(),
++            states: self.states.values().cloned().collect(),
++            cells: self.cells.clone(),
++            ledger: self.ledger.clone(),
++            fronts: self.fronts.values().cloned().collect(),
++            resource_updates: self.resource_updates.clone(),
++            partial_period_fights: if valid {
++                Vec::new()
++            } else {
++                self.pending_fights.clone()
++            },
++        });
++    }
++    pub fn trace_json(&self) -> String {
++        serde_json::json!({"config":self.config,"seed":self.seed,"tick":self.tick,"periods":self.completed,"attempted_period":self.period,"cells":self.cells,"states":self.states.values().collect::<Vec<_>>(),"fronts":self.fronts.values().collect::<Vec<_>>(),"resource_updates":self.resource_updates,"wars":self.tracker,"prior_fighting":self.prior_fighting,"retired_states":self.retired,"ledger":self.ledger}).to_string()
++    }
++    pub fn completed_periods(&self) -> u64 {
++        self.completed
++    }
++    pub fn outcome(&self) -> Option<&Outcome> {
++        self.result.as_ref()
++    }
++    pub fn invalidate_after_panic(&mut self, message: String) {
++        if self.result.is_none() {
++            self.finish(false, "implementation_panic", Some(message));
++        }
++    }
++    pub fn economic_fingerprint(&self) -> u64 {
++        let mut r = self.rng.clone();
++        let mut c = self.config.clone();
++        c.periods_per_tick = 1;
++        hash(
++            &serde_json::to_vec(&(
++                c,
++                self.period,
++                self.completed,
++                &self.cells,
++                self.states.values().collect::<Vec<_>>(),
++                self.fronts.values().collect::<Vec<_>>(),
++                &self.tracker,
++                &self.prior_fighting,
++                &self.retired,
++                &self.ledger,
++                r.next_u64(),
++            ))
++            .unwrap(),
++        )
++    }
++    pub(crate) fn record(&mut self) {
++        let total = self
++            .states
++            .values()
++            .try_fold(0.0, |sum, s| s.capacity.map(|r| sum + r));
++        self.stats.push(GeosimSnapshot {
++            tick: self.tick,
++            period: self.completed,
++            periods: self.completed,
++            attempted_period: self.period,
++            last_tick_periods: self.last_tick_periods,
++            sovereign_count: self.states.len(),
++            total_capacity: total.filter(|x| x.is_finite()),
++            largest_territory: self.members.values().map(Vec::len).max().unwrap_or(0),
++            alerted_states: self.states.values().filter(|s| s.alert).count(),
++            mean_threshold: (!self.states.is_empty()).then(|| {
++                let sum = self
++                    .states
++                    .values()
++                    .map(|state| state.threshold)
++                    .sum::<f64>();
++                if sum.is_finite() {
++                    return sum / self.states.len() as f64;
++                }
++                // Positive finite thresholds have a finite incremental mean.
++                // Use it only on overflow, retaining ordinary/subnormal rounding.
++                self.states
++                    .values()
++                    .enumerate()
++                    .fold(0.0, |mean, (i, state)| {
++                        mean + (state.threshold - mean) / (i + 1) as f64
++                    })
++            }),
++            completed_wars: self.tracker.completed.len(),
++            active_wars: self.tracker.active.len(),
++            collector_backlog: self.tracker.backlog.len(),
++            damage: self.ledger.damage,
++            conquests: self.ledger.conquests,
++            shocks: self.ledger.shocks,
++            finish_reason: self.result.as_ref().map(|o| o.finish_reason.clone()),
++            invalidity: self.result.as_ref().and_then(|o| o.invalid_reason.clone()),
++        });
++    }
++}
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+@@ -47,7 +633,6 @@ mod tests {
+         assert_eq!(a.economic_fingerprint(), b.economic_fingerprint());
+     }
+ }
+-
+ #[cfg(test)]
+ mod boundary_tests {
+     use super::super::tests::prescribed;
+diff --git a/crates/sugarscape-core/src/lib.rs b/crates/sugarscape-core/src/lib.rs
+index b68672f858854a2bcb31ea8635dd62dcdafac7cf..c26ac46fee5c6c26178bf32e969fe799f2c13b14 100644
+--- a/crates/sugarscape-core/src/lib.rs
++++ b/crates/sugarscape-core/src/lib.rs
+@@ -60,3 +60,5 @@ pub mod zi;
+ 
+ #[cfg(test)]
+ pub(crate) mod testkit;
++
++pub mod geosim;
+diff --git a/crates/sugarscape-core/src/model.rs b/crates/sugarscape-core/src/model.rs
+index ab50074e7e2c265b9093dfa756090391e39d2b8a..54dcead07997204ac5dafdbbe4126bfc9c4e2e32 100644
+--- a/crates/sugarscape-core/src/model.rs
++++ b/crates/sugarscape-core/src/model.rs
+@@ -19,6 +19,7 @@ use crate::dpd::{DpdConfig, DpdWorld};
+ use crate::ethno::{EthnoConfig, EthnoWorld};
+ use crate::farol::{FarolConfig, FarolWorld};
+ use crate::firms::{FirmsConfig, FirmsWorld};
++use crate::geosim::{GeosimConfig, GeosimWorld};
+ use crate::hoard::{HoardConfig, HoardWorld};
+ use crate::image::{ImageConfig, ImageWorld};
+ use crate::line::{LineConfig, LineWorld};
+@@ -78,10 +79,11 @@ pub enum ModelKind {
+     Collusion,
+     Auctions,
+     Polarity,
++    Geosim,
+ }
+ 
+ impl ModelKind {
+-    pub const ALL: [ModelKind; 30] = [
++    pub const ALL: [ModelKind; 31] = [
+         ModelKind::Sugarscape,
+         ModelKind::Schelling,
+         ModelKind::Ring,
+@@ -112,6 +114,7 @@ impl ModelKind {
+         ModelKind::Collusion,
+         ModelKind::Auctions,
+         ModelKind::Polarity,
++        ModelKind::Geosim,
+     ];
+ 
+     pub fn as_str(self) -> &'static str {
+@@ -146,6 +149,7 @@ impl ModelKind {
+             ModelKind::Collusion => "collusion",
+             ModelKind::Auctions => "auctions",
+             ModelKind::Polarity => "polarity",
++            ModelKind::Geosim => "geosim",
+         }
+     }
+ 
+@@ -183,6 +187,7 @@ impl ModelKind {
+             ModelKind::Collusion => crate::collusion::schema(),
+             ModelKind::Auctions => crate::auctions::schema(),
+             ModelKind::Polarity => crate::polarity::schema(),
++            ModelKind::Geosim => crate::geosim::schema(),
+         }
+     }
+ }
+@@ -226,6 +231,7 @@ pub enum ModelConfig {
+     Collusion(CollusionConfig),
+     Auctions(AuctionsConfig),
+     Polarity(PolarityConfig),
++    Geosim(GeosimConfig),
+ }
+ 
+ /// Another model's config on the wire: its fields and `"model": "<kind>"`.
+@@ -261,6 +267,7 @@ enum Tagged<'a> {
+     Collusion(&'a CollusionConfig),
+     Auctions(&'a AuctionsConfig),
+     Polarity(&'a PolarityConfig),
++    Geosim(&'a GeosimConfig),
+ }
+ 
+ impl From<Config> for ModelConfig {
+@@ -303,6 +310,7 @@ impl Serialize for ModelConfig {
+             ModelConfig::Collusion(c) => Tagged::Collusion(c).serialize(s),
+             ModelConfig::Auctions(c) => Tagged::Auctions(c).serialize(s),
+             ModelConfig::Polarity(c) => Tagged::Polarity(c).serialize(s),
++            ModelConfig::Geosim(c) => Tagged::Geosim(c).serialize(s),
+         }
+     }
+ }
+@@ -340,6 +348,7 @@ impl ModelConfig {
+             ModelConfig::Collusion(_) => ModelKind::Collusion,
+             ModelConfig::Auctions(_) => ModelKind::Auctions,
+             ModelConfig::Polarity(_) => ModelKind::Polarity,
++            ModelConfig::Geosim(_) => ModelKind::Geosim,
+         }
+     }
+ 
+@@ -452,6 +461,7 @@ impl ModelConfig {
+             "polarity" => serde_json::from_value(value)
+                 .map(ModelConfig::Polarity)
+                 .map_err(|e| FieldError::new("config", e.to_string())),
++            "geosim" => serde_json::from_value(value).map(ModelConfig::Geosim).map_err(|e|FieldError::new("config",e.to_string())),
+             "auctions" => serde_json::from_value(value)
+                 .map(ModelConfig::Auctions)
+                 .map_err(|e| FieldError::new("config", e.to_string())),
+@@ -505,6 +515,7 @@ impl ModelConfig {
+             ModelConfig::Collusion(c) => c.validate(),
+             ModelConfig::Auctions(c) => c.validate(),
+             ModelConfig::Polarity(c) => c.validate(),
++            ModelConfig::Geosim(c) => c.validate(),
+         }
+     }
+ 
+@@ -542,6 +553,7 @@ impl ModelConfig {
+             ModelConfig::Collusion(c) => set_path(c, path, value).map(ModelConfig::Collusion),
+             ModelConfig::Auctions(c) => set_path(c, path, value).map(ModelConfig::Auctions),
+             ModelConfig::Polarity(c) => set_path(c, path, value).map(ModelConfig::Polarity),
++            ModelConfig::Geosim(c) => set_path(c, path, value).map(ModelConfig::Geosim),
+         }
+     }
+ 
+@@ -552,6 +564,9 @@ impl ModelConfig {
+             ModelConfig::Polarity(c) => {
+                 Some(c.horizon.div_ceil(u64::from(c.periods_per_tick)) as u32)
+             }
++            ModelConfig::Geosim(c) => {
++                Some(c.horizon().div_ceil(u64::from(c.periods_per_tick)) as u32)
++            }
+             ModelConfig::Anasazi(c) => Some(c.end_year.saturating_sub(c.start_year)),
+             ModelConfig::Tags(c) => (c.end > 0).then_some(c.end),
+             ModelConfig::Ethno(c) => (c.end > 0).then_some(c.end),
+@@ -625,6 +640,7 @@ impl ModelConfig {
+             ModelConfig::Firms(_) => crate::firms::SERIES.iter().map(|s| s.to_string()).collect(),
+             ModelConfig::Auctions(c) => crate::auctions::series_names(c.bidders),
+             ModelConfig::Polarity(_) => crate::polarity::series_names(),
++            ModelConfig::Geosim(_) => crate::geosim::series_names(),
+             ModelConfig::Collusion(_) => crate::collusion::SERIES
+                 .iter()
+                 .map(|s| s.to_string())
+@@ -828,6 +844,7 @@ pub enum ModelWorld {
+     Collusion(Box<CollusionWorld>),
+     Auctions(Box<AuctionsWorld>),
+     Polarity(Box<PolarityWorld>),
++    Geosim(Box<GeosimWorld>),
+ }
+ 
+ impl ModelWorld {
+@@ -889,6 +906,7 @@ impl ModelWorld {
+             ModelConfig::Polarity(c) => {
+                 ModelWorld::Polarity(Box::new(PolarityWorld::new(c, seed)?))
+             }
++            ModelConfig::Geosim(c) => ModelWorld::Geosim(Box::new(GeosimWorld::new(c, seed)?)),
+             ModelConfig::Auctions(c) => {
+                 ModelWorld::Auctions(Box::new(AuctionsWorld::new(c, seed)?))
+             }
+@@ -930,6 +948,7 @@ impl ModelWorld {
+             ModelWorld::Collusion(_) => ModelKind::Collusion,
+             ModelWorld::Auctions(_) => ModelKind::Auctions,
+             ModelWorld::Polarity(_) => ModelKind::Polarity,
++            ModelWorld::Geosim(_) => ModelKind::Geosim,
+         }
+     }
+ 
+@@ -965,6 +984,7 @@ impl ModelWorld {
+             ModelWorld::Collusion(w) => w.as_ref(),
+             ModelWorld::Auctions(w) => w.as_ref(),
+             ModelWorld::Polarity(w) => w.as_ref(),
++            ModelWorld::Geosim(w) => w.as_ref(),
+         }
+     }
+ 
+@@ -1000,6 +1020,7 @@ impl ModelWorld {
+             ModelWorld::Collusion(w) => w.as_mut(),
+             ModelWorld::Auctions(w) => w.as_mut(),
+             ModelWorld::Polarity(w) => w.as_mut(),
++            ModelWorld::Geosim(w) => w.as_mut(),
+         }
+     }
+ 
+@@ -1110,6 +1131,7 @@ impl ModelWorld {
+             ModelWorld::Firms(w) => copy_without_history!(Firms, w),
+             ModelWorld::Collusion(w) => copy_without_history!(Collusion, w),
+             ModelWorld::Polarity(w) => copy_without_history!(Polarity, w),
++            ModelWorld::Geosim(w) => copy_without_history!(Geosim, w),
+             ModelWorld::Auctions(w) => {
+                 let stats = std::mem::take(&mut w.stats);
+                 let mut copy = (**w).clone();
+@@ -1175,6 +1197,7 @@ impl ModelWorld {
+             (ModelWorld::Firms(live), ModelWorld::Firms(kept)) => restore_into!(live, kept),
+             (ModelWorld::Collusion(live), ModelWorld::Collusion(kept)) => restore_into!(live, kept),
+             (ModelWorld::Polarity(live), ModelWorld::Polarity(kept)) => restore_into!(live, kept),
++            (ModelWorld::Geosim(live), ModelWorld::Geosim(kept)) => restore_into!(live, kept),
+             (ModelWorld::Auctions(live), ModelWorld::Auctions(kept)) => {
+                 let mut stats = std::mem::take(&mut live.stats);
+                 let len = stats.history().partition_point(|s| s.tick <= kept.tick);
+@@ -1857,7 +1880,8 @@ mod tests {
+                 "firms",
+                 "collusion",
+                 "auctions",
+-                "polarity"
++                "polarity",
++                "geosim"
+             ]
+         );
+         assert!(ModelKind::Sugarscape.schema().is_empty());
+diff --git a/crates/sugarscape-core/src/presets.rs b/crates/sugarscape-core/src/presets.rs
+index 55cc94a9312241dd46e892988051baf36296b728..05cdda727cc9cf1f071d80dd1335bf3aaf316029 100644
+--- a/crates/sugarscape-core/src/presets.rs
++++ b/crates/sugarscape-core/src/presets.rs
+@@ -1599,6 +1599,7 @@ pub fn catalog() -> Vec<ModelPreset> {
+     out.extend(crate::collusion::presets());
+     out.extend(crate::auctions::presets());
+     out.extend(crate::polarity::presets());
++    out.extend(crate::geosim::presets());
+     out
+ }
+ 
+diff --git a/crates/sugarscape-core/src/sweep.rs b/crates/sugarscape-core/src/sweep.rs
+index b48628d944b7ca592b88b62af1020489c748e857..03c66a95f4ba68b4d9489361ca3cd99a6371e03e 100644
+--- a/crates/sugarscape-core/src/sweep.rs
++++ b/crates/sugarscape-core/src/sweep.rs
+@@ -558,6 +558,12 @@ pub fn run_config(sweep: &Sweep, point: &Point, config: ModelConfig) -> RunResul
+         .model()
+         .series(sweep.metric.series())
+         .expect("the metric's series is checked against every config");
++    // Raw GeoSim statistics remain inspectable after an invalid attempted period,
++    // but no portion of that run may enter experiment metric aggregates.
++    if matches!(&world, ModelWorld::Geosim(w) if w.outcome().is_some_and(|outcome| !outcome.valid))
++    {
++        history.fill(f64::NAN);
++    }
+     // A world that stopped on its own for good (Axelrod's culture once stable,
+     // a Sugarscape whose cultures settled) holds its last state: the ticks it
+     // did not run repeat its last values. Any other stopped world reads NaN.
+diff --git a/crates/sugarscape-core/src/titles.rs b/crates/sugarscape-core/src/titles.rs
+index 077970da46e3437dfa9ffa8620e83fcb9f8165c9..13bfa0c6981fc05bafb8a75571c513c4f61de063 100644
+--- a/crates/sugarscape-core/src/titles.rs
++++ b/crates/sugarscape-core/src/titles.rs
+@@ -3,7 +3,7 @@
+ //! paper (`source`) stay on the preset as its reference.
+ 
+ /// Titles by preset id, in catalog order.
+-pub const TITLES: [(&str, &str); 419] = [
++pub const TITLES: [(&str, &str); 424] = [
+     (
+         "ii-1-instant",
+         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
+@@ -1569,6 +1569,11 @@ pub const TITLES: [(&str, &str); 419] = [
+         "collusion-below-nash",
+         "On a grid with no room above Nash, prices settle at the top",
+     ),
++    ("geosim-paper", "Technology and contested fronts shape the size of wars"),
++    ("geosim-no-technology", "Fixed logistical limits constrain conflict cascades"),
++    ("geosim-no-context", "States contemplate attacks without neighborhood alerts"),
++    ("geosim-smaller-shocks", "Slower logistical expansion changes conflict clusters"),
++    ("geosim-artifact-2017", "An archived GeoSim2 bundle exposes different source readings"),
+     ("polarity-original", "Predators contest a world of independent governments"),
+     ("polarity-defense", "A stronger defense changes the struggle for territory"),
+     ("polarity-alliances", "Threatened neighbors can form defensive coalitions"),
+diff --git a/docs/superpowers/specs/2026-10-03-geosim-design.md b/docs/superpowers/specs/2026-10-03-geosim-design.md
+index 7d3207c616152ed612608a8428d33ba5ba3aeef7..974c6820a5ebda30db85263c5b9ea98f1fa99986 100644
+--- a/docs/superpowers/specs/2026-10-03-geosim-design.md
++++ b/docs/superpowers/specs/2026-10-03-geosim-design.md
+@@ -177,3 +177,5 @@ CI uses seconds-scale motifs, short tiny worlds, host/config/schema/serializatio
+ After written-spec approval, use writing-plans. Follow the approved prior workflow: isolated scratch implementation, verify a plan reconstructs it byte-for-byte, then subagent-driven native execution of the verified plan. Keep a3–5-stage `IMPLEMENTATION_PLAN.md` until complete. Commit working increments; no test bypasses. Author-run attempts and premeasurement audit belong in the verified plan and cannot be replaced by an assertion that the archive looks compatible.
+ 
+ Completion means all declared arms/keys and source/modern findings are present, including invalid/Unresolved/Insufficient outcomes; scientific rules and raw evidence are preserved; a fresh final reviewer checks source fidelity/protocol/provenance and hosts; all required checks pass; integration receives exact-head CI/Pages and deployed Inspect/Compare/Experiments smoke. Update papers/roadmap/campaign/war-study handoff with findings and measured limits. Remove only owned worktrees after preserving every unique raw/reference/review artifact. Unavailable author docking or empirical source recovery is a reported limitation, not a fabricated success or an indefinite dependency.
++
++**Premeasurement correction — 2026-10-03.** Task 1 review found that affected-cell locking checked only a claim's sampled path, while later contiguity repair could release a province already locked by an earlier claim. The selected fix computes the claim's complete prospective owner-changing cell set, including cells released by capital collapse or contiguity repair, and rejects the claim before mutation if its agent is locked or any prospective owner change intersects an earlier lock. Shared capital anchors alone do not make distinct province claims conflict, preserving independent province claims. The public `losses` helper delegates to the production `losses_with_incidence` rule with `attacked_party` incidence so that these behaviors remain defined once. No registered history has run; this correction is premeasurement and does not amend any measured result.

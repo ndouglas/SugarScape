@@ -26,7 +26,7 @@ import { calendarYear, hasCaches, hoardSeasonTicks, isSugar, mindsShown, modelOf
 import { MAX_TICKS, SimHost } from './sim-host';
 import { wasmSimModule } from './sim-module';
 import { InlineTransport, startWorker, type Transport } from './transport';
-import type { AgreementConfig, ColorMode, Config, FieldError, HoardConfig, HoardStatus, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
+import type { AgreementConfig, AuctionsConfig, AuctionsStats, GeosimStats, DemocraticPeaceStats, PolarityStats, ColorMode, Config, FieldError, HoardConfig, HoardStatus, Layer, MindsView, ModelConfig, ModelKind, ModelStats, Param, Preset } from './types';
 import init, { model_schemas_json, presets_json } from './wasm-pkg/sugarscape.js';
 
 export type { Overlay, PlaceOverrides } from './protocol';
@@ -52,11 +52,33 @@ export type EngineEvent =
 export const FULL_NOTICE = 'This world has reached 1,000,000 ticks, the most its history holds here — export its data, or Reset to start again';
 
 /** What the page says when a world has run its course (the engine pauses and fires 'finished'). */
-export function finishedNotice(config: ModelConfig, tick: number): string {
+export function finishedNotice(config: ModelConfig, tick: number, latest?: ModelStats | null): string {
+  if (modelOf(config) === 'democratic_peace') {
+    const d = latest as DemocraticPeaceStats | null | undefined;
+    if (d?.invalidity) return `Invalid reconstruction at attempted period ${d.attempted_period} (${d.periods} completed), ${d.invalid_phase ?? 'unknown phase'}: ${d.invalidity} — Reset to run it again`;
+    return `This session finished at period ${d?.periods ?? 'unavailable'} (${d?.finish_reason ?? 'endpoint'}) — Reset to run it again`;
+  }
+  if (modelOf(config) === 'geosim') {
+    const g = latest as GeosimStats | null | undefined;
+    if (g?.invalidity) return `Invalid reconstruction at attempted period ${g.attempted_period} (${g.periods} completed): ${g.invalidity} — Reset to run it again`;
+    return `This session finished at period ${g?.periods ?? 'unavailable'} (${g?.finish_reason ?? 'endpoint'}) — Reset to run it again`;
+  }
+  if (modelOf(config) === 'polarity') {
+    const p = latest as PolarityStats | null | undefined;
+    if (p?.invalidity) return `Invalid reconstruction at period ${p.periods}: ${p.invalidity} — Reset to run it again`;
+    return `This session finished at period ${p?.periods ?? 'unavailable'} (${p?.finish_reason ?? 'endpoint'}) — Reset to run it again`;
+  }
   if (modelOf(config) === 'civil') return `A group has died out at t = ${tick} — Reset to run it again`;
   if (modelOf(config) === 'farol') return `This run has reached its last round (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'ants' || modelOf(config) === 'thresholds') return `This run has reached its last step (${tick}) — Reset to run it again`;
   if (modelOf(config) === 'firms') return `This run has reached its last period (${tick}) — Reset to run it again`;
+  if (modelOf(config) === 'auctions') {
+    const c = config as AuctionsConfig;
+    const stable = (latest as AuctionsStats | undefined)?.converged;
+    const status = stable === 1 ? 'final strategy window stable' : stable === 0 ? 'final strategy window unstable' : 'Inspect shows final strategy stability';
+    return `This session has reached its fixed horizon of ${c.horizon} periods · ${status} — Reset to run it again`;
+  }
+  if (modelOf(config) === 'collusion') return `This session has finished at tick ${tick} — Reset to run it again`;
   if (modelOf(config) === 'bali') return `This run has reached its last year — Reset to run it again`;
   if (modelOf(config) === 'hoard') {
     // A run ends at the end of generation `generations`' season, or earlier when every agent died.
@@ -393,6 +415,7 @@ export class Engine {
     }
     engine.origin = { config, seed: engine.seed, landscapes };
     engine.adopt(result.snapshot);
+    if ((engine.model === 'polarity' || engine.model === 'geosim' || engine.model === 'democratic_peace')) engine.origin.config = structuredClone(engine.config);
     engine.replayMoved = false;
     engine.baseConfig = structuredClone(engine.config);
     engine.presetId = engine.matchPreset();
@@ -688,6 +711,11 @@ export class Engine {
 
   seriesCsv(): Promise<string> {
     return this.value({ type: 'seriesCsv' });
+  }
+
+  /** The full current model state and finite science availability records. */
+  modelJson(): Promise<string> {
+    return this.value({ type: 'modelJson' });
   }
 
   agentsCsv(): Promise<string> {
@@ -1133,6 +1161,7 @@ export class Engine {
       this.memoryCells = NO_CELLS;
     }
     const clamped = this.adopt(result.snapshot);
+    if ((this.model === 'polarity' || this.model === 'geosim' || this.model === 'democratic_peace')) this.origin.config = structuredClone(this.config);
     if (!opts.keepSetup) {
       this.baseConfig = structuredClone(this.config);
       this.presetId = opts.presetId ?? this.matchPreset();

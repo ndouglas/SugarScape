@@ -1,4 +1,4 @@
-import type { FieldError, ModelConfig, ModelKind, Param } from '../types';
+import type { DemocraticPeaceConfig, GeosimConfig, AuctionsConfig, PolarityConfig, FieldError, ModelConfig, ModelKind, Param } from '../types';
 import type { Axis, Metric, ShorthandAxis, Sweep, SweepBase } from './types';
 import { formatValues, parseValues, type AxisScalar } from './values';
 
@@ -8,6 +8,8 @@ export interface SweepForm {
   name: string;
   /** Kept as opened; the form does not edit it. */
   description?: string;
+  /** Fixed treatment fields retained by a model's suggested experiment. */
+  set?: Record<string, unknown>;
   x: AxisForm;
   /** The second axis: one line per value. */
   series: AxisForm | null;
@@ -108,6 +110,25 @@ export function defaultForm(model: ModelKind = 'sugarscape', config?: ModelConfi
     // The built-in firms-beta's axis: the size exponent against increasing returns (A99 Table 3).
     return { ...form, x: { path: 'beta', values: '1.7:2.1:0.1' }, ticks: 5000, metric: { ...form.metric, kind: 'final', series: 'mu' } };
   }
+  if (model === 'democratic_peace') {
+    const d = config as DemocraticPeaceConfig | undefined;
+    return { ...form, description: 'Exploratory initial democratic density; terminal territory share after the captured source horizon. Undefined clustering and invalid runs retain their reasons. This is not the registered scientific study.', x: { path: 'initial_democratic_share', values: '0,0.1,0.3,0.5,1' }, ticks: d ? Math.ceil(d.horizon_periods / d.periods_per_tick) : 1000, metric: { ...form.metric, kind: 'final', series: 'democratic_share' } };
+  }
+  if (model === 'geosim') {
+    const g = config as GeosimConfig | undefined;
+    return { ...form, description: 'Exploratory GeoSim technology settings; completed abstract conflict clusters after the captured source horizon. This is not the registered scientific study.', x: { path: 'shock_shift', values: '0,10,20' }, ticks: g ? Math.ceil((g.initialization_periods + g.observation_periods) / g.periods_per_tick) : 10500, metric: { ...form.metric, kind: 'final', series: 'completed_wars' } };
+  }
+  if (model === 'polarity') {
+    const p = config as PolarityConfig | undefined;
+    return { ...form, description: 'Cederman predator-share settings; terminal sovereign count after the economic horizon or hegemony. Parameters and source profile are retained; ticks batch complete periods.', x: { path: 'predator_share', values: '0,0.05,0.1,0.2,0.4,0.6,0.8,1' }, ticks: p ? Math.ceil(p.horizon / p.periods_per_tick) : 1000, metric: { ...form.metric, kind: 'final', series: 'sovereign_count' } };
+  }
+  if (model === 'auctions') {
+    return { ...form, set: { auction: 'mixture' }, description: 'Formats from first price (1) to second price (2), using mixture payment. Terminal policy revenue after the fixed horizon; one tick executes periods_per_tick auctions.', x: { path: 'auction_alpha', values: '1:2:0.1' }, ticks: config ? Math.ceil((config as AuctionsConfig).horizon / (config as AuctionsConfig).periods_per_tick) : 1000, metric: { ...form.metric, kind: 'final', series: 'terminal_revenue' } };
+  }
+  if (model === 'collusion') {
+    // The built-in collusion-delta's axis: the profit gain against the discount factor (CCDP Fig. 6).
+    return { ...form, x: { path: 'delta', values: '0:0.9:0.15' }, ticks: 100_000, metric: { ...form.metric, kind: 'final', series: 'cycle_gain' } };
+  }
   if (model === 'bali') {
     // The built-in bali-imitation-growth's axis: the scored harvest against pest growth.
     return { ...form, x: { path: 'growth', values: '2:2.4:0.1' }, ticks: 360, metric: { ...form.metric, kind: 'final', series: 'scored' } };
@@ -193,6 +214,7 @@ export function formToSweep(form: SweepForm, base: SweepBase): { sweep: Sweep | 
     ticks: form.ticks,
     metric,
   };
+  if (form.set) sweep.set = structuredClone(form.set);
   if (series) sweep.series = series;
   if (form.description !== undefined) sweep.description = form.description;
   return { sweep, errors: [] };
@@ -285,4 +307,9 @@ export function numericPaths(config: ModelConfig, schema: Param[] = []): string[
   };
   walk(config, '');
   return out;
+}
+
+/** Capture the chosen experiment base before later world edits. */
+export function captureExperimentBase(presetId: string | null, modified: boolean, config: ModelConfig): SweepBase {
+  return presetId !== null && !modified ? {preset:presetId} : {config:structuredClone(config)};
 }

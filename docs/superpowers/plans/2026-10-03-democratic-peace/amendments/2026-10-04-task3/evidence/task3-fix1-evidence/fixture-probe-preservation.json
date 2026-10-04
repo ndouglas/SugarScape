@@ -1,0 +1,44 @@
+[
+  {
+    "prefix": "fixture",
+    "keys": 6,
+    "attempts_and_science_unchanged": true,
+    "manifest_contract_and_resolved_payload_unchanged": true
+  },
+  {
+    "prefix": "probe-0",
+    "keys": 1,
+    "attempts_and_science_unchanged": true,
+    "manifest_contract_and_resolved_payload_unchanged": true
+  },
+  {
+    "prefix": "probe-1",
+    "keys": 1,
+    "attempts_and_science_unchanged": true,
+    "manifest_contract_and_resolved_payload_unchanged": true
+  },
+  {
+    "prefix": "probe-2",
+    "keys": 1,
+    "attempts_and_science_unchanged": true,
+    "manifest_contract_and_resolved_payload_unchanged": true
+  },
+  {
+    "prefix": "probe-3",
+    "keys": 1,
+    "attempts_and_science_unchanged": true,
+    "manifest_contract_and_resolved_payload_unchanged": true
+  },
+  {
+    "prefix": "probe-4",
+    "keys": 1,
+    "attempts_and_science_unchanged": true,
+    "manifest_contract_and_resolved_payload_unchanged": true
+  },
+  {
+    "prefix": "probe-5",
+    "keys": 1,
+    "attempts_and_science_unchanged": true,
+    "manifest_contract_and_resolved_payload_unchanged": true
+  }
+]

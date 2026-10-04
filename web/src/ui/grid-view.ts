@@ -1,7 +1,11 @@
+import { democraticPeaceLegend } from '../democratic-peace';
+import { geosimLegend } from '../geosim';
+import { polarityLegend } from '../polarity';
+import { auctionLegend } from '../auctions';
 import type { Engine } from '../engine';
 import { isSugarView } from '../models';
 import { NETWORKS, type NetworkOverlay } from '../protocol';
-import type { AgentView, HoardConfig } from '../types';
+import type { AgentView, DemocraticPeaceConfig, DemocraticPeaceStats, GeosimConfig, GeosimStats, AuctionsConfig, AuctionsStats, PolarityConfig, PolarityStats, HoardConfig } from '../types';
 import { linkSegments, SETTLEMENT_COLOR, settlementRadius, settlements, WATER_COLOR } from '../valley';
 import { cacheSize, cacheSummary, compartmentName, isCheaterOnly, isLarder, labStatus } from '../minds';
 import { h } from './dom';
@@ -253,6 +257,7 @@ export class GridView {
       cheaterCaches: summary?.cheaterOnly ?? false,
       ownCaches: (agent?.caching?.caches.length ?? 0) > 0,
       homes: homes.length > 0,
+      guarding: homes.some((home) => home.guarding),
       larders: homes.some((home) => home.larder > 0),
       memory: remembered.length > 0,
       spots: remembered.some((m) => m.shape === 'circle'),
@@ -267,8 +272,12 @@ export class GridView {
     const sugar = this.engine.model === 'sugarscape';
     // Minds 7: the frame is a population panel, one column per agent.
     const hoard = this.engine.model === 'hoard';
-    const status = sugar && marks.lab ? labStatus(marks.lab) : hoard ? HOARD_STATUS : '';
-    const items = sugar
+    const auction = this.engine.model === 'auctions' ? auctionLegend(this.engine.config as AuctionsConfig, this.engine.colorMode, (this.engine.latest as AuctionsStats | null)?.periods ?? 0) : null;
+    const polarity = this.engine.model === 'polarity' ? polarityLegend(this.engine.config as PolarityConfig, this.engine.colorMode, (this.engine.latest as PolarityStats | null)?.periods ?? 0) : null;
+    const geosim = this.engine.model === 'geosim' ? geosimLegend(this.engine.config as GeosimConfig, this.engine.colorMode, (this.engine.latest as GeosimStats | null)?.periods ?? 0) : null;
+    const democraticPeace = this.engine.model === 'democratic_peace' ? democraticPeaceLegend(this.engine.config as DemocraticPeaceConfig, this.engine.colorMode, (this.engine.latest as DemocraticPeaceStats | null)?.periods ?? 0) : null;
+    const status = democraticPeace ?? geosim ?? polarity ?? (auction ? auction.status : sugar && marks.lab ? labStatus(marks.lab) : hoard ? HOARD_STATUS : '');
+    const items = auction ? auction.items : sugar
       ? [...colorLegend(this.engine.colorMode, this.engine.sugar), ...overlayLegend(marks, this.engine.sugar)]
       : hoard
         ? hoardLegend(((this.engine.config as HoardConfig).cheaters ?? 0) > 0)
@@ -365,6 +374,13 @@ export class GridView {
       if (home.larder <= 0) continue;
       const r = (0.12 + 0.2 * Math.sqrt(home.larder / most)) * CELL;
       diamond(ctx, (home.x + 0.5) * CELL, (home.y + 0.5) * CELL, r);
+    }
+    // A solid outer frame marks an owner who guarded this tick.
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = getComputedStyle(this.canvas).getPropertyValue('--accent').trim() || '#ffb000';
+    ctx.lineWidth = 2.5;
+    for (const home of homes) {
+      if (home.guarding) ctx.strokeRect((home.x + 0.03) * CELL, (home.y + 0.03) * CELL, CELL * 0.94, CELL * 0.94);
     }
     ctx.restore();
   }

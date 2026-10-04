@@ -1,0 +1,94 @@
+{
+  "absent_scan_trace_slots": 1,
+  "classification": "independent_source_visual_review",
+  "date": "2026-10-03",
+  "decision": "accepted_as_inferred_curve_values_with_reported_envelopes",
+  "figures": [
+    {
+      "axis_landmarks": {
+        "x_pixels": [
+          326,
+          884
+        ],
+        "x_values": [
+          0.0,
+          1.0
+        ],
+        "y_pixels": [
+          892,
+          310
+        ],
+        "y_values": [
+          0.0,
+          1.0
+        ]
+      },
+      "id": "fig9",
+      "image_sha256": "b2b22e44405aa6df4267ab110577d9180ba68c6c2ae210a582d106c9cbff85c1"
+    },
+    {
+      "axis_landmarks": {
+        "x_pixels": [
+          329,
+          798
+        ],
+        "x_values": [
+          0.0,
+          1.0
+        ],
+        "y_pixels": [
+          852,
+          337
+        ],
+        "y_values": [
+          0.0,
+          15.0
+        ]
+      },
+      "id": "fig10",
+      "image_sha256": "a3fcec8687f1414b7eca9e1b3a8a0a6fb857e78b372b1dd77df5460660a90002"
+    },
+    {
+      "axis_landmarks": {
+        "x_pixels": [
+          317,
+          759
+        ],
+        "x_values": [
+          0.0,
+          1.0
+        ],
+        "y_pixels": [
+          793,
+          300
+        ],
+        "y_values": [
+          0.0,
+          1.0
+        ]
+      },
+      "id": "fig11",
+      "image_sha256": "1aaa6b48ddd3a6437116be4e901b7c54dd45d2d5025d89f268fe9f692873dd8a"
+    }
+  ],
+  "limitations": [
+    "Original sampled means are not independently recovered",
+    "Original RNG and clustering estimator identity remain unresolved",
+    "Source absence status identifies an unreadable scan trace, not missing original data"
+  ],
+  "paper_sha256": "069ad22da938727b2020c5d2c3a52aa383687c74085f5bc0af8cea74817b5215",
+  "readable_slots": 78,
+  "registered_histories": 0,
+  "review_scope": [
+    "All three full source pages",
+    "Axis endpoints, metric scales and mechanism legends",
+    "All readable target centers and uncertainty bands against visible trajectories",
+    "Steep and interrupted strokes, overlapping curves and endpoint attribution",
+    "105-slot roster and three separate density-zero exclusions"
+  ],
+  "reviewer": "root",
+  "schema_version": 1,
+  "slots_sha256": "ecd1811410ab054740286a5ecde8eec1f451b91b535d1ca2e3a41e5d0fa26dcc",
+  "source_intervals_changed": false,
+  "unreadable_overlap_slots": 26
+}

@@ -59,7 +59,11 @@ fn mean_distance_to_center(w: &World) -> f64 {
         .agents()
         .map(|a| d(a.pos.x, cw / 2, cw).hypot(d(a.pos.y, ch / 2, ch)))
         .collect();
-    if v.is_empty() { f64::NAN } else { stats::mean(&v) }
+    if v.is_empty() {
+        f64::NAN
+    } else {
+        stats::mean(&v)
+    }
 }
 
 fn combat_deaths(w: &World) -> usize {
@@ -78,7 +82,12 @@ fn snapshot(w: &World) -> Snapshot {
         .map(|a| {
             (
                 a.id,
-                (a.holdings[0], f64::from(a.metabolism[0]), a.tribe(), a.children.clone()),
+                (
+                    a.holdings[0],
+                    f64::from(a.metabolism[0]),
+                    a.tribe(),
+                    a.children.clone(),
+                ),
             )
         })
         .collect()
@@ -154,7 +163,11 @@ fn child_gain_at_parent_death(config: &Config, seeds: &[u64]) -> Vec<f64> {
                 }
             }
         }
-        if v.is_empty() { f64::NAN } else { stats::mean(&v) }
+        if v.is_empty() {
+            f64::NAN
+        } else {
+            stats::mean(&v)
+        }
     })
 }
 
@@ -170,7 +183,13 @@ fn generations_alive(seeds: &[u64]) -> Vec<f64> {
                 }
                 let g = match a.parents {
                     None => 0,
-                    Some([p, q]) => 1 + gen.get(&p).copied().unwrap_or(0).max(gen.get(&q).copied().unwrap_or(0)),
+                    Some([p, q]) => {
+                        1 + gen
+                            .get(&p)
+                            .copied()
+                            .unwrap_or(0)
+                            .max(gen.get(&q).copied().unwrap_or(0))
+                    }
                 };
                 gen.insert(a.id, g);
             }
@@ -198,7 +217,11 @@ fn conquest_and_warlord(seeds: &[u64]) -> Vec<[f64; 2]> {
         }
         let total: usize = made.values().sum();
         let top = made.values().copied().max().unwrap_or(0);
-        let share = if total >= 50 { top as f64 / total as f64 } else { f64::NAN };
+        let share = if total >= 50 {
+            top as f64 / total as f64
+        } else {
+            f64::NAN
+        };
         [flag(majority_share(&w) >= 0.9), share]
     })
 }
@@ -211,8 +234,10 @@ fn front_and_newcomers(seeds: &[u64]) -> Vec<[f64; 2]> {
         let mut quarters = [0usize; 4];
         let (mut young, mut victims) = (0usize, 0usize);
         for _ in 0..500 {
-            let before: BTreeMap<u64, (u32, u32, u32)> =
-                w.agents().map(|a| (a.id, (a.pos.x, a.pos.y, a.age))).collect();
+            let before: BTreeMap<u64, (u32, u32, u32)> = w
+                .agents()
+                .map(|a| (a.id, (a.pos.x, a.pos.y, a.age)))
+                .collect();
             w.step();
             for k in &w.events().kills {
                 if let Some(&(x, y, age)) = before.get(&k.victim) {
@@ -223,7 +248,10 @@ fn front_and_newcomers(seeds: &[u64]) -> Vec<[f64; 2]> {
             }
         }
         let spread = quarters.iter().all(|&q| q as f64 >= 0.15 * victims as f64);
-        [flag(victims > 0 && spread), young as f64 / victims.max(1) as f64]
+        [
+            flag(victims > 0 && spread),
+            young as f64 / victims.max(1) as f64,
+        ]
     })
 }
 

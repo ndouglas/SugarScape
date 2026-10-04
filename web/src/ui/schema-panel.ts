@@ -1,7 +1,9 @@
+import { DEMOCRATIC_PEACE_RULES, democraticPeaceParams } from '../democratic-peace';
+import { GEOSIM_RULES, geosimParams } from '../geosim';
 import { scheduleLines } from '../civil';
 import type { Engine } from '../engine';
 import { errorsFor } from '../paths';
-import { describedBy, groupParams, paramEdit, paramInput, paramShown, paramSlider, type ParamInput } from '../schema-form';
+import { describedBy, groupParams, paramEdit, paramInput, paramShown, paramSlider, schemaControlLabel, type ParamInput } from '../schema-form';
 import type { CivilConfig, FieldError, ModelKind, Param } from '../types';
 import { h } from './dom';
 
@@ -63,12 +65,13 @@ export class SchemaPanel {
     this.syncers = [];
     this.slots = [];
     this.errors = [];
-    const sections = groupParams(this.engine.schemas[model] ?? []).map(({ group, params }) => {
+    const params = this.engine.schemas[model] ?? [];
+    const sections = groupParams(model === 'democratic_peace' ? democraticPeaceParams(params) : model === 'geosim' ? geosimParams(params) : params).map(({ group, params }) => {
       const section = h('section', { class: 'group' }, h('h3', {}, group), h('p', { class: 'hint' }, note(params)), ...params.map((p) => this.control(p)));
       if (params.every((p) => p.show_if)) this.syncers.push(() => (section.hidden = !params.some((p) => paramShown(p, this.engine.config))));
       return section;
     });
-    const extra = model === 'anasazi' ? [valleyCredit()] : [];
+    const extra = model === 'anasazi' ? [valleyCredit()] : model === 'geosim' ? [h('p', { class: 'hint' }, GEOSIM_RULES)] : model === 'democratic_peace' ? [h('p', { class: 'hint' }, DEMOCRATIC_PEACE_RULES)] : [];
     const schedule = model === 'civil' ? [this.schedule()] : [];
     this.el.replaceChildren(...extra, this.general, ...sections, ...schedule);
     this.renderErrors();
@@ -118,6 +121,7 @@ export class SchemaPanel {
 
   private controlBody(p: Param): HTMLElement {
     const id = `${this.idPrefix}-${p.path.replace(/[^A-Za-z0-9_-]/g, '-')}`;
+    const labelId = `${id}-label`;
     const ids = { help: p.help ? `${id}-help` : null, error: `${id}-error` };
     const slot = h('div', { class: 'error', id: ids.error });
     const inputs: HTMLElement[] = [];
@@ -134,18 +138,23 @@ export class SchemaPanel {
         return h('div', { class: 'control' }, h('label', { class: 'switch' }, box, ` ${p.label}`), help, slot);
       }
       case 'choice': {
+        const selectId = `${id}-choice`;
         const select = h(
           'select',
-          { onchange: () => void this.commit(p, select.value) },
+          { id: selectId, 'aria-labelledby': labelId, onchange: () => void this.commit(p, select.value) },
           ...(p.choices ?? []).map((c) => h('option', { value: c.value }, c.label)),
         );
         inputs.push(select);
         this.syncers.push(() => (select.value = String(current())));
-        return h('div', { class: 'control' }, h('label', {}, p.label), select, help, slot);
+        return h('div', { class: 'control' }, h('label', { id: labelId, htmlFor: selectId }, schemaControlLabel(p.label)), select, help, slot);
       }
       case 'range': {
-        const lo = h('input', { type: 'number', class: 'num', ...bounds });
-        const hi = h('input', { type: 'number', class: 'num', ...bounds });
+        const loId = `${id}-minimum`;
+        const hiId = `${id}-maximum`;
+        const loNameId = `${loId}-name`;
+        const hiNameId = `${hiId}-name`;
+        const lo = h('input', { id: loId, type: 'number', class: 'num', 'aria-labelledby': `${labelId} ${loNameId}`, ...bounds });
+        const hi = h('input', { id: hiId, type: 'number', class: 'num', 'aria-labelledby': `${labelId} ${hiNameId}`, ...bounds });
         const apply = (edited: 'min' | 'max') => void this.commit(p, { min: lo.value, max: hi.value, edited });
         inputs.push(lo, hi);
         lo.addEventListener('change', () => apply('min'));
@@ -158,15 +167,19 @@ export class SchemaPanel {
         return h(
           'div',
           { class: 'control' },
-          h('label', {}, p.label),
-          h('div', { class: 'row' }, lo, h('span', { class: 'hint' }, 'to'), hi),
+          h('label', { id: labelId, htmlFor: loId }, schemaControlLabel(p.label)),
+          h('div', { class: 'row' }, lo, h('span', { id: loNameId, hidden: true }, schemaControlLabel('', 'minimum')), h('span', { class: 'hint' }, 'to'), hi, h('span', { id: hiNameId, hidden: true }, schemaControlLabel('', 'maximum'))),
           help,
           slot,
         );
       }
       default: {
-        const slider = h('input', { type: 'range', ...bounds });
-        const num = h('input', { type: 'number', class: 'num', ...bounds });
+        const sliderId = `${id}-slider`;
+        const numberId = `${id}-number`;
+        const sliderNameId = `${sliderId}-name`;
+        const numberNameId = `${numberId}-name`;
+        const slider = h('input', { id: sliderId, type: 'range', 'aria-labelledby': `${labelId} ${sliderNameId}`, ...bounds });
+        const num = h('input', { id: numberId, type: 'number', class: 'num', 'aria-labelledby': `${labelId} ${numberNameId}`, ...bounds });
         inputs.push(slider, num);
         slider.addEventListener('input', () => (num.value = slider.value));
         slider.addEventListener('change', () => void this.commit(p, slider.value));
@@ -177,7 +190,14 @@ export class SchemaPanel {
           // value it falls back to, not the browser's own midpoint default for an empty value.
           if (!focused(slider)) slider.value = paramSlider(p, this.engine.config);
         });
-        return h('div', { class: 'control' }, h('label', {}, p.label), h('div', { class: 'row' }, slider, num), help, slot);
+        return h(
+          'div',
+          { class: 'control' },
+          h('label', { id: labelId, htmlFor: sliderId }, schemaControlLabel(p.label)),
+          h('div', { class: 'row' }, slider, h('span', { id: sliderNameId, hidden: true }, schemaControlLabel('', 'slider')), num, h('span', { id: numberNameId, hidden: true }, schemaControlLabel('', 'number'))),
+          help,
+          slot,
+        );
       }
     }
   }

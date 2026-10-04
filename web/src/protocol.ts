@@ -186,6 +186,7 @@ export type Command =
   | { type: 'inspect'; target: { x: number; y: number } | { agentId: number } }
   | { type: 'seriesCsv' }
   | { type: 'agentsCsv' }
+  | { type: 'modelJson' }
   | { type: 'fingerprint' }
   | { type: 'session' }
   | { type: 'endReplay' }

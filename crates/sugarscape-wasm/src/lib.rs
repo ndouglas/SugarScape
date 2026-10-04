@@ -57,6 +57,115 @@ pub fn default_config_json() -> String {
     serde_json::to_string(&Config::default()).expect("config serializes")
 }
 
+/// Checked laboratory configuration, using the same core construction as the CLI.
+#[wasm_bindgen]
+pub fn protection_config_json(lab_json: &str) -> Result<String, JsValue> {
+    let config = read_protection_config(lab_json)?;
+    Ok(serde_json::to_string(&config).expect("config serializes"))
+}
+
+fn read_protection_config(lab_json: &str) -> Result<Config, JsValue> {
+    let lab = serde_json::from_str(lab_json).map_err(|error| {
+        field_errors(vec![FieldError::new("protection_lab", error.to_string())])
+    })?;
+    let config = sugarscape_core::minds::protection::lab::rig_config(lab);
+    config.validate().map_err(field_errors)?;
+    Ok(config)
+}
+
+/// One core episode with researcher-only action and cohort records.
+#[wasm_bindgen]
+pub fn protection_episode_json(lab_json: &str, seed: &str) -> Result<String, JsValue> {
+    let config = read_protection_config(lab_json)?;
+    let seed = decimal_seed(seed)
+        .map_err(|message| field_errors(vec![FieldError::new("seed", message)]))?;
+    let record = sugarscape_core::minds::protection::runner::run_episode(
+        config.protection_lab.expect("checked lab"),
+        seed,
+        true,
+    )
+    .map_err(|message| field_errors(vec![FieldError::new("episode", message)]))?;
+    Ok(serde_json::to_string(&record).expect("episode serializes"))
+}
+
+/// Checked standalone excavation replay; serializes the same core record as the native CLI.
+#[wasm_bindgen]
+pub fn burrow_replay_json(
+    config_json: &str,
+    seed: &str,
+    ticks: f64,
+    sample_every: f64,
+) -> Result<String, JsValue> {
+    let config: sugarscape_core::burrow::LabConfig = serde_json::from_str(config_json)
+        .map_err(|error| field_errors(vec![FieldError::new("burrow_config", error.to_string())]))?;
+    let seed = decimal_seed(seed)
+        .map_err(|message| field_errors(vec![FieldError::new("seed", message)]))?;
+    let ticks = checked_burrow_u32(ticks, "ticks", 0)?;
+    let sample_every = checked_burrow_u32(sample_every, "sample_every", 1)?;
+    let episode = sugarscape_core::burrow::run_episode(
+        config,
+        seed,
+        sugarscape_core::burrow::RunOptions {
+            ticks,
+            sample_every,
+        },
+    )
+    .map_err(field_errors)?;
+    Ok(serde_json::to_string(&episode).expect("episode serializes"))
+}
+
+/// Checked resource-access replay; returns the complete shared outer record.
+#[wasm_bindgen]
+pub fn burrow_access_replay_json(
+    config_json: &str,
+    seed: &str,
+    ticks: f64,
+    sample_every: f64,
+) -> Result<String, JsValue> {
+    let config: sugarscape_core::burrow::AccessConfig =
+        serde_json::from_str(config_json).map_err(|error| {
+            field_errors(vec![FieldError::new(
+                "burrow_access_config",
+                error.to_string(),
+            )])
+        })?;
+    let seed = decimal_seed(seed)
+        .map_err(|message| field_errors(vec![FieldError::new("seed", message)]))?;
+    let ticks = checked_burrow_u32(ticks, "ticks", 0)?;
+    let sample_every = checked_burrow_u32(sample_every, "sample_every", 1)?;
+    let episode = sugarscape_core::burrow::run_access_episode(
+        config,
+        seed,
+        sugarscape_core::burrow::RunOptions {
+            ticks,
+            sample_every,
+        },
+    )
+    .map_err(field_errors)?;
+    Ok(serde_json::to_string(&episode).expect("access episode serializes"))
+}
+
+fn checked_burrow_u32(value: f64, field: &str, minimum: u32) -> Result<u32, JsValue> {
+    if !value.is_finite()
+        || value.fract() != 0.0
+        || value < f64::from(minimum)
+        || value > f64::from(u32::MAX)
+    {
+        return Err(field_errors(vec![FieldError::new(
+            field,
+            format!("expected finite integer in {minimum}..={}", u32::MAX),
+        )]));
+    }
+    Ok(value as u32)
+}
+
+fn decimal_seed(seed: &str) -> Result<u64, &'static str> {
+    if seed.is_empty() || !seed.bytes().all(|byte| byte.is_ascii_digit()) {
+        return Err("expected unsigned decimal u64");
+    }
+    seed.parse().map_err(|_| "seed exceeds u64")
+}
+
 fn read_sweep(spec: &str) -> Result<Sweep, JsValue> {
     Sweep::from_json(spec).map_err(field_errors)
 }
@@ -561,6 +670,16 @@ impl Sim {
         serde_json::to_string(&self.model().series_names()).expect("names serialize")
     }
 
+    /// Full finite state, science availability reasons, and clocks for democratic peace.
+    pub fn export_model_json(&self) -> Result<String, JsValue> {
+        match &self.world {
+            ModelWorld::DemocraticPeace(world) => Ok(world.state_json()),
+            _ => Err(edit_error(
+                "full model JSON is available for democratic_peace".into(),
+            )),
+        }
+    }
+
     pub fn export_series_csv(&self) -> String {
         self.model().series_csv()
     }
@@ -714,5 +833,17 @@ impl Sim {
             .hoard()
             .and_then(|h| h.generation_series(name))
             .unwrap_or_default()
+    }
+}
+
+#[cfg(test)]
+mod protection_boundary_tests {
+    #[test]
+    fn decimal_seed_is_strict_and_preserves_full_u64_range() {
+        assert_eq!(super::decimal_seed("18446744073709551615"), Ok(u64::MAX));
+        assert_eq!(super::decimal_seed("0007"), Ok(7));
+        for seed in ["", "-1", "+7", "7.0", " 7", "7\n", "18446744073709551616"] {
+            assert!(super::decimal_seed(seed).is_err(), "{seed:?}");
+        }
     }
 }

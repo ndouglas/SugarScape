@@ -14,6 +14,9 @@ export interface ComparePreset {
 
 export const COMPARE_PRESETS: ComparePreset[] = [
   { id: 'vi-2-vs-vi-3', label: 'Indecomposability — VI-2 vs VI-3 (Compare)', a: 'vi-2-no-trade', b: 'vi-3-trade' },
+  { id: 'polarity-offense-defense', label: 'Offense vs defense — Emergent Polarity (Compare)', a: 'polarity-original', b: 'polarity-defense' },
+  { id: 'polarity-alliance-effect', label: 'No alliances vs behavioral alliances — Emergent Polarity (Compare)', a: 'polarity-original', b: 'polarity-alliances' },
+
   {
     id: 'lhv-published-vs-documented',
     label: 'Replication vs documented — Anasazi (Compare)',
@@ -212,6 +215,19 @@ export const COMPARE_PRESETS: ComparePreset[] = [
     a: 'firms-base',
     b: 'firms-live',
   },
+  {
+    id: 'collusion-async-vs-sync',
+    label: 'Learning from the price charged vs every price — Algorithmic Collusion (Compare)',
+    a: 'collusion-calvano',
+    b: 'collusion-synchronous',
+  },
+  { id: 'democratic-peace-tagging-alliances', label: 'Tagging vs defensive alliances — Democratic Peace (Compare)', a: 'democratic-peace-tagging', b: 'democratic-peace-alliances' },
+  { id: 'democratic-peace-alliances-security', label: 'Alliances vs collective security — Democratic Peace (Compare)', a: 'democratic-peace-alliances', b: 'democratic-peace-collective-security' },
+  { id: 'democratic-peace-probability', label: 'Printed vs prose probability — Democratic Peace (Compare)', a: 'democratic-peace-printed-2001', b: 'democratic-peace-prose-probability' },
+  { id: 'geosim-technology', label: 'With vs without technological change — GeoSim (Compare)', a: 'geosim-paper', b: 'geosim-no-technology' },
+  { id: 'geosim-context', label: 'With vs without contextual activation — GeoSim (Compare)', a: 'geosim-paper', b: 'geosim-no-context' },
+  { id: 'auctions-formats', label: 'First price vs second price — Q-learning Auctions (Compare)', a: 'auctions-first-price', b: 'auctions-second-price' },
+  { id: 'auctions-feedback', label: 'Learning from one bid vs every bid — Q-learning Auctions (Compare)', a: 'auctions-first-price', b: 'auctions-feedback' },
 ];
 
 /**

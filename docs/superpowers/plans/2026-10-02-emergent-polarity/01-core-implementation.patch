@@ -1,0 +1,4866 @@
+diff --git a/crates/sugarscape-core/src/lib.rs b/crates/sugarscape-core/src/lib.rs
+--- a/crates/sugarscape-core/src/lib.rs
++++ b/crates/sugarscape-core/src/lib.rs
+@@ -35,6 +35,7 @@
+ pub mod network;
+ pub mod norms;
+ pub mod opinions;
++pub mod polarity;
+ pub mod portable;
+ pub mod presets;
+ pub mod punishment;
+diff --git a/crates/sugarscape-core/src/model.rs b/crates/sugarscape-core/src/model.rs
+--- a/crates/sugarscape-core/src/model.rs
++++ b/crates/sugarscape-core/src/model.rs
+@@ -24,6 +24,7 @@
+ use crate::line::{LineConfig, LineWorld};
+ use crate::norms::{NormsConfig, NormsWorld};
+ use crate::opinions::{OpinionsConfig, OpinionsWorld};
++use crate::polarity::{PolarityConfig, PolarityWorld};
+ use crate::punishment::{PunishmentConfig, PunishmentWorld};
+ use crate::render::{self, ColorMode, Layer};
+ use crate::retirement::{RetirementConfig, RetirementWorld};
+@@ -76,10 +77,11 @@
+     Firms,
+     Collusion,
+     Auctions,
++    Polarity,
+ }
+ 
+ impl ModelKind {
+-    pub const ALL: [ModelKind; 29] = [
++    pub const ALL: [ModelKind; 30] = [
+         ModelKind::Sugarscape,
+         ModelKind::Schelling,
+         ModelKind::Ring,
+@@ -109,6 +111,7 @@
+         ModelKind::Firms,
+         ModelKind::Collusion,
+         ModelKind::Auctions,
++        ModelKind::Polarity,
+     ];
+ 
+     pub fn as_str(self) -> &'static str {
+@@ -142,6 +145,7 @@
+             ModelKind::Firms => "firms",
+             ModelKind::Collusion => "collusion",
+             ModelKind::Auctions => "auctions",
++            ModelKind::Polarity => "polarity",
+         }
+     }
+ 
+@@ -178,6 +182,7 @@
+             ModelKind::Firms => crate::firms::schema(),
+             ModelKind::Collusion => crate::collusion::schema(),
+             ModelKind::Auctions => crate::auctions::schema(),
++            ModelKind::Polarity => crate::polarity::schema(),
+         }
+     }
+ }
+@@ -220,6 +225,7 @@
+     Firms(FirmsConfig),
+     Collusion(CollusionConfig),
+     Auctions(AuctionsConfig),
++    Polarity(PolarityConfig),
+ }
+ 
+ /// Another model's config on the wire: its fields and `"model": "<kind>"`.
+@@ -254,6 +260,7 @@
+     Firms(&'a FirmsConfig),
+     Collusion(&'a CollusionConfig),
+     Auctions(&'a AuctionsConfig),
++    Polarity(&'a PolarityConfig),
+ }
+ 
+ impl From<Config> for ModelConfig {
+@@ -295,6 +302,7 @@
+             ModelConfig::Firms(c) => Tagged::Firms(c).serialize(s),
+             ModelConfig::Collusion(c) => Tagged::Collusion(c).serialize(s),
+             ModelConfig::Auctions(c) => Tagged::Auctions(c).serialize(s),
++            ModelConfig::Polarity(c) => Tagged::Polarity(c).serialize(s),
+         }
+     }
+ }
+@@ -331,6 +339,7 @@
+             ModelConfig::Firms(_) => ModelKind::Firms,
+             ModelConfig::Collusion(_) => ModelKind::Collusion,
+             ModelConfig::Auctions(_) => ModelKind::Auctions,
++            ModelConfig::Polarity(_) => ModelKind::Polarity,
+         }
+     }
+ 
+@@ -440,6 +449,9 @@
+             "firms" => serde_json::from_value(value)
+                 .map(ModelConfig::Firms)
+                 .map_err(|e| FieldError::new("config", e.to_string())),
++            "polarity" => serde_json::from_value(value)
++                .map(ModelConfig::Polarity)
++                .map_err(|e| FieldError::new("config", e.to_string())),
+             "auctions" => serde_json::from_value(value)
+                 .map(ModelConfig::Auctions)
+                 .map_err(|e| FieldError::new("config", e.to_string())),
+@@ -455,7 +467,7 @@
+             _ => Err(FieldError::new(
+                 "model",
+                 format!(
+-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment, zi, bali, line, tipping, hoard, firms, collusion or auctions)"
++                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment, zi, bali, line, tipping, hoard, firms, collusion, auctions or polarity)"
+                 ),
+             )),
+         }
+@@ -492,6 +504,7 @@
+             ModelConfig::Firms(c) => c.validate(),
+             ModelConfig::Collusion(c) => c.validate(),
+             ModelConfig::Auctions(c) => c.validate(),
++            ModelConfig::Polarity(c) => c.validate(),
+         }
+     }
+ 
+@@ -528,6 +541,7 @@
+             ModelConfig::Firms(c) => set_path(c, path, value).map(ModelConfig::Firms),
+             ModelConfig::Collusion(c) => set_path(c, path, value).map(ModelConfig::Collusion),
+             ModelConfig::Auctions(c) => set_path(c, path, value).map(ModelConfig::Auctions),
++            ModelConfig::Polarity(c) => set_path(c, path, value).map(ModelConfig::Polarity),
+         }
+     }
+ 
+@@ -535,6 +549,9 @@
+     /// its own (the anasazi at its end year); `None` when it runs forever.
+     pub fn max_ticks(&self) -> Option<u32> {
+         match self {
++            ModelConfig::Polarity(c) => {
++                Some(c.horizon.div_ceil(u64::from(c.periods_per_tick)) as u32)
++            }
+             ModelConfig::Anasazi(c) => Some(c.end_year.saturating_sub(c.start_year)),
+             ModelConfig::Tags(c) => (c.end > 0).then_some(c.end),
+             ModelConfig::Ethno(c) => (c.end > 0).then_some(c.end),
+@@ -607,6 +624,7 @@
+                 .collect(),
+             ModelConfig::Firms(_) => crate::firms::SERIES.iter().map(|s| s.to_string()).collect(),
+             ModelConfig::Auctions(c) => crate::auctions::series_names(c.bidders),
++            ModelConfig::Polarity(_) => crate::polarity::series_names(),
+             ModelConfig::Collusion(_) => crate::collusion::SERIES
+                 .iter()
+                 .map(|s| s.to_string())
+@@ -809,6 +827,7 @@
+     Firms(Box<FirmsWorld>),
+     Collusion(Box<CollusionWorld>),
+     Auctions(Box<AuctionsWorld>),
++    Polarity(Box<PolarityWorld>),
+ }
+ 
+ impl ModelWorld {
+@@ -867,6 +886,9 @@
+             ModelConfig::Tipping(c) => ModelWorld::Tipping(Box::new(TippingWorld::new(c, seed)?)),
+             ModelConfig::Hoard(c) => ModelWorld::Hoard(Box::new(HoardWorld::new(c, seed)?)),
+             ModelConfig::Firms(c) => ModelWorld::Firms(Box::new(FirmsWorld::new(c, seed)?)),
++            ModelConfig::Polarity(c) => {
++                ModelWorld::Polarity(Box::new(PolarityWorld::new(c, seed)?))
++            }
+             ModelConfig::Auctions(c) => {
+                 ModelWorld::Auctions(Box::new(AuctionsWorld::new(c, seed)?))
+             }
+@@ -907,6 +929,7 @@
+             ModelWorld::Firms(_) => ModelKind::Firms,
+             ModelWorld::Collusion(_) => ModelKind::Collusion,
+             ModelWorld::Auctions(_) => ModelKind::Auctions,
++            ModelWorld::Polarity(_) => ModelKind::Polarity,
+         }
+     }
+ 
+@@ -941,6 +964,7 @@
+             ModelWorld::Firms(w) => w.as_ref(),
+             ModelWorld::Collusion(w) => w.as_ref(),
+             ModelWorld::Auctions(w) => w.as_ref(),
++            ModelWorld::Polarity(w) => w.as_ref(),
+         }
+     }
+ 
+@@ -975,6 +999,7 @@
+             ModelWorld::Firms(w) => w.as_mut(),
+             ModelWorld::Collusion(w) => w.as_mut(),
+             ModelWorld::Auctions(w) => w.as_mut(),
++            ModelWorld::Polarity(w) => w.as_mut(),
+         }
+     }
+ 
+@@ -1084,6 +1109,7 @@
+             ModelWorld::Hoard(w) => copy_without_history!(Hoard, w),
+             ModelWorld::Firms(w) => copy_without_history!(Firms, w),
+             ModelWorld::Collusion(w) => copy_without_history!(Collusion, w),
++            ModelWorld::Polarity(w) => copy_without_history!(Polarity, w),
+             ModelWorld::Auctions(w) => {
+                 let stats = std::mem::take(&mut w.stats);
+                 let mut copy = (**w).clone();
+@@ -1148,6 +1174,7 @@
+             (ModelWorld::Hoard(live), ModelWorld::Hoard(kept)) => restore_into!(live, kept),
+             (ModelWorld::Firms(live), ModelWorld::Firms(kept)) => restore_into!(live, kept),
+             (ModelWorld::Collusion(live), ModelWorld::Collusion(kept)) => restore_into!(live, kept),
++            (ModelWorld::Polarity(live), ModelWorld::Polarity(kept)) => restore_into!(live, kept),
+             (ModelWorld::Auctions(live), ModelWorld::Auctions(kept)) => {
+                 let mut stats = std::mem::take(&mut live.stats);
+                 let len = stats.history().partition_point(|s| s.tick <= kept.tick);
+@@ -1607,6 +1634,30 @@
+         w.model_mut().run(3);
+         w.restore(&cp).unwrap();
+         assert_eq!(w.model().tick(), 0);
++    }
++
++    #[test]
++    fn polarity_host_runs_partial_final_tick_and_preserves_endpoint() {
++        let config = ModelConfig::from_json(r#"{"model":"polarity","width":2,"height":2,"predator_share":0,"horizon":15,"periods_per_tick":7}"#).unwrap();
++        assert_eq!(config.max_ticks(), Some(3));
++        let mut world = ModelWorld::new(config.clone(), 1).unwrap();
++        world.model_mut().run(3);
++        let latest: serde_json::Value = serde_json::from_str(&world.model().latest_json()).unwrap();
++        assert_eq!(
++            (
++                latest["periods"].as_u64(),
++                latest["last_tick_periods"].as_u64()
++            ),
++            (Some(15), Some(1))
++        );
++        assert_eq!(world.model().latest_value("sovereign_count"), Some(4.0));
++        let fingerprint = world.model().fingerprint();
++        world.model_mut().run(10);
++        assert_eq!(world.model().fingerprint(), fingerprint);
++        assert!(world
++            .model_mut()
++            .set_config(config.with_path("alliances", &json!(true)).unwrap())
++            .is_err());
+     }
+ 
+     #[test]
+@@ -1805,7 +1856,8 @@
+                 "hoard",
+                 "firms",
+                 "collusion",
+-                "auctions"
++                "auctions",
++                "polarity"
+             ]
+         );
+         assert!(ModelKind::Sugarscape.schema().is_empty());
+diff --git a/crates/sugarscape-core/src/polarity/alliance.rs b/crates/sugarscape-core/src/polarity/alliance.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/polarity/alliance.rs
+@@ -0,0 +1,190 @@
++//! Directed trust and defensive coalitions keyed by a common prime threat.
++use super::config::PolarityConfig;
++use super::{
++    config::*,
++    decision::FrontKey,
++    territory,
++    world::{index, PolarityWorld},
++};
++use std::collections::BTreeSet;
++pub fn trust(config: &PolarityConfig, old: f64, aggression: bool) -> f64 {
++    let (rate, target) = if aggression {
++        (config.negative_trust_rate, -1000.0)
++    } else {
++        (config.positive_trust_rate, 1000.0)
++    };
++    (1.0 - rate) * old + rate * target
++}
++
++impl PolarityWorld {
++    pub(super) fn update_trust(&mut self) {
++        if !self.config.alliances {
++            return;
++        }
++        for (&(a, b), value) in &mut self.trust {
++            let aggression = match self.config.threat_observation {
++                ThreatObservation::NeighborAggression => self.aggression.contains(&b),
++                ThreatObservation::DyadicAggression => self.dyadic_aggression.contains(&(b, a)),
++            };
++            *value = super::alliance::trust(&self.config, *value, aggression);
++        }
++    }
++    pub(super) fn form_coalitions(&mut self) {
++        self.coalitions.clear();
++        self.threats.clear();
++        if !self.config.alliances {
++            return;
++        }
++        for a in territory::capitals(&self.cells) {
++            let mut least = self.config.threat_threshold;
++            let mut candidates = Vec::new();
++            for b in territory::neighbors(&self.config, &self.cells, a) {
++                let value = self.trust[&(a, b)];
++                if value < least {
++                    least = value;
++                    candidates.clear();
++                    candidates.push(b);
++                } else if value == least && value < self.config.threat_threshold {
++                    candidates.push(b);
++                }
++            }
++            if !candidates.is_empty() {
++                let b = if self.config.tie_break == TieBreak::Random {
++                    candidates[index(&mut self.rng, candidates.len())]
++                } else {
++                    candidates[0]
++                };
++                self.threats.insert(a, b);
++                self.coalitions.entry(b).or_default().push(a);
++            }
++        }
++        self.coalitions.retain(|_, members| members.len() >= 2);
++    }
++    pub(super) fn supported(&self, a: usize, victim: usize) -> [f64; 2] {
++        let mut attack = self.cells[a].stock;
++        let mut defend = self.cells[victim].stock;
++        for (&threat, members) in &self.coalitions {
++            if threat == victim && members.contains(&a) {
++                attack = members.iter().map(|&i| self.cells[i].stock).sum();
++            }
++            if members.contains(&victim) {
++                defend = members.iter().map(|&i| self.cells[i].stock).sum();
++            }
++        }
++        [attack, defend]
++    }
++    pub(super) fn deterrence_commitments(&self, a: usize, victim: usize) -> [f64; 2] {
++        let front_value = |actor: usize, opponent: usize| {
++            let key = FrontKey::foreign(actor, opponent);
++            self.fronts
++                .get(&key)
++                .map(|f| f.commitments[usize::from(key.b == actor)])
++                .unwrap_or(0.0)
++        };
++        let mut result = [front_value(a, victim), front_value(victim, a)];
++        for (&threat, members) in &self.coalitions {
++            if threat == victim && members.contains(&a) {
++                result[0] += members
++                    .iter()
++                    .filter(|&&i| i != a)
++                    .map(|&i| {
++                        if self.config.pra_alliance_support == PraAllianceSupport::Stocks {
++                            self.cells[i].stock
++                        } else {
++                            front_value(i, victim)
++                        }
++                    })
++                    .sum::<f64>();
++            }
++            if members.contains(&victim) {
++                result[1] += members
++                    .iter()
++                    .filter(|&&i| i != victim)
++                    .map(|&i| {
++                        if self.config.pra_alliance_support == PraAllianceSupport::Stocks {
++                            self.cells[i].stock
++                        } else {
++                            front_value(i, a)
++                        }
++                    })
++                    .sum::<f64>();
++            }
++        }
++        result
++    }
++    pub(super) fn coalition_threat(&self, capital: usize) -> Option<usize> {
++        self.coalitions
++            .iter()
++            .find(|(_, m)| m.contains(&capital))
++            .map(|(&t, _)| t)
++    }
++    pub(super) fn obligations(&mut self) {
++        if !self.config.alliances {
++            return;
++        }
++        let initiations: Vec<(usize, usize)> = self
++            .fronts
++            .values()
++            .filter(|f| !f.key.domestic)
++            .flat_map(|f| {
++                [
++                    (f.key.a, f.key.b, f.initiated[0]),
++                    (f.key.b, f.key.a, f.initiated[1]),
++                ]
++            })
++            .filter(|(_, _, yes)| *yes)
++            .map(|(a, b, _)| (a, b))
++            .collect();
++        for (a, b) in &initiations {
++            for members in self.coalitions.values_mut() {
++                if members.contains(a) && members.contains(b) {
++                    members.retain(|x| x != a);
++                }
++            }
++        }
++        self.coalitions.retain(|_, m| m.len() >= 2);
++        let mut obligations = BTreeSet::new();
++        for (a, b) in initiations {
++            for members in self.coalitions.values() {
++                if members.contains(&b) {
++                    for &member in members {
++                        if member != a && self.fronts.contains_key(&FrontKey::foreign(member, a)) {
++                            obligations.insert((member, a));
++                        }
++                    }
++                }
++            }
++        }
++        if self.config.obligation_timing == ObligationTiming::NextPeriod {
++            self.pending = obligations;
++        } else {
++            for (a, b) in obligations {
++                let k = FrontKey::foreign(a, b);
++                self.fronts.get_mut(&k).unwrap().actions[usize::from(k.b == a)] = true;
++            }
++        }
++    }
++    pub(super) fn note_aggression(&mut self) {
++        for f in self.fronts.values().filter(|f| !f.key.domestic) {
++            if f.initiated[0] {
++                self.aggression.insert(f.key.a);
++                self.dyadic_aggression.insert((f.key.a, f.key.b));
++            }
++            if f.initiated[1] {
++                self.aggression.insert(f.key.b);
++                self.dyadic_aggression.insert((f.key.b, f.key.a));
++            }
++        }
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn negative_and_positive_trust_learning_follow_source_recurrence() {
++        let c = PolarityConfig::default();
++        assert_eq!(trust(&c, 100.0, true), -450.0);
++        assert_eq!(trust(&c, -450.0, false), -435.5);
++    }
++}
+diff --git a/crates/sugarscape-core/src/polarity/analysis.rs b/crates/sugarscape-core/src/polarity/analysis.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/polarity/analysis.rs
+@@ -0,0 +1,136 @@
++//! Session categories and conflict episodes are distinct from battle counts.
++use super::config::PolarityConfig;
++use serde::Serialize;
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Category {
++    One,
++    Two,
++    ThreeToTen,
++    ElevenToNinety,
++    NinetyOneToHundred,
++}
++pub fn category(n: u32) -> Option<Category> {
++    if !(1..=100).contains(&n) {
++        return None;
++    }
++    Some(match n {
++        1 => Category::One,
++        2 => Category::Two,
++        3..=10 => Category::ThreeToTen,
++        11..=90 => Category::ElevenToNinety,
++        _ => Category::NinetyOneToHundred,
++    })
++}
++#[derive(Clone, Debug, Default, PartialEq, Serialize)]
++pub struct Ledger {
++    pub attacks: u64,
++    pub dd_encounters: u64,
++    pub conquests: u64,
++    pub capital_collapses: u64,
++    pub disconnections: u64,
++    pub revolts: u64,
++    pub stale_claims: u64,
++    pub locked_claims: u64,
++    pub path_collisions: u64,
++    pub double_successes: u64,
++    pub destruction: f64,
++    pub signed_creation: f64,
++    pub harvest: f64,
++    pub taxes: f64,
++    pub transfers: f64,
++    pub clipping: f64,
++}
++impl Ledger {
++    pub fn all_finite(&self) -> bool {
++        [
++            self.destruction,
++            self.signed_creation,
++            self.harvest,
++            self.taxes,
++            self.transfers,
++            self.clipping,
++        ]
++        .iter()
++        .all(|x| x.is_finite())
++    }
++
++    pub fn add(&mut self, b: &Self) {
++        self.attacks += b.attacks;
++        self.dd_encounters += b.dd_encounters;
++        self.conquests += b.conquests;
++        self.capital_collapses += b.capital_collapses;
++        self.disconnections += b.disconnections;
++        self.revolts += b.revolts;
++        self.stale_claims += b.stale_claims;
++        self.locked_claims += b.locked_claims;
++        self.path_collisions += b.path_collisions;
++        self.double_successes += b.double_successes;
++        self.destruction += b.destruction;
++        self.signed_creation += b.signed_creation;
++        self.harvest += b.harvest;
++        self.taxes += b.taxes;
++        self.transfers += b.transfers;
++        self.clipping += b.clipping;
++    }
++}
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct Episode {
++    pub id: u64,
++    pub domestic: bool,
++    pub capitals: [usize; 2],
++    pub initiator: usize,
++    pub start: u64,
++    pub end: Option<u64>,
++    pub duration: u64,
++    pub path: [usize; 2],
++    pub actions: [bool; 2],
++    pub initial_sizes: [usize; 2],
++    pub positive_loss: f64,
++    pub signed_creation: f64,
++    pub end_cause: Option<String>,
++    pub winner: Option<usize>,
++    pub censored: bool,
++}
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct Event {
++    pub id: u64,
++    pub period: u64,
++    pub kind: String,
++    pub cells: Vec<usize>,
++    pub front: Option<[usize; 2]>,
++}
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct Outcome {
++    pub config: PolarityConfig,
++    pub seed: u64,
++    pub periods: u64,
++    pub attempted_period: u64,
++    pub finish_reason: String,
++    pub valid: bool,
++    pub invalid_reason: Option<String>,
++    pub sovereign_count: u32,
++    pub terminal_category: Option<Category>,
++    pub initial_predator_share: f64,
++    pub predator_capital_share: f64,
++    pub destruction: f64,
++    pub signed_creation: f64,
++    pub events: Ledger,
++    pub episodes: Vec<Episode>,
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn source_category_partition_stops_at_one_hundred() {
++        assert_eq!(category(1), Some(Category::One));
++        assert_eq!(category(2), Some(Category::Two));
++        assert_eq!(category(3), Some(Category::ThreeToTen));
++        assert_eq!(category(10), Some(Category::ThreeToTen));
++        assert_eq!(category(11), Some(Category::ElevenToNinety));
++        assert_eq!(category(90), Some(Category::ElevenToNinety));
++        assert_eq!(category(91), Some(Category::NinetyOneToHundred));
++        assert_eq!(category(100), Some(Category::NinetyOneToHundred));
++        assert_eq!(category(101), None);
++    }
++}
+diff --git a/crates/sugarscape-core/src/polarity/combat.rs b/crates/sugarscape-core/src/polarity/combat.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/polarity/combat.rs
+@@ -0,0 +1,385 @@
++//! Portable probabilistic encounters and mutually exclusive claims.
++use super::combat;
++use super::resources::ratio;
++use super::{
++    analysis::{Episode, Ledger},
++    config::*,
++    decision::FrontKey,
++    resources,
++    territory::{self, Claim},
++    world::{shuffle, PolarityWorld},
++};
++use rand::Rng;
++use std::collections::BTreeSet;
++pub fn probability(r: f64, threshold: f64, exponent: f64) -> f64 {
++    if r <= 0.0 {
++        return 0.0;
++    }
++    if r == f64::INFINITY {
++        return 1.0;
++    }
++    // Normalize subnormals before the portable logarithm.
++    fn log(x: f64) -> f64 {
++        if x.is_subnormal() {
++            crate::portable::ln(x * 4503599627370496.0) - 52.0 * std::f64::consts::LN_2
++        } else {
++            crate::portable::ln(x)
++        }
++    }
++    let z = exponent * (log(r) - log(threshold));
++    if z >= 0.0 {
++        1.0 / (1.0 + crate::portable::exp_neg(-z))
++    } else {
++        let e = crate::portable::exp_neg(z);
++        e / (1.0 + e)
++    }
++}
++pub fn single_draw(a: f64, b: f64, draw: f64) -> Option<usize> {
++    if draw < a {
++        Some(0)
++    } else if draw < a + b {
++        Some(1)
++    } else {
++        None
++    }
++}
++pub fn deterministic(commitments: [f64; 2], threshold: f64) -> Option<usize> {
++    if ratio(commitments[0], commitments[1]) > threshold {
++        Some(0)
++    } else if ratio(commitments[1], commitments[0]) > threshold {
++        Some(1)
++    } else {
++        None
++    }
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn threshold_equality_is_not_victory() {
++        assert_eq!(deterministic([20.0, 10.0], 2.0), None);
++        assert_eq!(deterministic([21.0, 10.0], 2.0), Some(0));
++        assert_eq!(deterministic([10.0, 21.0], 2.0), Some(1));
++    }
++    #[test]
++    fn logistic_endpoints_and_midpoint() {
++        assert_eq!(probability(0.0, 3.0, 5.0), 0.0);
++        assert_eq!(probability(f64::INFINITY, 3.0, 5.0), 1.0);
++        assert_eq!(probability(3.0, 3.0, 5.0), 0.5);
++    }
++    #[test]
++    fn single_draw_competing_victories_have_adjacent_intervals() {
++        assert_eq!(single_draw(0.3, 0.2, 0.25), Some(0));
++        assert_eq!(single_draw(0.3, 0.2, 0.4), Some(1));
++        assert_eq!(single_draw(0.3, 0.2, 0.8), None);
++    }
++}
++#[cfg(test)]
++mod numeric_motifs {
++    use super::*;
++    #[test]
++    fn nonpositive_ratios_have_zero_stochastic_success() {
++        for r in [-100.0, -0.1, 0.0] {
++            assert_eq!(probability(r, 3.0, 5.0), 0.0);
++        }
++    }
++    #[test]
++    fn equal_power_does_not_imply_equal_half_chance() {
++        assert!((probability(1.0, 3.0, 5.0) - 1.0 / 244.0).abs() < 1e-16);
++    }
++    #[test]
++    fn reverse_probabilities_leave_stalemate_mass() {
++        assert!(probability(2.0, 3.0, 5.0) + probability(0.5, 3.0, 5.0) < 1.0);
++    }
++    #[test]
++    fn subnormal_positive_ratio_does_not_panic_portable_log() {
++        assert_eq!(probability(f64::from_bits(1), 3.0, 5.0), 0.0);
++    }
++    #[test]
++    fn zero_stock_both_sides_stalemate() {
++        assert_eq!(deterministic([0.0, 0.0], 2.0), None);
++    }
++    #[test]
++    fn defender_can_win_instead_of_forced_stalemate() {
++        assert_eq!(deterministic([10.0, 30.0], 2.0), Some(1));
++    }
++}
++
++impl PolarityWorld {
++    pub(super) fn victory(
++        &mut self,
++        key: FrontKey,
++        values: [f64; 2],
++        e: &mut Ledger,
++    ) -> Option<usize> {
++        if values.iter().any(|v| !v.is_finite()) {
++            self.finish(
++                "invalid",
++                Some(format!(
++                    "period {} front {:?}: nonfinite victory allocation; config {:?}",
++                    self.period, key, self.config
++                )),
++            );
++            return None;
++        }
++        if resources::ratio_overflows(values[0], values[1])
++            || resources::ratio_overflows(values[1], values[0])
++        {
++            self.finish(
++                "invalid",
++                Some(format!(
++                    "period {} front {:?}: nonfinite ratio with nonzero denominator; config {:?}",
++                    self.period, key, self.config
++                )),
++            );
++            return None;
++        }
++        if self.config.variant != Variant::Overextension {
++            return combat::deterministic(
++                values,
++                if key.domestic {
++                    2.0
++                } else {
++                    self.config.victory
++                },
++            );
++        }
++        let threshold = if key.domestic {
++            2.0
++        } else {
++            self.config.stochastic_threshold
++        };
++        let a = combat::probability(
++            resources::ratio(values[0], values[1]),
++            threshold,
++            self.config.stochastic_exponent,
++        );
++        let b = combat::probability(
++            resources::ratio(values[1], values[0]),
++            threshold,
++            self.config.stochastic_exponent,
++        );
++        match self.config.stochastic_resolution {
++            StochasticResolution::SingleDraw => combat::single_draw(a, b, self.rng.gen::<f64>()),
++            StochasticResolution::IndependentDraws => {
++                let av = self.rng.gen::<f64>() < a;
++                let bv = self.rng.gen::<f64>() < b;
++                match (av, bv) {
++                    (true, false) => Some(0),
++                    (false, true) => Some(1),
++                    (true, true) => {
++                        e.double_successes += 1;
++                        None
++                    }
++                    _ => None,
++                }
++            }
++        }
++    }
++    pub(super) fn episode_period(&mut self, key: FrontKey, losses: [f64; 2]) {
++        let actions = self.fronts[&key].actions;
++        if !actions[0] && !actions[1] {
++            self.end_episode(key, "cooperation", None);
++            return;
++        }
++        if self.fronts[&key].episode.is_none() {
++            let f = &self.fronts[&key];
++            let initiator = if f.initiated[1] && !f.initiated[0] {
++                key.b
++            } else if actions[0] {
++                key.a
++            } else {
++                key.b
++            };
++            let ep = Episode {
++                id: self.next_episode,
++                domestic: key.domestic,
++                capitals: [key.a, key.b],
++                initiator,
++                start: self.period,
++                end: None,
++                duration: 0,
++                path: f.path.unwrap(),
++                actions,
++                initial_sizes: [
++                    territory::members(&self.cells, key.a).len(),
++                    if key.domestic {
++                        1
++                    } else {
++                        territory::members(&self.cells, key.b).len()
++                    },
++                ],
++                positive_loss: 0.0,
++                signed_creation: 0.0,
++                end_cause: None,
++                winner: None,
++                censored: false,
++            };
++            self.next_episode += 1;
++            self.fronts.get_mut(&key).unwrap().episode = Some(ep);
++        }
++        let ep = self.fronts.get_mut(&key).unwrap().episode.as_mut().unwrap();
++        ep.duration += 1;
++        ep.actions = actions;
++        for loss in losses {
++            if loss > 0.0 {
++                ep.positive_loss += loss;
++            } else {
++                ep.signed_creation -= loss;
++            }
++        }
++    }
++    pub(super) fn end_episode(&mut self, key: FrontKey, cause: &str, winner: Option<usize>) {
++        if let Some(f) = self.fronts.get_mut(&key) {
++            if let Some(mut ep) = f.episode.take() {
++                ep.end = Some(self.period);
++                ep.end_cause = Some(cause.into());
++                ep.winner = winner;
++                self.episodes.push(ep);
++            }
++            if cause == "victory" {
++                f.actions = [false, false];
++                f.previous = [false, false];
++                f.path = None;
++            }
++        }
++    }
++    pub(super) fn claim(&self, key: FrontKey, side: usize) -> Option<Claim> {
++        let path = self.fronts[&key].path?;
++        if key.domestic {
++            if side == 1 {
++                Some(Claim {
++                    winner: key.b,
++                    loser: key.a,
++                    target: key.b,
++                    domestic: true,
++                    source: None,
++                })
++            } else {
++                None
++            }
++        } else {
++            Some(Claim {
++                winner: if side == 0 { key.a } else { key.b },
++                loser: if side == 0 { key.b } else { key.a },
++                target: path[1 - side],
++                domestic: false,
++                source: Some(path[side]),
++            })
++        }
++    }
++    pub(super) fn structural(&mut self, claims: &[Claim], e: &mut Ledger) {
++        let change = territory::apply_locked(
++            &self.config,
++            &mut self.cells,
++            claims,
++            &mut self.period_locks,
++        );
++        e.transfers += change.transfer_volume;
++        for claim in &change.applied {
++            if !claim.domestic {
++                self.aggression.insert(claim.winner);
++                self.dyadic_aggression.insert((claim.winner, claim.loser));
++            }
++        }
++        e.conquests += change.conquests;
++        e.capital_collapses += change.collapses;
++        e.disconnections += change.disconnections;
++        e.stale_claims += change.stale;
++        e.locked_claims += change.locked;
++        if !change.cells.is_empty() {
++            self.log("structure", change.cells, None);
++            self.rebuild();
++        }
++    }
++    pub(super) fn sequential(&mut self, mut caps: Vec<usize>, e: &mut Ledger) {
++        shuffle(&mut caps, &mut self.rng);
++        let mut visited = BTreeSet::new();
++        for actor in caps {
++            if self.cells[actor].capital != actor {
++                continue;
++            }
++            self.rebuild();
++            let stocks = self.cells.iter().map(|c| c.stock).collect::<Vec<_>>();
++            let values = self.allocate(&stocks);
++            for (k, v) in values {
++                if !visited.contains(&k) {
++                    self.fronts.get_mut(&k).unwrap().commitments = v;
++                }
++            }
++            self.decide_actor(actor, e);
++            self.obligations();
++            self.paths(e);
++            let keys: Vec<FrontKey> = self
++                .fronts
++                .keys()
++                .filter(|k| k.a == actor || (!k.domestic && k.b == actor))
++                .copied()
++                .collect();
++            for key in keys {
++                if !visited.insert(key) {
++                    continue;
++                }
++                self.resolved_fronts.insert(key);
++                let f = &self.fronts[&key];
++                if f.commitments.iter().any(|v| !v.is_finite()) {
++                    self.finish(
++                        "invalid",
++                        Some(format!(
++                            "period {} front {:?}: nonfinite sequential commitment",
++                            self.period, key
++                        )),
++                    );
++                    return;
++                }
++                let losses = resources::damage(
++                    f.actions,
++                    f.commitments,
++                    self.config.damage_rate,
++                    self.config.asymmetric_losses(),
++                );
++                let old = f.commitments;
++                if f.actions == [true, true] {
++                    e.dd_encounters += 1;
++                }
++                self.episode_period(key, losses);
++                let active = self.fronts[&key].actions.iter().any(|x| *x);
++                let early = if active && self.config.victory_timing == VictoryTiming::BeforeDamage {
++                    self.victory(key, old, e)
++                } else {
++                    None
++                };
++                self.cells[key.a].stock -= losses[0];
++                self.cells[key.b].stock -= losses[1];
++                for loss in losses {
++                    if loss > 0.0 {
++                        e.destruction += loss;
++                    } else {
++                        e.signed_creation -= loss;
++                    }
++                }
++                if !self.intermediate_valid() {
++                    return;
++                }
++                let winner = if active && self.config.victory_timing != VictoryTiming::BeforeDamage
++                {
++                    let values =
++                        self.allocate(&self.cells.iter().map(|c| c.stock).collect::<Vec<_>>());
++                    self.victory(key, values[&key], e)
++                } else {
++                    early
++                };
++                self.note_aggression();
++                if let Some(side) = winner {
++                    let claim = self.claim(key, side);
++                    let winner = if side == 0 { key.a } else { key.b };
++                    self.end_episode(key, "victory", Some(winner));
++                    if let Some(claim) = claim {
++                        self.structural(&[claim], e);
++                    }
++                }
++            }
++        }
++        self.harvest(e);
++    }
++}
+diff --git a/crates/sugarscape-core/src/polarity/config.rs b/crates/sugarscape-core/src/polarity/config.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/polarity/config.rs
+@@ -0,0 +1,948 @@
++//! Source mechanics and explicit, serialized reconstruction readings.
++use crate::{
++    config::FieldError,
++    schema::{Apply, Param},
++};
++use serde::{Deserialize, Serialize};
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Variant {
++    Epm,
++    TwoLevel,
++    Overextension,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum SourceProfile {
++    Chapter4,
++    Chapter5,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Topology {
++    Bounded,
++    Torus,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Placement {
++    ExactCount,
++    Bernoulli,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ResourceDistribution {
++    Normal,
++    BoundedUniform,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum AsymmetricDamage {
++    Source,
++    On,
++    Off,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Allocation {
++    Equal,
++    Pra,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ActionMemory {
++    PreviousAction,
++    WarUntilVictory,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum SchlieffenGate {
++    OwnCurrentDefections,
++    PreviousHostilities,
++    UnresolvedWar,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum CombatPath {
++    StoredEpisode,
++    RedrawEachPeriod,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum TieBreak {
++    LowestId,
++    Random,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum PathCollision {
++    LowestId,
++    Random,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum PraActive {
++    EitherDefection,
++    MutualDefection,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum VictoryTiming {
++    BeforeDamage,
++    AfterDamage,
++    AfterHarvest,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Update {
++    Snapshot,
++    Sequential,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Locking {
++    AffectedCells,
++    AffectedStates,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum CapitalCapture {
++    CollapseOnly,
++    CaptureAndFragment,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ProvinceTransfer {
++    EqualShare,
++    PrimitiveStockOnly,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ResourcePolicy {
++    Signed,
++    FloorZero,
++    RejectNonpositive,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ThreatObservation {
++    NeighborAggression,
++    DyadicAggression,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ObligationTiming {
++    SamePeriod,
++    NextPeriod,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum PraAttackRule {
++    Diagram,
++    LiteralProse,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum TaxDistance {
++    Manhattan,
++    TerritorialPath,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum StochasticResolution {
++    SingleDraw,
++    IndependentDraws,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum PraAllianceSupport {
++    FrontCommitments,
++    Stocks,
++}
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct PolarityConfig {
++    pub variant: Variant,
++    pub source_profile: SourceProfile,
++    pub width: u32,
++    pub height: u32,
++    pub topology: Topology,
++    pub predator_share: f64,
++    pub placement: Placement,
++    pub initial_mean: f64,
++    pub initial_sd: f64,
++    pub harvest_mean: f64,
++    pub harvest_sd: f64,
++    pub resource_distribution: ResourceDistribution,
++    pub superiority: f64,
++    pub victory: f64,
++    pub damage_rate: f64,
++    pub asymmetric_damage: AsymmetricDamage,
++    pub allocation: Allocation,
++    pub action_memory: ActionMemory,
++    pub schlieffen_gate: SchlieffenGate,
++    pub combat_path: CombatPath,
++    pub tie_break: TieBreak,
++    pub path_collision: PathCollision,
++    pub pra_active: PraActive,
++    pub victory_timing: VictoryTiming,
++    pub update: Update,
++    pub locking: Locking,
++    pub capital_capture: CapitalCapture,
++    pub province_transfer: ProvinceTransfer,
++    pub resource_policy: ResourcePolicy,
++    pub alliances: bool,
++    pub pra_alliance_support: PraAllianceSupport,
++    pub trust_initial: f64,
++    pub threat_threshold: f64,
++    pub negative_trust_rate: f64,
++    pub positive_trust_rate: f64,
++    pub threat_observation: ThreatObservation,
++    pub obligation_timing: ObligationTiming,
++    pub pra_attack_rule: PraAttackRule,
++    pub tax_rate: f64,
++    pub tax_discount: f64,
++    pub tax_distance: TaxDistance,
++    pub stochastic_threshold: f64,
++    pub stochastic_exponent: f64,
++    pub stochastic_resolution: StochasticResolution,
++    pub horizon: u64,
++    pub stop_at_hegemony: bool,
++    pub periods_per_tick: u32,
++    pub event_log: bool,
++    pub event_log_limit: u32,
++}
++impl Default for PolarityConfig {
++    fn default() -> Self {
++        Self {
++            variant: Variant::Epm,
++            source_profile: SourceProfile::Chapter4,
++            width: 10,
++            height: 10,
++            topology: Topology::Bounded,
++            predator_share: 0.2,
++            placement: Placement::ExactCount,
++            initial_mean: 50.0,
++            initial_sd: 10.0,
++            harvest_mean: 2.0,
++            harvest_sd: 5.0,
++            resource_distribution: ResourceDistribution::Normal,
++            superiority: 2.0,
++            victory: 2.0,
++            damage_rate: 0.05,
++            asymmetric_damage: AsymmetricDamage::Source,
++            allocation: Allocation::Equal,
++            action_memory: ActionMemory::PreviousAction,
++            schlieffen_gate: SchlieffenGate::OwnCurrentDefections,
++            combat_path: CombatPath::StoredEpisode,
++            tie_break: TieBreak::LowestId,
++            path_collision: PathCollision::LowestId,
++            pra_active: PraActive::EitherDefection,
++            victory_timing: VictoryTiming::BeforeDamage,
++            update: Update::Snapshot,
++            locking: Locking::AffectedCells,
++            capital_capture: CapitalCapture::CollapseOnly,
++            province_transfer: ProvinceTransfer::EqualShare,
++            resource_policy: ResourcePolicy::Signed,
++            alliances: false,
++            pra_alliance_support: PraAllianceSupport::FrontCommitments,
++            trust_initial: 0.0,
++            threat_threshold: 0.0,
++            negative_trust_rate: 0.5,
++            positive_trust_rate: 0.01,
++            threat_observation: ThreatObservation::NeighborAggression,
++            obligation_timing: ObligationTiming::SamePeriod,
++            pra_attack_rule: PraAttackRule::Diagram,
++            tax_rate: 0.4,
++            tax_discount: 0.7,
++            tax_distance: TaxDistance::Manhattan,
++            stochastic_threshold: 3.0,
++            stochastic_exponent: 5.0,
++            stochastic_resolution: StochasticResolution::SingleDraw,
++            horizon: 1000,
++            stop_at_hegemony: true,
++            periods_per_tick: 1,
++            event_log: false,
++            event_log_limit: 1000,
++        }
++    }
++}
++impl PolarityConfig {
++    pub fn for_variant(variant: Variant) -> Self {
++        let mut c = Self {
++            variant,
++            ..Self::default()
++        };
++        if variant != Variant::Epm {
++            c.source_profile = SourceProfile::Chapter5;
++            c.allocation = Allocation::Pra;
++        }
++        if variant == Variant::TwoLevel {
++            c.tax_discount = 1.0;
++        }
++        if variant == Variant::Overextension {
++            c.horizon = 4000;
++            c.stop_at_hegemony = false;
++        }
++        c
++    }
++    pub fn provincial(&self) -> bool {
++        self.variant != Variant::Epm
++    }
++    pub fn asymmetric_losses(&self) -> bool {
++        match self.asymmetric_damage {
++            AsymmetricDamage::On => true,
++            AsymmetricDamage::Off => false,
++            AsymmetricDamage::Source => self.source_profile == SourceProfile::Chapter4,
++        }
++    }
++    pub fn validate(&self) -> Result<(), Vec<FieldError>> {
++        let mut errors = Vec::new();
++        let mut check = |ok: bool, field: &str, message: &str| {
++            if !ok {
++                errors.push(FieldError::new(field, message));
++            }
++        };
++        check((2..=100).contains(&self.width), "width", "must be 2..100");
++        check((2..=100).contains(&self.height), "height", "must be 2..100");
++        check(
++            u64::from(self.width) * u64::from(self.height) <= 10000,
++            "width",
++            "at most 10,000 cells",
++        );
++        check(
++            (0.0..=1.0).contains(&self.predator_share),
++            "predator_share",
++            "must be finite and 0..1",
++        );
++        check(
++            (0.0..=1.0).contains(&self.damage_rate),
++            "damage_rate",
++            "must be finite and 0..1",
++        );
++        check(
++            (0.0..=1.0).contains(&self.negative_trust_rate),
++            "negative_trust_rate",
++            "must be finite and 0..1",
++        );
++        check(
++            (0.0..=1.0).contains(&self.positive_trust_rate),
++            "positive_trust_rate",
++            "must be finite and 0..1",
++        );
++        check(
++            (0.0..=1.0).contains(&self.tax_rate),
++            "tax_rate",
++            "must be finite and 0..1",
++        );
++        check(
++            (0.0..=1.0).contains(&self.tax_discount),
++            "tax_discount",
++            "must be finite and 0..1",
++        );
++        check(
++            self.initial_mean.is_finite(),
++            "initial_mean",
++            "must be finite",
++        );
++        check(
++            self.harvest_mean.is_finite(),
++            "harvest_mean",
++            "must be finite",
++        );
++        check(
++            self.initial_sd.is_finite() && self.initial_sd >= 0.0,
++            "initial_sd",
++            "must be finite and nonnegative",
++        );
++        check(
++            self.harvest_sd.is_finite() && self.harvest_sd >= 0.0,
++            "harvest_sd",
++            "must be finite and nonnegative",
++        );
++        check(
++            self.superiority.is_finite() && self.superiority > 1.0,
++            "superiority",
++            "must be finite and greater than 1",
++        );
++        check(
++            self.victory.is_finite() && self.victory > 1.0,
++            "victory",
++            "must be finite and greater than 1",
++        );
++        check(
++            self.stochastic_threshold.is_finite() && self.stochastic_threshold > 1.0,
++            "stochastic_threshold",
++            "must be finite and greater than 1",
++        );
++        check(
++            (-1000.0..=1000.0).contains(&self.trust_initial),
++            "trust_initial",
++            "must be finite and -1000..1000",
++        );
++        check(
++            (-1000.0..=1000.0).contains(&self.threat_threshold),
++            "threat_threshold",
++            "must be finite and -1000..1000",
++        );
++        check(
++            self.stochastic_exponent.is_finite() && self.stochastic_exponent > 0.0,
++            "stochastic_exponent",
++            "must be finite and positive",
++        );
++        check(
++            (1..=1_000_000_000).contains(&self.horizon),
++            "horizon",
++            "must be 1..1,000,000,000",
++        );
++        check(
++            (1..=10000).contains(&self.periods_per_tick),
++            "periods_per_tick",
++            "must be 1..10,000",
++        );
++        check(
++            self.event_log_limit <= 1_000_000 && (!self.event_log || self.event_log_limit > 0),
++            "event_log_limit",
++            "must be 0..1,000,000 and positive when logging",
++        );
++        check(
++            !self.provincial() || self.source_profile == SourceProfile::Chapter5,
++            "source_profile",
++            "provincial variants require chapter5",
++        );
++        check(
++            !self.provincial() || self.allocation == Allocation::Pra,
++            "allocation",
++            "provincial variants require pra",
++        );
++        check(
++            self.variant != Variant::TwoLevel || self.tax_discount == 1.0,
++            "tax_discount",
++            "two_level uses constant tax: choose tax_discount=1 or overextension",
++        );
++        check(
++            self.variant != Variant::Overextension || !self.stop_at_hegemony,
++            "stop_at_hegemony",
++            "overextension must continue through hegemony",
++        );
++        check(
++            !(self.update == Update::Sequential
++                && self.victory_timing == VictoryTiming::AfterHarvest),
++            "victory_timing",
++            "sequential requires before_damage or after_damage; choose snapshot for after_harvest",
++        );
++        if errors.is_empty() {
++            Ok(())
++        } else {
++            Err(errors)
++        }
++    }
++}
++impl<'de> Deserialize<'de> for PolarityConfig {
++    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
++        #[derive(Deserialize)]
++        #[serde(deny_unknown_fields)]
++        struct Partial {
++            #[serde(default)]
++            variant: Option<Variant>,
++            #[serde(default)]
++            source_profile: Option<SourceProfile>,
++            #[serde(default)]
++            width: Option<u32>,
++            #[serde(default)]
++            height: Option<u32>,
++            #[serde(default)]
++            topology: Option<Topology>,
++            #[serde(default)]
++            predator_share: Option<f64>,
++            #[serde(default)]
++            placement: Option<Placement>,
++            #[serde(default)]
++            initial_mean: Option<f64>,
++            #[serde(default)]
++            initial_sd: Option<f64>,
++            #[serde(default)]
++            harvest_mean: Option<f64>,
++            #[serde(default)]
++            harvest_sd: Option<f64>,
++            #[serde(default)]
++            resource_distribution: Option<ResourceDistribution>,
++            #[serde(default)]
++            superiority: Option<f64>,
++            #[serde(default)]
++            victory: Option<f64>,
++            #[serde(default)]
++            damage_rate: Option<f64>,
++            #[serde(default)]
++            asymmetric_damage: Option<AsymmetricDamage>,
++            #[serde(default)]
++            allocation: Option<Allocation>,
++            #[serde(default)]
++            action_memory: Option<ActionMemory>,
++            #[serde(default)]
++            schlieffen_gate: Option<SchlieffenGate>,
++            #[serde(default)]
++            combat_path: Option<CombatPath>,
++            #[serde(default)]
++            tie_break: Option<TieBreak>,
++            #[serde(default)]
++            path_collision: Option<PathCollision>,
++            #[serde(default)]
++            pra_active: Option<PraActive>,
++            #[serde(default)]
++            victory_timing: Option<VictoryTiming>,
++            #[serde(default)]
++            update: Option<Update>,
++            #[serde(default)]
++            locking: Option<Locking>,
++            #[serde(default)]
++            capital_capture: Option<CapitalCapture>,
++            #[serde(default)]
++            province_transfer: Option<ProvinceTransfer>,
++            #[serde(default)]
++            resource_policy: Option<ResourcePolicy>,
++            #[serde(default)]
++            alliances: Option<bool>,
++            #[serde(default)]
++            pra_alliance_support: Option<PraAllianceSupport>,
++            #[serde(default)]
++            trust_initial: Option<f64>,
++            #[serde(default)]
++            threat_threshold: Option<f64>,
++            #[serde(default)]
++            negative_trust_rate: Option<f64>,
++            #[serde(default)]
++            positive_trust_rate: Option<f64>,
++            #[serde(default)]
++            threat_observation: Option<ThreatObservation>,
++            #[serde(default)]
++            obligation_timing: Option<ObligationTiming>,
++            #[serde(default)]
++            pra_attack_rule: Option<PraAttackRule>,
++            #[serde(default)]
++            tax_rate: Option<f64>,
++            #[serde(default)]
++            tax_discount: Option<f64>,
++            #[serde(default)]
++            tax_distance: Option<TaxDistance>,
++            #[serde(default)]
++            stochastic_threshold: Option<f64>,
++            #[serde(default)]
++            stochastic_exponent: Option<f64>,
++            #[serde(default)]
++            stochastic_resolution: Option<StochasticResolution>,
++            #[serde(default)]
++            horizon: Option<u64>,
++            #[serde(default)]
++            stop_at_hegemony: Option<bool>,
++            #[serde(default)]
++            periods_per_tick: Option<u32>,
++            #[serde(default)]
++            event_log: Option<bool>,
++            #[serde(default)]
++            event_log_limit: Option<u32>,
++        }
++        let p = Partial::deserialize(d)?;
++        let mut c = Self::for_variant(p.variant.unwrap_or(Variant::Epm));
++        if let Some(v) = p.variant {
++            c.variant = v;
++        }
++        if let Some(v) = p.source_profile {
++            c.source_profile = v;
++        }
++        if let Some(v) = p.width {
++            c.width = v;
++        }
++        if let Some(v) = p.height {
++            c.height = v;
++        }
++        if let Some(v) = p.topology {
++            c.topology = v;
++        }
++        if let Some(v) = p.predator_share {
++            c.predator_share = v;
++        }
++        if let Some(v) = p.placement {
++            c.placement = v;
++        }
++        if let Some(v) = p.initial_mean {
++            c.initial_mean = v;
++        }
++        if let Some(v) = p.initial_sd {
++            c.initial_sd = v;
++        }
++        if let Some(v) = p.harvest_mean {
++            c.harvest_mean = v;
++        }
++        if let Some(v) = p.harvest_sd {
++            c.harvest_sd = v;
++        }
++        if let Some(v) = p.resource_distribution {
++            c.resource_distribution = v;
++        }
++        if let Some(v) = p.superiority {
++            c.superiority = v;
++        }
++        if let Some(v) = p.victory {
++            c.victory = v;
++        }
++        if let Some(v) = p.damage_rate {
++            c.damage_rate = v;
++        }
++        if let Some(v) = p.asymmetric_damage {
++            c.asymmetric_damage = v;
++        }
++        if let Some(v) = p.allocation {
++            c.allocation = v;
++        }
++        if let Some(v) = p.action_memory {
++            c.action_memory = v;
++        }
++        if let Some(v) = p.schlieffen_gate {
++            c.schlieffen_gate = v;
++        }
++        if let Some(v) = p.combat_path {
++            c.combat_path = v;
++        }
++        if let Some(v) = p.tie_break {
++            c.tie_break = v;
++        }
++        if let Some(v) = p.path_collision {
++            c.path_collision = v;
++        }
++        if let Some(v) = p.pra_active {
++            c.pra_active = v;
++        }
++        if let Some(v) = p.victory_timing {
++            c.victory_timing = v;
++        }
++        if let Some(v) = p.update {
++            c.update = v;
++        }
++        if let Some(v) = p.locking {
++            c.locking = v;
++        }
++        if let Some(v) = p.capital_capture {
++            c.capital_capture = v;
++        }
++        if let Some(v) = p.province_transfer {
++            c.province_transfer = v;
++        }
++        if let Some(v) = p.resource_policy {
++            c.resource_policy = v;
++        }
++        if let Some(v) = p.alliances {
++            c.alliances = v;
++        }
++        if let Some(v) = p.pra_alliance_support {
++            c.pra_alliance_support = v;
++        }
++        if let Some(v) = p.trust_initial {
++            c.trust_initial = v;
++        }
++        if let Some(v) = p.threat_threshold {
++            c.threat_threshold = v;
++        }
++        if let Some(v) = p.negative_trust_rate {
++            c.negative_trust_rate = v;
++        }
++        if let Some(v) = p.positive_trust_rate {
++            c.positive_trust_rate = v;
++        }
++        if let Some(v) = p.threat_observation {
++            c.threat_observation = v;
++        }
++        if let Some(v) = p.obligation_timing {
++            c.obligation_timing = v;
++        }
++        if let Some(v) = p.pra_attack_rule {
++            c.pra_attack_rule = v;
++        }
++        if let Some(v) = p.tax_rate {
++            c.tax_rate = v;
++        }
++        if let Some(v) = p.tax_discount {
++            c.tax_discount = v;
++        }
++        if let Some(v) = p.tax_distance {
++            c.tax_distance = v;
++        }
++        if let Some(v) = p.stochastic_threshold {
++            c.stochastic_threshold = v;
++        }
++        if let Some(v) = p.stochastic_exponent {
++            c.stochastic_exponent = v;
++        }
++        if let Some(v) = p.stochastic_resolution {
++            c.stochastic_resolution = v;
++        }
++        if let Some(v) = p.horizon {
++            c.horizon = v;
++        }
++        if let Some(v) = p.stop_at_hegemony {
++            c.stop_at_hegemony = v;
++        }
++        if let Some(v) = p.periods_per_tick {
++            c.periods_per_tick = v;
++        }
++        if let Some(v) = p.event_log {
++            c.event_log = v;
++        }
++        if let Some(v) = p.event_log_limit {
++            c.event_log_limit = v;
++        }
++        Ok(c)
++    }
++}
++pub fn schema() -> Vec<Param> {
++    let mut p=vec![
++Param::choice("Readings","pra_alliance_support","PRA alliance deterrence",&[("front_commitments","Coalition commitments"),("stocks","Coalition stocks")],Apply::Reset).with_help("Unreported alliance/PRA interaction (Cederman 1997 p.121 fn5); named reconstruction, deterrence only."),
++Param::choice("Readings","variant","Variant",&[("epm","EPM"),("two_level","Two level"),("overextension","Overextension")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","source_profile","Source profile",&[("chapter4","Chapter 4"),("chapter5","Chapter 5")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::integer(
++        "Clock and grid",
++        "width",
++        "Width",
++        (2, 100),
++        Apply::Reset,
++    ),
++Param::integer(
++        "Clock and grid",
++        "height",
++        "Height",
++        (2, 100),
++        Apply::Reset,
++    ),
++Param::choice("Readings","topology","Topology",&[("bounded","Bounded"),("torus","Torus")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::number(
++        "Resources and decisions",
++        "predator_share",
++        "Predator share",
++        (0.0, 1.0, 0.01),
++        Apply::Reset,
++    ),
++Param::choice("Readings","placement","Placement",&[("exact_count","Exact count"),("bernoulli","Bernoulli")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::number(
++        "Resources and decisions",
++        "initial_mean",
++        "Initial mean",
++        (-1000.0, 1000.0, 1.0),
++        Apply::Reset,
++    ),
++Param::number(
++        "Resources and decisions",
++        "initial_sd",
++        "Initial sd",
++        (0.0, 1000.0, 0.1),
++        Apply::Reset,
++    ),
++Param::number(
++        "Resources and decisions",
++        "harvest_mean",
++        "Harvest mean",
++        (-1000.0, 1000.0, 1.0),
++        Apply::Reset,
++    ),
++Param::number(
++        "Resources and decisions",
++        "harvest_sd",
++        "Harvest sd",
++        (0.0, 1000.0, 0.1),
++        Apply::Reset,
++    ),
++Param::choice("Readings","resource_distribution","Resource distribution",&[("normal","Normal"),("bounded_uniform","Bounded uniform")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::number(
++        "Resources and decisions",
++        "superiority",
++        "Superiority",
++        (1.01, 20.0, 0.01),
++        Apply::Reset,
++    ),
++Param::number(
++        "Resources and decisions",
++        "victory",
++        "Victory",
++        (1.01, 20.0, 0.01),
++        Apply::Reset,
++    ),
++Param::number(
++        "Resources and decisions",
++        "damage_rate",
++        "Damage rate",
++        (0.0, 1.0, 0.01),
++        Apply::Reset,
++    ),
++Param::choice("Readings","asymmetric_damage","Asymmetric damage",&[("source","Source"),("on","On"),("off","Off")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","allocation","Allocation",&[("equal","Equal"),("pra","PRA")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","action_memory","Action memory",&[("previous_action","Previous action"),("war_until_victory","War until victory")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","schlieffen_gate","Schlieffen gate",&[("own_current_defections","Own current defections"),("previous_hostilities","Previous hostilities"),("unresolved_war","Unresolved war")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","combat_path","Combat path",&[("stored_episode","Stored episode"),("redraw_each_period","Redraw each period")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","tie_break","Tie break",&[("lowest_id","Lowest id"),("random","Random")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","path_collision","Path collision",&[("lowest_id","Lowest id"),("random","Random")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","pra_active","Pra active",&[("either_defection","Either defection"),("mutual_defection","Mutual defection")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","victory_timing","Victory timing",&[("before_damage","Before damage"),("after_damage","After damage"),("after_harvest","After harvest")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","update","Update",&[("snapshot","Snapshot"),("sequential","Sequential")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","locking","Locking",&[("affected_cells","Affected cells"),("affected_states","Affected states")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","capital_capture","Capital capture",&[("collapse_only","Collapse only"),("capture_and_fragment","Capture and fragment")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","province_transfer","Province transfer",&[("equal_share","Equal share"),("primitive_stock_only","Primitive stock only")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","resource_policy","Resource policy",&[("signed","Signed"),("floor_zero","Floor zero"),("reject_nonpositive","Reject nonpositive")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::bool("Model", "alliances", "Alliances", Apply::Reset),
++Param::number(
++        "Resources and decisions",
++        "trust_initial",
++        "Trust initial",
++        (-1000.0, 1000.0, 1.0),
++        Apply::Reset,
++    ),
++Param::number(
++        "Resources and decisions",
++        "threat_threshold",
++        "Threat threshold",
++        (-1000.0, 1000.0, 1.0),
++        Apply::Reset,
++    ),
++Param::number(
++        "Resources and decisions",
++        "negative_trust_rate",
++        "Negative trust rate",
++        (0.0, 1.0, 0.01),
++        Apply::Reset,
++    ),
++Param::number(
++        "Resources and decisions",
++        "positive_trust_rate",
++        "Positive trust rate",
++        (0.0, 1.0, 0.01),
++        Apply::Reset,
++    ),
++Param::choice("Readings","threat_observation","Threat observation",&[("neighbor_aggression","Neighbor aggression"),("dyadic_aggression","Dyadic aggression")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","obligation_timing","Obligation timing",&[("same_period","Same period"),("next_period","Next period")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::choice("Readings","pra_attack_rule","Pra attack rule",&[("diagram","Diagram"),("literal_prose","Literal prose")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::number(
++        "Resources and decisions",
++        "tax_rate",
++        "Tax rate",
++        (0.0, 1.0, 0.01),
++        Apply::Reset,
++    ),
++Param::number(
++        "Resources and decisions",
++        "tax_discount",
++        "Tax discount",
++        (0.0, 1.0, 0.01),
++        Apply::Reset,
++    ),
++Param::choice("Readings","tax_distance","Tax distance",&[("manhattan","Manhattan"),("territorial_path","Territorial path")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::number(
++        "Resources and decisions",
++        "stochastic_threshold",
++        "Stochastic threshold",
++        (1.01, 20.0, 0.01),
++        Apply::Reset,
++    ),
++Param::number(
++        "Resources and decisions",
++        "stochastic_exponent",
++        "Stochastic exponent",
++        (0.01, 100.0, 0.01),
++        Apply::Reset,
++    ),
++Param::choice("Readings","stochastic_resolution","Stochastic resolution",&[("single_draw","Single draw"),("independent_draws","Independent draws")],Apply::Reset).with_help("Cederman 1994 pp.507–517 / 1997 ch.5; explicit reconstruction reading, see approved design."),
++Param::integer(
++        "Clock and grid",
++        "horizon",
++        "Horizon",
++        (1, 1000000000),
++        Apply::Reset,
++    ),
++Param::bool(
++        "Model",
++        "stop_at_hegemony",
++        "Stop at hegemony",
++        Apply::Reset,
++    ),
++Param::integer(
++        "Clock and grid",
++        "periods_per_tick",
++        "Periods per tick",
++        (1, 10000),
++        Apply::Reset,
++    ),
++Param::bool("Model", "event_log", "Event log", Apply::Reset),
++Param::integer(
++        "Clock and grid",
++        "event_log_limit",
++        "Event log limit",
++        (0, 1000000),
++        Apply::Reset,
++    )
++];
++    for param in &mut p {
++        let help=match param.path {
++            "variant"=>Some("Cederman 1994 base EPM; 1997 ch.5 adds province stocks/revolts and stochastic overextension. Extended variants require chapter5 and PRA."),
++            "source_profile"=>Some("1994 Fig.8 damages CD/DC; 1997 p.109 fn1 suppresses asymmetric losses. Source selects that distinction; explicit on/off overrides remain visible."),
++            "placement"=>Some("1994 p.517 supplies predator percentages; exact rounded count shuffled over cells is reconstruction. Bernoulli is an explicit alternative."),
++            "resource_distribution"=>Some("1994 pp.511,514–515 normal draws remain untruncated. Variance-matched bounded uniform is our attributed sensitivity."),
++            "action_memory"=>Some("1994 Fig.7 previous-opponent TFT is default. War until victory is a persistence reading from later GeoSim/Radax, not recovered Pascal behavior."),
++            "schlieffen_gate"=>Some("1994 Fig.7 no-other-war guard is underspecified. Default checks current own defections; alternatives check any previous hostility or an unresolved episode."),
++            "combat_path"=>Some("1994 pp.512–514 sample attacker border cell then defender cell. Stored episode path is reconstruction; redraw each period tests path dependence."),
++            "allocation"=>Some("1994 equal division uses distinct sovereign neighbors. 1997 pp.117–120 PRA uses opposing old commitments, active/passive equations and zero fallbacks."),
++            "pra_active"=>Some("1997 PRA active-front timing is reconstructed as either side previously D. Mutual D is an explicit alternative."),
++            "pra_attack_rule"=>Some("1997 diagram maximizes ratio and uses strict greater-than. Literal prose minimizes and uses less-than, retaining the published inconsistency."),
++            "victory_timing"=>Some("1994 Fig.8 does not establish loss/harvest timing. Frozen allocations before damage are default; alternatives recompute stocks with frozen graph/PRA weights."),
++            "locking"=>Some("1994 p.511 fn7 locking scope is unreported. Default locks affected cells and changed-stock capitals; alternative locks both pre-event states."),
++            "capital_capture"=>Some("1994 p.515 fn19 collapse-then-subsequent-capture supports collapse only. Capture and fragment annexes the capital, releasing provinces."),
++            "province_transfer"=>Some("EPM captured-stock bookkeeping is unreported. Equal share moves pre-event per-cell corporate stock; primitive-stock-only moves no share for dependent provinces."),
++            "resource_policy"=>Some("Sources specify no negative-stock policy. Signed preserves negative draws and damage creation; floor clips with a ledger; reject retains invalid sessions."),
++            "update"=>Some("Snapshot follows decisions/interaction/structure phases. Sequential shuffles actors and resolves each dyad on first visit; after-harvest timing requires snapshot."),
++            "topology"=>Some("1994 at most four neighbors supports bounded cardinal grid. Toroidal wrapping is a named sensitivity; both deduplicate neighbors."),
++            "tie_break"=>Some("Equal strategic target and prime-threat ties are unreported. Lowest stable cell ID is default; random is a seeded alternative."),
++            "path_collision"=>Some("Opposed initiations share one dyad. Default chooses lower-ID initiator path; random chooses between both sampled paths. This arbitration is reconstruction."),
++            "alliances"=>Some("1994 pp.515–517 directed behavioral trust groups at least two states sharing a prime threat; never pools stocks or changes sovereignty."),
++            "obligation_timing"=>Some("Coalition response timing is unreported. Same period expands voluntary attacks once, without recursive obligations; next period defers the response."),
++            "threat_observation"=>Some("Aggression perception is reconstruction. Current neighbors observe prior initiation/conquest; dyadic observes only aggression against the observer."),
++            "tax_distance"=>Some("1997 pp.126–134 distance decay uses tax_rate times tax_discount raised to distance. Manhattan is default; territorial path remains inside the state."),
++            "stochastic_resolution"=>Some("1997 competing victories are unreported. Single draw uses adjacent success intervals; independent draws count double success as stalemate."),
++            "stochastic_threshold"=>Some("Threshold 3 is an inferred Fig.5.9 overextension run setting, not a recovered narrative-run input."),
++            "event_log"=>Some("Our bounded opt-in diagnostic event log; episode/counter summaries remain complete independently of retained log records."),
++            _=>param.help,
++        };
++        param.help = help;
++    }
++    p
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn extended_partial_json_selects_consistent_source_defaults() {
++        let c: PolarityConfig = serde_json::from_str(r#"{"variant":"overextension"}"#).unwrap();
++        assert_eq!(
++            (c.horizon, c.stop_at_hegemony, c.tax_discount),
++            (4000, false, 0.7)
++        );
++        assert!(c.validate().is_ok());
++    }
++    #[test]
++    fn provincial_equal_allocation_and_nonfinite_rates_are_rejected() {
++        let mut c = PolarityConfig::for_variant(Variant::TwoLevel);
++        c.allocation = Allocation::Equal;
++        assert!(c
++            .validate()
++            .unwrap_err()
++            .iter()
++            .any(|e| e.field == "allocation"));
++        c.allocation = Allocation::Pra;
++        c.harvest_sd = f64::NAN;
++        assert!(c
++            .validate()
++            .unwrap_err()
++            .iter()
++            .any(|e| e.field == "harvest_sd"));
++    }
++    #[test]
++    fn explicit_inconsistent_extended_profile_is_not_silently_overwritten() {
++        let c: PolarityConfig =
++            serde_json::from_str(r#"{"variant":"two_level","source_profile":"chapter4"}"#).unwrap();
++        assert!(c.validate().is_err());
++    }
++}
+diff --git a/crates/sugarscape-core/src/polarity/decision.rs b/crates/sugarscape-core/src/polarity/decision.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/polarity/decision.rs
+@@ -0,0 +1,332 @@
++//! Foreign and domestic fronts have separate namespaces and stable paths.
++use super::decision;
++use super::{analysis::Episode, config::*};
++use super::{
++    analysis::Ledger,
++    combat, resources, territory,
++    world::{index, PolarityWorld},
++};
++use rand::Rng;
++use serde::Serialize;
++#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
++pub struct FrontKey {
++    pub domestic: bool,
++    pub a: usize,
++    pub b: usize,
++}
++impl FrontKey {
++    pub fn foreign(a: usize, b: usize) -> Self {
++        Self {
++            domestic: false,
++            a: a.min(b),
++            b: a.max(b),
++        }
++    }
++}
++#[derive(Clone, Debug, Serialize)]
++pub struct Front {
++    pub key: FrontKey,
++    pub previous: [bool; 2],
++    pub actions: [bool; 2],
++    pub old_commitments: [f64; 2],
++    pub commitments: [f64; 2],
++    pub path: Option<[usize; 2]>,
++    pub initiated: [bool; 2],
++    pub episode: Option<Episode>,
++}
++pub fn provisional(memory: ActionMemory, prior: [bool; 2], open: bool) -> [bool; 2] {
++    if memory == ActionMemory::WarUntilVictory {
++        [prior[1] || prior[0] || open, prior[0] || prior[1] || open]
++    } else {
++        [prior[1], prior[0]]
++    }
++}
++pub fn may_initiate(
++    gate: SchlieffenGate,
++    own: &[bool],
++    previous: &[[bool; 2]],
++    open: bool,
++) -> bool {
++    match gate {
++        SchlieffenGate::OwnCurrentDefections => !own.iter().any(|x| *x),
++        SchlieffenGate::PreviousHostilities => !previous.iter().any(|p| p[0] || p[1]),
++        SchlieffenGate::UnresolvedWar => !open,
++    }
++}
++
++impl PolarityWorld {
++    pub(super) fn valid_path(&self, key: FrontKey, p: [usize; 2]) -> bool {
++        if key.domestic {
++            return p == [key.a, key.b] && self.cells[key.b].capital == key.a;
++        }
++        self.cells[p[0]].capital == key.a
++            && self.cells[p[1]].capital == key.b
++            && territory::adjacent(&self.config, p[0]).contains(&p[1])
++    }
++    pub(super) fn sample_path(&mut self, key: FrontKey, side: usize) -> [usize; 2] {
++        if key.domestic {
++            return [key.a, key.b];
++        }
++        let (a, b) = if side == 0 {
++            (key.a, key.b)
++        } else {
++            (key.b, key.a)
++        };
++        let candidates: Vec<usize> = territory::members(&self.cells, a)
++            .into_iter()
++            .filter(|&i| {
++                territory::adjacent(&self.config, i)
++                    .iter()
++                    .any(|&j| self.cells[j].capital == b)
++            })
++            .collect();
++        let i = candidates[index(&mut self.rng, candidates.len())];
++        let targets: Vec<usize> = territory::adjacent(&self.config, i)
++            .into_iter()
++            .filter(|&j| self.cells[j].capital == b)
++            .collect();
++        let j = targets[index(&mut self.rng, targets.len())];
++        if side == 0 {
++            [i, j]
++        } else {
++            [j, i]
++        }
++    }
++    pub(super) fn prepare(&mut self) {
++        for f in self.fronts.values_mut() {
++            f.actions =
++                decision::provisional(self.config.action_memory, f.previous, f.episode.is_some());
++            f.initiated = [false, false];
++        }
++        for &(a, b) in &self.pending {
++            let k = FrontKey::foreign(a, b);
++            if let Some(f) = self.fronts.get_mut(&k) {
++                f.actions[usize::from(k.b == a)] = true;
++            }
++        }
++        self.pending.clear();
++        let stocks: Vec<f64> = self.cells.iter().map(|c| c.stock).collect();
++        let allocated = self.allocate(&stocks);
++        for (k, v) in allocated {
++            self.fronts.get_mut(&k).unwrap().commitments = v;
++        }
++    }
++    pub(super) fn decide_actor(&mut self, actor: usize, e: &mut Ledger) {
++        // Provinces can initiate before their center evaluates its domestic guard.
++        if self.config.provincial() {
++            let domestic: Vec<FrontKey> = self
++                .fronts
++                .keys()
++                .filter(|k| k.domestic && k.a == actor)
++                .copied()
++                .collect();
++            for key in domestic {
++                let f = &self.fronts[&key];
++                if !f.actions[1] && f.episode.is_none() {
++                    if resources::ratio_overflows(self.cells[key.b].stock, f.commitments[0]) {
++                        self.finish("invalid",Some(format!("period {} domestic front {:?}: nonfinite revolt ratio; config {:?}",self.period,key,self.config)));
++                        return;
++                    }
++                    let r = resources::ratio(self.cells[key.b].stock, f.commitments[0]);
++                    let yes = if self.config.variant == Variant::Overextension {
++                        self.rng.gen::<f64>()
++                            < combat::probability(r, 2.0, self.config.stochastic_exponent)
++                    } else {
++                        r > 2.0
++                    };
++                    if yes {
++                        let f = self.fronts.get_mut(&key).unwrap();
++                        f.actions[1] = true;
++                        f.initiated[1] = true;
++                        e.revolts += 1;
++                    }
++                }
++            }
++        }
++        if !self.cells[actor].predator {
++            return;
++        }
++        let related: Vec<&Front> = self
++            .fronts
++            .values()
++            .filter(|f| f.key.a == actor || (!f.key.domestic && f.key.b == actor))
++            .collect();
++        let own: Vec<bool> = related
++            .iter()
++            .map(|f| f.actions[usize::from(f.key.b == actor && !f.key.domestic)])
++            .collect();
++        let prior: Vec<[bool; 2]> = related.iter().map(|f| f.previous).collect();
++        let open = related.iter().any(|f| f.episode.is_some());
++        if !decision::may_initiate(self.config.schlieffen_gate, &own, &prior, open)
++            || related
++                .iter()
++                .any(|f| f.key.domestic && (f.actions[0] || f.actions[1]))
++        {
++            return;
++        }
++        let candidates: Vec<(usize, f64)> = related
++            .iter()
++            .filter(|f| {
++                !f.key.domestic
++                    && !(self.config.update == Update::Sequential
++                        && self.resolved_fronts.contains(&f.key))
++            })
++            .map(|f| {
++                let side = usize::from(f.key.b == actor);
++                let other = if side == 0 { f.key.b } else { f.key.a };
++                let score = if self.config.allocation == Allocation::Equal {
++                    self.cells[other].stock
++                } else {
++                    resources::ratio(f.commitments[side], f.commitments[1 - side])
++                };
++                (other, score)
++            })
++            .collect();
++        if self.config.allocation == Allocation::Pra {
++            for &(other, _) in &candidates {
++                let key = FrontKey::foreign(actor, other);
++                let f = &self.fronts[&key];
++                let side = usize::from(key.b == actor);
++                if resources::ratio_overflows(f.commitments[side], f.commitments[1 - side]) {
++                    self.finish(
++                        "invalid",
++                        Some(format!(
++                            "period {} front {:?}: nonfinite target ratio; config {:?}",
++                            self.period, key, self.config
++                        )),
++                    );
++                    return;
++                }
++            }
++        }
++        let maximize = self.config.allocation == Allocation::Pra
++            && self.config.pra_attack_rule == PraAttackRule::Diagram;
++        let mut best: Option<f64> = None;
++        let mut tied = Vec::new();
++        for (other, score) in candidates {
++            let improves = best.is_none_or(|v| if maximize { score > v } else { score < v });
++            if improves {
++                best = Some(score);
++                tied.clear();
++                tied.push(other);
++            } else if best == Some(score) {
++                tied.push(other);
++            }
++        }
++        if tied.is_empty() {
++            return;
++        }
++        let victim = if self.config.tie_break == TieBreak::Random {
++            tied[index(&mut self.rng, tied.len())]
++        } else {
++            tied[0]
++        };
++        let key = FrontKey::foreign(actor, victim);
++        let side = usize::from(key.b == actor);
++        let support = self.supported(actor, victim);
++        let comparison = if self.config.allocation == Allocation::Pra {
++            self.deterrence_commitments(actor, victim)
++        } else {
++            support
++        };
++        if comparison.iter().any(|v| !v.is_finite())
++            || resources::ratio_overflows(comparison[0], comparison[1])
++        {
++            self.finish(
++                "invalid",
++                Some(format!(
++                    "period {} front {:?}: nonfinite initiation ratio/support; config {:?}",
++                    self.period, key, self.config
++                )),
++            );
++            return;
++        }
++        let r = resources::ratio(comparison[0], comparison[1]);
++        let initiate = if self.config.variant == Variant::Overextension {
++            self.rng.gen::<f64>()
++                < combat::probability(
++                    r,
++                    self.config.stochastic_threshold,
++                    self.config.stochastic_exponent,
++                )
++        } else if self.config.allocation == Allocation::Pra
++            && self.config.pra_attack_rule == PraAttackRule::LiteralProse
++        {
++            r < self.config.superiority
++        } else {
++            r > self.config.superiority
++        };
++        if initiate {
++            let f = self.fronts.get_mut(&key).unwrap();
++            f.actions[side] = true;
++            f.initiated[side] = true;
++            e.attacks += 1;
++            self.log("initiation", vec![], Some([actor, victim]));
++        }
++    }
++    pub(super) fn paths(&mut self, e: &mut Ledger) {
++        let keys: Vec<FrontKey> = self.fronts.keys().copied().collect();
++        for key in keys {
++            let f = &self.fronts[&key];
++            if !f.actions[0] && !f.actions[1] {
++                continue;
++            }
++            let initiated = f.initiated;
++            let redraw =
++                self.config.combat_path == CombatPath::RedrawEachPeriod || f.path.is_none();
++            if !redraw {
++                continue;
++            }
++            let first = if (initiated[1] && !initiated[0]) || !f.actions[0] {
++                1
++            } else {
++                0
++            };
++            let mut path = self.sample_path(key, first);
++            if initiated == [true, true] {
++                let other = self.sample_path(key, 1);
++                e.path_collisions += 1;
++                if self.config.path_collision == PathCollision::Random && self.rng.gen::<bool>() {
++                    path = other;
++                }
++            }
++            self.fronts.get_mut(&key).unwrap().path = Some(path);
++        }
++    }
++    pub(super) fn front_count(&self, actor: usize, _domestic: bool, _unused: bool) -> usize {
++        territory::neighbors(&self.config, &self.cells, actor).len()
++            + if self.config.provincial() {
++                territory::members(&self.cells, actor).len() - 1
++            } else {
++                0
++            }
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn tft_echo_allows_predator_reinitiation_to_mutual_defection() {
++        assert_eq!(
++            provisional(ActionMemory::PreviousAction, [true, false], true),
++            [false, true]
++        );
++        assert!(may_initiate(
++            SchlieffenGate::OwnCurrentDefections,
++            &[false],
++            &[[true, false]],
++            true
++        ));
++        assert!(!may_initiate(
++            SchlieffenGate::PreviousHostilities,
++            &[false],
++            &[[true, false]],
++            true
++        ));
++        assert_eq!(
++            provisional(ActionMemory::WarUntilVictory, [true, false], true),
++            [true, true]
++        );
++    }
++}
+diff --git a/crates/sugarscape-core/src/polarity/mod.rs b/crates/sugarscape-core/src/polarity/mod.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/polarity/mod.rs
+@@ -0,0 +1,20 @@
++//! Cederman's emergent polarity, with named reconstruction choices.
++mod config;
++pub use config::*;
++mod alliance;
++mod analysis;
++mod combat;
++mod decision;
++mod resources;
++mod territory;
++pub use analysis::{Category, Episode, Event, Ledger, Outcome};
++mod presets;
++mod stats;
++mod world;
++pub use presets::presets;
++pub use stats::{series_names, PolaritySnapshot, SERIES};
++pub use world::PolarityWorld;
++mod view;
++
++#[cfg(test)]
++mod tests;
+diff --git a/crates/sugarscape-core/src/polarity/presets.rs b/crates/sugarscape-core/src/polarity/presets.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/polarity/presets.rs
+@@ -0,0 +1,21 @@
++//! Source-labelled profiles; the switches remain visible in exports.
++use super::*;
++use crate::{model::ModelConfig, presets::ModelPreset};
++pub fn presets() -> Vec<ModelPreset> {
++    let original = PolarityConfig::default();
++    let defense = PolarityConfig {
++        superiority: 3.0,
++        victory: 3.0,
++        ..original.clone()
++    };
++    let alliances = PolarityConfig {
++        alliances: true,
++        ..original.clone()
++    };
++    let pra = PolarityConfig {
++        source_profile: SourceProfile::Chapter5,
++        allocation: Allocation::Pra,
++        ..original
++    };
++    [("polarity-original","Emergent polarity",PolarityConfig::default()),("polarity-defense","Defense advantage",defense),("polarity-alliances","Behavioral alliances",alliances),("polarity-pra","Proportional resource allocation",pra),("polarity-two-level","Provincial revolt",PolarityConfig{predator_share:1.0,..PolarityConfig::for_variant(Variant::TwoLevel)}),("polarity-overextension","Stochastic overextension",PolarityConfig{predator_share:1.0,..PolarityConfig::for_variant(Variant::Overextension)})].into_iter().map(|(id,name,config)|ModelPreset{id,name,source:"Cederman 1994, ISQ 38(4):501–533; Cederman 1997 ch.4–5",description:"Inspectable source reconstruction. Numerical policy, timing, ties, paths, capture/transfer and provincial defaults are explicit readings; no original executable was recovered. Predator share .2 is a playground selection.",config:ModelConfig::Polarity(config)}).collect()
++}
+diff --git a/crates/sugarscape-core/src/polarity/resources.rs b/crates/sugarscape-core/src/polarity/resources.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/polarity/resources.rs
+@@ -0,0 +1,296 @@
++//! Signed stock ledgers, source damage matrix, and literal PRA.
++use super::{
++    analysis::Ledger,
++    config::*,
++    decision::FrontKey,
++    territory,
++    world::{discount, draw, PolarityWorld},
++};
++use std::collections::{BTreeMap, BTreeSet};
++pub fn ratio_overflows(a: f64, b: f64) -> bool {
++    b != 0.0 && !(a / b).is_finite()
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn chapter4_dc_damages_only_cooperator_and_signed_damage_creates() {
++        assert_eq!(damage([true, false], [20.0, 10.0], 0.05, true), [0.0, 1.0]);
++        assert_eq!(damage([true, true], [-20.0, 10.0], 0.05, true), [0.5, -1.0]);
++        assert_eq!(damage([true, false], [20.0, 10.0], 0.05, false), [0.0, 0.0]);
++    }
++    #[test]
++    fn pra_passive_fronts_are_conditional_and_not_normalized() {
++        assert_eq!(
++            pra(100.0, &[20.0, 30.0, 10.0], &[true, true, false]),
++            vec![40.0, 60.0, 100.0 / 6.0]
++        );
++        assert_eq!(pra(100.0, &[0.0, 0.0], &[false, false]), vec![100.0, 100.0]);
++        assert_eq!(pra(100.0, &[0.0, 0.0], &[true, true]), vec![50.0, 50.0]);
++    }
++    #[test]
++    fn ratios_keep_signed_zero_semantics() {
++        assert_eq!(ratio(0.0, 0.0), 0.0);
++        assert_eq!(ratio(-2.0, 0.0), f64::NEG_INFINITY);
++        assert_eq!(ratio(2.0, 0.0), f64::INFINITY);
++        assert_eq!(ratio(-4.0, 2.0), -2.0);
++    }
++}
++pub fn damage(actions: [bool; 2], commitments: [f64; 2], rate: f64, asymmetric: bool) -> [f64; 2] {
++    match actions {
++        [false, false] => [0.0, 0.0],
++        [true, true] => [rate * commitments[1], rate * commitments[0]],
++        [true, false] if asymmetric => [0.0, rate * commitments[0]],
++        [false, true] if asymmetric => [rate * commitments[1], 0.0],
++        _ => [0.0, 0.0],
++    }
++}
++pub fn pra(stock: f64, opposing: &[f64], active: &[bool]) -> Vec<f64> {
++    let sum: f64 = opposing
++        .iter()
++        .zip(active)
++        .filter(|(_, a)| **a)
++        .map(|(r, _)| *r)
++        .sum();
++    let count = active.iter().filter(|a| **a).count();
++    opposing
++        .iter()
++        .zip(active)
++        .map(|(r, a)| {
++            let denominator = if *a { sum } else { sum + *r };
++            if denominator == 0.0 {
++                if *a {
++                    stock / count as f64
++                } else if count == 0 {
++                    stock
++                } else {
++                    0.0
++                }
++            } else {
++                stock * *r / denominator
++            }
++        })
++        .collect()
++}
++pub fn ratio(a: f64, b: f64) -> f64 {
++    if b == 0.0 {
++        if a > 0.0 {
++            f64::INFINITY
++        } else if a < 0.0 {
++            f64::NEG_INFINITY
++        } else {
++            0.0
++        }
++    } else {
++        a / b
++    }
++}
++#[cfg(test)]
++mod matrix_motifs {
++    use super::*;
++    #[test]
++    fn cc_has_no_damage_even_with_negative_allocations() {
++        assert_eq!(
++            damage([false, false], [-20.0, -10.0], 0.05, true),
++            [0.0, 0.0]
++        );
++    }
++    #[test]
++    fn chapter4_cd_is_dc_mirror() {
++        assert_eq!(damage([false, true], [20.0, 10.0], 0.05, true), [0.5, 0.0]);
++    }
++    #[test]
++    fn chapter5_dd_keeps_both_losses() {
++        assert_eq!(damage([true, true], [20.0, 10.0], 0.05, false), [0.5, 1.0]);
++    }
++    #[test]
++    fn signed_pra_denominator_is_not_absolute_value() {
++        assert_eq!(pra(100.0, &[-20.0, -30.0], &[true, true]), vec![40.0, 60.0]);
++    }
++    #[test]
++    fn zero_active_sum_splits_only_active_fronts() {
++        assert_eq!(
++            pra(90.0, &[0.0, 0.0, 10.0], &[true, true, false]),
++            vec![45.0, 45.0, 90.0]
++        );
++    }
++}
++
++impl PolarityWorld {
++    pub(super) fn allocate(&self, stocks: &[f64]) -> BTreeMap<FrontKey, [f64; 2]> {
++        let mut out: BTreeMap<FrontKey, [f64; 2]> =
++            self.fronts.keys().map(|&k| (k, [0.0, 0.0])).collect();
++        for actor in territory::capitals(&self.cells) {
++            let fronts: Vec<(FrontKey, usize)> = self
++                .fronts
++                .keys()
++                .filter_map(|&k| {
++                    if k.a == actor {
++                        Some((k, 0))
++                    } else if !k.domestic && k.b == actor {
++                        Some((k, 1))
++                    } else {
++                        None
++                    }
++                })
++                .collect();
++            if fronts.is_empty() {
++                continue;
++            }
++            let values = if self.config.allocation == Allocation::Equal {
++                vec![stocks[actor] / fronts.len() as f64; fronts.len()]
++            } else {
++                let opposing: Vec<f64> = fronts
++                    .iter()
++                    .map(|(k, side)| self.fronts[k].old_commitments[1 - side])
++                    .collect();
++                let active: Vec<bool> = fronts
++                    .iter()
++                    .map(|(k, _)| {
++                        let p = self.fronts[k].previous;
++                        match self.config.pra_active {
++                            PraActive::EitherDefection => p[0] || p[1],
++                            PraActive::MutualDefection => p[0] && p[1],
++                        }
++                    })
++                    .collect();
++                pra(stocks[actor], &opposing, &active)
++            };
++            for ((k, side), v) in fronts.into_iter().zip(values) {
++                out.get_mut(&k).unwrap()[side] = v;
++            }
++        }
++        for (&key, value) in &mut out {
++            if key.domestic {
++                value[1] = stocks[key.b];
++            }
++        }
++        out
++    }
++    pub(super) fn harvest(&mut self, e: &mut Ledger) {
++        let mut changes = vec![0.0; self.cells.len()];
++        for c in &self.cells {
++            let h = draw(
++                &self.config,
++                &mut self.rng,
++                self.config.harvest_mean,
++                self.config.harvest_sd,
++            );
++            e.harvest += h;
++            if !self.config.provincial() {
++                changes[c.capital] += h;
++            } else if c.capital == c.id {
++                changes[c.id] += h;
++            } else {
++                let rate = if self.config.variant == Variant::Overextension {
++                    self.config.tax_rate
++                        * discount(self.config.tax_discount, self.distance(c.capital, c.id))
++                } else {
++                    self.config.tax_rate
++                };
++                let tax = if c.stock == 0.0 { 0.0 } else { h * rate };
++                changes[c.capital] += tax;
++                changes[c.id] += h - tax;
++                e.taxes += tax;
++            }
++        }
++        for (c, change) in self.cells.iter_mut().zip(changes) {
++            c.stock += change;
++        }
++    }
++    pub(super) fn distance(&self, a: usize, b: usize) -> u32 {
++        if self.config.tax_distance == TaxDistance::Manhattan {
++            let w = self.config.width as usize;
++            ((a % w).abs_diff(b % w) + (a / w).abs_diff(b / w)) as u32
++        } else {
++            let mut queue = std::collections::VecDeque::from([(a, 0)]);
++            let mut seen = BTreeSet::from([a]);
++            while let Some((i, d)) = queue.pop_front() {
++                if i == b {
++                    return d;
++                }
++                for j in territory::adjacent(&self.config, i) {
++                    if self.cells[j].capital == a && seen.insert(j) {
++                        queue.push_back((j, d + 1));
++                    }
++                }
++            }
++            0
++        }
++    }
++    pub(super) fn policy(&mut self, e: &mut Ledger) {
++        if !self.intermediate_valid() {
++            return;
++        }
++        let bad = self
++            .cells
++            .iter()
++            .find(|c| !c.stock.is_finite())
++            .map(|c| c.id);
++        if let Some(i) = bad {
++            self.finish(
++                "invalid",
++                Some(format!(
++                    "period {} cell {i}: nonfinite stock; config {:?}",
++                    self.period, self.config
++                )),
++            );
++            return;
++        }
++        match self.config.resource_policy {
++            ResourcePolicy::Signed => {}
++            ResourcePolicy::FloorZero => {
++                for c in &mut self.cells {
++                    if c.stock < 0.0 {
++                        e.clipping -= c.stock;
++                        c.stock = 0.0;
++                    }
++                }
++            }
++            ResourcePolicy::RejectNonpositive => {
++                if let Some(c) = self
++                    .cells
++                    .iter()
++                    .find(|c| c.stock <= 0.0 && (self.config.provincial() || c.id == c.capital))
++                {
++                    let message = format!(
++                        "period {} cell {}: nonpositive stock {} under reject_nonpositive",
++                        self.period, c.id, c.stock
++                    );
++                    self.finish("invalid", Some(message));
++                }
++            }
++        }
++    }
++    pub(super) fn intermediate_valid(&mut self) -> bool {
++        let stock_sum = self.cells.iter().map(|c| c.stock).sum::<f64>();
++        let bad = self.cells.iter().find(|c| {
++            !c.stock.is_finite()
++                || (self.config.resource_policy == ResourcePolicy::RejectNonpositive
++                    && c.stock <= 0.0
++                    && (self.config.provincial() || c.id == c.capital))
++        });
++        if let Some(c) = bad {
++            self.finish(
++                "invalid",
++                Some(format!(
++                    "period {} cell {}: invalid stock {} under {:?}",
++                    self.period, c.id, c.stock, self.config.resource_policy
++                )),
++            );
++            false
++        } else if !stock_sum.is_finite() {
++            self.finish(
++                "invalid",
++                Some(format!(
++                    "period {}: nonfinite aggregate stock; config {:?}",
++                    self.period, self.config
++                )),
++            );
++            false
++        } else {
++            true
++        }
++    }
++}
+diff --git a/crates/sugarscape-core/src/polarity/stats.rs b/crates/sugarscape-core/src/polarity/stats.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/polarity/stats.rs
+@@ -0,0 +1,121 @@
++//! State series are endpoint observations; event series sum complete periods in a tick.
++use super::analysis::Ledger;
++use crate::stats::Series;
++use serde::Serialize;
++pub const SERIES: &[&str] = &[
++    "period",
++    "periods",
++    "last_tick_periods",
++    "sovereign_count",
++    "category_1",
++    "category_2",
++    "category_3_10",
++    "category_11_90",
++    "category_91_100",
++    "largest_territory",
++    "second_largest_territory",
++    "predator_capital_share",
++    "total_stock",
++    "capital_stock",
++    "province_stock",
++    "nonpositive_stocks",
++    "destruction",
++    "signed_creation",
++    "attacks",
++    "dd_encounters",
++    "conquests",
++    "capital_collapses",
++    "disconnections",
++    "revolts",
++    "coalitions",
++    "open_episodes",
++    "harvest",
++    "taxes",
++    "transfers",
++    "clipping",
++    "stale_claims",
++    "locked_claims",
++    "double_successes",
++    "path_collisions",
++];
++pub fn series_names() -> Vec<String> {
++    SERIES.iter().map(|s| s.to_string()).collect()
++}
++#[derive(Clone, Debug, Default, Serialize)]
++pub struct PolaritySnapshot {
++    pub tick: u64,
++    pub period: u64,
++    pub periods: u64,
++    pub attempted_period: u64,
++    pub last_tick_periods: u32,
++    pub sovereign_count: u32,
++    pub sovereigns: u32,
++    pub category: Option<super::analysis::Category>,
++    pub largest_territory: usize,
++    pub second_largest_territory: usize,
++    pub predator_capital_share: f64,
++    pub total_stock: f64,
++    pub capital_stock: f64,
++    pub province_stock: f64,
++    pub nonpositive_stocks: usize,
++    pub coalitions: usize,
++    pub open_episodes: usize,
++    pub finish_reason: Option<String>,
++    pub invalidity: Option<String>,
++    pub events_dropped: u64,
++    #[serde(flatten)]
++    pub events: Ledger,
++}
++impl Series for PolaritySnapshot {
++    fn tick(&self) -> u64 {
++        self.tick
++    }
++    fn value(&self, name: &str) -> Option<f64> {
++        Some(match name {
++            "tick" => self.tick as f64,
++            "period" | "periods" => self.period as f64,
++            "last_tick_periods" => self.last_tick_periods as f64,
++            "sovereign_count" => self.sovereign_count as f64,
++            "category_1" | "category_2" | "category_3_10" | "category_11_90"
++            | "category_91_100" => match self.category {
++                None => f64::NAN,
++                Some(c) => {
++                    let wanted = match name {
++                        "category_1" => super::Category::One,
++                        "category_2" => super::Category::Two,
++                        "category_3_10" => super::Category::ThreeToTen,
++                        "category_11_90" => super::Category::ElevenToNinety,
++                        _ => super::Category::NinetyOneToHundred,
++                    };
++                    f64::from(u8::from(c == wanted))
++                }
++            },
++            "largest_territory" => self.largest_territory as f64,
++            "second_largest_territory" => self.second_largest_territory as f64,
++            "predator_capital_share" => self.predator_capital_share,
++            "total_stock" => self.total_stock,
++            "capital_stock" => self.capital_stock,
++            "province_stock" => self.province_stock,
++            "nonpositive_stocks" => self.nonpositive_stocks as f64,
++            "coalitions" => self.coalitions as f64,
++            "open_episodes" => self.open_episodes as f64,
++            "destruction" => self.events.destruction,
++            "signed_creation" => self.events.signed_creation,
++            "harvest" => self.events.harvest,
++            "taxes" => self.events.taxes,
++            "transfers" => self.events.transfers,
++            "clipping" => self.events.clipping,
++            "attacks" => self.events.attacks as f64,
++            "dd_encounters" => self.events.dd_encounters as f64,
++            "conquests" => self.events.conquests as f64,
++            "capital_collapses" => self.events.capital_collapses as f64,
++            "disconnections" => self.events.disconnections as f64,
++            "revolts" => self.events.revolts as f64,
++            "stale_claims" => self.events.stale_claims as f64,
++            "locked_claims" => self.events.locked_claims as f64,
++            "double_successes" => self.events.double_successes as f64,
++            "path_collisions" => self.events.path_collisions as f64,
++            _ => return None,
++        })
++    }
++}
+diff --git a/crates/sugarscape-core/src/polarity/territory.rs b/crates/sugarscape-core/src/polarity/territory.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/polarity/territory.rs
+@@ -0,0 +1,500 @@
++//! Fixed cell IDs and structural changes from explicit snapshot claims.
++use super::config::*;
++use serde::Serialize;
++use std::collections::{BTreeSet, VecDeque};
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct Cell {
++    pub id: usize,
++    pub capital: usize,
++    pub predator: bool,
++    pub stock: f64,
++}
++#[derive(Clone, Debug, Serialize)]
++pub struct Claim {
++    pub winner: usize,
++    pub loser: usize,
++    pub target: usize,
++    pub domestic: bool,
++    pub source: Option<usize>,
++}
++#[derive(Clone, Debug, Default, Serialize)]
++pub struct Change {
++    pub applied: Vec<Claim>,
++    pub transfer_volume: f64,
++    pub cells: Vec<usize>,
++    pub conquests: u64,
++    pub collapses: u64,
++    pub disconnections: u64,
++    pub stale: u64,
++    pub locked: u64,
++}
++pub fn adjacent(config: &PolarityConfig, id: usize) -> Vec<usize> {
++    let (w, h) = (config.width as usize, config.height as usize);
++    let (x, y) = (id % w, id / w);
++    let mut out = BTreeSet::new();
++    for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
++        let (mut nx, mut ny) = (x as i32 + dx, y as i32 + dy);
++        if config.topology == Topology::Torus {
++            nx = nx.rem_euclid(w as i32);
++            ny = ny.rem_euclid(h as i32);
++        }
++        if nx >= 0 && ny >= 0 && nx < w as i32 && ny < h as i32 {
++            out.insert(ny as usize * w + nx as usize);
++        }
++    }
++    out.into_iter().collect()
++}
++pub fn members(cells: &[Cell], capital: usize) -> Vec<usize> {
++    cells
++        .iter()
++        .filter(|c| c.capital == capital)
++        .map(|c| c.id)
++        .collect()
++}
++pub fn capitals(cells: &[Cell]) -> Vec<usize> {
++    cells
++        .iter()
++        .filter(|c| c.capital == c.id)
++        .map(|c| c.id)
++        .collect()
++}
++pub fn neighbors(config: &PolarityConfig, cells: &[Cell], capital: usize) -> Vec<usize> {
++    let mut out = BTreeSet::new();
++    for i in members(cells, capital) {
++        for j in adjacent(config, i) {
++            if cells[j].capital != capital {
++                out.insert(cells[j].capital);
++            }
++        }
++    }
++    out.into_iter().collect()
++}
++#[cfg(test)]
++pub fn apply(config: &PolarityConfig, cells: &mut [Cell], claims: &[Claim]) -> Change {
++    apply_locked(config, cells, claims, &mut BTreeSet::new())
++}
++pub fn apply_locked(
++    config: &PolarityConfig,
++    cells: &mut [Cell],
++    claims: &[Claim],
++    locks: &mut BTreeSet<usize>,
++) -> Change {
++    let mut result = Change::default();
++    for claim in claims {
++        let Claim {
++            winner,
++            loser,
++            target,
++            domestic,
++            source,
++        } = *claim;
++        if source
++            .is_some_and(|i| cells[i].capital != winner || !adjacent(config, i).contains(&target))
++            || cells[target].capital != loser
++            || cells[loser].capital != loser
++            || (!domestic && cells[winner].capital != winner)
++        {
++            result.stale += 1;
++            continue;
++        }
++        let old = members(cells, loser);
++        let winner_members = members(cells, winner);
++        let share = cells[loser].stock / old.len() as f64;
++        let mut candidate = cells.to_vec();
++        let mut changed = BTreeSet::from([target]);
++        let mut conquests = 0;
++        let mut collapses = 0;
++        let mut disconnected = 0;
++        let mut transfer_volume = 0.0;
++        if domestic {
++            // A province wins its revolt; victory by the center creates no structural claim.
++            candidate[target].capital = target;
++        } else if target == loser && old.len() > 1 {
++            collapses = 1;
++            if !config.provincial() {
++                transfer_volume += share * (old.len() - 1) as f64;
++            }
++            for &i in &old {
++                candidate[i].capital = i;
++                if !config.provincial() {
++                    candidate[i].stock = share;
++                }
++                changed.insert(i);
++            }
++            if config.capital_capture == CapitalCapture::CaptureAndFragment {
++                let stock = candidate[target].stock;
++                transfer_volume += stock;
++                candidate[target].capital = winner;
++                candidate[winner].stock += stock;
++                candidate[target].stock = 0.0;
++                conquests = 1;
++            }
++        } else {
++            candidate[target].capital = winner;
++            conquests = 1;
++            if !config.provincial() {
++                let transfer = if old.len() == 1 {
++                    candidate[loser].stock
++                } else if config.province_transfer == ProvinceTransfer::EqualShare {
++                    share
++                } else {
++                    candidate[target].stock
++                };
++                transfer_volume += transfer;
++                candidate[loser].stock -= transfer;
++                candidate[winner].stock += transfer;
++                candidate[target].stock = 0.0;
++            }
++        }
++        if candidate[loser].capital == loser {
++            let mut reached = BTreeSet::from([loser]);
++            let mut queue = VecDeque::from([loser]);
++            while let Some(i) = queue.pop_front() {
++                for j in adjacent(config, i) {
++                    if candidate[j].capital == loser && reached.insert(j) {
++                        queue.push_back(j);
++                    }
++                }
++            }
++            for &i in &old {
++                if candidate[i].capital == loser && !reached.contains(&i) {
++                    candidate[i].capital = i;
++                    if !config.provincial() {
++                        candidate[i].stock = share;
++                        candidate[loser].stock -= share;
++                        transfer_volume += share;
++                    }
++                    changed.insert(i);
++                    disconnected += 1;
++                }
++            }
++        }
++        for i in 0..cells.len() {
++            if candidate[i] != cells[i] {
++                changed.insert(i);
++            }
++        }
++        if config.locking == Locking::AffectedStates {
++            changed.extend(old);
++            changed.extend(winner_members);
++        }
++        if changed.iter().any(|i| locks.contains(i)) {
++            result.locked += 1;
++            continue;
++        }
++        cells.clone_from_slice(&candidate);
++        locks.extend(changed.iter().copied());
++        result.cells.extend(changed);
++        result.applied.push(claim.clone());
++        result.transfer_volume += transfer_volume;
++        result.conquests += conquests;
++        result.collapses += collapses;
++        result.disconnections += disconnected;
++    }
++    result.cells.sort_unstable();
++    result.cells.dedup();
++    result
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    fn cell(id: usize, capital: usize, stock: f64) -> Cell {
++        Cell {
++            id,
++            capital,
++            stock,
++            predator: false,
++        }
++    }
++    #[test]
++    fn capital_fall_releases_every_cell_without_annexation_and_conserves_stock() {
++        let c = PolarityConfig {
++            width: 3,
++            height: 2,
++            ..Default::default()
++        };
++        let mut cells = vec![
++            cell(0, 0, 90.0),
++            cell(1, 0, 0.0),
++            cell(2, 0, 0.0),
++            cell(3, 3, 50.0),
++            cell(4, 4, 10.0),
++            cell(5, 5, 10.0),
++        ];
++        let result = apply(
++            &c,
++            &mut cells,
++            &[Claim {
++                winner: 3,
++                loser: 0,
++                target: 0,
++                domestic: false,
++                source: None,
++            }],
++        );
++        assert_eq!(
++            cells
++                .iter()
++                .take(3)
++                .map(|x| (x.capital, x.stock))
++                .collect::<Vec<_>>(),
++            vec![(0, 30.0), (1, 30.0), (2, 30.0)]
++        );
++        assert_eq!(result.collapses, 1);
++        assert_eq!(cells.iter().map(|x| x.stock).sum::<f64>(), 160.0);
++    }
++    #[test]
++    fn province_capture_and_disconnected_enclave_debit_equal_shares_once() {
++        let c = PolarityConfig {
++            width: 3,
++            height: 2,
++            ..Default::default()
++        };
++        let mut cells = vec![
++            cell(0, 0, 90.0),
++            cell(1, 0, 0.0),
++            cell(2, 0, 0.0),
++            cell(3, 3, 50.0),
++            cell(4, 4, 10.0),
++            cell(5, 5, 10.0),
++        ];
++        let result = apply(
++            &c,
++            &mut cells,
++            &[Claim {
++                winner: 4,
++                loser: 0,
++                target: 1,
++                domestic: false,
++                source: None,
++            }],
++        );
++        assert_eq!(
++            (cells[0].stock, cells[4].stock, cells[2].stock),
++            (30.0, 40.0, 30.0)
++        );
++        assert_eq!(result.disconnections, 1);
++        assert_eq!(cells.iter().map(|x| x.stock).sum::<f64>(), 160.0);
++    }
++    #[test]
++    fn provincial_collapse_preserves_individual_stocks() {
++        let c = PolarityConfig {
++            width: 3,
++            height: 2,
++            ..PolarityConfig::for_variant(Variant::TwoLevel)
++        };
++        let mut cells = vec![
++            cell(0, 0, 90.0),
++            cell(1, 0, -5.0),
++            cell(2, 0, 20.0),
++            cell(3, 3, 50.0),
++            cell(4, 4, 10.0),
++            cell(5, 5, 10.0),
++        ];
++        apply(
++            &c,
++            &mut cells,
++            &[Claim {
++                winner: 3,
++                loser: 0,
++                target: 0,
++                domestic: false,
++                source: None,
++            }],
++        );
++        assert_eq!(
++            cells.iter().take(3).map(|x| x.stock).collect::<Vec<_>>(),
++            vec![90.0, -5.0, 20.0]
++        );
++    }
++    #[test]
++    fn torus_deduplicates_neighbors_on_two_cell_sides() {
++        let c = PolarityConfig {
++            width: 2,
++            height: 2,
++            topology: Topology::Torus,
++            ..Default::default()
++        };
++        assert_eq!(adjacent(&c, 0), vec![1, 2]);
++    }
++}
++#[cfg(test)]
++mod structural_motifs {
++    use super::*;
++    fn cells() -> Vec<Cell> {
++        vec![
++            Cell {
++                id: 0,
++                capital: 0,
++                predator: false,
++                stock: 90.0,
++            },
++            Cell {
++                id: 1,
++                capital: 0,
++                predator: true,
++                stock: 0.0,
++            },
++            Cell {
++                id: 2,
++                capital: 0,
++                predator: false,
++                stock: 0.0,
++            },
++            Cell {
++                id: 3,
++                capital: 3,
++                predator: false,
++                stock: 50.0,
++            },
++            Cell {
++                id: 4,
++                capital: 4,
++                predator: false,
++                stock: 10.0,
++            },
++            Cell {
++                id: 5,
++                capital: 5,
++                predator: false,
++                stock: 10.0,
++            },
++        ]
++    }
++    fn config() -> PolarityConfig {
++        PolarityConfig {
++            width: 3,
++            height: 2,
++            ..Default::default()
++        }
++    }
++    fn claim(target: usize) -> Claim {
++        Claim {
++            winner: 3,
++            loser: 0,
++            target,
++            domestic: false,
++            source: None,
++        }
++    }
++    #[test]
++    fn capture_and_fragment_annexes_only_capital_and_conserves_stock() {
++        let mut c = config();
++        c.capital_capture = CapitalCapture::CaptureAndFragment;
++        let mut cells = cells();
++        let r = apply(&c, &mut cells, &[claim(0)]);
++        assert_eq!(
++            (cells[0].capital, cells[0].stock, cells[3].stock),
++            (3, 0.0, 80.0)
++        );
++        assert_eq!(r.collapses, 1);
++        assert_eq!(cells.iter().map(|c| c.stock).sum::<f64>(), 160.0);
++    }
++    #[test]
++    fn stale_snapshot_claim_cannot_capture_a_changed_target() {
++        let mut cells = cells();
++        let r = apply(&config(), &mut cells, &[claim(1), claim(1)]);
++        assert_eq!(r.stale, 1);
++        assert_eq!(r.conquests, 1);
++    }
++    #[test]
++    fn affected_capital_lock_prevents_second_stock_transfer() {
++        let mut cells = cells();
++        let r = apply(&config(), &mut cells, &[claim(2), claim(1)]);
++        assert_eq!(r.locked, 1);
++        assert_eq!(r.conquests, 1);
++    }
++    #[test]
++    fn source_cell_ownership_is_part_of_snapshot_identity() {
++        let mut cells = cells();
++        let mut claim = claim(1);
++        claim.source = Some(4);
++        let r = apply(&config(), &mut cells, &[claim]);
++        assert_eq!(r.stale, 1);
++        assert_eq!(cells[1].capital, 0);
++    }
++    #[test]
++    fn primitive_stock_only_does_not_take_corporate_share() {
++        let mut c = config();
++        c.province_transfer = ProvinceTransfer::PrimitiveStockOnly;
++        let mut cells = cells();
++        apply(&c, &mut cells, &[claim(2)]);
++        assert_eq!((cells[0].stock, cells[3].stock), (90.0, 50.0));
++    }
++    #[test]
++    fn negative_corporate_stock_splits_without_floors() {
++        let mut cells = cells();
++        cells[0].stock = -90.0;
++        apply(&config(), &mut cells, &[claim(0)]);
++        assert_eq!(
++            cells.iter().take(3).map(|c| c.stock).collect::<Vec<_>>(),
++            vec![-30.0, -30.0, -30.0]
++        );
++    }
++    #[test]
++    fn primitive_provincial_capture_preserves_stock_at_new_province() {
++        let c = PolarityConfig {
++            width: 3,
++            height: 2,
++            ..PolarityConfig::for_variant(Variant::TwoLevel)
++        };
++        let mut cells = cells();
++        cells[1].capital = 1;
++        cells[1].stock = 25.0;
++        let q = Claim {
++            winner: 0,
++            loser: 1,
++            target: 1,
++            domestic: false,
++            source: Some(0),
++        };
++        apply(&c, &mut cells, &[q]);
++        assert_eq!(
++            (cells[1].capital, cells[1].stock, cells[0].stock),
++            (0, 25.0, 90.0)
++        );
++    }
++    #[test]
++    fn corporate_provincial_capital_capture_transfers_only_center_stock() {
++        let mut c = PolarityConfig {
++            width: 3,
++            height: 2,
++            ..PolarityConfig::for_variant(Variant::TwoLevel)
++        };
++        c.capital_capture = CapitalCapture::CaptureAndFragment;
++        let mut cells = cells();
++        cells[1].stock = -5.0;
++        cells[2].stock = 20.0;
++        apply(&c, &mut cells, &[claim(0)]);
++        assert_eq!(
++            (cells[3].stock, cells[1].stock, cells[2].stock),
++            (140.0, -5.0, 20.0)
++        );
++    }
++    #[test]
++    fn successful_revolt_restores_latent_type_and_preserves_provincial_stock() {
++        let c = PolarityConfig {
++            width: 3,
++            height: 2,
++            ..PolarityConfig::for_variant(Variant::TwoLevel)
++        };
++        let mut cells = cells();
++        cells[1].stock = 25.0;
++        apply(
++            &c,
++            &mut cells,
++            &[Claim {
++                winner: 1,
++                loser: 0,
++                target: 1,
++                domestic: true,
++                source: None,
++            }],
++        );
++        assert_eq!(
++            (cells[1].capital, cells[1].stock, cells[1].predator),
++            (1, 25.0, true)
++        );
++        assert_eq!(cells[2].capital, 2);
++    }
++}
+diff --git a/crates/sugarscape-core/src/polarity/tests.rs b/crates/sugarscape-core/src/polarity/tests.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/polarity/tests.rs
+@@ -0,0 +1,806 @@
++use super::{config::*, decision::FrontKey, territory, world::*};
++use crate::model::Model;
++use std::collections::BTreeMap;
++#[cfg(test)]
++mod clock_contracts {
++    use super::*;
++    use crate::model::Model;
++    #[test]
++    fn no_predator_world_stays_peaceful_and_finishes_at_horizon() {
++        let c = PolarityConfig {
++            width: 3,
++            height: 3,
++            predator_share: 0.0,
++            horizon: 4,
++            initial_mean: 50.0,
++            initial_sd: 0.0,
++            harvest_mean: 2.0,
++            harvest_sd: 0.0,
++            ..Default::default()
++        };
++        let mut w = PolarityWorld::new(c, 7).unwrap();
++        w.run(20);
++        assert_eq!(w.period, 4);
++        assert_eq!(w.population(), 9);
++        assert_eq!(w.cells.iter().map(|c| c.stock).sum::<f64>(), 522.0);
++        assert_eq!(w.totals.attacks, 0);
++        let before = w.fingerprint();
++        w.run(1);
++        assert_eq!(before, w.fingerprint());
++    }
++    #[test]
++    fn grouped_periods_have_identical_economic_state_and_random_stream() {
++        let c = PolarityConfig {
++            width: 4,
++            height: 4,
++            horizon: 12,
++            stop_at_hegemony: false,
++            ..Default::default()
++        };
++        let mut one = PolarityWorld::new(c.clone(), 17).unwrap();
++        one.run(12);
++        let mut c = c;
++        c.periods_per_tick = 5;
++        let mut grouped = PolarityWorld::new(c, 17).unwrap();
++        grouped.run(3);
++        assert_eq!(one.economic_fingerprint(), grouped.economic_fingerprint());
++        assert_eq!(grouped.stats.latest().unwrap().last_tick_periods, 2);
++    }
++    #[test]
++    fn provincial_negative_harvest_tax_is_signed_and_zero_stock_exempt() {
++        let c = PolarityConfig {
++            width: 2,
++            height: 2,
++            predator_share: 0.0,
++            initial_mean: 50.0,
++            initial_sd: 0.0,
++            harvest_mean: -10.0,
++            harvest_sd: 0.0,
++            tax_rate: 0.4,
++            horizon: 1,
++            ..PolarityConfig::for_variant(Variant::TwoLevel)
++        };
++        let mut w = PolarityWorld::new(c, 9).unwrap();
++        w.cells[1].capital = 0;
++        w.cells[1].stock = 20.0;
++        w.rebuild();
++        w.run(1);
++        assert_eq!((w.cells[0].stock, w.cells[1].stock), (36.0, 14.0));
++        assert_eq!(w.totals.harvest, -40.0);
++        assert_eq!(w.totals.taxes, -4.0);
++    }
++    #[test]
++    fn rejecting_nonpositive_stock_retains_invalid_outcome() {
++        let c = PolarityConfig {
++            width: 2,
++            height: 2,
++            predator_share: 0.0,
++            initial_mean: 1.0,
++            initial_sd: 0.0,
++            harvest_mean: -2.0,
++            harvest_sd: 0.0,
++            resource_policy: ResourcePolicy::RejectNonpositive,
++            ..Default::default()
++        };
++        let mut w = PolarityWorld::new(c, 4).unwrap();
++        w.run(1);
++        let outcome = w.outcome().unwrap();
++        assert!(!outcome.valid);
++        assert!(outcome.terminal_category.is_none());
++        assert!(!w.holds_when_finished());
++    }
++}
++#[cfg(test)]
++mod source_motifs {
++    use super::*;
++    fn fixture() -> PolarityWorld {
++        PolarityWorld::new(
++            PolarityConfig {
++                width: 3,
++                height: 2,
++                predator_share: 0.0,
++                initial_mean: 50.0,
++                initial_sd: 0.0,
++                harvest_mean: 0.0,
++                harvest_sd: 0.0,
++                stop_at_hegemony: false,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap()
++    }
++    #[test]
++    fn equal_allocation_counts_sovereign_neighbors_not_border_edges() {
++        let mut w = fixture();
++        w.cells[1].capital = 0;
++        w.cells[0].stock = 120.0;
++        w.cells[1].stock = 0.0;
++        w.rebuild();
++        let a = w.allocate(&w.cells.iter().map(|c| c.stock).collect::<Vec<_>>());
++        assert_eq!(a[&FrontKey::foreign(0, 2)][0], 40.0);
++    }
++    #[test]
++    fn signed_damage_ledger_separates_creation_from_positive_destruction() {
++        let mut w = fixture();
++        w.cells[0].stock = -60.0;
++        w.cells[1].stock = -60.0;
++        let k = FrontKey::foreign(0, 1);
++        w.fronts.get_mut(&k).unwrap().previous = [true, true];
++        w.fronts.get_mut(&FrontKey::foreign(2, 5)).unwrap().previous = [true, true];
++        w.run(1);
++        assert!(w.totals.signed_creation > 0.0);
++        assert!(w.totals.destruction > 0.0);
++    }
++    #[test]
++    fn coalition_obligations_do_not_recursively_trigger_another_coalition() {
++        let mut w = fixture();
++        w.config.alliances = true;
++        w.coalitions = BTreeMap::from([(0, vec![1, 3]), (1, vec![2, 4])]);
++        let k = FrontKey::foreign(0, 1);
++        w.fronts.get_mut(&k).unwrap().initiated = [true, false];
++        w.fronts.get_mut(&k).unwrap().actions = [true, false];
++        w.obligations();
++        assert!(w.fronts[&FrontKey::foreign(0, 3)].actions[1]);
++        assert!(!w.fronts[&FrontKey::foreign(1, 2)].actions[1]);
++    }
++    #[test]
++    fn intra_coalition_initiator_is_expelled_before_obligations() {
++        let mut w = fixture();
++        w.config.alliances = true;
++        w.coalitions = BTreeMap::from([(4, vec![0, 1, 3])]);
++        w.fronts
++            .get_mut(&FrontKey::foreign(0, 1))
++            .unwrap()
++            .initiated = [true, false];
++        w.obligations();
++        assert_eq!(w.coalitions[&4], vec![1, 3]);
++    }
++    #[test]
++    fn source_horizon_censors_open_episode_instead_of_inventing_end() {
++        let mut w = fixture();
++        w.config.horizon = 1;
++        w.config.victory = 100.0;
++        w.fronts.get_mut(&FrontKey::foreign(0, 1)).unwrap().previous = [true, true];
++        w.run(1);
++        let ep = &w.outcome().unwrap().episodes[0];
++        assert_eq!(ep.duration, 1);
++        assert!(ep.censored);
++        assert!(ep.end_cause.is_none());
++    }
++    #[test]
++    fn inspect_and_render_leave_state_and_rng_unchanged() {
++        let w = fixture();
++        let before = w.fingerprint();
++        let _ = w.inspect_json(3, 3).unwrap();
++        for mode in ["territory", "resources", "strategy", "coalitions"] {
++            w.render(mode, "", &mut vec![]).unwrap();
++        }
++        assert_eq!(before, w.fingerprint());
++    }
++    #[test]
++    fn logs_have_monotonic_ids_and_report_dropped_events() {
++        let mut w = fixture();
++        w.config.event_log = true;
++        w.config.event_log_limit = 2;
++        for _ in 0..3 {
++            w.log("test", vec![0], None);
++        }
++        assert_eq!(
++            w.events.iter().map(|e| e.id).collect::<Vec<_>>(),
++            vec![1, 2]
++        );
++        assert_eq!(w.events_dropped, 1);
++    }
++    #[test]
++    fn tax_distance_discount_is_cardinal_distance() {
++        let w = fixture();
++        assert_eq!(w.distance(0, 5), 3);
++        assert_eq!(discount(0.7, 3), 0.3429999999999999);
++    }
++}
++
++#[cfg(test)]
++mod added_rules {
++    use super::*;
++    #[test]
++    fn pra_coalition_deterrence_distinguishes_front_commitments_from_stocks() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 3,
++                height: 2,
++                predator_share: 0.0,
++                initial_mean: 60.0,
++                initial_sd: 0.0,
++                alliances: true,
++                allocation: Allocation::Pra,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.coalitions = BTreeMap::from([(0, vec![1, 4]), (1, vec![0, 2])]);
++        assert_eq!(w.deterrence_commitments(0, 1), [60.0, 20.0]);
++        w.config.pra_alliance_support = PraAllianceSupport::Stocks;
++        assert_eq!(w.deterrence_commitments(0, 1), [90.0, 80.0]);
++    }
++    #[test]
++    fn reject_policy_stops_at_damage_before_harvest_can_repair_stock() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 2,
++                height: 2,
++                predator_share: 0.0,
++                initial_mean: 1.0,
++                initial_sd: 0.0,
++                harvest_mean: 100.0,
++                harvest_sd: 0.0,
++                damage_rate: 1.0,
++                resource_policy: ResourcePolicy::RejectNonpositive,
++                victory: 100.0,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.cells[1].stock = 10.0;
++        w.fronts.get_mut(&FrontKey::foreign(0, 1)).unwrap().previous = [true, true];
++        w.run(1);
++        assert!(!w.outcome().unwrap().valid);
++        assert_eq!(w.totals.harvest, 0.0);
++    }
++}
++#[cfg(test)]
++mod invalid_arithmetic {
++    use super::*;
++    #[test]
++    fn aggregate_overflow_is_invalid_even_when_every_stock_is_finite() {
++        let w = PolarityWorld::new(
++            PolarityConfig {
++                initial_mean: 1e308,
++                initial_sd: 0.0,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        assert!(!w.outcome().unwrap().valid);
++        assert!(w
++            .outcome()
++            .unwrap()
++            .invalid_reason
++            .as_ref()
++            .unwrap()
++            .contains("aggregate"));
++    }
++    #[test]
++    fn flooring_does_not_conceal_nonfinite_aggregate() {
++        let w = PolarityWorld::new(
++            PolarityConfig {
++                initial_mean: 1e308,
++                initial_sd: 0.0,
++                resource_policy: ResourcePolicy::FloorZero,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        assert!(!w.outcome().unwrap().valid);
++    }
++    #[test]
++    fn overextension_continues_a_one_state_period() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 2,
++                height: 2,
++                predator_share: 0.0,
++                initial_mean: 50.0,
++                initial_sd: 0.0,
++                harvest_mean: 0.0,
++                harvest_sd: 0.0,
++                horizon: 2,
++                ..PolarityConfig::for_variant(Variant::Overextension)
++            },
++            1,
++        )
++        .unwrap();
++        for c in &mut w.cells {
++            c.capital = 0;
++        }
++        w.rebuild();
++        w.run(1);
++        assert_eq!(w.period, 1);
++        assert!(w.outcome().is_none());
++    }
++}
++#[cfg(test)]
++mod further_contracts {
++    use super::*;
++    #[test]
++    fn all_presets_validate_and_roundtrip_resolved_fields() {
++        for p in crate::polarity::presets() {
++            let crate::model::ModelConfig::Polarity(c) = p.config else {
++                panic!("wrong preset kind")
++            };
++            c.validate().unwrap();
++            let encoded = serde_json::to_string(&c).unwrap();
++            let copy: PolarityConfig = serde_json::from_str(&encoded).unwrap();
++            assert_eq!(copy, c);
++        }
++    }
++    #[test]
++    fn all_schema_paths_exist_in_exported_configuration() {
++        let c = serde_json::to_value(PolarityConfig::default()).unwrap();
++        for p in crate::polarity::schema() {
++            assert!(c.get(p.path).is_some(), "{}", p.path);
++            assert_eq!(p.apply, crate::schema::Apply::Reset);
++        }
++    }
++    #[test]
++    fn next_period_obligations_are_deferred() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 3,
++                height: 2,
++                alliances: true,
++                obligation_timing: ObligationTiming::NextPeriod,
++                predator_share: 0.0,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.coalitions = BTreeMap::from([(0, vec![1, 3])]);
++        w.fronts
++            .get_mut(&FrontKey::foreign(0, 1))
++            .unwrap()
++            .initiated = [true, false];
++        w.obligations();
++        assert!(!w.fronts[&FrontKey::foreign(0, 3)].actions[1]);
++        assert!(w.pending.contains(&(3, 0)));
++        w.prepare();
++        assert!(w.fronts[&FrontKey::foreign(0, 3)].actions[1]);
++    }
++    #[test]
++    fn prime_threat_requires_strictly_negative_enough_trust() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 2,
++                height: 2,
++                alliances: true,
++                trust_initial: 0.0,
++                threat_threshold: 0.0,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.form_coalitions();
++        assert!(w.threats.is_empty());
++        w.trust.insert((1, 0), -1.0);
++        w.trust.insert((2, 0), -1.0);
++        w.form_coalitions();
++        assert_eq!(w.coalitions[&0], vec![1, 2]);
++    }
++    #[test]
++    fn sequential_claims_share_period_locks() {
++        let c = PolarityConfig {
++            width: 3,
++            height: 2,
++            ..Default::default()
++        };
++        let mut cells: Vec<territory::Cell> = (0..6)
++            .map(|id| territory::Cell {
++                id,
++                capital: if id < 3 { 0 } else { id },
++                stock: if id == 0 {
++                    90.0
++                } else if id < 3 {
++                    0.0
++                } else {
++                    50.0
++                },
++                predator: false,
++            })
++            .collect();
++        let mut locks = std::collections::BTreeSet::new();
++        let a = territory::Claim {
++            winner: 3,
++            loser: 0,
++            target: 2,
++            domestic: false,
++            source: None,
++        };
++        let b = territory::Claim {
++            target: 1,
++            ..a.clone()
++        };
++        territory::apply_locked(&c, &mut cells, &[a], &mut locks);
++        assert_eq!(
++            territory::apply_locked(&c, &mut cells, &[b], &mut locks).locked,
++            1
++        );
++    }
++    #[test]
++    fn floor_zero_records_signed_clipping_without_hiding_harvest() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 2,
++                height: 2,
++                predator_share: 0.0,
++                initial_mean: 1.0,
++                initial_sd: 0.0,
++                harvest_mean: -2.0,
++                harvest_sd: 0.0,
++                resource_policy: ResourcePolicy::FloorZero,
++                horizon: 1,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.run(1);
++        assert_eq!(w.totals.harvest, -8.0);
++        assert_eq!(w.totals.clipping, 4.0);
++        assert_eq!(w.cells.iter().map(|c| c.stock).sum::<f64>(), 0.0);
++    }
++    #[test]
++    fn harvest_tax_is_exempt_at_zero_province_stock() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 2,
++                height: 2,
++                predator_share: 0.0,
++                initial_mean: 50.0,
++                initial_sd: 0.0,
++                harvest_mean: -10.0,
++                harvest_sd: 0.0,
++                horizon: 1,
++                ..PolarityConfig::for_variant(Variant::TwoLevel)
++            },
++            1,
++        )
++        .unwrap();
++        w.cells[1].capital = 0;
++        w.cells[1].stock = 0.0;
++        w.rebuild();
++        w.run(1);
++        assert_eq!((w.cells[0].stock, w.cells[1].stock), (40.0, -10.0));
++        assert_eq!(w.totals.taxes, 0.0);
++    }
++}
++#[cfg(test)]
++mod ordered_source_motifs {
++    use super::*;
++    fn fight(timing: VictoryTiming) -> PolarityWorld {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 2,
++                height: 2,
++                predator_share: 0.0,
++                initial_mean: 50.0,
++                initial_sd: 0.0,
++                harvest_mean: 0.0,
++                harvest_sd: 0.0,
++                victory_timing: timing,
++                damage_rate: 1.0,
++                stop_at_hegemony: false,
++                horizon: 1,
++                ..Default::default()
++            },
++            7,
++        )
++        .unwrap();
++        w.cells[0].stock = 90.0;
++        w.cells[1].stock = 20.0;
++        let f = w.fronts.get_mut(&FrontKey::foreign(0, 1)).unwrap();
++        f.previous = [true, true];
++        f.path = Some([0, 1]);
++        w
++    }
++    #[test]
++    fn simultaneous_damage_uses_frozen_opponent_commitments() {
++        let mut w = fight(VictoryTiming::AfterDamage);
++        w.run(1);
++        assert_eq!((w.cells[0].stock, w.cells[1].stock), (80.0, -25.0));
++        assert_eq!(w.totals.destruction, 55.0);
++    }
++    #[test]
++    fn before_damage_victory_uses_frozen_ratio() {
++        let mut w = fight(VictoryTiming::BeforeDamage);
++        w.run(1);
++        assert_eq!(w.cells[1].capital, 0);
++        assert_eq!(w.cells[0].stock, 55.0);
++    }
++    #[test]
++    fn after_damage_victory_can_differ_from_before_damage() {
++        let mut w = fight(VictoryTiming::AfterDamage);
++        w.run(1);
++        assert_eq!(w.cells[1].capital, 1);
++        assert_eq!(w.totals.conquests, 0);
++    }
++    #[test]
++    fn after_harvest_recomputes_stocks_before_victory() {
++        let mut w = fight(VictoryTiming::AfterHarvest);
++        w.config.damage_rate = 0.0;
++        w.config.harvest_mean = 100.0;
++        w.run(1);
++        assert_eq!(w.cells[1].capital, 1);
++        assert_eq!((w.cells[0].stock, w.cells[1].stock), (190.0, 120.0));
++    }
++    #[test]
++    fn defender_victory_captures_attacking_border_cell() {
++        let mut w = fight(VictoryTiming::BeforeDamage);
++        w.config.damage_rate = 0.0;
++        w.cells[0].stock = 20.0;
++        w.cells[1].stock = 90.0;
++        w.run(1);
++        assert_eq!(w.cells[0].capital, 1);
++        assert_eq!(w.cells[1].stock, 110.0);
++    }
++    #[test]
++    fn cc_cannot_generate_claim_despite_strict_resource_superiority() {
++        let mut w = fight(VictoryTiming::BeforeDamage);
++        w.fronts.get_mut(&FrontKey::foreign(0, 1)).unwrap().previous = [false, false];
++        w.run(1);
++        assert_eq!(w.totals.conquests, 0);
++        assert_eq!(w.cells[1].capital, 1);
++    }
++    #[test]
++    fn domestic_revolt_strict_equality_does_not_initiate() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 2,
++                height: 2,
++                predator_share: 0.0,
++                initial_mean: 60.0,
++                initial_sd: 0.0,
++                harvest_mean: 0.0,
++                harvest_sd: 0.0,
++                horizon: 1,
++                ..PolarityConfig::for_variant(Variant::TwoLevel)
++            },
++            1,
++        )
++        .unwrap();
++        w.cells[1].capital = 0;
++        w.cells[1].stock = 120.0;
++        w.rebuild();
++        w.run(1);
++        assert_eq!(w.totals.revolts, 0);
++        assert_eq!(w.cells[1].capital, 0);
++    }
++    #[test]
++    fn winning_province_gains_independence_without_stock_transfer() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 2,
++                height: 2,
++                predator_share: 0.0,
++                initial_mean: 60.0,
++                initial_sd: 0.0,
++                harvest_mean: 0.0,
++                harvest_sd: 0.0,
++                damage_rate: 0.0,
++                horizon: 1,
++                ..PolarityConfig::for_variant(Variant::TwoLevel)
++            },
++            1,
++        )
++        .unwrap();
++        w.cells[1].capital = 0;
++        w.cells[1].stock = 121.0;
++        w.rebuild();
++        w.run(1);
++        assert_eq!(w.totals.revolts, 1);
++        assert_eq!(
++            (w.cells[1].capital, w.cells[1].stock, w.cells[0].stock),
++            (1, 121.0, 60.0)
++        );
++    }
++    #[test]
++    fn two_stage_path_samples_from_border_cell_support() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 3,
++                height: 2,
++                predator_share: 0.0,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.cells[3].capital = 0;
++        w.cells[4].capital = 1;
++        w.rebuild();
++        let key = FrontKey::foreign(0, 1);
++        for _ in 0..32 {
++            let p = w.sample_path(key, 0);
++            assert!([0, 3].contains(&p[0]));
++            assert!([1, 4].contains(&p[1]));
++            assert!(territory::adjacent(&w.config, p[0]).contains(&p[1]));
++        }
++    }
++    #[test]
++    fn territory_path_distance_uses_only_owned_cells() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 3,
++                height: 2,
++                tax_distance: TaxDistance::TerritorialPath,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        for i in [1, 2, 5, 3] {
++            w.cells[i].capital = 0;
++        }
++        assert_eq!(w.distance(0, 5), 3);
++    }
++}
++#[cfg(test)]
++mod sequential_control {
++    use super::*;
++    #[test]
++    fn later_actor_cannot_initiate_against_already_resolved_dyads() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 2,
++                height: 2,
++                predator_share: 0.0,
++                update: Update::Sequential,
++                initial_mean: 10.0,
++                initial_sd: 0.0,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.cells[3].predator = true;
++        w.cells[3].stock = 100.0;
++        w.resolved_fronts.insert(FrontKey::foreign(1, 3));
++        w.resolved_fronts.insert(FrontKey::foreign(2, 3));
++        w.prepare();
++        let mut ledger = crate::polarity::Ledger::default();
++        w.decide_actor(3, &mut ledger);
++        assert_eq!(ledger.attacks, 0);
++        assert!(!w.fronts.values().any(|f| f.initiated[0] || f.initiated[1]));
++    }
++    #[test]
++    fn sequential_runs_a_full_harvest_period_once_per_cell() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 2,
++                height: 2,
++                predator_share: 0.0,
++                update: Update::Sequential,
++                initial_mean: 50.0,
++                initial_sd: 0.0,
++                harvest_mean: 2.0,
++                harvest_sd: 0.0,
++                horizon: 1,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.run(1);
++        assert_eq!(w.totals.harvest, 8.0);
++        assert_eq!(w.cells.iter().map(|c| c.stock).sum::<f64>(), 208.0);
++    }
++}
++#[cfg(test)]
++mod variant_validation {
++    use super::*;
++    #[test]
++    fn two_level_rejects_decay_but_overextension_accepts_it() {
++        let mut c = PolarityConfig::for_variant(Variant::TwoLevel);
++        c.tax_discount = 0.7;
++        assert!(c
++            .validate()
++            .unwrap_err()
++            .iter()
++            .any(|e| e.field == "tax_discount"));
++        c.variant = Variant::Overextension;
++        c.stop_at_hegemony = false;
++        assert!(c.validate().is_ok());
++    }
++}
++#[cfg(test)]
++mod completed_clock {
++    use super::*;
++    #[test]
++    fn invalid_partial_period_is_attempted_but_not_completed() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 2,
++                height: 2,
++                predator_share: 0.0,
++                initial_mean: 1.0,
++                initial_sd: 0.0,
++                harvest_mean: -2.0,
++                harvest_sd: 0.0,
++                resource_policy: ResourcePolicy::RejectNonpositive,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.run(1);
++        let o = w.outcome().unwrap();
++        assert_eq!((o.periods, o.attempted_period), (0, 1));
++        let s = w.stats.latest().unwrap();
++        assert_eq!(
++            (s.periods, s.attempted_period, s.last_tick_periods),
++            (0, 1, 0)
++        );
++    }
++}
++#[cfg(test)]
++mod final_numeric_guards {
++    use super::*;
++    #[test]
++    fn finite_nonzero_denominator_ratio_overflow_retains_invalid_session() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 2,
++                height: 2,
++                predator_share: 0.0,
++                initial_mean: 1.0,
++                initial_sd: 0.0,
++                harvest_mean: 0.0,
++                harvest_sd: 0.0,
++                damage_rate: 0.0,
++                horizon: 1,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.cells[0].stock = 1e300;
++        w.cells[1].stock = 1e-300;
++        w.fronts.get_mut(&FrontKey::foreign(0, 1)).unwrap().previous = [true, true];
++        w.run(1);
++        assert!(!w.outcome().unwrap().valid);
++        assert!(w
++            .outcome()
++            .unwrap()
++            .invalid_reason
++            .as_ref()
++            .unwrap()
++            .contains("ratio"));
++    }
++    #[test]
++    fn cumulative_ledger_overflow_is_invalid_with_finite_stocks() {
++        let mut w = PolarityWorld::new(
++            PolarityConfig {
++                width: 2,
++                height: 2,
++                predator_share: 0.0,
++                initial_mean: 1e307,
++                initial_sd: 0.0,
++                harvest_mean: 0.0,
++                harvest_sd: 0.0,
++                damage_rate: 1.0,
++                victory: 100.0,
++                horizon: 1,
++                ..Default::default()
++            },
++            1,
++        )
++        .unwrap();
++        w.totals.destruction = f64::MAX;
++        w.fronts.get_mut(&FrontKey::foreign(0, 1)).unwrap().previous = [true, true];
++        w.run(1);
++        assert!(w.cells.iter().all(|c| c.stock.is_finite()));
++        assert!(!w.outcome().unwrap().valid);
++        assert!(w
++            .outcome()
++            .unwrap()
++            .invalid_reason
++            .as_ref()
++            .unwrap()
++            .contains("ledger"));
++    }
++}
+diff --git a/crates/sugarscape-core/src/polarity/view.rs b/crates/sugarscape-core/src/polarity/view.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/polarity/view.rs
+@@ -0,0 +1,210 @@
++//! Rendering observes ownership, stocks and coalition membership without drawing randomness.
++use super::{decision::Front, world::hash};
++use super::{territory, world::PolarityWorld};
++use crate::{
++    config::FieldError,
++    model::{wrong_model, Model, ModelConfig, ModelKind},
++    stats::Series,
++};
++use std::fmt::Write;
++pub fn render(w: &PolarityWorld, mode: &str, buf: &mut Vec<u8>) -> Result<(), String> {
++    if !["", "territory", "resources", "strategy", "coalitions"].contains(&mode) {
++        return Err(format!("unknown polarity mode {mode}"));
++    }
++    let width = w.config.width as usize * 6;
++    buf.clear();
++    buf.resize(width * w.config.height as usize * 6 * 4, 255);
++    for c in &w.cells {
++        let x = c.id % w.config.width as usize;
++        let y = c.id / w.config.width as usize;
++        let seed = (c.capital as u32).wrapping_mul(2654435761);
++        let mut color = [
++            70 + (seed % 160) as u8,
++            70 + ((seed >> 8) % 160) as u8,
++            70 + ((seed >> 16) % 160) as u8,
++        ];
++        if mode == "resources" {
++            let t = (c.stock / 100.0).clamp(-1.0, 1.0);
++            color = if t < 0.0 {
++                [(100.0 - 140.0 * t) as u8, 30, 40]
++            } else {
++                [30, (40.0 + 190.0 * t) as u8, 100]
++            };
++        } else if mode == "strategy" {
++            color = if c.predator {
++                [230, 120, 40]
++            } else {
++                [60, 170, 100]
++            };
++        } else if mode == "coalitions" {
++            let threat = w.coalition_threat(c.capital);
++            color = threat
++                .map(|id| {
++                    let k = (id as u32).wrapping_mul(1664525);
++                    [
++                        80 + (k % 160) as u8,
++                        80 + ((k >> 8) % 160) as u8,
++                        80 + ((k >> 16) % 160) as u8,
++                    ]
++                })
++                .unwrap_or([75, 80, 90]);
++        }
++        for dy in 0..6 {
++            for dx in 0..6 {
++                let i = ((y * 6 + dy) * width + x * 6 + dx) * 4;
++                let border = (dx == 0 && (x == 0 || w.cells[c.id - 1].capital != c.capital))
++                    || (dx == 5
++                        && (x + 1 == w.config.width as usize
++                            || w.cells[c.id + 1].capital != c.capital))
++                    || (dy == 0
++                        && (y == 0
++                            || w.cells[c.id - w.config.width as usize].capital != c.capital))
++                    || (dy == 5
++                        && (y + 1 == w.config.height as usize
++                            || w.cells[c.id + w.config.width as usize].capital != c.capital));
++                let pixel = if border {
++                    [20, 20, 25]
++                } else if c.id == c.capital && (2..=3).contains(&dx) && (2..=3).contains(&dy) {
++                    [250, 250, 250]
++                } else if dx == 4 && dy == 4 {
++                    if c.predator {
++                        [255, 150, 30]
++                    } else {
++                        [60, 230, 100]
++                    }
++                } else {
++                    color
++                };
++                buf[i..i + 3].copy_from_slice(&pixel);
++            }
++        }
++    }
++    let _ = territory::capitals(&w.cells);
++    Ok(())
++}
++
++impl Model for PolarityWorld {
++    fn config(&self) -> ModelConfig {
++        ModelConfig::Polarity(self.config.clone())
++    }
++    fn run(&mut self, ticks: u32) {
++        PolarityWorld::run(self, ticks)
++    }
++    fn tick(&self) -> u64 {
++        self.tick
++    }
++    fn population(&self) -> usize {
++        territory::capitals(&self.cells).len()
++    }
++    fn fingerprint(&self) -> u64 {
++        self.economic_fingerprint()
++            ^ hash(
++                &serde_json::to_vec(&(
++                    self.tick,
++                    &self.config,
++                    &self.outcome,
++                    &self.events,
++                    self.events_dropped,
++                ))
++                .unwrap(),
++            )
++    }
++    fn size(&self) -> (u32, u32) {
++        (self.config.width * 6, self.config.height * 6)
++    }
++    fn render(&self, mode: &str, _layer: &str, buf: &mut Vec<u8>) -> Result<(), String> {
++        super::view::render(self, mode, buf)
++    }
++    fn latest_json(&self) -> String {
++        serde_json::to_string(&self.stats.latest()).unwrap()
++    }
++    fn series_names(&self) -> Vec<String> {
++        super::series_names()
++    }
++    fn series(&self, name: &str) -> Option<Vec<f64>> {
++        self.stats.series(name)
++    }
++    fn latest_value(&self, name: &str) -> Option<f64> {
++        self.stats.latest().and_then(|s| s.value(name))
++    }
++    fn series_csv(&self) -> String {
++        crate::export::history_csv(&self.series_names(), self.stats.history())
++    }
++    fn agents_csv(&self) -> String {
++        let mut s = "cell,x,y,capital,predator,stock\n".to_string();
++        for c in &self.cells {
++            writeln!(
++                s,
++                "{},{},{},{},{},{}",
++                c.id,
++                c.id % self.config.width as usize,
++                c.id / self.config.width as usize,
++                c.capital,
++                c.predator,
++                c.stock
++            )
++            .unwrap();
++        }
++        s
++    }
++    fn inspect_json(&self, x: u32, y: u32) -> Result<String, String> {
++        if x >= self.config.width * 6 || y >= self.config.height * 6 {
++            return Err("outside polarity grid".into());
++        }
++        let id = ((y / 6) * self.config.width + x / 6) as usize;
++        let c = &self.cells[id];
++        let capital = c.capital;
++        let foreign: Vec<&Front> = self
++            .fronts
++            .values()
++            .filter(|f| !f.key.domestic && (f.key.a == capital || f.key.b == capital))
++            .collect();
++        let domestic: Vec<&Front> = self
++            .fronts
++            .values()
++            .filter(|f| f.key.domestic && f.key.a == capital)
++            .collect();
++        let coalition = self
++            .coalitions
++            .iter()
++            .find(|(_, m)| m.contains(&capital))
++            .map(|(threat, m)| serde_json::json!({"threat":threat,"members":m}));
++        Ok(serde_json::json!({"model":"polarity","cell":c,"capital":capital,"province_stock":if c.id==capital{0.0}else{c.stock},"corporate_stock":self.cells[capital].stock,"members":territory::members(&self.cells,capital),"neighbors":territory::neighbors(&self.config,&self.cells,capital),"trust":self.trust.iter().filter(|((a,_),_)|*a==capital).map(|((_,b),v)|serde_json::json!({"neighbor":b,"trust":v})).collect::<Vec<_>>(),"threat":self.threats.get(&capital),"coalition":coalition,"foreign_fronts":foreign,"domestic_fronts":domestic,"last_event":self.last_event,"period":self.completed_periods(),"periods":self.completed_periods(),"attempted_period":self.period,"agent":null,"event_log_limit":self.config.event_log_limit,"horizon":self.config.horizon,"finish_reason":self.outcome.as_ref().map(|o|&o.finish_reason),"invalidity":self.outcome.as_ref().and_then(|o|o.invalid_reason.as_ref()),"event_log_enabled":self.config.event_log,"events":self.events,"events_dropped":self.events_dropped,"next_event_id":self.next_event}).to_string())
++    }
++    fn locate(&self, id: u64) -> Option<(u32, u32)> {
++        if id >= self.cells.len() as u64 {
++            None
++        } else {
++            Some((
++                (id as u32 % self.config.width) * 6 + 3,
++                (id as u32 / self.config.width) * 6 + 3,
++            ))
++        }
++    }
++    fn set_config(&mut self, next: ModelConfig) -> Result<(), Vec<FieldError>> {
++        let ModelConfig::Polarity(c) = next else {
++            return Err(wrong_model(ModelKind::Polarity, &next));
++        };
++        c.validate()?;
++        let a = serde_json::to_value(&self.config).unwrap();
++        let b = serde_json::to_value(&c).unwrap();
++        let errors: Vec<FieldError> = a
++            .as_object()
++            .unwrap()
++            .iter()
++            .filter(|(k, v)| b[*k] != **v)
++            .map(|(k, _)| FieldError::new(k, "changes only on reset"))
++            .collect();
++        if errors.is_empty() {
++            Ok(())
++        } else {
++            Err(errors)
++        }
++    }
++    fn finished(&self) -> bool {
++        self.outcome.is_some()
++    }
++    fn holds_when_finished(&self) -> bool {
++        self.outcome.as_ref().is_some_and(|o| o.valid)
++    }
++}
+diff --git a/crates/sugarscape-core/src/polarity/world.rs b/crates/sugarscape-core/src/polarity/world.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/sugarscape-core/src/polarity/world.rs
+@@ -0,0 +1,539 @@
++//! Full economic periods share one seeded portable engine on native and WASM.
++use super::{
++    analysis::*,
++    config::*,
++    decision::{Front, FrontKey},
++    resources,
++    stats::PolaritySnapshot,
++    territory::{self, Cell},
++};
++use crate::{
++    config::FieldError,
++    rng::{self, SimRng},
++    stats::Stats,
++};
++use rand::Rng;
++use std::collections::{BTreeMap, BTreeSet};
++#[derive(Clone)]
++pub struct PolarityWorld {
++    pub config: PolarityConfig,
++    pub tick: u64,
++    pub stats: Stats<PolaritySnapshot>,
++    pub(crate) period: u64,
++    pub(crate) cells: Vec<Cell>,
++    pub(crate) fronts: BTreeMap<FrontKey, Front>,
++    pub(super) seed: u64,
++    pub(super) rng: SimRng,
++    pub(super) trust: BTreeMap<(usize, usize), f64>,
++    pub(super) threats: BTreeMap<usize, usize>,
++    pub(super) coalitions: BTreeMap<usize, Vec<usize>>,
++    pub(super) aggression: BTreeSet<usize>,
++    pub(super) dyadic_aggression: BTreeSet<(usize, usize)>,
++    pub(super) pending: BTreeSet<(usize, usize)>,
++    pub(super) totals: Ledger,
++    pub(super) episodes: Vec<Episode>,
++    pub(super) events: Vec<Event>,
++    pub(super) events_dropped: u64,
++    pub(super) next_event: u64,
++    pub(super) next_episode: u64,
++    pub(super) initial_predator_share: f64,
++    pub(super) outcome: Option<Outcome>,
++    pub(super) last_event: Option<Event>,
++    pub(super) period_locks: BTreeSet<usize>,
++    pub(super) resolved_fronts: BTreeSet<FrontKey>,
++}
++impl PolarityWorld {
++    pub fn new(config: PolarityConfig, seed: u64) -> Result<Self, Vec<FieldError>> {
++        config.validate()?;
++        let mut rng = rng::seeded(seed);
++        let n = (config.width * config.height) as usize;
++        let mut cells: Vec<Cell> = (0..n)
++            .map(|id| Cell {
++                id,
++                capital: id,
++                predator: false,
++                stock: draw(&config, &mut rng, config.initial_mean, config.initial_sd),
++            })
++            .collect();
++        match config.placement {
++            Placement::ExactCount => {
++                let mut order: Vec<usize> = (0..n).collect();
++                shuffle(&mut order, &mut rng);
++                let count = (config.predator_share * n as f64 + 0.5).floor() as usize;
++                for &i in order.iter().take(count) {
++                    cells[i].predator = true;
++                }
++            }
++            Placement::Bernoulli => {
++                for c in &mut cells {
++                    c.predator = rng.gen::<f64>() < config.predator_share;
++                }
++            }
++        }
++        let initial_predator_share = cells.iter().filter(|c| c.predator).count() as f64 / n as f64;
++        let mut w = Self {
++            config,
++            tick: 0,
++            stats: Stats::default(),
++            period: 0,
++            cells,
++            fronts: BTreeMap::new(),
++            seed,
++            rng,
++            trust: BTreeMap::new(),
++            threats: BTreeMap::new(),
++            coalitions: BTreeMap::new(),
++            aggression: BTreeSet::new(),
++            dyadic_aggression: BTreeSet::new(),
++            pending: BTreeSet::new(),
++            totals: Ledger::default(),
++            episodes: vec![],
++            events: vec![],
++            events_dropped: 0,
++            next_event: 0,
++            next_episode: 0,
++            initial_predator_share,
++            outcome: None,
++            last_event: None,
++            period_locks: BTreeSet::new(),
++            resolved_fronts: BTreeSet::new(),
++        };
++        w.rebuild();
++        let mut e = Ledger::default();
++        w.policy(&mut e);
++        w.accumulate(&e);
++        w.record(e, 0);
++        Ok(w)
++    }
++    pub fn completed_periods(&self) -> u64 {
++        self.outcome
++            .as_ref()
++            .map(|o| o.periods)
++            .unwrap_or(self.period)
++    }
++    pub fn outcome(&self) -> Option<&Outcome> {
++        self.outcome.as_ref()
++    }
++    pub fn run(&mut self, ticks: u32) {
++        for _ in 0..ticks {
++            if self.outcome.is_some() {
++                break;
++            }
++            let mut e = Ledger::default();
++            let mut count = 0;
++            for _ in 0..self.config.periods_per_tick {
++                if self.outcome.is_some() {
++                    break;
++                }
++                let completed = self.completed_periods();
++                let one = self.period();
++                e.add(&one);
++                count += (self.completed_periods() - completed) as u32;
++            }
++            self.tick += 1;
++            self.record(e, count);
++        }
++    }
++    pub(super) fn accumulate(&mut self, e: &Ledger) {
++        self.totals.add(e);
++        if !self.totals.all_finite() && self.outcome.is_none() {
++            self.finish(
++                "invalid",
++                Some(format!(
++                    "period {}: nonfinite cumulative ledger {:?}; config {:?}",
++                    self.period, self.totals, self.config
++                )),
++            );
++        }
++        if let Some(o) = &mut self.outcome {
++            o.events = self.totals.clone();
++            o.destruction = self.totals.destruction;
++            o.signed_creation = self.totals.signed_creation;
++        }
++    }
++    pub(super) fn log(&mut self, kind: &str, cells: Vec<usize>, front: Option<[usize; 2]>) {
++        let event = Event {
++            id: self.next_event,
++            period: self.period,
++            kind: kind.into(),
++            cells,
++            front,
++        };
++        self.next_event += 1;
++        self.last_event = Some(event.clone());
++        if self.config.event_log {
++            if self.events.len() >= self.config.event_log_limit as usize {
++                self.events.remove(0);
++                self.events_dropped += 1;
++            }
++            self.events.push(event);
++        }
++    }
++    pub(super) fn finish(&mut self, reason: &str, invalid: Option<String>) {
++        if self.outcome.is_some() {
++            return;
++        }
++        let caps = territory::capitals(&self.cells);
++        let mut episodes = self.episodes.clone();
++        for front in self.fronts.values() {
++            if let Some(mut ep) = front.episode.clone() {
++                ep.censored = true;
++                episodes.push(ep);
++            }
++        }
++        self.outcome = Some(Outcome {
++            config: self.config.clone(),
++            seed: self.seed,
++            periods: if invalid.is_some() {
++                self.period.saturating_sub(1)
++            } else {
++                self.period
++            },
++            attempted_period: self.period,
++            finish_reason: reason.into(),
++            valid: invalid.is_none(),
++            invalid_reason: invalid.clone(),
++            sovereign_count: caps.len() as u32,
++            terminal_category: if invalid.is_none() {
++                super::analysis::category(caps.len() as u32)
++            } else {
++                None
++            },
++            initial_predator_share: self.initial_predator_share,
++            predator_capital_share: caps.iter().filter(|&&c| self.cells[c].predator).count() as f64
++                / caps.len() as f64,
++            destruction: self.totals.destruction,
++            signed_creation: self.totals.signed_creation,
++            events: self.totals.clone(),
++            episodes,
++        });
++    }
++    pub(super) fn rebuild(&mut self) {
++        let mut wanted = BTreeSet::new();
++        let caps = territory::capitals(&self.cells);
++        for &a in &caps {
++            for b in territory::neighbors(&self.config, &self.cells, a) {
++                wanted.insert(FrontKey::foreign(a, b));
++            }
++        }
++        if self.config.provincial() {
++            for c in &self.cells {
++                if c.capital != c.id {
++                    wanted.insert(FrontKey {
++                        domestic: true,
++                        a: c.capital,
++                        b: c.id,
++                    });
++                }
++            }
++        }
++        let old = std::mem::take(&mut self.fronts);
++        for (key, mut f) in old {
++            let valid = wanted.contains(&key) && f.path.is_none_or(|p| self.valid_path(key, p));
++            if valid {
++                self.fronts.insert(key, f);
++            } else if let Some(mut ep) = f.episode.take() {
++                ep.end = Some(self.period);
++                ep.end_cause = Some(
++                    if wanted.contains(&key) {
++                        "path_loss"
++                    } else if self.cells[key.a].capital != key.a
++                        || (!key.domestic && self.cells[key.b].capital != key.b)
++                    {
++                        "sovereignty_loss"
++                    } else {
++                        "border_loss"
++                    }
++                    .into(),
++                );
++                self.episodes.push(ep);
++            }
++        }
++        for key in wanted {
++            if !self.fronts.contains_key(&key) {
++                let na = self.front_count(key.a, key.domestic, false);
++                let nb = if key.domestic {
++                    1
++                } else {
++                    self.front_count(key.b, false, false)
++                };
++                let old_commitments = [
++                    self.cells[key.a].stock / na.max(1) as f64,
++                    self.cells[key.b].stock / nb.max(1) as f64,
++                ];
++                self.fronts.insert(
++                    key,
++                    Front {
++                        key,
++                        previous: [false, false],
++                        actions: [false, false],
++                        old_commitments,
++                        commitments: old_commitments,
++                        path: None,
++                        initiated: [false, false],
++                        episode: None,
++                    },
++                );
++            }
++        }
++        self.trust.retain(|(a, b), _| {
++            self.cells[*a].capital == *a
++                && self.cells[*b].capital == *b
++                && territory::neighbors(&self.config, &self.cells, *a).contains(b)
++        });
++        for f in self.fronts.values().filter(|f| !f.key.domestic) {
++            self.trust
++                .entry((f.key.a, f.key.b))
++                .or_insert(self.config.trust_initial);
++            self.trust
++                .entry((f.key.b, f.key.a))
++                .or_insert(self.config.trust_initial);
++        }
++    }
++    fn period(&mut self) -> Ledger {
++        self.period += 1;
++        self.period_locks.clear();
++        self.resolved_fronts.clear();
++        let mut e = Ledger::default();
++        self.update_trust();
++        self.prepare();
++        let caps = territory::capitals(&self.cells);
++        self.aggression.clear();
++        self.dyadic_aggression.clear();
++        if self.config.update == Update::Sequential {
++            self.sequential(caps, &mut e);
++        } else {
++            for actor in caps {
++                self.decide_actor(actor, &mut e);
++                if self.outcome.is_some() {
++                    self.accumulate(&e);
++                    return e;
++                }
++            }
++            self.obligations();
++            self.paths(&mut e);
++            let stocks: Vec<f64> = self.cells.iter().map(|c| c.stock).collect();
++            let frozen = self.allocate(&stocks);
++            for (&k, &v) in &frozen {
++                self.fronts.get_mut(&k).unwrap().commitments = v;
++            }
++            if let Some((k, _)) = frozen
++                .iter()
++                .find(|(_, v)| v.iter().any(|x| !x.is_finite()))
++            {
++                self.finish(
++                    "invalid",
++                    Some(format!(
++                        "period {} front {:?}: nonfinite allocation; config {:?}",
++                        self.period, k, self.config
++                    )),
++                );
++                self.accumulate(&e);
++                return e;
++            }
++            let keys: Vec<FrontKey> = self.fronts.keys().copied().collect();
++            let mut damage = vec![0.0; self.cells.len()];
++            for &key in &keys {
++                let f = &self.fronts[&key];
++                let losses = resources::damage(
++                    f.actions,
++                    f.commitments,
++                    self.config.damage_rate,
++                    self.config.asymmetric_losses(),
++                );
++                damage[key.a] += losses[0];
++                damage[key.b] += losses[1];
++                if f.actions == [true, true] {
++                    e.dd_encounters += 1;
++                }
++                for loss in losses {
++                    if loss > 0.0 {
++                        e.destruction += loss;
++                    } else {
++                        e.signed_creation -= loss;
++                    }
++                }
++                self.episode_period(key, losses);
++            }
++            let mut victories = BTreeMap::new();
++            if self.config.victory_timing == VictoryTiming::BeforeDamage {
++                for &key in &keys {
++                    if self.fronts[&key].actions.iter().any(|x| *x) {
++                        let win = self.victory(key, frozen[&key], &mut e);
++                        victories.insert(key, win);
++                    }
++                }
++            }
++            for (cell, loss) in self.cells.iter_mut().zip(damage) {
++                cell.stock -= loss;
++            }
++            if !self.intermediate_valid() {
++                self.accumulate(&e);
++                if let Some(o) = &mut self.outcome {
++                    o.events = self.totals.clone();
++                    o.destruction = self.totals.destruction;
++                    o.signed_creation = self.totals.signed_creation;
++                }
++                return e;
++            }
++            if self.config.victory_timing == VictoryTiming::AfterDamage {
++                let stocks = self.cells.iter().map(|c| c.stock).collect::<Vec<_>>();
++                let values = self.allocate(&stocks);
++                for &key in &keys {
++                    if self.fronts[&key].actions.iter().any(|x| *x) {
++                        let win = self.victory(key, values[&key], &mut e);
++                        victories.insert(key, win);
++                    }
++                }
++            }
++            if self.outcome.is_some() {
++                self.accumulate(&e);
++                return e;
++            }
++            self.harvest(&mut e);
++            if !self.intermediate_valid() {
++                self.accumulate(&e);
++                if let Some(o) = &mut self.outcome {
++                    o.events = self.totals.clone();
++                }
++                return e;
++            }
++            if self.config.victory_timing == VictoryTiming::AfterHarvest {
++                let stocks = self.cells.iter().map(|c| c.stock).collect::<Vec<_>>();
++                let values = self.allocate(&stocks);
++                for &key in &keys {
++                    if self.fronts[&key].actions.iter().any(|x| *x) {
++                        let win = self.victory(key, values[&key], &mut e);
++                        victories.insert(key, win);
++                    }
++                }
++            }
++            if self.outcome.is_some() {
++                self.accumulate(&e);
++                return e;
++            }
++            let mut claims = Vec::new();
++            for (key, win) in victories {
++                if let Some(side) = win {
++                    if let Some(claim) = self.claim(key, side) {
++                        claims.push(claim);
++                    }
++                    let winner = if side == 0 { key.a } else { key.b };
++                    self.end_episode(key, "victory", Some(winner));
++                }
++            }
++            self.note_aggression();
++            shuffle(&mut claims, &mut self.rng);
++            self.structural(&claims, &mut e);
++        }
++        for f in self.fronts.values_mut() {
++            f.previous = f.actions;
++            f.old_commitments = f.commitments;
++            f.initiated = [false, false];
++        }
++        self.rebuild();
++        self.form_coalitions();
++        self.policy(&mut e);
++        self.accumulate(&e);
++        // Policy invalidation happens before totals were added; retain complete ledgers.
++        if let Some(o) = &mut self.outcome {
++            o.events = self.totals.clone();
++            o.destruction = self.totals.destruction;
++            o.signed_creation = self.totals.signed_creation;
++        }
++        if self.outcome.is_none() {
++            if self.config.stop_at_hegemony && territory::capitals(&self.cells).len() == 1 {
++                self.finish("hegemony", None);
++            } else if self.period >= self.config.horizon {
++                self.finish("horizon", None);
++            }
++        }
++        e
++    }
++    fn record(&mut self, events: Ledger, last_tick_periods: u32) {
++        let caps = territory::capitals(&self.cells);
++        let mut sizes: Vec<usize> = caps
++            .iter()
++            .map(|&c| territory::members(&self.cells, c).len())
++            .collect();
++        sizes.sort_unstable_by(|a, b| b.cmp(a));
++        let capital_stock = caps.iter().map(|&i| self.cells[i].stock).sum::<f64>();
++        let total_stock = self.cells.iter().map(|c| c.stock).sum::<f64>();
++        let s = PolaritySnapshot {
++            tick: self.tick,
++            period: self.completed_periods(),
++            periods: self.completed_periods(),
++            attempted_period: self.period,
++            last_tick_periods,
++            sovereign_count: caps.len() as u32,
++            sovereigns: caps.len() as u32,
++            category: self.outcome.as_ref().and_then(|o| o.terminal_category),
++            largest_territory: sizes.first().copied().unwrap_or(0),
++            second_largest_territory: sizes.get(1).copied().unwrap_or(0),
++            predator_capital_share: caps.iter().filter(|&&i| self.cells[i].predator).count() as f64
++                / caps.len() as f64,
++            total_stock,
++            capital_stock,
++            province_stock: total_stock - capital_stock,
++            nonpositive_stocks: self
++                .cells
++                .iter()
++                .filter(|c| c.stock <= 0.0 && (self.config.provincial() || c.id == c.capital))
++                .count(),
++            coalitions: self.coalitions.len(),
++            open_episodes: self.fronts.values().filter(|f| f.episode.is_some()).count(),
++            finish_reason: self.outcome.as_ref().map(|o| o.finish_reason.clone()),
++            invalidity: self.outcome.as_ref().and_then(|o| o.invalid_reason.clone()),
++            events_dropped: self.events_dropped,
++            events,
++        };
++        if self.stats.history().len() >= 1_000_001 {
++            self.stats.truncate(1_000_000);
++        }
++        self.stats.push(s);
++    }
++    pub fn economic_fingerprint(&self) -> u64 {
++        let state = serde_json::json!({"period":self.period,"cells":self.cells,"fronts":self.fronts.values().collect::<Vec<_>>(),"trust":self.trust.iter().collect::<Vec<_>>(),"coalitions":self.coalitions,"pending":self.pending,"aggression":self.aggression,"dyadic":self.dyadic_aggression,"totals":self.totals,"episodes":self.episodes,"threats":self.threats,"next_episode":self.next_episode,"next_event":self.next_event,"last_event":self.last_event});
++        let mut h = hash(&serde_json::to_vec(&state).unwrap());
++        let mut r = self.rng.clone();
++        for _ in 0..2 {
++            for b in r.gen::<u64>().to_le_bytes() {
++                h ^= u64::from(b);
++                h = h.wrapping_mul(0x0100_0000_01b3);
++            }
++        }
++        h
++    }
++}
++pub(super) fn hash(bytes: &[u8]) -> u64 {
++    let mut h = 0xcbf2_9ce4_8422_2325u64;
++    for &b in bytes {
++        h ^= u64::from(b);
++        h = h.wrapping_mul(0x0100_0000_01b3);
++    }
++    h
++}
++pub(super) fn draw(c: &PolarityConfig, r: &mut SimRng, mean: f64, sd: f64) -> f64 {
++    match c.resource_distribution {
++        ResourceDistribution::Normal => mean + sd * crate::anasazi::random::normal(r),
++        ResourceDistribution::BoundedUniform => {
++            mean + 3.0_f64.sqrt() * sd * (2.0 * r.gen::<f64>() - 1.0)
++        }
++    }
++}
++pub(super) fn index(r: &mut SimRng, len: usize) -> usize {
++    r.gen_range(0..len as u32) as usize
++}
++pub(super) fn shuffle<T>(items: &mut [T], r: &mut SimRng) {
++    for i in (1..items.len()).rev() {
++        let j = index(r, i + 1);
++        items.swap(i, j);
++    }
++}
++pub(super) fn discount(base: f64, n: u32) -> f64 {
++    let mut value = 1.0;
++    for _ in 0..n {
++        value *= base;
++    }
++    value
++}
+diff --git a/crates/sugarscape-core/src/presets.rs b/crates/sugarscape-core/src/presets.rs
+--- a/crates/sugarscape-core/src/presets.rs
++++ b/crates/sugarscape-core/src/presets.rs
+@@ -1559,6 +1559,7 @@
+     out.extend(crate::hoard::presets());
+     out.extend(crate::collusion::presets());
+     out.extend(crate::auctions::presets());
++    out.extend(crate::polarity::presets());
+     out
+ }
+ 
+diff --git a/crates/sugarscape-core/src/titles.rs b/crates/sugarscape-core/src/titles.rs
+--- a/crates/sugarscape-core/src/titles.rs
++++ b/crates/sugarscape-core/src/titles.rs
+@@ -3,7 +3,7 @@
+ //! paper (`source`) stay on the preset as its reference.
+ 
+ /// Titles by preset id, in catalog order.
+-pub const TITLES: [(&str, &str); 410] = [
++pub const TITLES: [(&str, &str); 416] = [
+     (
+         "ii-1-instant",
+         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
+@@ -1566,6 +1566,13 @@
+         "collusion-below-nash",
+         "On a grid with no room above Nash, prices settle at the top",
+     ),
++    ("polarity-original", "Predators contest a world of independent governments"),
++    ("polarity-defense", "A stronger defense changes the struggle for territory"),
++    ("polarity-alliances", "Threatened neighbors can form defensive coalitions"),
++    ("polarity-pra", "Governments direct resources toward hostile fronts"),
++    ("polarity-two-level", "Provincial revolts challenge expanding governments"),
++    ("polarity-overextension", "Uncertain victories can limit territorial expansion"),
++
+ ];
+ 
+ /// The title of preset `id`, or "" if it has none.
+diff --git a/crates/sugarscape-core/tests/golden.rs b/crates/sugarscape-core/tests/golden.rs
+--- a/crates/sugarscape-core/tests/golden.rs
++++ b/crates/sugarscape-core/tests/golden.rs
+@@ -124,6 +124,13 @@
+ 
+ /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).
+ const MODEL_GOLDEN: &[(&str, u64)] = &[
++    // Polarity reconstruction: source-labelled presets, 200 ticks from seed 1.
++    ("polarity-original", 0x489849cf252544a3),
++    ("polarity-defense", 0x6c55f6f41448e503),
++    ("polarity-alliances", 0x93f744fba37cb327),
++    ("polarity-pra", 0xd1b184350e70d728),
++    ("polarity-two-level", 0x999de30e70e8da90),
++    ("polarity-overextension", 0x5a75f9a4214f4e17),
+     ("s71-board", 0x8be271afb20afb6f),
+     ("s71-center-out", 0x4d984d3877efd40e),
+     ("s71-third", 0x1ad27c86391e5a56),

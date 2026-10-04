@@ -66,6 +66,7 @@ struct LegacyConfig {
     credit: CreditRule,
     foresight: Foresight,
     disease: DiseaseRule,
+    spatial_hoarding: crate::config::SpatialHoarding,
     schedule: Vec<ScheduledChange>,
 }
 
@@ -110,6 +111,7 @@ impl Default for LegacyConfig {
             credit: c.credit,
             foresight: c.foresight,
             disease: c.disease,
+            spatial_hoarding: c.spatial_hoarding,
             schedule: Vec::new(),
         }
     }
@@ -216,8 +218,11 @@ pub(crate) fn convert(value: serde_json::Value) -> Result<Config, FieldError> {
         mvt: crate::config::Mvt::default(),
         caching: Caching::default(),
         theft: Theft::default(),
+        watching: crate::config::Watching::default(),
         central: Central { enabled: false },
+        spatial_hoarding: old.spatial_hoarding,
         lab: None,
+        protection_lab: None,
         schedule,
     })
 }

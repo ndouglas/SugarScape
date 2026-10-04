@@ -15,7 +15,10 @@ fn positions(w: &World) -> BTreeMap<u64, (u32, u32)> {
 
 /// Share of agents alive at both times that did not move between them.
 fn stationary_share(before: &BTreeMap<u64, (u32, u32)>, after: &BTreeMap<u64, (u32, u32)>) -> f64 {
-    let both: Vec<_> = after.iter().filter(|(id, _)| before.contains_key(id)).collect();
+    let both: Vec<_> = after
+        .iter()
+        .filter(|(id, _)| before.contains_key(id))
+        .collect();
     if both.is_empty() {
         return f64::NAN;
     }
@@ -41,10 +44,23 @@ fn dead_vs_alive(seeds: &[u64], ticks: u32) -> Vec<[f64; 4]> {
         w.run(ticks);
         let alive: BTreeSet<u64> = w.agents().map(|a| a.id).collect();
         let pick = |dead: bool, f: fn(&(u64, f64, f64)) -> f64| {
-            let v: Vec<f64> = start.iter().filter(|a| alive.contains(&a.0) != dead).map(f).collect();
-            if v.is_empty() { f64::NAN } else { stats::mean(&v) }
+            let v: Vec<f64> = start
+                .iter()
+                .filter(|a| alive.contains(&a.0) != dead)
+                .map(f)
+                .collect();
+            if v.is_empty() {
+                f64::NAN
+            } else {
+                stats::mean(&v)
+            }
         };
-        [pick(true, |a| a.1), pick(false, |a| a.1), pick(true, |a| a.2), pick(false, |a| a.2)]
+        [
+            pick(true, |a| a.1),
+            pick(false, |a| a.1),
+            pick(true, |a| a.2),
+            pick(false, |a| a.2),
+        ]
     })
 }
 
@@ -69,9 +85,18 @@ fn seasonal_groups(seeds: &[u64]) -> Vec<[f64; 4]> {
                 .filter(|(_, n)| if migrant { **n >= 2 } else { **n == 0 })
                 .map(|(id, _)| f(&traits[id]))
                 .collect();
-            if v.is_empty() { f64::NAN } else { stats::mean(&v) }
+            if v.is_empty() {
+                f64::NAN
+            } else {
+                stats::mean(&v)
+            }
         };
-        [group(true, |t| t.0), group(false, |t| t.0), group(true, |t| t.1), group(false, |t| t.1)]
+        [
+            group(true, |t| t.0),
+            group(false, |t| t.0),
+            group(true, |t| t.1),
+            group(false, |t| t.1),
+        ]
     })
 }
 
@@ -322,4 +347,3 @@ pub fn claims() -> Vec<Claim> {
         },
     ]
 }
-

@@ -31,7 +31,10 @@
 //! - **Counts.** `pilfers` counts takes; `caches_pilfered` counts distinct
 //!   caches there at the tick's start that lost any sugar to a thief this
 //!   tick (once each, however many thieves or however partial). The
-//!   pilferage rate is `caches_pilfered / pilfer_candidates`.
+//!   pilferage rate is `caches_pilfered / pilfer_candidates`. This
+//!   bookkeeping (the candidates count, the fate log, the theft stats) runs
+//!   under `Config::pilfering_on`: theft, or Minds 8's watching, whose raids
+//!   are pilfers too (`watching`).
 //! - **Loot.** `keep`: the take goes into the thief's holdings, where its
 //!   burial rule may bury it again that tick (recached). `eat`: it's eaten,
 //!   going into the thief's stomach (`Agent::fed`, counted in
@@ -108,9 +111,30 @@ fn ensure_index(world: &mut World) {
 }
 
 /// Counts the caches in the world into `events.pilfer_candidates` (called
-/// at the tick's start under theft).
+/// at the tick's start under theft or watching, `Config::pilfering_on`).
 pub(crate) fn count_candidates(world: &mut World) {
     let n: usize = world.agents().map(|a| a.caches.len()).sum();
+    let larders = if world.config.spatial_hoarding.enabled {
+        world
+            .agents()
+            .filter(|a| a.spatial.as_ref().is_some_and(|s| s.larder > 0.0))
+            .count()
+    } else {
+        0
+    };
+    if let Some(e) = crate::minds::spatial_hoarding::stores::events(
+        world,
+        crate::minds::spatial_hoarding::state::StoreKind::Scatter,
+    ) {
+        e.pilfer_candidates = u32::try_from(n).unwrap_or(u32::MAX);
+    }
+    if let Some(e) = crate::minds::spatial_hoarding::stores::events(
+        world,
+        crate::minds::spatial_hoarding::state::StoreKind::Larder,
+    ) {
+        e.pilfer_candidates = u32::try_from(larders).unwrap_or(u32::MAX);
+    }
+    let n = n.saturating_add(larders);
     world.events.pilfer_candidates = u32::try_from(n).unwrap_or(u32::MAX);
 }
 
@@ -140,6 +164,9 @@ pub(crate) fn stumble(world: &mut World, id: AgentId, site: u32, room: f64) -> O
     }
     world.events.pilfer_draws += foreign;
     let owner = found?;
+    if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+        a.discovery_site = Some(site);
+    }
     let mut harvest = Harvest::default();
     if owner == id {
         let take = super::dig(world, id, site, room);
@@ -151,24 +178,48 @@ pub(crate) fn stumble(world: &mut World, id: AgentId, site: u32, room: f64) -> O
         harvest.dug = take;
         return Some(harvest);
     }
-    let room = match theft.loot {
-        Loot::Keep => room,
-        Loot::Eat => f64::INFINITY,
-    };
-    let take = pilfer(world, owner, id, site, room);
+    let take = loot(world, owner, id, site, room);
     if take <= 0.0 {
         return None;
     }
-    let a = world.agent_mut(id).expect("live agent");
-    match theft.loot {
+    if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+        a.discovery_site = Some(site);
+        a.discovery_amount += take;
+    }
+    harvest.pilfered = take;
+    Some(harvest)
+}
+
+/// `thief` pilfers `owner`'s cache at `site` under `theft.loot`, with
+/// `room` left under the carrying limit, and returns the take (0 for none):
+/// under `keep` min(cache, room) into its holdings, under `eat` the whole
+/// cache into its stomach (`fed`, counted in `loot_eaten`). Minds 6's
+/// stumble and Minds 8's raid both take this way.
+pub(crate) fn loot(world: &mut World, owner: AgentId, thief: AgentId, site: u32, room: f64) -> f64 {
+    let rule = world.config.theft.loot;
+    let room = match rule {
+        Loot::Keep => room,
+        Loot::Eat => f64::INFINITY,
+    };
+    let take = pilfer(world, owner, thief, site, room);
+    if take <= 0.0 {
+        return 0.0;
+    }
+    let a = world.agent_mut(thief).expect("live agent");
+    match rule {
         Loot::Keep => a.holdings[0] += take,
         Loot::Eat => {
             a.fed += take;
             world.events.loot_eaten += take;
+            if let Some(e) = crate::minds::spatial_hoarding::stores::events(
+                world,
+                crate::minds::spatial_hoarding::state::StoreKind::Scatter,
+            ) {
+                e.loot_eaten += take;
+            }
         }
     }
-    harvest.pilfered = take;
-    Some(harvest)
+    take
 }
 
 /// Takes min(cache, `room`) from `owner`'s cache at `site` for `thief` and
@@ -207,9 +258,25 @@ pub(crate) fn pilfer(
     let e = &mut world.events;
     e.pilfered += take;
     e.pilfers += 1;
-    if at_start && e.pilfered_caches.insert((owner, site)) {
+    let distinct = at_start
+        && e.pilfered_caches.insert((
+            owner,
+            site,
+            crate::minds::spatial_hoarding::state::StoreKind::Scatter,
+        ));
+    if distinct {
         e.caches_pilfered += 1;
     }
+    if let Some(e) = crate::minds::spatial_hoarding::stores::events(
+        world,
+        crate::minds::spatial_hoarding::state::StoreKind::Scatter,
+    ) {
+        e.pilfered += take;
+        e.pilfers += 1;
+        e.caches_pilfered += u32::from(distinct);
+    }
+    crate::minds::protection::ledger::update(world, owner, |l| l.pilfer(site, take));
+    crate::minds::protection::ledger::reconcile_world(world);
     // The fate log reads `cache_since` (for a backfill), so it goes after.
     super::fates::close_pilfered(world, owner, site, take, thief);
     if emptied {
@@ -316,7 +383,11 @@ mod tests {
             "owner unchanged"
         );
         assert_eq!(pilfered_by(&w, thief), 2.0);
-        let open: f64 = w.cache_open[&(owner, here)]
+        let open: f64 = w.cache_open[&(
+            owner,
+            here,
+            crate::minds::spatial_hoarding::state::StoreKind::Scatter,
+        )]
             .iter()
             .map(|&i| w.cache_log[i].amount)
             .sum();

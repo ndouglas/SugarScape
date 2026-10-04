@@ -1,6 +1,10 @@
 mod agreement;
 mod ants;
+mod auctions;
 mod bali;
+pub(crate) mod burrow;
+pub(crate) mod burrow_archive;
+pub(crate) mod burrow_report;
 mod ch2;
 mod ch3;
 mod ch4;
@@ -8,6 +12,7 @@ mod ch5;
 mod ch6;
 mod civil;
 mod classes;
+mod collusion;
 mod culture;
 mod dpd;
 mod ethno;
@@ -21,8 +26,14 @@ mod minds4;
 mod minds5;
 mod minds6;
 mod minds7;
+mod minds8;
+pub(crate) mod minds8b;
+pub(crate) mod minds9;
 mod norms;
 mod opinions;
+pub(crate) mod protection;
+pub(crate) mod protection_archive;
+pub(crate) mod protection_report;
 mod punishment;
 mod retirement;
 mod schelling71;
@@ -39,6 +50,7 @@ use crate::claim::Claim;
 pub fn all() -> Vec<Claim> {
     [
         agreement::claims(),
+        auctions::claims(),
         ants::claims(),
         bali::claims(),
         ch2::claims(),
@@ -53,6 +65,7 @@ pub fn all() -> Vec<Claim> {
         ethno::claims(),
         farol::claims(),
         firms::claims(),
+        collusion::claims(),
         norms::claims(),
         image::claims(),
         minds1::claims(),
@@ -62,6 +75,8 @@ pub fn all() -> Vec<Claim> {
         minds5::claims(),
         minds6::claims(),
         minds7::claims(),
+        minds8::claims(),
+        minds8b::claims(),
         opinions::claims(),
         punishment::claims(),
         retirement::claims(),
@@ -78,3 +93,7 @@ pub fn all() -> Vec<Claim> {
     .flatten()
     .collect()
 }
+
+#[cfg(test)]
+#[path = "burrow_tests.rs"]
+mod burrow_tests;

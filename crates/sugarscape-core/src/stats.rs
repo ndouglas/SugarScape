@@ -129,20 +129,317 @@ pub fn series_names(config: &Config) -> Vec<String> {
             names.push(s.into());
         }
     }
-    if config.theft.is_on() {
+    if config.pilfering_on() {
         for s in THEFT_SERIES {
             names.push(s.into());
         }
     }
-    if config.theft.cheaters > 0.0 {
+    if config.theft.cheaters > 0.0 || config.spatial_hoarding.enabled {
         for s in CHEATER_SERIES {
             names.push(s.into());
         }
     }
+    if config.watching.on {
+        for s in WATCH_SERIES {
+            names.push(s.into());
+        }
+        if watchers_split(config) || config.spatial_hoarding.enabled {
+            for s in WATCHER_SERIES {
+                names.push(s.into());
+            }
+        }
+    }
+    if config.spatial_hoarding.enabled {
+        names.extend(spatial_series_names());
+    }
     names
 }
 
-/// Minds 6's theft series, named while `theft.is_on()`.
+/// Only the ordinary spatial episode exposes these extra columns.
+fn spatial_series_names() -> Vec<String> {
+    let mut names = Vec::new();
+    for kind in ["scatter", "larder"] {
+        for field in [
+            "cached",
+            "caches",
+            "buried",
+            "dug",
+            "pilfered",
+            "lost",
+            "bury_cost",
+            "loot_eaten",
+            "digs",
+            "pilfers",
+            "pilfer_candidates",
+            "caches_pilfered",
+            "cache_ticks",
+            "stock_ticks",
+            "recovery",
+            "pilferage_rate",
+            "loss_rate",
+        ] {
+            names.push(format!("{kind}_{field}"));
+        }
+    }
+    for field in [
+        "starts",
+        "completions",
+        "cancellations",
+        "return_turns",
+        "delivered",
+        "bury_cost",
+    ] {
+        names.push(format!("delivery_{field}"));
+    }
+    for field in [
+        "intended",
+        "executed",
+        "recovered",
+        "probe_harvest",
+        "blocked_raids",
+        "blocked_discoveries",
+    ] {
+        names.push(format!("guard_{field}"));
+    }
+    for field in [
+        "burials_seen",
+        "sightings",
+        "seen_entries",
+        "seen_arrivals",
+        "contacts",
+        "discovery_draws",
+        "discovery_hits",
+        "raid_attempts",
+        "raids",
+        "raided",
+        "raids_empty",
+        "raids_no_room",
+        "raids_blocked",
+        "discoveries_blocked",
+        "scatter_draws_skipped",
+    ] {
+        names.push(format!("larder_{field}"));
+    }
+    names.extend(["metabolic_demand".into(), "metabolic_consumed".into()]);
+    names
+}
+
+/// Per-tick spatial fields plus cumulative tick-start exposure and fate ratios.
+/// A missing denominator is NaN (a CSV NaN / chart gap / JSON null).
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+pub struct SpatialStats {
+    #[serde(flatten)]
+    pub values: std::collections::BTreeMap<String, f64>,
+    #[serde(skip)]
+    totals: std::collections::BTreeMap<String, f64>,
+}
+
+/// Capture live positive stock before a tick, including supported edits since the last snapshot.
+pub(crate) fn spatial_store_exposure(
+    world: &World,
+) -> [crate::minds::spatial_hoarding::runner::ExposureTotals; 2] {
+    use crate::minds::spatial_hoarding::runner::ExposureTotals;
+    let mut out = [ExposureTotals::default(); 2];
+    for a in world.agents() {
+        for &amount in a.caches.values().filter(|amount| **amount > 0.0) {
+            out[0].cache_ticks += 1;
+            out[0].stock_ticks += amount;
+        }
+        if let Some(s) = &a.spatial {
+            if s.larder > 0.0 {
+                out[1].cache_ticks += 1;
+                out[1].stock_ticks += s.larder;
+            }
+        }
+    }
+    out
+}
+
+impl SpatialStats {
+    fn of(world: &World) -> Self {
+        let elapsed = world.stats.latest().is_some_and(|s| s.tick < world.tick);
+        let prev = world
+            .stats
+            .latest()
+            .and_then(|s| s.spatial_hoarding.as_ref());
+        let mut out = Self {
+            totals: prev.map(|s| s.totals.clone()).unwrap_or_default(),
+            ..Self::default()
+        };
+        let events = world.events().spatial_stores.unwrap_or_default();
+        let exposure = world.events().spatial_exposure.unwrap_or_default();
+        for (kind, flow, sampled) in [
+            ("scatter", events.scatter, exposure[0]),
+            ("larder", events.larder, exposure[1]),
+        ] {
+            let stocks: Vec<f64> = if kind == "scatter" {
+                world
+                    .agents()
+                    .flat_map(|a| a.caches.values().copied())
+                    .collect()
+            } else {
+                world
+                    .agents()
+                    .filter_map(|a| a.spatial.as_ref().map(|s| s.larder))
+                    .collect()
+            };
+            out.values
+                .insert(format!("{kind}_cached"), stocks.iter().sum());
+            out.values.insert(
+                format!("{kind}_caches"),
+                stocks.iter().filter(|v| **v > 0.0).count() as f64,
+            );
+            for (field, value) in [
+                ("buried", flow.buried),
+                ("dug", flow.dug),
+                ("pilfered", flow.pilfered),
+                ("lost", flow.lost),
+                ("bury_cost", flow.bury_cost),
+                ("loot_eaten", flow.loot_eaten),
+                ("digs", f64::from(flow.digs)),
+                ("pilfers", f64::from(flow.pilfers)),
+                ("pilfer_candidates", f64::from(flow.pilfer_candidates)),
+                ("caches_pilfered", f64::from(flow.caches_pilfered)),
+            ] {
+                let key = format!("{kind}_{field}");
+                out.values.insert(key.clone(), value);
+                if elapsed || prev.is_none() {
+                    *out.totals.entry(key).or_default() += value;
+                }
+            }
+            for (field, increment) in [
+                ("cache_ticks", sampled.cache_ticks as f64),
+                ("stock_ticks", sampled.stock_ticks),
+            ] {
+                let key = format!("{kind}_{field}");
+                let previous = prev.map_or(0.0, |p| p.values[&key]);
+                out.values
+                    .insert(key, previous + if elapsed { increment } else { 0.0 });
+            }
+            let ratio = |numerator: f64, denominator: f64| {
+                if denominator > 0.0 {
+                    numerator / denominator
+                } else {
+                    f64::NAN
+                }
+            };
+            out.values.insert(
+                format!("{kind}_recovery"),
+                ratio(
+                    out.totals[&format!("{kind}_dug")],
+                    out.totals[&format!("{kind}_buried")],
+                ),
+            );
+            out.values.insert(
+                format!("{kind}_pilferage_rate"),
+                ratio(
+                    out.totals[&format!("{kind}_caches_pilfered")],
+                    out.values[&format!("{kind}_cache_ticks")],
+                ),
+            );
+            out.values.insert(
+                format!("{kind}_loss_rate"),
+                ratio(
+                    out.totals[&format!("{kind}_pilfered")] + out.totals[&format!("{kind}_lost")],
+                    out.values[&format!("{kind}_stock_ticks")],
+                ),
+            );
+        }
+        let d = events.delivery;
+        for (field, value) in [
+            ("starts", f64::from(d.starts)),
+            ("completions", f64::from(d.completions)),
+            ("cancellations", f64::from(d.cancellations)),
+            ("return_turns", f64::from(d.return_turns)),
+            ("delivered", d.delivered),
+            ("bury_cost", d.bury_cost),
+        ] {
+            out.values.insert(format!("delivery_{field}"), value);
+        }
+        let g = events.guard;
+        for (field, value) in [
+            ("intended", f64::from(g.intended)),
+            ("executed", f64::from(g.executed)),
+            ("recovered", g.recovered),
+            ("probe_harvest", g.probe_harvest),
+            ("blocked_raids", f64::from(g.blocked_raids)),
+            ("blocked_discoveries", f64::from(g.blocked_discoveries)),
+        ] {
+            out.values.insert(format!("guard_{field}"), value);
+        }
+        let o = events.observation;
+        for (field, value) in [
+            ("burials_seen", f64::from(o.burials_seen)),
+            ("sightings", f64::from(o.sightings)),
+            ("seen_entries", f64::from(o.seen_entries)),
+            ("seen_arrivals", f64::from(o.seen_arrivals)),
+            ("contacts", f64::from(o.contacts)),
+            ("discovery_draws", f64::from(o.discovery_draws)),
+            ("discovery_hits", f64::from(o.discovery_hits)),
+            ("raid_attempts", f64::from(o.raid_attempts)),
+            ("raids", f64::from(o.raids)),
+            ("raided", o.raided),
+            ("raids_empty", f64::from(o.raids_empty)),
+            ("raids_no_room", f64::from(o.raids_no_room)),
+            ("raids_blocked", f64::from(o.raids_blocked)),
+            ("discoveries_blocked", f64::from(o.discoveries_blocked)),
+            ("scatter_draws_skipped", f64::from(o.scatter_draws_skipped)),
+        ] {
+            out.values.insert(format!("larder_{field}"), value);
+        }
+        out.values
+            .insert("metabolic_demand".into(), events.metabolism.demand);
+        out.values
+            .insert("metabolic_consumed".into(), events.metabolism.consumed);
+        out
+    }
+}
+
+/// Whether both kinds of founder exist under watching: watching is on and,
+/// over founder ids 1..=population, some watch and some don't
+/// (`Watching::founder_watches`, so `who` counts, not just `watchers`).
+fn watchers_split(config: &Config) -> bool {
+    let w = &config.watching;
+    if !w.on {
+        return false;
+    }
+    let (mut watch, mut not) = (false, false);
+    for id in 1..=u64::from(config.population) {
+        if w.founder_watches(id, config.theft.founder_cheats(id)) {
+            watch = true;
+        } else {
+            not = true;
+        }
+        if watch && not {
+            return true;
+        }
+    }
+    false
+}
+
+/// Minds 8's watching series, named while `watching.on`.
+const WATCH_SERIES: [&str; 7] = [
+    "raids",
+    "raided",
+    "raids_wasted",
+    "seen_arrivals",
+    "burials_seen",
+    "sightings",
+    "seen_entries",
+];
+
+/// Minds 8's watcher/other series, named while some founders watch and
+/// some don't (`watchers_split`).
+const WATCHER_SERIES: [&str; 5] = [
+    "watcher_wealth",
+    "other_wealth",
+    "watcher_alive",
+    "other_alive",
+    "watcher_advantage",
+];
+
+/// Minds 6's theft series, named while `pilfering_on()` (theft, or Minds
+/// 8's watching, whose raids are pilfers).
 const THEFT_SERIES: [&str; 6] = [
     "pilfered",
     "pilferage_rate",
@@ -229,12 +526,22 @@ pub struct Snapshot {
     /// `central.enabled`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub central: Option<CentralStats>,
-    /// Minds 6's theft series, present when `theft.is_on()`.
+    /// Minds 6's theft series, present when `pilfering_on()` (theft or
+    /// watching).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub theft: Option<TheftStats>,
     /// Minds 6's hoarder/cheater series, present when `theft.cheaters > 0`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cheaters: Option<CheaterStats>,
+    /// Minds 8's watching series, present when `watching.on`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub watching: Option<WatchStats>,
+    /// Minds 8's watcher/other series, present when `watching.on` and some
+    /// founders watch and some don't (`who` and `watchers`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub watchers: Option<WatcherStats>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub spatial_hoarding: Option<SpatialStats>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
@@ -393,6 +700,54 @@ pub struct CheaterStats {
     pub cheater_holdings: f64,
     pub hoarder_alive: u32,
     pub cheater_alive: u32,
+}
+
+/// Minds 8's watching series, per tick (see `TickEvents`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct WatchStats {
+    pub raids: u32,
+    pub raided: f64,
+    pub raids_wasted: u32,
+    pub seen_arrivals: u32,
+    pub burials_seen: u32,
+    pub sightings: u32,
+    pub seen_entries: u32,
+}
+
+/// Minds 8's watcher/other series. `*_wealth` is wealth per founder of each
+/// kind: Σ (holdings[0] + Σ caches + the stomach `fed`) over the living of
+/// that kind ÷ that kind's founders, so the dead count as 0 (0 for a kind
+/// with no founders). `*_alive` are counts of the living.
+///
+/// Founders are ids 1..=population, dealt by the id rule (⌊population·s⌋
+/// watchers, the rest others): agents born or placed later count among the
+/// living (their wealth and their `*_alive`) but not among the founders. The
+/// presets have none.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize)]
+pub struct WatcherStats {
+    pub watcher_wealth: f64,
+    pub other_wealth: f64,
+    pub watcher_alive: u32,
+    pub other_alive: u32,
+    /// `watcher_alive` ÷ watcher founders − `other_alive` ÷ other founders,
+    /// the founders being ids 1..=population counted by the id rule, so the
+    /// dead count as 0 (and agents born or placed later count as living but
+    /// not as founders). A group with no founders contributes 0.
+    pub watcher_advantage: f64,
+}
+
+/// Preserve the original scatter accumulation order on ordinary worlds.
+fn cached_stock(world: &World) -> f64 {
+    let scatter: f64 = world.agents().flat_map(|a| a.caches.values()).sum();
+    if world.config.spatial_hoarding.enabled {
+        scatter
+            + world
+                .agents()
+                .map(|a| a.spatial.as_ref().map_or(0.0, |s| s.larder))
+                .sum::<f64>()
+    } else {
+        scatter
+    }
 }
 
 impl Snapshot {
@@ -617,8 +972,13 @@ impl Snapshot {
                     mean_rate: mean(&|a| a.rate),
                 }
             }),
+            spatial_hoarding: world
+                .config
+                .spatial_hoarding
+                .enabled
+                .then(|| SpatialStats::of(world)),
             caching: world.config.caching.is_on().then(|| {
-                let cached: f64 = world.agents().flat_map(|a| a.caches.values()).sum();
+                let cached = cached_stock(world);
                 let (prev_buried, prev_dug) = world
                     .stats
                     .latest()
@@ -673,8 +1033,8 @@ impl Snapshot {
                     deliveries_total,
                 }
             }),
-            theft: world.config.theft.is_on().then(|| {
-                let cached: f64 = world.agents().flat_map(|a| a.caches.values()).sum();
+            theft: world.config.pilfering_on().then(|| {
+                let cached = cached_stock(world);
                 let (pb, pd, pp, pl) = world
                     .stats
                     .latest()
@@ -710,25 +1070,78 @@ impl Snapshot {
                     lost_total,
                 }
             }),
-            cheaters: (world.config.theft.cheaters > 0.0).then(|| {
-                let (mut hs, mut hn, mut cs, mut cn) = (0.0, 0u32, 0.0, 0u32);
-                for a in world.agents() {
-                    if a.cheater {
-                        cs += a.holdings[0];
-                        cn += 1;
-                    } else {
-                        hs += a.holdings[0];
-                        hn += 1;
+            cheaters: (world.config.theft.cheaters > 0.0 || world.config.spatial_hoarding.enabled)
+                .then(|| {
+                    let (mut hs, mut hn, mut cs, mut cn) = (0.0, 0u32, 0.0, 0u32);
+                    for a in world.agents() {
+                        if a.cheater {
+                            cs += a.holdings[0];
+                            cn += 1;
+                        } else {
+                            hs += a.holdings[0];
+                            hn += 1;
+                        }
                     }
-                }
-                let m = |s: f64, n: u32| if n == 0 { 0.0 } else { s / f64::from(n) };
-                CheaterStats {
-                    hoarder_holdings: m(hs, hn),
-                    cheater_holdings: m(cs, cn),
-                    hoarder_alive: hn,
-                    cheater_alive: cn,
-                }
+                    let m = |s: f64, n: u32| if n == 0 { 0.0 } else { s / f64::from(n) };
+                    CheaterStats {
+                        hoarder_holdings: m(hs, hn),
+                        cheater_holdings: m(cs, cn),
+                        hoarder_alive: hn,
+                        cheater_alive: cn,
+                    }
+                }),
+            watching: world.config.watching.on.then_some(WatchStats {
+                raids: events.raids,
+                raided: events.raided,
+                raids_wasted: events.raids_wasted,
+                seen_arrivals: events.seen_arrivals,
+                burials_seen: events.burials_seen,
+                sightings: events.sightings,
+                seen_entries: events.seen_entries,
             }),
+            watchers: (watchers_split(&world.config)
+                || (world.config.spatial_hoarding.enabled && world.config.watching.on))
+                .then(|| {
+                    let (mut ws, mut wn, mut os, mut on) = (0.0, 0u32, 0.0, 0u32);
+                    for a in world.agents() {
+                        let wealth = a.holdings[0]
+                            + a.caches.values().sum::<f64>()
+                            + a.fed
+                            + if world.config.spatial_hoarding.enabled {
+                                a.spatial.as_ref().map_or(0.0, |s| s.larder)
+                            } else {
+                                0.0
+                            };
+                        if a.watches {
+                            ws += wealth;
+                            wn += 1;
+                        } else {
+                            os += wealth;
+                            on += 1;
+                        }
+                    }
+                    let m = |s: f64, n: u32| if n == 0 { 0.0 } else { s / f64::from(n) };
+                    let watching = &world.config.watching;
+                    let founders = world.config.population;
+                    let wf = match world.spatial_cohort.as_ref() {
+                        Some(cohort) if world.config.spatial_hoarding.enabled => {
+                            cohort.iter().filter(|traits| traits.watches).count() as u32
+                        }
+                        _ => (1..=u64::from(founders))
+                            .filter(|&i| {
+                                watching.founder_watches(i, world.config.theft.founder_cheats(i))
+                            })
+                            .count() as u32,
+                    };
+                    let of = founders - wf;
+                    WatcherStats {
+                        watcher_wealth: m(ws, wf),
+                        other_wealth: m(os, of),
+                        watcher_alive: wn,
+                        other_alive: on,
+                        watcher_advantage: m(f64::from(wn), wf) - m(f64::from(on), of),
+                    }
+                }),
         }
     }
 
@@ -761,6 +1174,11 @@ impl Snapshot {
             "trade_pairs" => f64::from(self.trade_pairs),
             "gini_total" => self.gini_total,
             _ => {
+                if let Some(spatial) = &self.spatial_hoarding {
+                    if let Some(v) = spatial.values.get(name) {
+                        return Some(*v);
+                    }
+                }
                 let index = |prefix: &str| name.strip_prefix(prefix)?.parse::<usize>().ok();
                 if let Some(i) = index("mean_holding_") {
                     return self.goods.get(i).map(|g| g.mean_holding);
@@ -874,11 +1292,37 @@ impl Snapshot {
                         _ => {}
                     }
                 }
+                if let Some(t) = self.watching {
+                    match name {
+                        "raids" => return Some(f64::from(t.raids)),
+                        "raided" => return Some(t.raided),
+                        "raids_wasted" => return Some(f64::from(t.raids_wasted)),
+                        "seen_arrivals" => return Some(f64::from(t.seen_arrivals)),
+                        "burials_seen" => return Some(f64::from(t.burials_seen)),
+                        "sightings" => return Some(f64::from(t.sightings)),
+                        "seen_entries" => return Some(f64::from(t.seen_entries)),
+                        _ => {}
+                    }
+                }
+                if let Some(c) = self.watchers {
+                    match name {
+                        "watcher_wealth" => return Some(c.watcher_wealth),
+                        "other_wealth" => return Some(c.other_wealth),
+                        "watcher_alive" => return Some(f64::from(c.watcher_alive)),
+                        "other_alive" => return Some(f64::from(c.other_alive)),
+                        "watcher_advantage" => return Some(c.watcher_advantage),
+                        _ => {}
+                    }
+                }
                 // `theft.find` is live, so theft can come on mid-run and the
                 // names reach back past snapshots that lack the group: NaN
                 // there (a gap in a chart, a cell in a CSV), not an unknown
                 // series. The cheater names are covered the same way.
-                if THEFT_SERIES.contains(&name) || CHEATER_SERIES.contains(&name) {
+                if THEFT_SERIES.contains(&name)
+                    || CHEATER_SERIES.contains(&name)
+                    || WATCH_SERIES.contains(&name)
+                    || WATCHER_SERIES.contains(&name)
+                {
                     return Some(f64::NAN);
                 }
                 return None;
@@ -1233,6 +1677,143 @@ mod tests {
     use crate::config::CachingRule;
     use crate::config::Config;
     use crate::config::Pollutant;
+
+    #[test]
+    fn spatial_hoarding_tick_one_uses_positive_tick_zero_stores_without_discovery() {
+        let mut c = crate::presets::by_id("theft-winter").unwrap().config;
+        c.population = 1;
+        c.goods[0].endowment = crate::config::URange::new(50, 50);
+        c.theft.find = 0.0;
+        c.spatial_hoarding.enabled = true;
+        c.spatial_hoarding.find_larder = 0.0;
+        c.spatial_hoarding.guard = false;
+        let mut w = World::new(c, 1).unwrap();
+        let id = w.agents().next().unwrap().id;
+        let site = w.torus.index(w.agent(id).unwrap().pos) as u32;
+        let a = w.agent_mut(id).unwrap();
+        a.caches.insert(site, 3.0);
+        a.spatial.as_mut().unwrap().larder = 5.0;
+        assert_eq!(
+            w.stats.latest().unwrap().value("larder_stock_ticks"),
+            Some(0.0)
+        );
+        w.step();
+        let tick = w.stats.latest().unwrap();
+        assert_eq!(tick.value("scatter_stock_ticks"), Some(3.0));
+        assert_eq!(tick.value("larder_stock_ticks"), Some(5.0));
+        assert_eq!(tick.value("scatter_cache_ticks"), Some(1.0));
+        assert_eq!(tick.value("larder_cache_ticks"), Some(1.0));
+    }
+
+    #[test]
+    fn spatial_hoarding_exposure_excludes_stores_removed_by_supported_edit_between_ticks() {
+        let mut c = crate::presets::by_id("theft-winter").unwrap().config;
+        c.population = 2;
+        c.goods[0].endowment = crate::config::URange::new(50, 50);
+        c.theft.find = 0.0;
+        c.spatial_hoarding.enabled = true;
+        c.spatial_hoarding.find_larder = 0.0;
+        c.spatial_hoarding.guard = false;
+        let mut w = World::new(c, 1).unwrap();
+        let ids: Vec<_> = w.agents().map(|a| a.id).collect();
+        for (id, scatter, larder) in [(ids[0], 3.0, 5.0), (ids[1], 7.0, 11.0)] {
+            let site = w.torus.index(w.agent(id).unwrap().pos) as u32;
+            let a = w.agent_mut(id).unwrap();
+            a.caches.insert(site, scatter);
+            a.spatial.as_mut().unwrap().larder = larder;
+        }
+        w.step();
+        let pos = w.agent(ids[0]).unwrap().pos;
+        w.remove_agent(pos.x, pos.y).unwrap();
+        let scatter = w
+            .agents()
+            .flat_map(|a| a.caches.values())
+            .filter(|v| **v > 0.0)
+            .copied()
+            .collect::<Vec<_>>();
+        let larder = w
+            .agents()
+            .map(|a| a.spatial.as_ref().unwrap().larder)
+            .filter(|v| *v > 0.0)
+            .collect::<Vec<_>>();
+        w.step();
+        let tick = w.stats.latest().unwrap();
+        assert_eq!(
+            tick.value("scatter_stock_ticks"),
+            Some(10.0 + scatter.iter().sum::<f64>())
+        );
+        assert_eq!(
+            tick.value("larder_stock_ticks"),
+            Some(16.0 + larder.iter().sum::<f64>())
+        );
+        assert_eq!(
+            tick.value("scatter_cache_ticks"),
+            Some(2.0 + scatter.len() as f64)
+        );
+        assert_eq!(
+            tick.value("larder_cache_ticks"),
+            Some(2.0 + larder.len() as f64)
+        );
+        assert_eq!(
+            Snapshot::of(&w).value("larder_stock_ticks"),
+            tick.value("larder_stock_ticks")
+        );
+    }
+
+    #[test]
+    fn spatial_hoarding_series_distinguish_stocks_flows_and_undefined_ratios() {
+        let mut c = crate::presets::by_id("theft-winter").unwrap().config;
+        c.population = 1;
+        c.theft.find = 0.0;
+        c.spatial_hoarding.enabled = true;
+        c.spatial_hoarding.find_larder = 0.0;
+        c.spatial_hoarding.guard = false;
+        c.spatial_hoarding.larder = 0.0;
+        let mut w = World::new(c, 1).unwrap();
+        let initial = w.stats.latest().unwrap();
+        assert!(initial.value("scatter_recovery").unwrap().is_nan());
+        assert_eq!(initial.value("scatter_stock_ticks"), Some(0.0));
+        w.run(3);
+        let history = w.stats.history();
+        let expected: f64 = history[..history.len() - 1]
+            .iter()
+            .map(|s| s.value("scatter_cached").unwrap())
+            .sum();
+        assert!(expected > 0.0);
+        assert_eq!(
+            w.stats.latest().unwrap().value("scatter_stock_ticks"),
+            Some(expected)
+        );
+        assert_eq!(
+            Snapshot::of(&w).value("scatter_stock_ticks"),
+            Some(expected),
+            "a fresh view of the same tick adds no exposure"
+        );
+        assert_eq!(
+            w.stats.latest().unwrap().value("larder_stock_ticks"),
+            Some(0.0)
+        );
+        assert!(w
+            .stats
+            .latest()
+            .unwrap()
+            .value("larder_loss_rate")
+            .unwrap()
+            .is_nan());
+        for s in history {
+            assert_eq!(
+                s.value("scatter_cached").unwrap() + s.value("larder_cached").unwrap(),
+                s.value("cached").unwrap()
+            );
+            assert_eq!(
+                s.value("scatter_buried").unwrap() + s.value("larder_buried").unwrap(),
+                s.value("buried").unwrap()
+            );
+        }
+        assert!(!series_names(&Config::default())
+            .iter()
+            .any(|n| n.starts_with("scatter_")));
+    }
 
     #[test]
     fn per_good_and_per_pollutant_series() {
@@ -2408,5 +2989,200 @@ mod tests {
         assert_eq!(c.hoarder_holdings, 15.0);
         assert_eq!(c.cheater_holdings, 7.0, "holdings only, not fed");
         assert_eq!((c.hoarder_alive, c.cheater_alive), (2, 1));
+    }
+
+    #[test]
+    fn watching_series_exist_only_under_their_gates() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.population = 4;
+        let base = series_names(&w.config).len();
+        let s = Snapshot::of(&w);
+        assert!(s.watching.is_none() && s.watchers.is_none());
+        w.config.watching.on = true;
+        let s = Snapshot::of(&w);
+        assert!(s.watching.is_some() && s.watchers.is_none(), "watchers = 1");
+        w.config.watching.watchers = 0.5;
+        assert!(Snapshot::of(&w).watchers.is_some());
+        w.config.watching.watchers = 0.0;
+        assert!(Snapshot::of(&w).watchers.is_none());
+        w.config.watching.watchers = 0.5;
+        let names = series_names(&w.config);
+        assert!(names.len() > base);
+        for n in WATCH_SERIES.iter().chain(WATCHER_SERIES.iter()) {
+            assert!(names.iter().any(|x| x == n), "{n}");
+            assert!(Snapshot::of(&w).value(n).is_some(), "{n}");
+        }
+        w.config.watching.on = false;
+        assert_eq!(series_names(&w.config).len(), base);
+        // Names reach back past snapshots that lack the group: NaN.
+        assert!(Snapshot::of(&w).value("raids").unwrap().is_nan());
+        assert!(Snapshot::of(&w).value("watcher_alive").unwrap().is_nan());
+    }
+
+    /// Controller ruling (Task 2): the watcher/other split is a real founder
+    /// split, so `who` counts as well as `watchers`.
+    #[test]
+    fn the_watcher_split_follows_who_watches_among_the_founders() {
+        use crate::config::Who;
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.population = 10;
+        w.config.watching.on = true;
+        let split = |w: &World| {
+            let named = series_names(&w.config)
+                .iter()
+                .any(|n| n == "watcher_advantage");
+            let present = Snapshot::of(w).watchers.is_some();
+            assert_eq!(named, present);
+            present
+        };
+        w.config.watching.who = Who::Hoarders;
+        w.config.theft.cheaters = 0.5;
+        assert!(split(&w), "hoarders, half cheating");
+        w.config.theft.cheaters = 0.0;
+        assert!(!split(&w), "hoarders, no cheaters: everyone watches");
+        w.config.watching.who = Who::Share;
+        w.config.watching.watchers = 0.5;
+        assert!(split(&w), "share 0.5");
+        w.config.watching.watchers = 1.0;
+        assert!(!split(&w), "share 1");
+        w.config.watching.watchers = 0.5;
+        w.config.watching.on = false;
+        assert!(!split(&w), "off");
+    }
+
+    #[test]
+    fn watch_series_match_the_events() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.watching.on = true;
+        {
+            let e = &mut w.events;
+            e.raids = 3;
+            e.raided = 4.5;
+            e.raids_wasted = 1;
+            e.seen_arrivals = 2;
+            e.burials_seen = 6;
+            e.sightings = 7;
+            e.seen_entries = 8;
+        }
+        let s = Snapshot::of(&w).watching.unwrap();
+        assert_eq!(
+            s,
+            WatchStats {
+                raids: 3,
+                raided: 4.5,
+                raids_wasted: 1,
+                seen_arrivals: 2,
+                burials_seen: 6,
+                sightings: 7,
+                seen_entries: 8
+            }
+        );
+        assert_eq!(Snapshot::of(&w).value("raided"), Some(4.5));
+        assert_eq!(Snapshot::of(&w).value("seen_entries"), Some(8.0));
+    }
+
+    #[test]
+    fn watcher_wealth_is_per_founder_by_kind() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.watching.on = true;
+        w.config.watching.watchers = 0.5;
+        // No founders: no split, so no group.
+        w.config.population = 0;
+        assert!(Snapshot::of(&w).watchers.is_none());
+        // 4 founders: ids 2 and 4 watch under the id rule (⌊4·0.5⌋ = 2).
+        // Ids 1–3 are alive; founder 4 (a watcher) is not, so counts as 0.
+        w.config.population = 4;
+        let mut ids = vec![];
+        for x in 0..3 {
+            ids.push(spawn(&mut w, x, 0));
+        }
+        assert_eq!(ids, vec![1, 2, 3]);
+        for (id, h, caches, fed) in [
+            (1, 10.0, vec![(5, 2.0)], 1.0),
+            (2, 7.0, vec![(6, 1.5), (7, 0.5)], 3.0),
+            (3, 20.0, vec![], 0.0),
+        ] {
+            let watches = w
+                .config
+                .watching
+                .founder_watches(id, w.config.theft.founder_cheats(id));
+            let ag = w.agent_mut(id).unwrap();
+            ag.holdings[0] = h;
+            ag.caches = caches.into_iter().collect();
+            ag.fed = fed;
+            ag.watches = watches;
+        }
+        let c = Snapshot::of(&w).watchers.unwrap();
+        // Others: (10 + 2 + 1) + 20 over 2 founders.
+        assert_eq!(c.other_wealth, 16.5);
+        // Watchers: 7 + 2 + 3 over 2 founders, the dead one counting 0.
+        assert_eq!(c.watcher_wealth, 6.0);
+        assert_eq!((c.watcher_alive, c.other_alive), (1, 2));
+        let s = Snapshot::of(&w);
+        assert_eq!(s.value("watcher_wealth"), Some(6.0));
+        assert_eq!(s.value("other_wealth"), Some(16.5));
+        // Past the gate, the names reach back as NaN.
+        w.config.watching.watchers = 1.0;
+        assert!(Snapshot::of(&w).value("other_wealth").unwrap().is_nan());
+    }
+
+    #[test]
+    fn watcher_advantage_is_survival_per_founder_by_kind() {
+        use crate::testkit::*;
+        let mut w = blank_world(5, 5);
+        w.config.watching.on = true;
+        w.config.watching.watchers = 0.5;
+        // 4 founders: ids 2 and 4 watch under the id rule (⌊4·0.5⌋ = 2).
+        w.config.population = 4;
+        let mut ids = vec![];
+        for x in 0..4 {
+            ids.push(spawn(&mut w, x, 0));
+        }
+        for &id in &ids {
+            let watches = w
+                .config
+                .watching
+                .founder_watches(id, w.config.theft.founder_cheats(id));
+            let ag = w.agent_mut(id).unwrap();
+            ag.watches = watches;
+            ag.fed = 99.0;
+        }
+        assert_eq!(w.agents().filter(|a| a.watches).count(), 2);
+        let s = Snapshot::of(&w);
+        assert_eq!(s.watchers.unwrap().watcher_advantage, 0.0);
+        assert_eq!(s.value("watcher_advantage"), Some(0.0));
+        // Kill one watcher: 1/2 − 2/2 = −0.5.
+        let watcher = *ids
+            .iter()
+            .find(|&&id| w.agent(id).unwrap().watches)
+            .unwrap();
+        w.kill(watcher, crate::world::DeathCause::Starvation);
+        let s = Snapshot::of(&w);
+        assert_eq!(s.value("watcher_advantage"), Some(-0.5));
+        // The gate: only while some founders watch and some do not.
+        assert!(series_names(&w.config)
+            .iter()
+            .any(|n| n == "watcher_advantage"));
+        w.config.watching.watchers = 1.0;
+        assert!(!series_names(&w.config)
+            .iter()
+            .any(|n| n == "watcher_advantage"));
+        assert!(Snapshot::of(&w)
+            .value("watcher_advantage")
+            .unwrap()
+            .is_nan());
+        w.config.watching.watchers = 0.5;
+        w.config.watching.on = false;
+        assert!(!series_names(&w.config)
+            .iter()
+            .any(|n| n == "watcher_advantage"));
+        assert!(Snapshot::of(&w)
+            .value("watcher_advantage")
+            .unwrap()
+            .is_nan());
     }
 }

@@ -1,0 +1,328 @@
+{
+  "base": "4b72b039bd1bd0352f948a533d2ebb2815dd817c",
+  "files": {
+    "README.md": {
+      "after": "41cb75db81b707e30218bf5d8a2fda2cb1f6e4bd2fce553aa7ee6c543d252dbd",
+      "before": "2a47abbdb53234e78676b45b4220e9c73971eca9e289a3bdc418d905bad87d67",
+      "phase": 3
+    },
+    "crates/sugarscape-cli/src/main.rs": {
+      "after": "0021385111d7ac0c01cae8d3e8076773b94b3521e56541a77c1a5ebdc6cc6f81",
+      "before": "225d094ac6bc8f8be59aed6a4858f9460e8f4ebf7158568d0d46c4565b1e8fd3",
+      "phase": 2
+    },
+    "crates/sugarscape-cli/tests/cli.rs": {
+      "after": "db21572376706eb2aab5996f590e5ea304162dc20575bae6e79f9bf80b2c3f84",
+      "before": "b99569864e0cd0aa17e3386a42474eaa4528ae07889f5f7d7b4e5f61d9fcaa30",
+      "phase": 2
+    },
+    "crates/sugarscape-core/src/auctions/analysis.rs": {
+      "after": "c09a758cd9ea3d204954688f1e991068233c72d27257884dcc1968e9b3056dc3",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/auctions/config.rs": {
+      "after": "f5242edca83cebf1f8a5e7c68a7eeff9c632bf14870ec6e1c36f48eaa10c46d2",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/auctions/learner.rs": {
+      "after": "ba70bb1c0cdbe0823cd676f188255d88d143f6aec9ac99562b0ecf56fe9a9185",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/auctions/mechanism.rs": {
+      "after": "4ca6cbb440b89dfb184b0d615ee057fcbc929ea35a59cd5a7f089d4d414d64bb",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/auctions/mod.rs": {
+      "after": "ea0ac3d08184b29339419f5fcd721688f5cda6f442e542ae6229c71516cc23e9",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/auctions/presets.rs": {
+      "after": "2280f86e13e587a12473282223874a972bc459c91ad59bcc3115ad8ab45cce72",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/auctions/stats.rs": {
+      "after": "00fe77119abc2fc4296d46e53359aa854927f0e10963a2781c288e0e93d1a697",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/auctions/view.rs": {
+      "after": "e45e46444f24bdbc89874d4bd3980266f24d7d69a84096ad1ea68ed7952cbb78",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/auctions/world.rs": {
+      "after": "b971b77313834c47e2e7cf0ae2910790fe8e19fa4098de14c8518463190e54d5",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/lib.rs": {
+      "after": "cd31366c2faaf4bc2435e72410d5b0d6e1489c91c6d8df201036685425692010",
+      "before": "276ce0f198fb83a1895a8b5722d5ead7ae79335ac2211daa8f87a579bb9fc5e0",
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/model.rs": {
+      "after": "cf4b0f6198f86bd625de93f89f6045520d1517c366dba0c7650bb05b4cebc061",
+      "before": "25d48e9f07066bc3ea2ac5a244c39e1395292d61efe63d9a1a9cec253c471604",
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/presets.rs": {
+      "after": "7608b627da72ba59c6603ca060871eb9d2a9073db8c6f885747341f8fb304a70",
+      "before": "f4fc30d96afd681d140e1ff127a60bf6c6a831a99dff0a01578018d30bf14786",
+      "phase": 1
+    },
+    "crates/sugarscape-core/src/sweep.rs": {
+      "after": "2ec0010915dccabcc752ff7fb836e8f674a0a3e8ea6be3243ff4b5b55154d459",
+      "before": "6a594e4b674256c9576add3e87b088f1c2632295af9688474a534db201441ed9",
+      "phase": 2
+    },
+    "crates/sugarscape-core/src/titles.rs": {
+      "after": "48dcb75d9da980ae91db12d44d4485a02baa11e23fe72bae0cf3ac22444d42f0",
+      "before": "71e9c68e503204dcfa4f5954c955afe2e62a261771aaec3f2e4bba097a4298d6",
+      "phase": 1
+    },
+    "crates/sugarscape-core/tests/auctions_discovery.rs": {
+      "after": "0f5595fd5b9b6db65ff71520ad649292921c356a2cfe7cdf6c0bd3490bcb8a03",
+      "before": null,
+      "phase": 1
+    },
+    "crates/sugarscape-core/tests/golden.rs": {
+      "after": "56af7c0dd81d7ac3530d8784184981c0f92a4817ee961c675f3ce8abe51a8ac7",
+      "before": "5133d196983e1ebe59bc271a324e036ba3794cbd710d5ebe3f849b54c6ecc93a",
+      "phase": 1
+    },
+    "crates/sugarscape-wasm/tests/web.rs": {
+      "after": "62905ad193235b4027e3795dc4862e7749a907cb1bcb48a88267dd8537c7938b",
+      "before": "9d53b15bef6409cb9fc076933dfb51b11a176accdd3220853e3e9302cdb66c3a",
+      "phase": 2
+    },
+    "docs/roadmap.md": {
+      "after": "38ecf3cff8aa965892bd8cd859b2f6a30a19e3c8d72c0d8e51cb01090daf12da",
+      "before": "9b44f7435cf1921957c66d942c485052982883845698f250b9c96c3bd8551558",
+      "phase": 3
+    },
+    "docs/studies/2026-09-27-swarm-coordination.md": {
+      "after": "fe9b9588cf69f12c2af1cc58b77823206406cdd4b8ac683bea79229f5442fc4f",
+      "before": "5eb2bfa5a0d8815eb2ca822e8dd8fc3d75ac9d49d97067115e1ed0d14a93ed15",
+      "phase": 3
+    },
+    "survey/.gitignore": {
+      "after": "f02e8c5755f177ee5b124e77719d5dbe23c91be033f056d264ff979f4aae83a9",
+      "before": "44c92e3a70ad3307b7056871c2bdb096d8bfa9373f5bf06a79bb6324a20ff2fb",
+      "phase": 3
+    },
+    "survey/src/claims/auctions-source-figures.json": {
+      "after": "0a4cd0f9777b2f644911ce6e14525662a2158e62c81cdca8d0b0c8a534a3bd7f",
+      "before": null,
+      "phase": 3
+    },
+    "survey/src/claims/auctions.rs": {
+      "after": "2b95bb4b4a0b58480ff0ee247609307453464216a181c33bd2181bffc0be41dc",
+      "before": null,
+      "phase": 3
+    },
+    "survey/src/claims/mod.rs": {
+      "after": "3e85e1d795a413e49259f8b6900ce43f4749cc382af708d59326fb77ae8e3e71",
+      "before": "8530102850382717dc3af59f773bf2e099a9d75dd1a30d6692b713cbfb1dceac",
+      "phase": 3
+    },
+    "survey/src/main.rs": {
+      "after": "e8ddcac89a910fab8cd5831d3c86e6578ec2ad5256d45ff8697ed1f37526cdcc",
+      "before": "9fa7d4b458945584bac4aa163b77bcd94fc113cefca1ac9330219e07c5199aa8",
+      "phase": 3
+    },
+    "sweeps/auctions-biased.json": {
+      "after": "a185174b295521f62a62ab510d74881994a0dc68023f3102bb0959fd945d189c",
+      "before": null,
+      "phase": 2
+    },
+    "sweeps/auctions-bidders.json": {
+      "after": "d53d75bd042effce23730f66527d6bb1e64879117f225b142169db21d72156a7",
+      "before": null,
+      "phase": 2
+    },
+    "sweeps/auctions-downward.json": {
+      "after": "8115f47093e36914ab740eebdd663db77c4c7f1e0bd1565d2fbe77083e40dc00",
+      "before": null,
+      "phase": 2
+    },
+    "sweeps/auctions-duration.json": {
+      "after": "e6e72071dcb7cbd992fafb7065460ef9188fb9c1d1d943de6fd5d4c8ff0e36a6",
+      "before": null,
+      "phase": 2
+    },
+    "sweeps/auctions-feedback.json": {
+      "after": "18a4f41d945f6a928ece5270bf646e8a327272ba8b9030aa6d346e70b22fcdb1",
+      "before": null,
+      "phase": 2
+    },
+    "sweeps/auctions-formats.json": {
+      "after": "9ae0a821e37e130a5bd85d5453c78c3d9c2036d373c42ddbe839c7319722bb65",
+      "before": null,
+      "phase": 2
+    },
+    "sweeps/auctions-hindsight.json": {
+      "after": "b2a6ec8ccdd2f222ab742414db916ae696948b75a45e556e531c9cd96148c609",
+      "before": null,
+      "phase": 2
+    },
+    "sweeps/auctions-initialization.json": {
+      "after": "e352b7358be2edaaf16d4e26ff849b2176fb753c7a8503d77fb3f58d8bc4560f",
+      "before": null,
+      "phase": 2
+    },
+    "sweeps/auctions-local.json": {
+      "after": "07470d58f2605cb6c071a7a2a50540465aca917c59c2bf0ec75be19de80a5fa3",
+      "before": null,
+      "phase": 2
+    },
+    "sweeps/auctions-market.json": {
+      "after": "a9ffb5a371533cf6be1d229023e3c17652be3680a5d5082972f3b478e2ea9325",
+      "before": null,
+      "phase": 2
+    },
+    "sweeps/auctions-persistent.json": {
+      "after": "c4dbd2523f03f93c73196b23cb11e7e95499f63a0e1f7fbc7aa31ff6f4adfa43",
+      "before": null,
+      "phase": 2
+    },
+    "sweeps/auctions-ties.json": {
+      "after": "efb8ba57993e3ea1103dbd5e140ac7acfcb3e9a2c0d144a651f44fa71d51d056",
+      "before": null,
+      "phase": 2
+    },
+    "web/src/auctions-grid.test.ts": {
+      "after": "6b1fd29103588ebae99c0b256a2ef7132c90a2a12bb1fc205ffedceb0551d1d2",
+      "before": null,
+      "phase": 2
+    },
+    "web/src/auctions-inspection.test.ts": {
+      "after": "ac4c3505c986c24464e03b09e3a9520830dde2392c9776c847f18c3540ffeeba",
+      "before": null,
+      "phase": 2
+    },
+    "web/src/auctions.test.ts": {
+      "after": "a93c91630f02a2066c6c63c3f616e1698f76807bbd8483a1f02639c7806f95d9",
+      "before": null,
+      "phase": 2
+    },
+    "web/src/auctions.ts": {
+      "after": "d2cf3b2eedd7980d2d30a200d22fd7dfcf7d037064bd4e4eef0cb057df19898d",
+      "before": null,
+      "phase": 2
+    },
+    "web/src/compare-presets.ts": {
+      "after": "203e8ade9a099a6ec736d72974271ab55e4b8541c771be899ff727de63c24f73",
+      "before": "2df2c55ae75ea663b08dda9a1398e8683173cad43c1c46cb47b09ab5af47a709",
+      "phase": 2
+    },
+    "web/src/compare/compare-view.ts": {
+      "after": "634cff194ca4573054b4739cfcfa0b88dc444251a985acbe99e8b5e5778208cd",
+      "before": "12c97f333c2016f15948441c0cd77e90107c12d370573fde196d0117f1ee0992",
+      "phase": 2
+    },
+    "web/src/determinism.test.ts": {
+      "after": "7ece34116fa762ef1d0c0c1921045089331e7c23822ff2a0a8fb7862299ad374",
+      "before": "9d0fd6f6fc6eac24a5b0abd358ee8039c3f90328ab51e77812163a655c7cc16f",
+      "phase": 2
+    },
+    "web/src/engine.test.ts": {
+      "after": "3df9c26b0094993bc717193845bd25f75028d85d7b6074bc6161a2dbc85c2dc2",
+      "before": "e62bcee4b8d170a8ea7095e96b51a70e40d537cc3b5f51126362abc4a03d2106",
+      "phase": 2
+    },
+    "web/src/engine.ts": {
+      "after": "4c7412b658b2c90e4e42fd916a0a2bfe15cac55d7f198865f06245339c387e95",
+      "before": "48d91a861904c593e54a52157c642b4892ef8b2084f1b968aed53ebe7c81890d",
+      "phase": 2
+    },
+    "web/src/experiments/form-view.ts": {
+      "after": "6c9ad57bb561ca616c0b047500e477cd4a6b0e70efb8c4e272389233d24f34e9",
+      "before": "8de4da84a5c88eafdb6f79bf7174490f7937378d7076b7ab822cdafd111329d0",
+      "phase": 2
+    },
+    "web/src/experiments/form.ts": {
+      "after": "bd4e4772bb7cf17bfdf431590dc87ba136cebde106d8f94c61e6f751a6dc5fc8",
+      "before": "f00673352bc62681a0dbd5a80cd0124758b28dda2c7bb8a5171238e53cac11d8",
+      "phase": 2
+    },
+    "web/src/main.ts": {
+      "after": "9c3946e2bbf3b96b6d439e4f1de7e02641485023f8b52c0983eceb299a51dd46",
+      "before": "486c0534e7c93cab67f22eec39b795dcb783b075d59a17e15756398c8ca0d0cd",
+      "phase": 2
+    },
+    "web/src/models.ts": {
+      "after": "4879016ab1631ed47dfb16f77296731c166c1f875c96283880dfc28862d256e9",
+      "before": "d5035d716594ae72e56a3f97857f30e5285fd0f509cdc71b4e92038c74456fac",
+      "phase": 2
+    },
+    "web/src/types.ts": {
+      "after": "f6579dbcbeea5335ac91f4b5f47ba33602f4fabf941fe25e42c215e8d32f37c2",
+      "before": "7f4eb5eb46f2725ca6fe24b9a4df35b997bc17f833a38f5ef572bfef18559702",
+      "phase": 2
+    },
+    "web/src/ui/charts-panel.ts": {
+      "after": "c5088a9a5c5dee405437057fef773600cd84ced3d20c9676dff1ae184b668997",
+      "before": "165f494e7c0e84c91cd4d7ea48d7e041a2634090af7a9f4614bf68c6fafdcd9c",
+      "phase": 2
+    },
+    "web/src/ui/grid-view.ts": {
+      "after": "ec9b6d3c648efc4316ece39459e2c9f19f740352046f30cdcf626f22f8b9d764",
+      "before": "e61f1a10ca09d9ee19b2c595e48236667768cb0356367aa785a65c4128bc201d",
+      "phase": 2
+    },
+    "web/src/ui/inspect-panel.ts": {
+      "after": "c06a546f25e2089ca8a36506f64fada4e8430244d8a783c0d2f2fa620334d7fc",
+      "before": "9c96ab24a98da60044a2fe442b0c633e502f82994e9718b0d9cc3c23c2d5793f",
+      "phase": 2
+    },
+    "web/src/ui/series-data.ts": {
+      "after": "313ad2d379ee1860f68f7fb6903c774becfa051500b35b08445918cea0bff38b",
+      "before": "e685607045aeae3992e2f496d41d9681f13659a1905c60bf52a672c48e19b0d3",
+      "phase": 2
+    }
+  },
+  "patches": [
+    {
+      "name": "01-core-tests.patch",
+      "part": "tests",
+      "phase": 1,
+      "sha256": "3cedd624a3c5daa5e4b19e2027ca25114ef79a53fbd36e333fc5ecddd5057a1f"
+    },
+    {
+      "name": "01-core-implementation.patch",
+      "part": "implementation",
+      "phase": 1,
+      "sha256": "ddeb0b2f64759a11e729a2b527fc718f66fde4809ebfaea1dffe1876778fba39"
+    },
+    {
+      "name": "02-hosts-web-sweeps-tests.patch",
+      "part": "tests",
+      "phase": 2,
+      "sha256": "269be6d18866414d5f2e9a74d25e91d6cdce89427bb77bb4e1540e28d58719e7"
+    },
+    {
+      "name": "02-hosts-web-sweeps-implementation.patch",
+      "part": "implementation",
+      "phase": 2,
+      "sha256": "8a565833fb7bef240935d46613a4da411d08d031f8420f11715dad48214853b2"
+    },
+    {
+      "name": "03-survey-docs-tests.patch",
+      "part": "tests",
+      "phase": 3,
+      "sha256": "cf6066aae493c291f4c3c1bd21a151279acd978521e46b0cb77e152ca64715e3"
+    },
+    {
+      "name": "03-survey-docs-implementation.patch",
+      "part": "implementation",
+      "phase": 3,
+      "sha256": "dd9f6e78de963cde1e2716aa29fcc2f9f648e166b95255164b8ac027dee5a56a"
+    }
+  ]
+}

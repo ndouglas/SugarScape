@@ -15,6 +15,10 @@ pub enum Source {
 pub enum Verdict {
     Holds,
     Weak,
+    /// Neither held nor failed by a judge that names a third outcome (Minds
+    /// 8b's claim 3a: the slope's interval neither lies below 0, nor sits
+    /// within the flat band, nor lies above 0). Like Weak, it is not a hold.
+    Inconclusive,
     Fails,
     Untestable,
     Error,
@@ -116,9 +120,17 @@ pub fn count(flags: &[f64], lo: usize, hi: usize) -> Outcome {
         return too_few(v.len());
     }
     let n = v.iter().filter(|&&f| f > 0.5).count();
-    let verdict = if (lo..=hi).contains(&n) { Verdict::Holds } else { Verdict::Fails };
+    let verdict = if (lo..=hi).contains(&n) {
+        Verdict::Holds
+    } else {
+        Verdict::Fails
+    };
     let measured = format!("{n} of {} seeds (expected {lo}–{hi})", v.len());
-    Outcome { verdict, measured, detail: String::new() }
+    Outcome {
+        verdict,
+        measured,
+        detail: String::new(),
+    }
 }
 
 /// Claim: `a` exceeds `b`. One-sided Mann–Whitney at p < 0.01.
@@ -161,8 +173,8 @@ pub fn equivalent(
     if a.len().min(b.len()) < MIN_SEEDS {
         return too_few(a.len().min(b.len()));
     }
-    let margin = margin
-        .unwrap_or_else(|| 0.1 * stats::mean(&[a.as_slice(), b.as_slice()].concat()).abs());
+    let margin =
+        margin.unwrap_or_else(|| 0.1 * stats::mean(&[a.as_slice(), b.as_slice()].concat()).abs());
     let p_eq = stats::tost(&a, &b, margin);
     let p_diff = stats::mw_two_sided(&a, &b);
     let verdict = if p_eq < 0.05 {
@@ -186,12 +198,14 @@ pub fn equivalent(
 }
 
 /// Several judged parts of one statement ("at every vision"): the worst
-/// verdict wins (Fails, then Weak, then Untestable, then Holds; Error first).
+/// verdict wins (Fails, then Weak, then Inconclusive, then Untestable, then
+/// Holds; Error first).
 pub fn all_of(parts: Vec<(String, Outcome)>) -> Outcome {
     let rank = |v: Verdict| match v {
-        Verdict::Error => 4,
-        Verdict::Fails => 3,
-        Verdict::Weak => 2,
+        Verdict::Error => 5,
+        Verdict::Fails => 4,
+        Verdict::Weak => 3,
+        Verdict::Inconclusive => 2,
         Verdict::Untestable => 1,
         Verdict::Holds => 0,
     };
@@ -211,12 +225,32 @@ pub fn all_of(parts: Vec<(String, Outcome)>) -> Outcome {
         .map(|(label, o)| format!("[{label}] {}", o.detail))
         .collect::<Vec<_>>()
         .join(" ");
-    Outcome { verdict, measured, detail }
+    Outcome {
+        verdict,
+        measured,
+        detail,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn all_of_ranks_inconclusive_between_weak_and_untestable() {
+        use Verdict::{Fails, Holds, Inconclusive, Untestable, Weak};
+        let o = |verdict| Outcome {
+            verdict,
+            measured: String::new(),
+            detail: String::new(),
+        };
+        let worst =
+            |vs: &[Verdict]| all_of(vs.iter().map(|&v| (String::new(), o(v))).collect()).verdict;
+        assert_eq!(worst(&[Holds, Inconclusive]), Inconclusive);
+        assert_eq!(worst(&[Untestable, Inconclusive]), Inconclusive);
+        assert_eq!(worst(&[Weak, Inconclusive]), Weak);
+        assert_eq!(worst(&[Fails, Inconclusive]), Fails);
+    }
 
     #[test]
     fn count_holds_only_inside_its_bounds() {
@@ -232,7 +266,7 @@ mod tests {
         assert_eq!(range(&v, 0.0, 15.0, false).verdict, Verdict::Holds); // 16/20
         assert_eq!(range(&v, 0.0, 11.0, false).verdict, Verdict::Weak); // 12/20
         assert_eq!(range(&v, 0.0, 5.0, false).verdict, Verdict::Fails); // 6/20
-        // about: [10, 15] becomes [9, 16.5], 8/20.
+                                                                        // about: [10, 15] becomes [9, 16.5], 8/20.
         assert!(range(&v, 10.0, 15.0, true).measured.contains("8/20"));
     }
 
@@ -262,10 +296,16 @@ mod tests {
         let a: Vec<f64> = (0..20).map(|i| 100.0 + f64::from(i % 5)).collect();
         let close: Vec<f64> = a.iter().map(|x| x + 0.5).collect();
         let far: Vec<f64> = a.iter().map(|x| x + 40.0).collect();
-        assert_eq!(equivalent(&a, &close, None, "a", "b").verdict, Verdict::Holds);
+        assert_eq!(
+            equivalent(&a, &close, None, "a", "b").verdict,
+            Verdict::Holds
+        );
         assert_eq!(equivalent(&a, &far, None, "a", "b").verdict, Verdict::Fails);
         let noisy: Vec<f64> = (0..20).map(|i| 100.0 + f64::from(i * 7 % 40)).collect();
         let noisy2: Vec<f64> = noisy.iter().map(|x| x + 8.0).collect();
-        assert_eq!(equivalent(&noisy, &noisy2, None, "a", "b").verdict, Verdict::Weak);
+        assert_eq!(
+            equivalent(&noisy, &noisy2, None, "a", "b").verdict,
+            Verdict::Weak
+        );
     }
 }

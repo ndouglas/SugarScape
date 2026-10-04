@@ -1,0 +1,441 @@
+diff --git a/crates/sugarscape-cli/tests/cli.rs b/crates/sugarscape-cli/tests/cli.rs
+index 97d6e1034d42e8456008ecbb850e6c0f22e53b61..a250e87e49dcb2f92a77b4ca01050acc6561c0d8 100644
+--- a/crates/sugarscape-cli/tests/cli.rs
++++ b/crates/sugarscape-cli/tests/cli.rs
+@@ -964,3 +964,40 @@ fn fingerprint_trace_reports_write_errors() {
+     assert!(stderr(&out).contains(path(&dir)), "{}", stderr(&out));
+     std::fs::remove_dir_all(dir).unwrap();
+ }
++
++#[test]
++fn geosim_cli_reports_source_clock_and_resolves_inactive_readings() {
++    let dir = scratch("geosim");
++    let config = dir.join("config.json");
++    let resolved = dir.join("resolved.json");
++    let trace = dir.join("trace.json");
++    std::fs::write(&config, r#"{"model":"geosim","width":2,"height":2,"initial_states":1,"initialization_periods":2,"observation_periods":13,"periods_per_tick":7,"defender_threshold":"same_threshold","damage_incidence":"acting_party"}"#).unwrap();
++    let out = sugarscape(&[
++        "run",
++        "--config",
++        path(&config),
++        "--ticks",
++        "100",
++        "--config-out",
++        path(&resolved),
++        "--fingerprint-trace",
++        path(&trace),
++    ]);
++    assert!(out.status.success(), "{}", stderr(&out));
++    assert!(
++        stderr(&out).contains("15 completed periods"),
++        "{}",
++        stderr(&out)
++    );
++    let value: serde_json::Value = serde_json::from_str(&read(&resolved)).unwrap();
++    assert_eq!(value["defender_threshold"], "same_threshold");
++    assert_eq!(value["damage_incidence"], "acting_party");
++    assert_eq!(value["attack_projection"], "respective_states");
++    let rows: Vec<serde_json::Value> = serde_json::from_str(&read(&trace)).unwrap();
++    assert_eq!(
++        rows.iter()
++            .map(|r| r["tick"].as_u64().unwrap())
++            .collect::<Vec<_>>(),
++        vec![0, 1, 2, 3]
++    );
++}
+diff --git a/crates/sugarscape-core/tests/geosim_host_sweep.rs b/crates/sugarscape-core/tests/geosim_host_sweep.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..940f0b7aa572196c29cfe611ca602d3379266650
+--- /dev/null
++++ b/crates/sugarscape-core/tests/geosim_host_sweep.rs
+@@ -0,0 +1,14 @@
++use sugarscape_core::sweep::Sweep;
++#[test]
++fn excessive_grouped_geosim_sweep_names_source_horizon() {
++    let spec = r#"{"name":"bounded host fixture","base":{"config":{"model":"geosim","width":2,"height":2,"initial_states":1,"initialization_periods":2,"observation_periods":13,"periods_per_tick":7}},"x":{"path":"shock_shift","values":[0]},"seeds":{"from":1,"count":1},"ticks":4,"metric":{"kind":"final","series":"completed_wars"}}"#;
++    let errors = Sweep::from_json(spec).unwrap().points().unwrap_err();
++    assert_eq!(errors[0].field, "ticks");
++    assert!(
++        errors[0]
++            .message
++            .contains("GeoSim source horizon of 15 periods"),
++        "{errors:?}"
++    );
++    assert!(errors[0].message.contains("3 display ticks"), "{errors:?}");
++}
+diff --git a/crates/sugarscape-wasm/tests/web.rs b/crates/sugarscape-wasm/tests/web.rs
+index 67a44662d94188c124a1c3fca133a5afd765b3f3..ef10fa6ccf7f40531a1149cc9fdc4c1517d91a44 100644
+--- a/crates/sugarscape-wasm/tests/web.rs
++++ b/crates/sugarscape-wasm/tests/web.rs
+@@ -828,6 +828,22 @@ fn presets_list_every_model_with_sugarscape_configs_untagged() {
+             .map(String::from)
+     };
+     assert_eq!(model("ii-2-unit"), None);
++    let geosim_ids = list
++        .iter()
++        .filter(|p| p["config"]["model"] == "geosim")
++        .map(|p| p["id"].as_str().unwrap())
++        .collect::<Vec<_>>();
++    assert_eq!(
++        geosim_ids,
++        vec![
++            "geosim-paper",
++            "geosim-no-technology",
++            "geosim-no-context",
++            "geosim-smaller-shocks",
++            "geosim-artifact-2017"
++        ]
++    );
++    assert_eq!(model("geosim-paper").as_deref(), Some("geosim"));
+     assert_eq!(model("vi-4-schelling-25").as_deref(), Some("schelling"));
+     assert_eq!(model("vi-9-ring-megagroup").as_deref(), Some("ring"));
+     // Sugarscape presets serialize as before, plus the menu's title.
+@@ -842,6 +858,21 @@ fn presets_list_every_model_with_sugarscape_configs_untagged() {
+ fn schemas_are_listed_for_the_other_models() {
+     let schemas: serde_json::Value = serde_json::from_str(&model_schemas_json()).unwrap();
+     assert!(schemas.get("sugarscape").is_none());
++    let geosim = schemas["geosim"].as_array().unwrap();
++    for path in [
++        "damage_incidence",
++        "defender_threshold",
++        "severity_export",
++        "completed_export",
++        "numerical_policy",
++    ] {
++        assert!(
++            geosim
++                .iter()
++                .any(|p| p["path"] == path && p["kind"] == "choice" && p["apply"] == "reset"),
++            "missing GeoSim reading {path}"
++        );
++    }
+     let schelling = schemas["schelling"].as_array().unwrap();
+     assert!(schelling
+         .iter()
+diff --git a/web/src/geosim-engine.test.ts b/web/src/geosim-engine.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..f683f95656028e19e8f76eebc055012ffcde710f
+--- /dev/null
++++ b/web/src/geosim-engine.test.ts
+@@ -0,0 +1,172 @@
++import { mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
++import { execFileSync } from 'node:child_process';
++import { tmpdir } from 'node:os';
++import { fileURLToPath } from 'node:url';
++import { describe, expect, it } from 'vitest';
++import { Engine, finishedNotice } from './engine';
++import { geosimRows, geosimParams } from './geosim';
++import { SimHost } from './sim-host';
++import { InlineTransport } from './transport';
++import { wasmSimModule } from './sim-module';
++import { Lockstep } from './compare/lockstep';
++import { readoutText } from './valley';
++import { captureExperimentBase, defaultForm, formToSweep } from './experiments/form';
++import { initSync, Sim, aggregate, run_point, sweep_points, presets_json, model_schemas_json } from './wasm-pkg/sugarscape.js';
++import type { GeosimConfig, GeosimInspection, GeosimStats, Preset } from './types';
++const setup = async (partial: Partial<GeosimConfig>, seed=1) => {
++  const wasm = initSync({module:readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url))});
++  const presets = JSON.parse(presets_json()) as Preset[];
++  const base = presets.find(p=>p.id==='geosim-paper')!.config as GeosimConfig;
++  const config = {...base,...partial};
++  return Engine.create({config,seed}, {presets, schemas:JSON.parse(model_schemas_json()),transport:new InlineTransport(new SimHost(wasmSimModule(wasm.memory)))});
++};
++describe('GeoSim through actual shared WASM hosts', () => {
++  it('discovers all named controls and roundtrips inactive choices after manual changes', async () => {
++    const engine = await setup({width:2,height:2,initial_states:1,initialization_periods:2,observation_periods:13,periods_per_tick:7,damage_incidence:'acting_party',defender_threshold:'same_threshold'});
++    expect(engine.model).toBe('geosim');
++    expect(engine.config).toMatchObject({damage_incidence:'acting_party',defender_threshold:'same_threshold',campaign_drop_timing:'each_decision'});
++    expect(geosimParams(engine.schemas.geosim!).every(p=>Boolean(p.help))).toBe(true);
++    expect(engine.schemas.geosim!.map(p=>p.path)).toEqual(expect.arrayContaining(['damage_incidence','defender_threshold','technology_inheritance','completed_export','initial_capacity','war_shadow']));
++    expect(engine.presets.filter(p=>'model' in p.config && p.config.model==='geosim')).toHaveLength(5);
++    expect(engine.presetId).toBeNull();
++    await engine.loadPreset('geosim-paper');
++    expect(engine.presetId).toBe('geosim-paper');
++    await engine.resetModelWith(c => { const g=c as GeosimConfig; g.width=2; g.height=2; g.initial_states=1; g.initialization_periods=2; g.observation_periods=13; g.periods_per_tick=7; g.damage_incidence='acting_party'; g.defender_threshold='same_threshold'; });
++    expect(engine.presetId).toBeNull();
++    expect(engine.config).toMatchObject({damage_incidence:'acting_party',defender_threshold:'same_threshold'});
++    await engine.select(0,0);
++    expect((engine.inspection!.view as GeosimInspection).outcome).toBeNull();
++    await engine.advance(3);
++    await engine.select(0,0);
++    const view=engine.inspection!.view as GeosimInspection;
++    expect(view.outcome!.periods).toBe(15);
++    expect(geosimRows(view)).toContainEqual(['Terminal war census','0 completed · 0 censored · 0 exported · 0 completed awaiting export']);
++    const before=await engine.fingerprint();
++    await engine.advance(1);
++    expect(await engine.fingerprint()).toBe(before);
++    expect((engine.latest as GeosimStats).periods).toBe(15);
++  });
++
++  it('keeps real Compare worlds independent and presents their own source clocks', async () => {
++    const partial={width:2,height:2,initial_states:1,initialization_periods:2,observation_periods:13};
++    const a=await setup({...partial,periods_per_tick:7},1);
++    const b=await setup({...partial,periods_per_tick:1},2);
++    const standalone=await setup({...partial,periods_per_tick:1},2);
++    const pair=new Lockstep([a,b],1);
++    await pair.settled();
++    await pair.advance(2);
++    await standalone.advance(2);
++    expect((a.latest as GeosimStats).periods).toBe(14);
++    expect((b.latest as GeosimStats).periods).toBe(2);
++    expect(readoutText(a,b)).toContain('A 14 periods');
++    expect(readoutText(a,b)).toContain('B 2 periods');
++    expect(await b.fingerprint()).toBe(await standalone.fingerprint());
++    await pair.advance(5);
++    expect(a.finished).toBe(true);
++    const stable=await a.fingerprint();
++    await pair.advance(1);
++    expect(await a.fingerprint()).toBe(stable);
++    a.close();b.close();standalone.close();
++  });
++  it('runs a bounded actual WASM experiment from a captured resolved custom horizon', async () => {
++    const engine=await setup({width:2,height:2,initial_states:1,initialization_periods:2,observation_periods:13,periods_per_tick:7});
++    const captured=captureExperimentBase(engine.presetId,engine.isModified(),engine.baseConfig);
++    const form=defaultForm('geosim',engine.baseConfig);form.seeds=1;form.x.values='0';
++    const sweep=formToSweep(form,captured).sweep!;
++    await engine.resetModelWith(c=>{(c as GeosimConfig).observation_periods=100;});
++    expect(sweep.ticks).toBe(3);
++    expect('config' in sweep.base && (sweep.base.config as GeosimConfig).observation_periods).toBe(13);
++    const points=JSON.parse(sweep_points(JSON.stringify(sweep))) as {index:number}[];
++    expect(points).toHaveLength(1);
++    const run=JSON.parse(run_point(JSON.stringify(sweep),0));
++    expect(run).toMatchObject({point:0,seed:1,value:0});
++    engine.close();
++  });
++  it('renders all five canvas modes without advancing the actual world', async () => {
++    initSync({module:readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm',import.meta.url))});
++    const base=(JSON.parse(presets_json()) as Preset[]).find(p=>p.id==='geosim-paper')!.config;
++    const sim=new Sim(JSON.stringify({...base,width:2,height:2,initial_states:1}),1,null);
++    const before=sim.fingerprint();
++    for(const mode of ['territory','capacity','technology','alert','wars']) {
++      expect(sim.render(mode,'sugar')).toBeGreaterThan(0);
++      expect(sim.frame_len()).toBe((2*6)*(2*6)*4);
++      expect(sim.fingerprint()).toBe(before);
++    }
++    sim.free();
++  });
++  it('presents invalid numerical termination with its attempted and completed clocks', async () => {
++    const engine=await setup({width:2,height:2,initial_states:4,initialization_periods:0,observation_periods:10,resource_adjustment:1,damage_fraction:1,attack_probability:1,superiority_threshold:.1});
++    await engine.advance(10);
++    await engine.select(0,0);
++    const view=engine.inspection!.view as GeosimInspection;
++    expect(view.outcome!.valid).toBe(false);
++    expect(view.outcome!.periods).toBe(3);
++    expect(view.outcome!.attempted_period).toBe(4);
++    expect(finishedNotice(engine.config,engine.tick,engine.latest)).toContain('attempted period 4');
++    expect(geosimRows(view).some(([label,value])=>label==='Capacity' && value.includes('-'))).toBe(true);
++    engine.close();
++  });
++  it('reports an overflowing technology frontier as invalid instead of valid horizon completion', async () => {
++    const engine=await setup({width:2,height:2,initial_states:1,initialization_periods:0,observation_periods:2,distance_threshold:1e308,shock_shift:1e308,shock_probability:1});
++    await engine.advance(2);
++    await engine.select(0,0);
++    const view=engine.inspection!.view as GeosimInspection;
++    expect(view.outcome!.valid).toBe(false);
++    expect(finishedNotice(engine.config,engine.tick,engine.latest)).toContain('Invalid reconstruction');
++    engine.close();
++  });
++  it('excludes an invalid final grouped tick from exploratory completed-run counts', async () => {
++    const engine=await setup({width:2,height:2,initial_states:4,initialization_periods:0,observation_periods:4,periods_per_tick:4,resource_adjustment:1,damage_fraction:1,attack_probability:1,superiority_threshold:.1});
++    const form=defaultForm('geosim',engine.baseConfig);form.seeds=1;form.x.values='20';
++    const sweep=formToSweep(form,captureExperimentBase(null,true,engine.baseConfig)).sweep!;
++    const run=JSON.parse(run_point(JSON.stringify(sweep),0));
++    expect(run.value).toBeNull();
++    const summary=JSON.parse(aggregate(JSON.stringify(sweep),JSON.stringify([run])));
++    expect(summary.rows[0]).toMatchObject({n:0,nan:1});
++    engine.close();
++  });
++  it.each(['geosim-paper','geosim-artifact-2017'])('%s matches native every tick across actual shocks, conquests and cluster completions', async id => {
++    const wasm=initSync({module:readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm',import.meta.url))});
++    const presets=JSON.parse(presets_json()) as Preset[];
++    const config={...presets.find(p=>p.id===id)!.config,width:4,height:4,initial_states:4,initialization_periods:0,observation_periods:120,periods_per_tick:7,attack_probability:1,superiority_threshold:1,victory_threshold:1,war_shadow:2,shock_probability:1,shock_shift:20,event_log:true,event_log_limit:1000} as GeosimConfig;
++    const scratch=mkdtempSync(`${tmpdir()}/geosim-parity-`);
++    try {
++      writeFileSync(`${scratch}/config.json`,JSON.stringify(config));
++      execFileSync(fileURLToPath(new URL('../../target/release/sugarscape',import.meta.url)),['run','--config',`${scratch}/config.json`,'--seed','1','--ticks','18','--fingerprint-trace',`${scratch}/trace.json`,'--series-csv',`${scratch}/series.csv`],{cwd:fileURLToPath(new URL('../../',import.meta.url)),encoding:'utf8'});
++      const trace=JSON.parse(readFileSync(`${scratch}/trace.json`,'utf8')) as {tick:number;fingerprint:string}[];
++      const engine=await Engine.create({config,seed:1},{presets,transport:new InlineTransport(new SimHost(wasmSimModule(wasm.memory)))});
++      const evidence=fileURLToPath(new URL('../../survey/out/geosim-host-parity/',import.meta.url));
++      mkdirSync(evidence,{recursive:true});
++      writeFileSync(`${evidence}/${id}-config.json`,JSON.stringify(config,null,2));
++      writeFileSync(`${evidence}/${id}-native-trace.json`,JSON.stringify(trace,null,2));
++      for (const row of trace) {
++        if(row.tick>0) await engine.advance(1);
++        const actual=await engine.fingerprint();
++        if(actual!==row.fingerprint){
++          await engine.select(0,0);
++          writeFileSync(`${evidence}/${id}-first-divergence-wasm.json`,JSON.stringify({tick:row.tick,native:row.fingerprint,wasm:actual,config:engine.config,latest:engine.latest,inspection:engine.inspection!.view},null,2));
++        }
++        expect(actual,`${id} divergence tick ${row.tick}`).toBe(row.fingerprint);
++      }
++      await engine.select(0,0);
++      const view=engine.inspection!.view as GeosimInspection;
++      const out=view.outcome!;
++      const csv=readFileSync(`${scratch}/series.csv`,'utf8');
++      const [header,...rows]=csv.trim().split('\n').map(row=>row.split(','));
++      const terminal=Object.fromEntries(header.map((key,i)=>[key,Number(rows.at(-1)![i])]));
++      expect(terminal).toMatchObject({periods:120,shocks:out.ledger.shocks,conquests:out.ledger.conquests,completed_wars:out.completed_wars.length});
++      writeFileSync(`${evidence}/${id}-native-series.csv`,csv);
++      expect(out.valid).toBe(true);
++      expect(out.periods).toBe(120);
++      expect(out.ledger.shocks).toBeGreaterThan(0);
++      expect(out.ledger.conquests).toBeGreaterThan(0);
++      expect(out.ledger.collapses).toBeGreaterThan(0);
++      expect(out.completed_wars.length).toBeGreaterThan(0);
++      const dest=fileURLToPath(new URL('../../survey/out/geosim-host-parity/',import.meta.url));
++      mkdirSync(dest,{recursive:true});
++      writeFileSync(`${dest}/${id}-config.json`,JSON.stringify(config,null,2));
++      writeFileSync(`${dest}/${id}-native-trace.json`,JSON.stringify(trace,null,2));
++      writeFileSync(`${dest}/${id}-outcome.json`,JSON.stringify(out,null,2));
++    } finally {rmSync(scratch,{recursive:true,force:true});}
++  });
++});
+diff --git a/web/src/geosim-inspection.test.ts b/web/src/geosim-inspection.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..c504c08a4435fffa1e09ed7e6f20ef2090c19704
+--- /dev/null
++++ b/web/src/geosim-inspection.test.ts
+@@ -0,0 +1,51 @@
++import { readFileSync } from 'node:fs';
++import { initSync, presets_json } from './wasm-pkg/sugarscape.js';
++import { describe, expect, it } from 'vitest';
++import { geosimRows, geosimChartCaption, geosimLegend } from './geosim';
++import type { GeosimConfig, GeosimInspection, GeosimOutcome, GeosimWar, Preset } from './types';
++
++initSync({module:readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm',import.meta.url))});
++const {model:_,...config}=(JSON.parse(presets_json()) as Preset[]).find(p=>p.id==='geosim-paper')!.config as GeosimConfig;
++const war:GeosimWar={id:4,parents:[],start_period:1,end_period:7,last_active_period:5,active_periods:3,elapsed_periods:7,raw_severity:2.5,exported_severity:250,participants:[{state:{capital_cell:1,sovereignty_generation:2},last_fighting_period:5}],end_cause:'shadow_expired_or_participants_retired',java_saturated:false,java_subunit_zero:false,fighting_periods:[1,2,5]};
++const outcome=(patch:Partial<GeosimOutcome>):GeosimOutcome=>({config,seed:1,rng_mode:'portable_pcg64_mcg',periods:7,attempted_period:7,counting_start:1,valid:true,state_available:true,finish_reason:'horizon',invalid_reason:null,completed_wars:[],censored_wars:[],legacy_visible_wars:[],exporter_backlog:[],merges:[],retired_states:[],sovereign_count:1,states:[],cells:[],fronts:[],resource_updates:[],partial_period_fights:[],ledger:{attacks:0,fighting_front_periods:0,mutual_front_periods:0,conquests:0,collapses:0,disconnections:0,stale_claims:0,locked_claims:0,double_successes:0,path_collisions:0,shocks:0,damage:0,measured_damage:0,capacity_increase:0,capacity_decrease:0,clipping:0,retirement_capacity:0,reemergence_capacity:0,recurrence_residual:0},...patch});
++
++const view = {
++  model: 'geosim', cell: { id: 3, owner: { capital_cell: 1, sovereignty_generation: 2 }, last_threshold: 2, next_generation: 0 },
++  state: { id: { capital_cell: 1, sovereignty_generation: 2 }, capacity: null, threshold: 2, alert: true, campaign: null, previous_damage: 0, newly_independent: false, extracted_yield: 0, recurrence_residual: null },
++  members: [1,3], distance: 1, projection: 0.9, resource_recurrence: null, fronts: [], wars: [], period: 4, periods: 4, attempted_period: 5, counting_start: 1,
++  finish_reason: 'invalid', invalidity: 'nonfinite capacity', outcome: null, last_structural_event: {id: 8, period: 4, kind: 'conquest', states: [], cells: [3]}, events: [], events_dropped: 0, agent: null,
++} as GeosimInspection;
++describe('GeoSim inspection presentation', () => {
++  it('distinguishes unavailable capacity from real zero losses and retired generations', () => {
++    const rows = geosimRows(view);
++    expect(rows).toContainEqual(['Government', 'Cell 3 · capital 1 · generation 2']);
++    expect(rows).toContainEqual(['Capacity', 'unavailable · extracted yield 0.000 · previous damage 0.000']);
++    expect(rows).toContainEqual(['Invalid reconstruction', 'nonfinite capacity']);
++  });
++  it('retains structural information independently of disabled event traces', () => {
++    expect(geosimRows(view)).toContainEqual(['Last structural event', '#8 · period 4 · conquest · cells 3']);
++    expect(geosimRows(view)).toContainEqual(['UI event trace', '0 retained · 0 dropped · bounded trace, not the full war census']);
++  });
++  it('keeps completion, censoring, FIFO visibility and backlog separate', () => {
++    const terminal = {...view, outcome: outcome({completed_wars: [{...war,id:1},{...war,id:2}], censored_wars:[{...war,id:3,end_period:null}], legacy_visible_wars:[{...war,id:1}], exporter_backlog:[{...war,id:2}]}) } as GeosimInspection;
++    expect(geosimRows(terminal)).toContainEqual(['Terminal war census', '2 completed · 1 censored · 1 exported · 1 completed awaiting export']);
++  });
++  it('labels each comparison clock and qualifies artifact identity', () => {
++    expect(geosimChartCaption('Wars', [{periods_per_tick:7},{periods_per_tick:1}] as GeosimConfig[])).toBe('Wars · A: 7 source periods/tick · B: 1 source periods/tick');
++    expect(geosimLegend({initialization_periods:2, observation_periods:13, periods_per_tick:7, initial_capacity:'artifact_random_100_1'} as GeosimConfig, 'wars', 14)).toContain('artifact identity Unresolved');
++  });
++});
++
++describe('readable complete terminal census', () => {
++  it('attributes open episodes to invalid termination rather than the horizon', () => {
++    const terminal={...view,outcome:outcome({valid:false,finish_reason:'invalid',censored_wars:[{...war,end_period:null}]})};
++    expect(geosimRows(terminal).find(([label])=>label==='Censored war #4')?.[1]).toContain('open at invalid');
++  });
++  it('presents all completed and censored records as damage and period summaries', () => {
++    const terminal={...view,outcome:outcome({completed_wars:[war],censored_wars:[{...war,id:5,end_period:null}],exporter_backlog:[war]})} as GeosimInspection;
++    const rows=geosimRows(terminal);
++    expect(rows.find(([label])=>label==='Completed war #4')?.[1]).toContain('raw damage 2.500 · exported 250.000');
++    expect(rows.find(([label])=>label==='Censored war #5')?.[1]).toContain('open at horizon');
++    expect(rows.find(([label])=>label==='Completed war #4')?.[1]).toContain('end cause shadow_expired_or_participants_retired');
++  });
++});
+diff --git a/web/src/geosim.test.ts b/web/src/geosim.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..0153194972390f485878fea26c4f175d5172029e
+--- /dev/null
++++ b/web/src/geosim.test.ts
+@@ -0,0 +1,60 @@
++import { describe, expect, it } from 'vitest';
++import { modelOf, ticksLeft, COLOR_MODES, finishesUnpredictably } from './models';
++import { defaultForm, formToSweep } from './experiments/form';
++import { finishedNotice } from './engine';
++import { readoutText } from './valley';
++import { COMPARE_PRESETS, comparePresetStates } from './compare-presets';
++import type { ModelConfig, ModelStats, Preset } from './types';
++const config = { model: 'geosim', initialization_periods: 2, observation_periods: 13, periods_per_tick: 7 } as unknown as ModelConfig;
++describe('GeoSim host contracts', () => {
++  it('recognizes GeoSim and counts its partial final source tick', () => {
++    expect([modelOf(config), ticksLeft(config, 0), ticksLeft(config, 2), ticksLeft(config, 3), finishesUnpredictably(config)]).toEqual(['geosim', 3, 1, 0, false]);
++  });
++  it('uses captured custom horizons and batching for experiment defaults', () => {
++    const form = defaultForm('geosim', config);
++    expect(form.ticks).toBe(3);
++    expect(form.metric).toMatchObject({ kind: 'final', series: 'completed_wars' });
++    expect(formToSweep(form, { config }).sweep?.base).toEqual({ config });
++  });
++  it('presents actual completed source periods independently from display ticks', () => {
++    expect(readoutText({ config, tick: 3, population: 1, latest: { periods: 15 } } as never, null)).toBe('t = 3 · 15 periods · 1 sovereign governments');
++    expect(finishedNotice(config, 3, { periods: 15, finish_reason: 'horizon', invalidity: null } as unknown as ModelStats)).toContain('period 15');
++  });
++  it('reports attempted invalid periods without claiming horizon completion', () => {
++    const text = finishedNotice(config, 1, { periods: 4, attempted_period: 5, finish_reason: 'invalid', invalidity: 'nonfinite capacity' } as unknown as ModelStats);
++    expect(text).toContain('nonfinite capacity');
++    expect(text).toContain('5');
++  });
++  it('offers all five core canvas modes', () => {
++    expect(COLOR_MODES.geosim.map(([mode]) => mode)).toEqual(['territory', 'capacity', 'technology', 'alert', 'wars']);
++  });
++  it('compares technology treatments using independent captured configs', () => {
++    const presets = ['geosim-paper', 'geosim-no-technology'].map(id => ({ id, title: id, name: id, source: 'Cederman2003', description: '', config: { ...config, shock_shift: id === 'geosim-paper' ? 20 : 0 } })) as Preset[];
++    const pair = COMPARE_PRESETS.find(p => p.id === 'geosim-technology');
++    expect(pair).toBeDefined();
++    expect(comparePresetStates(presets, pair!, 17)?.b.config).toMatchObject({ shock_shift: 0, periods_per_tick: 7 });
++  });
++});
++
++describe('GeoSim attributed control metadata', () => {
++  it('retains alternative choices and validation bounds when adding source guidance', async () => {
++    const {geosimParams}=await import('./geosim');
++    const params=[{path:'defender_threshold',label:'Defender threshold',kind:'choice',group:'Readings',apply:'reset',choices:[{value:'reciprocal',label:'reciprocal'},{value:'same_threshold',label:'same threshold'}]}, {path:'war_shadow',label:'War shadow',kind:'integer',group:'Model',apply:'reset',min:0,max:10000}] as import('./types').Param[];
++    const decorated=geosimParams(params);
++    expect(decorated[0].choices).toEqual(params[0].choices);
++    expect(decorated[0].help).toContain('p.148');
++    expect(decorated[1]).toMatchObject({min:0,max:10000});
++    expect(decorated[1].help).toContain('source periods');
++  });
++});
++
++describe('captured experiment base', () => {
++  it('captures resolved custom config rather than following subsequent control edits', async () => {
++    const {captureExperimentBase}=await import('./experiments/form');
++    const original=structuredClone(config);
++    const captured=captureExperimentBase(null,true,original);
++    (original as unknown as {observation_periods:number}).observation_periods=100;
++    expect(captured).toEqual({config});
++    expect(captureExperimentBase('geosim-paper',false,original)).toEqual({preset:'geosim-paper'});
++  });
++});
+diff --git a/web/src/schema-form.test.ts b/web/src/schema-form.test.ts
+index c9e169fe9af421516b0ccaf4b0593571ca0fa146..2975e051b84eb3199b440d57446c3b4544eb45c5 100644
+--- a/web/src/schema-form.test.ts
++++ b/web/src/schema-form.test.ts
+@@ -1,5 +1,5 @@
+ import { describe, expect, it } from 'vitest';
+-import { describedBy, groupParams, paramEdit, paramInput, paramShown, paramSlider } from './schema-form';
++import { describedBy, groupParams, paramEdit, paramInput, paramShown, paramSlider, schemaControlLabel } from './schema-form';
+ import type { AnasaziConfig, DpdConfig, EthnoConfig, ImageConfig, ModelConfig, Param, RingConfig, SchellingConfig } from './types';
+ 
+ const ring = (): RingConfig => ({
+@@ -14,6 +14,14 @@ const ring = (): RingConfig => ({
+ const param = (p: Partial<Param> & Pick<Param, 'path' | 'kind'>): Param => ({ label: p.path, apply: 'reset', group: 'Setup', ...p });
+ 
+ describe('the schema form', () => {
++  it('names a GeoSim choice and distinguishes its numeric slider from its number field', () => {
++    expect(schemaControlLabel('Defender threshold')).toBe('Defender threshold');
++    expect([schemaControlLabel('Shock shift', 'slider'), schemaControlLabel('Shock shift', 'number')]).toEqual([
++      'Shock shift slider',
++      'Shock shift number',
++    ]);
++  });
++
+   it('groups params in the order their groups first appear', () => {
+     const params = [param({ path: 'a', kind: 'integer' }), param({ path: 'b', kind: 'bool', group: 'Other' }), param({ path: 'c', kind: 'integer' })];
+     expect(groupParams(params).map((s) => [s.group, s.params.map((p) => p.path)])).toEqual([

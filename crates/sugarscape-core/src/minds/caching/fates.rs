@@ -22,10 +22,12 @@
 //!   log; never by a config, the app or a sweep). Every other world leaves
 //!   the log and its index empty and unallocated; the theft statistics come
 //!   from the tick events, not from here.
-//! - **Theft only.** Even then, records open only while `theft.is_on()`
-//!   (`find` or `cheaters` above 0): every other world, Minds 5's caching
-//!   worlds included, leaves the log empty. Records already open keep
-//!   closing if theft is turned off.
+//! - **Theft only.** Even then, records open only while
+//!   `Config::pilfering_on()`: theft (`find` or `cheaters` above 0) or
+//!   Minds 8's watching, whose raids are pilfers. Every other world, Minds
+//!   5's caching worlds included, leaves the log empty. Records already
+//!   open keep closing if theft is turned off. (Below, "theft" means
+//!   either.)
 //! - **Backfill.** `find` is live, so a cache can hold sugar the log never
 //!   saw (buried while theft was off). While theft is on, every touch of a
 //!   cache (a burial, a dig, a pilfer, its owner's death) first compares the
@@ -53,6 +55,7 @@
 use std::collections::{BTreeMap, VecDeque};
 
 use crate::agent::AgentId;
+use crate::minds::spatial_hoarding::state::StoreKind;
 use crate::world::World;
 
 /// Most records the log holds before it freezes (`World.cache_log_full`).
@@ -80,6 +83,8 @@ pub struct CacheRecord {
     pub owner: AgentId,
     /// Site index.
     pub site: u32,
+    /// Scatter and larder stock at the same site have independent records.
+    pub kind: StoreKind,
     pub amount: f64,
     /// The tick it was buried (for a backfill, the cache's `cache_since`).
     pub buried: u64,
@@ -87,9 +92,9 @@ pub struct CacheRecord {
     pub fate: Option<(u64, Fate)>,
 }
 
-/// Open records per (owner, site), oldest first, as indices into
+/// Open records per (owner, site, kind), oldest first, as indices into
 /// `World.cache_log`.
-pub(crate) type OpenRecords = BTreeMap<(AgentId, u32), VecDeque<usize>>;
+pub(crate) type OpenRecords = BTreeMap<(AgentId, u32, StoreKind), VecDeque<usize>>;
 
 /// Whether the log would pass the cap with `more` records; if so it
 /// freezes.
@@ -102,51 +107,71 @@ fn frozen_by(world: &mut World, more: usize) -> bool {
 }
 
 /// Pushes an open record (the caller has checked the cap).
-fn push(world: &mut World, owner: AgentId, site: u32, amount: f64, buried: u64) {
+fn push(world: &mut World, owner: AgentId, site: u32, kind: StoreKind, amount: f64, buried: u64) {
     let i = world.cache_log.len();
     world.cache_log.push(CacheRecord {
         owner,
         site,
+        kind,
         amount,
         buried,
         fate: None,
     });
     world
         .cache_open
-        .entry((owner, site))
+        .entry((owner, site, kind))
         .or_default()
         .push_back(i);
 }
 
 /// Pushes a backfill record when `cache` (the cache as it stood before this
 /// touch) holds more than `owner`'s open records at `site`.
-fn backfill(world: &mut World, owner: AgentId, site: u32, cache: f64, since: u64) {
+fn backfill(world: &mut World, owner: AgentId, site: u32, kind: StoreKind, cache: f64, since: u64) {
     let logged: f64 = world
         .cache_open
-        .get(&(owner, site))
+        .get(&(owner, site, kind))
         .map_or(0.0, |q| q.iter().map(|&i| world.cache_log[i].amount).sum());
     let gap = cache - logged;
     if gap > BACKFILL_EPS * cache.max(1.0) {
-        push(world, owner, site, gap, since);
+        push(world, owner, site, kind, gap, since);
     }
 }
 
 /// Opens a record for `amount` just buried by `owner` at `site` (under
 /// theft), after backfilling what the cache held before it.
 pub(crate) fn open(world: &mut World, owner: AgentId, site: u32, amount: f64) {
+    let a = world.agent(owner).expect("live agent");
+    let before = a.caches.get(&site).map_or(0.0, |c| c - amount);
+    let since = a.cache_since.get(&site).copied().unwrap_or(world.tick);
+    open_store(
+        world,
+        owner,
+        site,
+        StoreKind::Scatter,
+        amount,
+        (before, since),
+    );
+}
+
+/// `before` is stock and first-burial tick before the new burial.
+pub(crate) fn open_store(
+    world: &mut World,
+    owner: AgentId,
+    site: u32,
+    kind: StoreKind,
+    amount: f64,
+    before: (f64, u64),
+) {
     if !world.record_fates
         || world.cache_log_full
-        || !world.config.theft.is_on()
+        || !world.config.pilfering_on()
         || frozen_by(world, 2)
     {
         return;
     }
     let now = world.tick;
-    let a = world.agent(owner).expect("live agent");
-    let before = a.caches.get(&site).map_or(0.0, |c| c - amount);
-    let since = a.cache_since.get(&site).copied().unwrap_or(now);
-    backfill(world, owner, site, before, since);
-    push(world, owner, site, amount, now);
+    backfill(world, owner, site, kind, before.0, before.1);
+    push(world, owner, site, kind, amount, now);
 }
 
 /// Closes `amount` of `owner`'s records at `site`, oldest first, as `fate`.
@@ -154,10 +179,34 @@ pub(crate) fn open(world: &mut World, owner: AgentId, site: u32, amount: f64) {
 /// cache's `cache_since` is removed (a backfill reads it): if the owner no
 /// longer has a cache there, every open record there closes.
 fn close(world: &mut World, owner: AgentId, site: u32, amount: f64, fate: Fate) {
+    let a = world.agent(owner).expect("live agent");
+    let after = a.caches.get(&site).copied().unwrap_or(0.0);
+    let since = a.cache_since.get(&site).copied().unwrap_or(world.tick);
+    close_store(
+        world,
+        owner,
+        site,
+        StoreKind::Scatter,
+        amount,
+        fate,
+        (after, since),
+    );
+}
+
+/// `after` retains the pre-removal first-burial tick even when stock is empty.
+pub(crate) fn close_store(
+    world: &mut World,
+    owner: AgentId,
+    site: u32,
+    kind: StoreKind,
+    amount: f64,
+    fate: Fate,
+    after: (f64, u64),
+) {
     if !world.record_fates || world.cache_log_full {
         return;
     }
-    let theft = world.config.theft.is_on();
+    let theft = world.config.pilfering_on();
     if !theft && world.cache_open.is_empty() {
         return;
     }
@@ -166,20 +215,11 @@ fn close(world: &mut World, owner: AgentId, site: u32, amount: f64, fate: Fate) 
         return;
     }
     let now = world.tick;
-    let a = world.agent(owner).expect("live agent");
-    let left_in_cache = a.caches.get(&site).copied();
-    let emptied = left_in_cache.is_none();
+    let emptied = after.0 <= 0.0;
     if theft {
-        let since = a.cache_since.get(&site).copied().unwrap_or(now);
-        backfill(
-            world,
-            owner,
-            site,
-            left_in_cache.unwrap_or(0.0) + amount,
-            since,
-        );
+        backfill(world, owner, site, kind, after.0 + amount, after.1);
     }
-    let Some(queue) = world.cache_open.get_mut(&(owner, site)) else {
+    let Some(queue) = world.cache_open.get_mut(&(owner, site, kind)) else {
         return;
     };
     let mut left = amount;
@@ -198,7 +238,7 @@ fn close(world: &mut World, owner: AgentId, site: u32, amount: f64, fate: Fate) 
         }
     }
     if queue.is_empty() {
-        world.cache_open.remove(&(owner, site));
+        world.cache_open.remove(&(owner, site, kind));
     }
     if let Some(i) = split {
         let r = &mut world.cache_log[i];
@@ -242,21 +282,22 @@ pub(crate) fn close_lost(
         return;
     }
     let now = world.tick;
-    if world.config.theft.is_on() && !caches.is_empty() {
+    if world.config.pilfering_on() && !caches.is_empty() {
         if frozen_by(world, caches.len()) {
             return;
         }
         for (&site, &amount) in caches {
             let buried = since.get(&site).copied().unwrap_or(now);
-            backfill(world, owner, site, amount, buried);
+            backfill(world, owner, site, StoreKind::Scatter, amount, buried);
         }
     }
     if world.cache_open.is_empty() {
         return;
     }
-    let keys: Vec<(AgentId, u32)> = world
+    let keys: Vec<(AgentId, u32, StoreKind)> = world
         .cache_open
-        .range((owner, 0)..=(owner, u32::MAX))
+        .range((owner, 0, StoreKind::Scatter)..=(owner, u32::MAX, StoreKind::Larder))
+        .filter(|((_, _, kind), _)| *kind == StoreKind::Scatter)
         .map(|(&k, _)| k)
         .collect();
     for k in keys {
@@ -264,6 +305,22 @@ pub(crate) fn close_lost(
             world.cache_log[i].fate = Some((now, Fate::Lost));
         }
     }
+}
+
+/// Death uses supplied stock because `World::remove` has already detached the owner.
+pub(crate) fn lose_larder(world: &mut World, owner: AgentId, site: u32, amount: f64, since: u64) {
+    if amount <= 0.0 {
+        return;
+    }
+    close_store(
+        world,
+        owner,
+        site,
+        StoreKind::Larder,
+        amount,
+        Fate::Lost,
+        (0.0, since),
+    );
 }
 
 #[cfg(test)]
@@ -321,6 +378,7 @@ mod tests {
         assert_eq!(
             w.cache_log[0],
             CacheRecord {
+                kind: StoreKind::Scatter,
                 owner: id,
                 site: here,
                 amount: 3.0,
@@ -337,6 +395,7 @@ mod tests {
         assert_eq!(
             w.cache_log[2],
             CacheRecord {
+                kind: StoreKind::Scatter,
                 owner: id,
                 site: here,
                 amount: 1.0,
@@ -545,7 +604,7 @@ mod tests {
             assert!((taken - pilfered).abs() <= tol, "{t}: pilfered");
             // Each (owner, site) with open records holds their sum.
             let (mut open, mut held) = (0.0, 0.0);
-            for (&(owner, site), q) in &w.cache_open {
+            for (&(owner, site, _), q) in &w.cache_open {
                 let o: f64 = q.iter().map(|&i| w.cache_log[i].amount).sum();
                 let cache = w.agent(owner).expect("live owner").caches[&site];
                 assert!((o - cache).abs() <= tol, "{t}: ({owner}, {site})");
@@ -557,7 +616,7 @@ mod tests {
             let on = on_since.unwrap();
             for a in w.agents() {
                 for (&site, &amount) in &a.caches {
-                    if !w.cache_open.contains_key(&(a.id, site)) {
+                    if !w.cache_open.contains_key(&(a.id, site, StoreKind::Scatter)) {
                         let since = a.cache_since[&site];
                         assert!(since < on || amount <= tol, "{t}: unlogged cache");
                     }

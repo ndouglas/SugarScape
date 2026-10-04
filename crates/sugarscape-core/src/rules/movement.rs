@@ -166,6 +166,14 @@ pub(crate) fn candidates(world: &World, id: AgentId) -> Vec<(Pos, u32, f64)> {
 pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u32, f64)>, usize) {
     let a = world.agent(id).expect("live agent");
     let (pos, vision) = (a.pos, a.vision);
+    // Minds 8b: a forgoing scrounger's list is staying put (worth 0) and
+    // its seen caches, skipped and merged as `join_seen` always does.
+    if crate::minds::caching::watching::forgoes(world, id) {
+        let (mut out, mut start) = (vec![(pos, 0, 0.0)], 1);
+        crate::minds::caching::watching::join_seen(world, id, &mut out, &mut start);
+        crate::minds::spatial_hoarding::watching::join_larders(world, id, &mut out, &mut start);
+        return (out, start);
+    }
     let welfare = Welfare::new(world, a);
     let config = &world.config;
     let now = world.tick;
@@ -201,6 +209,8 @@ pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u
     let mut start = out.len();
     if !known {
         crate::minds::caching::join_caches(world, id, &mut out, &mut start);
+        crate::minds::caching::watching::join_seen(world, id, &mut out, &mut start);
+        crate::minds::spatial_hoarding::watching::join_larders(world, id, &mut out, &mut start);
         return (out, start);
     }
     let torus = world.torus;
@@ -232,6 +242,8 @@ pub(crate) fn candidates_with_memory(world: &World, id: AgentId) -> (Vec<(Pos, u
         out.push((q, lattice_distance(torus, pos, q), welfare.of(&levels)));
     }
     crate::minds::caching::join_caches(world, id, &mut out, &mut start);
+    crate::minds::caching::watching::join_seen(world, id, &mut out, &mut start);
+    crate::minds::spatial_hoarding::watching::join_larders(world, id, &mut out, &mut start);
     (out, start)
 }
 
@@ -248,15 +260,22 @@ pub(crate) fn lattice_distance(torus: Torus, a: Pos, b: Pos) -> u32 {
 fn true_value(world: &World, id: AgentId, p: Pos) -> f64 {
     let value = site_value(world, id, p);
     // Minds 5: a hungry agent's own cache counts as its candidate did.
-    match crate::minds::caching::cache_value(world, id, p) {
+    // Minds 8: so do the caches it saw buried there, at what is truly
+    // left of them now (not what it believes), so an emptied one is stale;
+    // under `value: room` capped as the belief was.
+    let value = match crate::minds::caching::cache_value(world, id, p) {
         Some(cache) => value.max(cache),
+        None => value,
+    };
+    match crate::minds::caching::watching::seen_truth(world, id, p) {
+        Some(seen) => value.max(seen),
         None => value,
     }
 }
 
 /// `true_value` without any cache: rule M's welfare of `p`'s counted levels
 /// (pollution-discounted), plus `truffles.value` sugar if its spot is ripe.
-fn site_value(world: &World, id: AgentId, p: Pos) -> f64 {
+pub(crate) fn site_value(world: &World, id: AgentId, p: Pos) -> f64 {
     let a = world.agent(id).expect("live agent");
     let mut levels = counted_levels(&world.config, world.site(p));
     if world.truffle(p) == Some(true) {
@@ -333,8 +352,17 @@ pub(crate) fn record_choice(
 /// - **The dig wins.** If its own cache here would be dug, it digs and draws
 ///   nothing. Under `owner_memory: off` it never digs this way (it doesn't
 ///   know where its caches are).
+///
+/// Minds 8 (`minds::caching::watching`), under `watching.on`:
+/// - **Raids.** An agent that doesn't dig here and remembers caches it saw
+///   buried here takes from the first still there, in owner-id order, with
+///   no draw, as a pilfer; only if it took nothing does it go on to
+///   stumbling. Either way it forgets what it saw buried here (a dig too).
+///   Under `raid_when: hungry` a fed agent (at or above R / 2) doesn't
+///   raid, and keeps what it saw here. Under the survey probe
+///   `World::probe_raid_harvests` a raid that took something also harvests
+///   the site as below, and draws no stumble.
 pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harvest {
-    let n = world.config.goods.len();
     let a = world.agent(id).expect("live agent");
     let (tags, mut social, remembers) = (a.tags, a.social, a.remembers);
     let capacity = world.config.caching.capacity;
@@ -354,11 +382,15 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
         }
     };
     let held = a.holdings[0];
+    // Minds 8b: a forgoing scrounger gathers nothing on a tick it doesn't
+    // raid: staying put, a walking step, or a wasted raid (decided before
+    // the move, while its entries are as they were at choosing).
+    let forgoes = crate::minds::caching::watching::forgoes(world, id);
     // What counts against the limit: holdings, or in a central-place world
     // the trip's load alone (the limit caps a load, not load plus
     // provisions).
     let central = world.config.central.enabled;
-    let used = if central { a.load_trip } else { held };
+    let mut used = if central { a.load_trip } else { held };
     world.move_agent(id, target);
     social.moved(world, Seen::at(world, target), tags);
     let mut harvest = Harvest::default();
@@ -372,12 +404,70 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
             room(used)
         };
         harvest.dug = crate::minds::caching::dig(world, id, site_index, room);
+        // Minds 8: an arrival forgets what it saw buried here, dig or not.
+        if world.config.watching.on {
+            crate::minds::caching::watching::forget(world, id, site_index);
+        }
         let a = world.agent_mut(id).expect("live agent");
         a.holdings[0] += harvest.dug;
         a.social = social;
+        if world.config.spatial_hoarding.enabled {
+            crate::minds::spatial_hoarding::watching::skip_scatter_draws(world, id, target);
+        }
         return harvest;
     }
-    if world.config.theft.find > 0.0 {
+    // Minds 9 own-larder recovery seam. Task 4 extends the remaining arrival
+    // sequence here; scatter digging above has already won this action.
+    if world.config.spatial_hoarding.enabled {
+        harvest.dug = crate::minds::spatial_hoarding::recover_own(world, id);
+        if harvest.dug > 0.0 {
+            crate::minds::spatial_hoarding::watching::skip_scatter_draws(world, id, target);
+            world.agent_mut(id).expect("live agent").social = social;
+            return harvest;
+        }
+        let taken = crate::minds::spatial_hoarding::watching::raid(world, id, target);
+        if taken > 0.0 {
+            harvest.pilfered = taken;
+            crate::minds::spatial_hoarding::watching::skip_scatter_draws(world, id, target);
+            world.agent_mut(id).expect("live agent").social = social;
+            return harvest;
+        }
+    }
+    if world.config.watching.on {
+        if let Some(taken) =
+            crate::minds::caching::watching::raid(world, id, site_index, room(used))
+        {
+            if !world.probe_raid_harvests {
+                if world.config.spatial_hoarding.enabled {
+                    crate::minds::spatial_hoarding::watching::skip_scatter_draws(world, id, target);
+                }
+                world.agent_mut(id).expect("live agent").social = social;
+                return taken;
+            }
+            // The survey probe: the raid doesn't replace the harvest. Kept
+            // loot now counts against the limit (watching never runs in a
+            // central-place world, so that is the holdings).
+            harvest.pilfered = taken.pilfered;
+            used = world.agent(id).expect("live agent").holdings[0];
+        }
+    }
+    if forgoes && harvest.pilfered == 0.0 {
+        world.agent_mut(id).expect("live agent").social = social;
+        return harvest;
+    }
+    if world.config.spatial_hoarding.enabled
+        && !world.spatial_probe.scatter_first
+        && harvest.pilfered == 0.0
+    {
+        let taken = crate::minds::spatial_hoarding::watching::stumble(world, id, target);
+        if taken > 0.0 {
+            harvest.pilfered = taken;
+            crate::minds::spatial_hoarding::watching::skip_scatter_draws(world, id, target);
+            world.agent_mut(id).expect("live agent").social = social;
+            return harvest;
+        }
+    }
+    if world.config.theft.find > 0.0 && harvest.pilfered == 0.0 {
         if let Some(taken) =
             crate::minds::caching::theft::stumble(world, id, site_index, room(used))
         {
@@ -385,6 +475,41 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
             return taken;
         }
     }
+    if world.config.spatial_hoarding.enabled
+        && world.spatial_probe.scatter_first
+        && harvest.pilfered == 0.0
+    {
+        let taken = crate::minds::spatial_hoarding::watching::stumble(world, id, target);
+        if taken > 0.0 {
+            harvest.pilfered = taken;
+            world.agent_mut(id).expect("live agent").social = social;
+            return harvest;
+        }
+    }
+    let gathered = gather_site(world, id, target, used, remembers);
+    world.agent_mut(id).expect("live agent").social = social;
+    harvest.gathered = gathered.gathered;
+    harvest
+}
+
+/// Gather the current site without movement or cache actions (also used by the guard probe).
+pub(crate) fn gather_site(
+    world: &mut World,
+    id: AgentId,
+    target: Pos,
+    used: f64,
+    remembers: bool,
+) -> Harvest {
+    let n = world.config.goods.len();
+    let capacity = world.config.caching.capacity;
+    let room = |held: f64| {
+        if capacity > 0 {
+            (f64::from(capacity) - held).max(0.0)
+        } else {
+            f64::INFINITY
+        }
+    };
+    let mut harvest = Harvest::default();
     let site = world.site_mut(target);
     for (got, level) in harvest
         .gathered
@@ -427,18 +552,38 @@ pub(crate) fn go_and_gather(world: &mut World, id: AgentId, target: Pos) -> Harv
     for (have, got) in a.holdings.iter_mut().zip(&harvest.gathered).take(n) {
         *have += got;
     }
-    a.social = social;
+    crate::minds::protection::ledger::update(world, id, |l| l.harvest(harvest.gathered[0]));
+    if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+        a.harvest += harvest.gathered[0];
+    }
+    crate::minds::protection::ledger::reconcile_world(world);
     harvest
 }
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) enum WalkOutcome {
+    Arrived,
+    Advanced,
+    Blocked,
+    Unreachable,
+}
 
-/// Reaches `target` by the configured movement, then gathers where the
-/// agent stops. `jump` (rule M) goes there in one tick. `walk` takes `speed`
-/// steps along an A* path on the 4-way torus (walls and occupied sites
-/// impassable, except the target) and stays when there is none within
-/// `WALK_LIMIT`. A remembered target (Minds 3) may be occupied: the walker
-/// then stops one site short of it on the path, or stays when that's where
-/// it stands. Records the agent's plan; draws nothing.
-pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
+/// Advance through the ordinary path planner without touching any food.
+pub(crate) fn walk_without_gather(world: &mut World, id: AgentId, target: Pos) -> WalkOutcome {
+    let before = world.agent(id).expect("live agent").pos;
+    let (stop, unreachable) = walking_stop(world, id, target);
+    world.move_agent(id, stop);
+    if unreachable {
+        WalkOutcome::Unreachable
+    } else if stop == target {
+        WalkOutcome::Arrived
+    } else if stop == before {
+        WalkOutcome::Blocked
+    } else {
+        WalkOutcome::Advanced
+    }
+}
+
+fn walking_stop(world: &mut World, id: AgentId, target: Pos) -> (Pos, bool) {
     let pos = world.agent(id).expect("live agent").pos;
     let m = world.config.movement;
     if m.mode == MoveMode::Jump || target == pos {
@@ -447,7 +592,7 @@ pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
             path: Vec::new(),
             walked: m.mode == MoveMode::Walk,
         };
-        return go_and_gather(world, id, target);
+        return (target, false);
     }
     let torus = world.torus;
     // Walls split the non-wall sites into components labeled at build. A
@@ -460,6 +605,7 @@ pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
         let grid = TorusGrid::new(torus, |q| q == target || !world.is_occupied(q));
         astar(&grid, torus.index(pos), torus.index(target), WALK_LIMIT)
     };
+    let unreachable = found.is_none();
     let (stop, rest) = match found {
         Some(s) => {
             let mut steps = (m.speed as usize).min(s.path.len() - 1);
@@ -482,7 +628,33 @@ pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
         path: rest,
         walked: true,
     };
-    go_and_gather(world, id, stop)
+    (stop, unreachable)
+}
+
+/// Reaches `target` by the configured movement, then gathers where the
+/// agent stops. `jump` (rule M) goes there in one tick. `walk` takes `speed`
+/// steps along an A* path on the 4-way torus (walls and occupied sites
+/// impassable, except the target) and stays when there is none within
+/// `WALK_LIMIT`. A remembered target (Minds 3) may be occupied: the walker
+/// then stops one site short of it on the path, or stays when that's where
+/// it stands. Records the agent's plan; draws nothing. Minds 8: a walker
+/// that stays for want of a path forgets the caches it saw buried at the
+/// target (`watching::give_up`, under `watching.on`).
+pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
+    if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
+        a.target = Some(target);
+    }
+    let torus = world.torus;
+    let (stop, unreachable) = walking_stop(world, id, target);
+    let harvest = go_and_gather(world, id, stop);
+    // Minds 8: a seen cache it can't reach is given up, after the gather so
+    // a forgoing scrounger staying put is judged as it chose (the gather
+    // touches only entries where it stands, never the target's).
+    if unreachable && world.config.watching.on {
+        let site = torus.index(target) as u32;
+        crate::minds::caching::watching::give_up(world, id, site);
+    }
+    harvest
 }
 
 #[cfg(test)]

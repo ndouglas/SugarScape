@@ -165,7 +165,15 @@ fn u_stat(a: &[f64], b: &[f64]) -> f64 {
     a.iter()
         .map(|x| {
             b.iter()
-                .map(|y| if x > y { 1.0 } else if x == y { 0.5 } else { 0.0 })
+                .map(|y| {
+                    if x > y {
+                        1.0
+                    } else if x == y {
+                        0.5
+                    } else {
+                        0.0
+                    }
+                })
                 .sum::<f64>()
         })
         .sum()
@@ -245,8 +253,8 @@ pub fn tost(a: &[f64], b: &[f64], margin: f64) -> f64 {
     if se == 0.0 {
         return if d.abs() < margin { 0.0 } else { 1.0 };
     }
-    let df = (va + vb).powi(2)
-        / (va * va / (a.len() as f64 - 1.0) + vb * vb / (b.len() as f64 - 1.0));
+    let df =
+        (va + vb).powi(2) / (va * va / (a.len() as f64 - 1.0) + vb * vb / (b.len() as f64 - 1.0));
     let p_low = 1.0 - student_t_cdf((d + margin) / se, df);
     let p_high = student_t_cdf((d - margin) / se, df);
     p_low.max(p_high)
@@ -314,5 +322,117 @@ mod tests {
     fn tost_with_zero_variance() {
         assert_eq!(tost(&[3.0; 5], &[4.0; 5], 2.0), 0.0);
         assert_eq!(tost(&[3.0; 5], &[6.0; 5], 2.0), 1.0);
+    }
+}
+
+/// A-B differences matched strictly by run seed; generations are never samples.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct PairedSummary {
+    pub n: usize,
+    pub mean: f64,
+    pub ci95: Option<(f64, f64)>,
+    pub positive: usize,
+    pub zero: usize,
+    pub negative: usize,
+}
+
+pub fn paired_summary(
+    a: &std::collections::BTreeMap<u64, f64>,
+    b: &std::collections::BTreeMap<u64, f64>,
+) -> Result<PairedSummary, String> {
+    if a.is_empty() || !a.keys().eq(b.keys()) {
+        return Err("paired inputs need nonempty identical run-seed sets".into());
+    }
+    let mut differences = Vec::with_capacity(a.len());
+    for (seed, x) in a {
+        let y = b[seed];
+        if !x.is_finite() || !y.is_finite() || !(x - y).is_finite() {
+            return Err(format!("nonfinite paired input/difference at seed {seed}"));
+        }
+        differences.push(x - y);
+    }
+    let n = differences.len();
+    let m = mean(&differences);
+    let ci95 = if n == 1 {
+        None
+    } else {
+        let se = (variance(&differences) / n as f64).sqrt();
+        let half = student_t_975((n - 1) as f64)? * se;
+        if !m.is_finite() || !half.is_finite() {
+            return Err("nonfinite paired summary".into());
+        }
+        let bounds = (m - half, m + half);
+        if !bounds.0.is_finite() || !bounds.1.is_finite() {
+            return Err("nonfinite paired interval".into());
+        }
+        Some(bounds)
+    };
+    Ok(PairedSummary {
+        n,
+        mean: m,
+        ci95,
+        positive: differences.iter().filter(|x| **x > 0.0).count(),
+        zero: differences.iter().filter(|x| **x == 0.0).count(),
+        negative: differences.iter().filter(|x| **x < 0.0).count(),
+    })
+}
+
+/// Bounded inversion of the existing Student t CDF, not a normal approximation.
+fn student_t_975(df: f64) -> Result<f64, String> {
+    let (mut lo, mut hi) = (0.0, 1.0);
+    for _ in 0..32 {
+        if student_t_cdf(hi, df) >= 0.975 {
+            for _ in 0..80 {
+                let mid = (lo + hi) / 2.0;
+                if student_t_cdf(mid, df) < 0.975 {
+                    lo = mid;
+                } else {
+                    hi = mid;
+                }
+            }
+            return Ok((lo + hi) / 2.0);
+        }
+        hi *= 2.0;
+    }
+    Err("unable to bracket Student t .975 quantile".into())
+}
+
+#[cfg(test)]
+mod minds9_tests {
+    use super::*;
+    #[test]
+    fn minds9_identical_pairs_have_zero_width_interval() {
+        let a = [(1, 2.0), (2, 3.0)].into_iter().collect();
+        let s = paired_summary(&a, &a).unwrap();
+        assert_eq!(s.ci95, Some((0.0, 0.0)));
+    }
+    #[test]
+    fn minds9_known_differences_use_student_t_df_two() {
+        let a = [(1, 1.0), (2, 2.0), (3, 3.0)].into_iter().collect();
+        let b = [(1, 0.0), (2, 0.0), (3, 0.0)].into_iter().collect();
+        let s = paired_summary(&a, &b).unwrap();
+        assert_eq!(
+            (s.n, s.mean, s.positive, s.zero, s.negative),
+            (3, 2.0, 3, 0, 0)
+        );
+        let (lo, hi) = s.ci95.unwrap();
+        assert!((lo - -0.4841377117).abs() < 1e-8);
+        assert!((hi - 4.4841377117).abs() < 1e-8);
+    }
+    #[test]
+    fn minds9_one_pair_has_no_interval() {
+        let a = [(1, 2.0)].into_iter().collect();
+        assert_eq!(paired_summary(&a, &a).unwrap().ci95, None);
+    }
+    #[test]
+    fn minds9_missing_partners_empty_and_nonfinite_are_errors() {
+        let a = [(1, 2.0)].into_iter().collect();
+        let b = [(2, 2.0)].into_iter().collect();
+        assert!(paired_summary(&a, &b).is_err());
+        assert!(paired_summary(&Default::default(), &Default::default()).is_err());
+        for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            let bad = [(1, value)].into_iter().collect();
+            assert!(paired_summary(&a, &bad).is_err());
+        }
     }
 }

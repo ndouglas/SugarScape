@@ -8,20 +8,25 @@ use serde::{Serialize, Serializer};
 use crate::agreement::{AgreementConfig, AgreementWorld};
 use crate::anasazi::{AnasaziConfig, AnasaziWorld};
 use crate::ants::{AntsConfig, AntsWorld};
+use crate::auctions::{AuctionsConfig, AuctionsWorld};
 use crate::bali::{BaliConfig, BaliWorld};
 use crate::civil::{CivilConfig, CivilWorld};
 use crate::classes::{ClassesConfig, ClassesWorld};
+use crate::collusion::{CollusionConfig, CollusionWorld};
 use crate::config::{Config, FieldError};
 use crate::culture::{CultureConfig, CultureWorld};
+use crate::democratic_peace::{DemocraticPeaceConfig, DemocraticPeaceWorld};
 use crate::dpd::{DpdConfig, DpdWorld};
 use crate::ethno::{EthnoConfig, EthnoWorld};
 use crate::farol::{FarolConfig, FarolWorld};
 use crate::firms::{FirmsConfig, FirmsWorld};
+use crate::geosim::{GeosimConfig, GeosimWorld};
 use crate::hoard::{HoardConfig, HoardWorld};
 use crate::image::{ImageConfig, ImageWorld};
 use crate::line::{LineConfig, LineWorld};
 use crate::norms::{NormsConfig, NormsWorld};
 use crate::opinions::{OpinionsConfig, OpinionsWorld};
+use crate::polarity::{PolarityConfig, PolarityWorld};
 use crate::punishment::{PunishmentConfig, PunishmentWorld};
 use crate::render::{self, ColorMode, Layer};
 use crate::retirement::{RetirementConfig, RetirementWorld};
@@ -72,10 +77,15 @@ pub enum ModelKind {
     Tipping,
     Hoard,
     Firms,
+    Collusion,
+    Auctions,
+    Polarity,
+    Geosim,
+    DemocraticPeace,
 }
 
 impl ModelKind {
-    pub const ALL: [ModelKind; 27] = [
+    pub const ALL: [ModelKind; 32] = [
         ModelKind::Sugarscape,
         ModelKind::Schelling,
         ModelKind::Ring,
@@ -103,6 +113,11 @@ impl ModelKind {
         ModelKind::Tipping,
         ModelKind::Hoard,
         ModelKind::Firms,
+        ModelKind::Collusion,
+        ModelKind::Auctions,
+        ModelKind::Polarity,
+        ModelKind::Geosim,
+        ModelKind::DemocraticPeace,
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -134,6 +149,11 @@ impl ModelKind {
             ModelKind::Tipping => "tipping",
             ModelKind::Hoard => "hoard",
             ModelKind::Firms => "firms",
+            ModelKind::Collusion => "collusion",
+            ModelKind::Auctions => "auctions",
+            ModelKind::Polarity => "polarity",
+            ModelKind::Geosim => "geosim",
+            ModelKind::DemocraticPeace => "democratic_peace",
         }
     }
 
@@ -168,6 +188,11 @@ impl ModelKind {
             ModelKind::Tipping => crate::tipping::schema(),
             ModelKind::Hoard => crate::hoard::schema(),
             ModelKind::Firms => crate::firms::schema(),
+            ModelKind::Collusion => crate::collusion::schema(),
+            ModelKind::Auctions => crate::auctions::schema(),
+            ModelKind::Polarity => crate::polarity::schema(),
+            ModelKind::Geosim => crate::geosim::schema(),
+            ModelKind::DemocraticPeace => crate::democratic_peace::schema(),
         }
     }
 }
@@ -208,6 +233,11 @@ pub enum ModelConfig {
     Tipping(TippingConfig),
     Hoard(HoardConfig),
     Firms(FirmsConfig),
+    Collusion(CollusionConfig),
+    Auctions(AuctionsConfig),
+    Polarity(PolarityConfig),
+    Geosim(GeosimConfig),
+    DemocraticPeace(DemocraticPeaceConfig),
 }
 
 /// Another model's config on the wire: its fields and `"model": "<kind>"`.
@@ -240,6 +270,11 @@ enum Tagged<'a> {
     Tipping(&'a TippingConfig),
     Hoard(&'a HoardConfig),
     Firms(&'a FirmsConfig),
+    Collusion(&'a CollusionConfig),
+    Auctions(&'a AuctionsConfig),
+    Polarity(&'a PolarityConfig),
+    Geosim(&'a GeosimConfig),
+    DemocraticPeace(&'a DemocraticPeaceConfig),
 }
 
 impl From<Config> for ModelConfig {
@@ -279,6 +314,11 @@ impl Serialize for ModelConfig {
             ModelConfig::Tipping(c) => Tagged::Tipping(c).serialize(s),
             ModelConfig::Hoard(c) => Tagged::Hoard(c).serialize(s),
             ModelConfig::Firms(c) => Tagged::Firms(c).serialize(s),
+            ModelConfig::Collusion(c) => Tagged::Collusion(c).serialize(s),
+            ModelConfig::Auctions(c) => Tagged::Auctions(c).serialize(s),
+            ModelConfig::Polarity(c) => Tagged::Polarity(c).serialize(s),
+            ModelConfig::Geosim(c) => Tagged::Geosim(c).serialize(s),
+            ModelConfig::DemocraticPeace(c) => Tagged::DemocraticPeace(c).serialize(s),
         }
     }
 }
@@ -313,6 +353,11 @@ impl ModelConfig {
             ModelConfig::Tipping(_) => ModelKind::Tipping,
             ModelConfig::Hoard(_) => ModelKind::Hoard,
             ModelConfig::Firms(_) => ModelKind::Firms,
+            ModelConfig::Collusion(_) => ModelKind::Collusion,
+            ModelConfig::Auctions(_) => ModelKind::Auctions,
+            ModelConfig::Polarity(_) => ModelKind::Polarity,
+            ModelConfig::Geosim(_) => ModelKind::Geosim,
+            ModelConfig::DemocraticPeace(_) => ModelKind::DemocraticPeace,
         }
     }
 
@@ -422,6 +467,17 @@ impl ModelConfig {
             "firms" => serde_json::from_value(value)
                 .map(ModelConfig::Firms)
                 .map_err(|e| FieldError::new("config", e.to_string())),
+            "polarity" => serde_json::from_value(value)
+                .map(ModelConfig::Polarity)
+                .map_err(|e| FieldError::new("config", e.to_string())),
+            "geosim" => serde_json::from_value(value).map(ModelConfig::Geosim).map_err(|e|FieldError::new("config",e.to_string())),
+            "democratic_peace" => serde_json::from_value(value).map(ModelConfig::DemocraticPeace).map_err(|e|FieldError::new("config",e.to_string())),
+            "auctions" => serde_json::from_value(value)
+                .map(ModelConfig::Auctions)
+                .map_err(|e| FieldError::new("config", e.to_string())),
+            "collusion" => serde_json::from_value(value)
+                .map(ModelConfig::Collusion)
+                .map_err(|e| FieldError::new("config", e.to_string())),
             "zi" => serde_json::from_value(value)
                 .map(ModelConfig::Zi)
                 .map_err(|e| FieldError::new("config", e.to_string())),
@@ -431,7 +487,7 @@ impl ModelConfig {
             _ => Err(FieldError::new(
                 "model",
                 format!(
-                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment, zi, bali, line, tipping, hoard or firms)"
+                    "unknown model {tag:?} (expected sugarscape, schelling, ring, anasazi, civil, spatial, tags, culture, classes, ethno, opinions, structure, dpd, norms, agreement, image, farol, ants, thresholds, retirement, punishment, zi, bali, line, tipping, hoard, firms, collusion, auctions or polarity)"
                 ),
             )),
         }
@@ -466,6 +522,11 @@ impl ModelConfig {
             ModelConfig::Tipping(c) => c.validate(),
             ModelConfig::Hoard(c) => c.validate(),
             ModelConfig::Firms(c) => c.validate(),
+            ModelConfig::Collusion(c) => c.validate(),
+            ModelConfig::Auctions(c) => c.validate(),
+            ModelConfig::Polarity(c) => c.validate(),
+            ModelConfig::Geosim(c) => c.validate(),
+            ModelConfig::DemocraticPeace(c) => c.validate(),
         }
     }
 
@@ -500,6 +561,13 @@ impl ModelConfig {
             ModelConfig::Tipping(c) => set_path(c, path, value).map(ModelConfig::Tipping),
             ModelConfig::Hoard(c) => set_path(c, path, value).map(ModelConfig::Hoard),
             ModelConfig::Firms(c) => set_path(c, path, value).map(ModelConfig::Firms),
+            ModelConfig::Collusion(c) => set_path(c, path, value).map(ModelConfig::Collusion),
+            ModelConfig::Auctions(c) => set_path(c, path, value).map(ModelConfig::Auctions),
+            ModelConfig::Polarity(c) => set_path(c, path, value).map(ModelConfig::Polarity),
+            ModelConfig::Geosim(c) => set_path(c, path, value).map(ModelConfig::Geosim),
+            ModelConfig::DemocraticPeace(c) => {
+                set_path(c, path, value).map(ModelConfig::DemocraticPeace)
+            }
         }
     }
 
@@ -507,6 +575,15 @@ impl ModelConfig {
     /// its own (the anasazi at its end year); `None` when it runs forever.
     pub fn max_ticks(&self) -> Option<u32> {
         match self {
+            ModelConfig::Polarity(c) => {
+                Some(c.horizon.div_ceil(u64::from(c.periods_per_tick)) as u32)
+            }
+            ModelConfig::DemocraticPeace(c) => {
+                Some(c.horizon().div_ceil(u64::from(c.periods_per_tick)) as u32)
+            }
+            ModelConfig::Geosim(c) => {
+                Some(c.horizon().div_ceil(u64::from(c.periods_per_tick)) as u32)
+            }
             ModelConfig::Anasazi(c) => Some(c.end_year.saturating_sub(c.start_year)),
             ModelConfig::Tags(c) => (c.end > 0).then_some(c.end),
             ModelConfig::Ethno(c) => (c.end > 0).then_some(c.end),
@@ -533,7 +610,9 @@ impl ModelConfig {
             | ModelConfig::Line(_)
             | ModelConfig::Tipping(_)
             | ModelConfig::Hoard(_)
-            | ModelConfig::Firms(_) => None,
+            | ModelConfig::Firms(_)
+            | ModelConfig::Collusion(_)
+            | ModelConfig::Auctions(_) => None,
         }
     }
 
@@ -576,6 +655,14 @@ impl ModelConfig {
                 .map(|s| s.to_string())
                 .collect(),
             ModelConfig::Firms(_) => crate::firms::SERIES.iter().map(|s| s.to_string()).collect(),
+            ModelConfig::Auctions(c) => crate::auctions::series_names(c.bidders),
+            ModelConfig::Polarity(_) => crate::polarity::series_names(),
+            ModelConfig::Geosim(_) => crate::geosim::series_names(),
+            ModelConfig::DemocraticPeace(_) => crate::democratic_peace::series_names(),
+            ModelConfig::Collusion(_) => crate::collusion::SERIES
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
         }
     }
 }
@@ -772,6 +859,11 @@ pub enum ModelWorld {
     Tipping(Box<TippingWorld>),
     Hoard(Box<HoardWorld>),
     Firms(Box<FirmsWorld>),
+    Collusion(Box<CollusionWorld>),
+    Auctions(Box<AuctionsWorld>),
+    Polarity(Box<PolarityWorld>),
+    Geosim(Box<GeosimWorld>),
+    DemocraticPeace(Box<DemocraticPeaceWorld>),
 }
 
 impl ModelWorld {
@@ -830,6 +922,19 @@ impl ModelWorld {
             ModelConfig::Tipping(c) => ModelWorld::Tipping(Box::new(TippingWorld::new(c, seed)?)),
             ModelConfig::Hoard(c) => ModelWorld::Hoard(Box::new(HoardWorld::new(c, seed)?)),
             ModelConfig::Firms(c) => ModelWorld::Firms(Box::new(FirmsWorld::new(c, seed)?)),
+            ModelConfig::Polarity(c) => {
+                ModelWorld::Polarity(Box::new(PolarityWorld::new(c, seed)?))
+            }
+            ModelConfig::Geosim(c) => ModelWorld::Geosim(Box::new(GeosimWorld::new(c, seed)?)),
+            ModelConfig::DemocraticPeace(c) => {
+                ModelWorld::DemocraticPeace(Box::new(DemocraticPeaceWorld::new(c, seed)?))
+            }
+            ModelConfig::Auctions(c) => {
+                ModelWorld::Auctions(Box::new(AuctionsWorld::new(c, seed)?))
+            }
+            ModelConfig::Collusion(c) => {
+                ModelWorld::Collusion(Box::new(CollusionWorld::new(c, seed)?))
+            }
         })
     }
 
@@ -862,6 +967,11 @@ impl ModelWorld {
             ModelWorld::Tipping(_) => ModelKind::Tipping,
             ModelWorld::Hoard(_) => ModelKind::Hoard,
             ModelWorld::Firms(_) => ModelKind::Firms,
+            ModelWorld::Collusion(_) => ModelKind::Collusion,
+            ModelWorld::Auctions(_) => ModelKind::Auctions,
+            ModelWorld::Polarity(_) => ModelKind::Polarity,
+            ModelWorld::Geosim(_) => ModelKind::Geosim,
+            ModelWorld::DemocraticPeace(_) => ModelKind::DemocraticPeace,
         }
     }
 
@@ -894,6 +1004,11 @@ impl ModelWorld {
             ModelWorld::Tipping(w) => w.as_ref(),
             ModelWorld::Hoard(w) => w.as_ref(),
             ModelWorld::Firms(w) => w.as_ref(),
+            ModelWorld::Collusion(w) => w.as_ref(),
+            ModelWorld::Auctions(w) => w.as_ref(),
+            ModelWorld::Polarity(w) => w.as_ref(),
+            ModelWorld::Geosim(w) => w.as_ref(),
+            ModelWorld::DemocraticPeace(w) => w.as_ref(),
         }
     }
 
@@ -926,6 +1041,11 @@ impl ModelWorld {
             ModelWorld::Tipping(w) => w.as_mut(),
             ModelWorld::Hoard(w) => w.as_mut(),
             ModelWorld::Firms(w) => w.as_mut(),
+            ModelWorld::Collusion(w) => w.as_mut(),
+            ModelWorld::Auctions(w) => w.as_mut(),
+            ModelWorld::Polarity(w) => w.as_mut(),
+            ModelWorld::Geosim(w) => w.as_mut(),
+            ModelWorld::DemocraticPeace(w) => w.as_mut(),
         }
     }
 
@@ -1034,6 +1154,19 @@ impl ModelWorld {
             ModelWorld::Tipping(w) => copy_without_history!(Tipping, w),
             ModelWorld::Hoard(w) => copy_without_history!(Hoard, w),
             ModelWorld::Firms(w) => copy_without_history!(Firms, w),
+            ModelWorld::Collusion(w) => copy_without_history!(Collusion, w),
+            ModelWorld::Polarity(w) => copy_without_history!(Polarity, w),
+            ModelWorld::Geosim(w) => copy_without_history!(Geosim, w),
+            ModelWorld::DemocraticPeace(w) => copy_without_history!(DemocraticPeace, w),
+            ModelWorld::Auctions(w) => {
+                let stats = std::mem::take(&mut w.stats);
+                let mut copy = (**w).clone();
+                if let Some(last) = stats.latest() {
+                    copy.stats.push(last.clone());
+                }
+                w.stats = stats;
+                ModelWorld::Auctions(Box::new(copy))
+            }
             _ => return None,
         };
         Some(Checkpoint { world, tick })
@@ -1088,6 +1221,25 @@ impl ModelWorld {
             (ModelWorld::Tipping(live), ModelWorld::Tipping(kept)) => restore_into!(live, kept),
             (ModelWorld::Hoard(live), ModelWorld::Hoard(kept)) => restore_into!(live, kept),
             (ModelWorld::Firms(live), ModelWorld::Firms(kept)) => restore_into!(live, kept),
+            (ModelWorld::Collusion(live), ModelWorld::Collusion(kept)) => restore_into!(live, kept),
+            (ModelWorld::Polarity(live), ModelWorld::Polarity(kept)) => restore_into!(live, kept),
+            (ModelWorld::Geosim(live), ModelWorld::Geosim(kept)) => restore_into!(live, kept),
+            (ModelWorld::DemocraticPeace(live), ModelWorld::DemocraticPeace(kept)) => {
+                restore_into!(live, kept)
+            }
+            (ModelWorld::Auctions(live), ModelWorld::Auctions(kept)) => {
+                let mut stats = std::mem::take(&mut live.stats);
+                let len = stats.history().partition_point(|s| s.tick <= kept.tick);
+                stats.truncate(len);
+                if stats.latest().is_none_or(|s| s.tick != kept.tick) {
+                    if let Some(last) = kept.stats.latest() {
+                        stats.push(last.clone());
+                    }
+                }
+                let mut next = (**kept).clone();
+                next.stats = stats;
+                **live = next;
+            }
             _ => return Err("the keyframe is of another model".into()),
         }
         Ok(())
@@ -1537,6 +1689,104 @@ mod tests {
     }
 
     #[test]
+    fn polarity_host_runs_partial_final_tick_and_preserves_endpoint() {
+        let config = ModelConfig::from_json(r#"{"model":"polarity","width":2,"height":2,"predator_share":0,"horizon":15,"periods_per_tick":7}"#).unwrap();
+        assert_eq!(config.max_ticks(), Some(3));
+        let mut world = ModelWorld::new(config.clone(), 1).unwrap();
+        world.model_mut().run(3);
+        let latest: serde_json::Value = serde_json::from_str(&world.model().latest_json()).unwrap();
+        assert_eq!(
+            (
+                latest["periods"].as_u64(),
+                latest["last_tick_periods"].as_u64()
+            ),
+            (Some(15), Some(1))
+        );
+        assert_eq!(world.model().latest_value("sovereign_count"), Some(4.0));
+        let fingerprint = world.model().fingerprint();
+        world.model_mut().run(10);
+        assert_eq!(world.model().fingerprint(), fingerprint);
+        assert!(world
+            .model_mut()
+            .set_config(config.with_path("alliances", &json!(true)).unwrap())
+            .is_err());
+    }
+
+    #[test]
+    fn auctions_checkpoint_restores_latest_snapshot_across_truncated_history_gap() {
+        let config = ModelConfig::Auctions(crate::auctions::AuctionsConfig {
+            horizon: 23,
+            window: 5,
+            periods_per_tick: 1,
+            ..Default::default()
+        });
+        let mut w = ModelWorld::new(config, 1).unwrap();
+        w.model_mut().run(4);
+        let checkpoint = w.checkpoint().unwrap();
+        w.model_mut().run(3);
+        let expected = w.model().fingerprint();
+        let ModelWorld::Auctions(a) = &mut w else {
+            unreachable!()
+        };
+        let latest = a.stats.latest().cloned().unwrap();
+        a.stats.truncate(2);
+        a.stats.push(latest);
+        w.restore(&checkpoint).unwrap();
+        let ModelWorld::Auctions(a) = &w else {
+            unreachable!()
+        };
+        assert_eq!(
+            a.stats.history().iter().map(|s| s.tick).collect::<Vec<_>>(),
+            vec![0, 1, 4]
+        );
+        w.model_mut().run(3);
+        assert_eq!(w.model().fingerprint(), expected);
+    }
+    #[test]
+    fn auctions_configs_round_trip_and_checkpoint_restores_random_stream() {
+        let config = ModelConfig::from_json(
+            r#"{"model":"auctions","horizon":23,"window":5,"periods_per_tick":7}"#,
+        )
+        .unwrap();
+        assert_eq!(config.kind(), ModelKind::Auctions);
+        assert_eq!(
+            ModelConfig::from_json(&serde_json::to_string(&config).unwrap()).unwrap(),
+            config
+        );
+        let mut w = ModelWorld::new(config, 1).unwrap();
+        w.model_mut().run(1);
+        let checkpoint = w.checkpoint().unwrap();
+        w.model_mut().run(1);
+        let expected = w.model().fingerprint();
+        w.restore(&checkpoint).unwrap();
+        w.model_mut().run(1);
+        assert_eq!(w.model().fingerprint(), expected);
+    }
+    #[test]
+    fn collusion_configs_round_trip_with_their_tag() {
+        let c = ModelConfig::from_json(
+            r#"{"model": "collusion", "memory": 0, "delta": 0.5, "window": 50}"#,
+        )
+        .unwrap();
+        assert_eq!(c.kind(), ModelKind::Collusion);
+        let json = serde_json::to_value(&c).unwrap();
+        assert_eq!(
+            (json["model"].as_str(), json["prices"].as_u64()),
+            (Some("collusion"), Some(15))
+        );
+        assert_eq!(ModelConfig::from_value(json).unwrap(), c);
+        assert_eq!(c.series_names()[..2], ["price_1", "price_2"]);
+        let e = ModelConfig::from_json(r#"{"model": "collusion", "firms": 9}"#).unwrap_err();
+        assert_eq!(e[0].field, "firms");
+        let mut w = ModelWorld::new(c, 1).unwrap();
+        assert_eq!(w.kind(), ModelKind::Collusion);
+        let cp = w.checkpoint().expect("collusion worlds have keyframes");
+        w.model_mut().run(3);
+        w.restore(&cp).unwrap();
+        assert_eq!(w.model().tick(), 0);
+    }
+
+    #[test]
     fn bali_configs_round_trip_with_their_tag() {
         let c = ModelConfig::from_json(
             r#"{"model": "bali", "plans": "traditional", "growth": 2.4, "stop_at": 2}"#,
@@ -1656,7 +1906,12 @@ mod tests {
                 "line",
                 "tipping",
                 "hoard",
-                "firms"
+                "firms",
+                "collusion",
+                "auctions",
+                "polarity",
+                "geosim",
+                "democratic_peace"
             ]
         );
         assert!(ModelKind::Sugarscape.schema().is_empty());

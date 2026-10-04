@@ -1,0 +1,65 @@
+{
+  "changed_paths": {
+    "survey/democratic_peace/analysis.py": {
+      "corrected_task3_checkpoint6": {
+        "mode": "100644",
+        "sha256": "588e50612fa220c6d53226b7134a381f295064cc3dd8aaddd82fa7a30cb54676"
+      },
+      "historical_task1_checkpoint6": {
+        "mode": "100644",
+        "sha256": "8c281e25ff8f69eb34abd681be2dffe60871b3658a2882587b92461286a674e6"
+      }
+    },
+    "survey/democratic_peace/test_analysis.py": {
+      "corrected_task3_checkpoint6": {
+        "mode": "100644",
+        "sha256": "009271ae179759f2c8e2f49aa7b136cbaf1c9f52d714c4649d0459c2db21d89d"
+      },
+      "historical_task1_checkpoint6": {
+        "mode": "100644",
+        "sha256": "bac11cad66c70059babfd45a0051cb020ddb3bc294d1aec29d1f15cc1cda8bc1"
+      }
+    },
+    "survey/democratic_peace/test_manifest.py": {
+      "corrected_task3_checkpoint6": {
+        "mode": "100644",
+        "sha256": "213dd1fd969854a9735e20777a71912405c79b5c2c0c81f2b69d357b08327152"
+      },
+      "historical_task1_checkpoint6": {
+        "mode": "100644",
+        "sha256": "ff74ba78ac4b5ba0d7b035fdadd7a974701b2215c875b039a50200a5cdf1b8f4"
+      }
+    },
+    "survey/src/bin/democratic_peace.rs": {
+      "corrected_task3_checkpoint6": {
+        "mode": "100644",
+        "sha256": "038107d11108e17afb6a9cf8ff1f79dfd29c30ed0b4610488cfc28a6beb9d881"
+      },
+      "historical_task1_checkpoint6": {
+        "mode": "100644",
+        "sha256": "3c7b4e1a03fe390bd7013db16579993a5c88116d5ba52f48f1232b7fba69f089"
+      }
+    },
+    "survey/tests/democratic_peace_native.rs": {
+      "corrected_task3_checkpoint6": {
+        "mode": "100644",
+        "sha256": "1c294d609a0cc93528268874e653340e8d9ee9bb00c4bc9c0409c571de51f37c"
+      },
+      "historical_task1_checkpoint6": {
+        "mode": "100644",
+        "sha256": "bf60bce9e065f2cfc68d1b16450989fd8668a57ff104477da4db4db63074c641"
+      }
+    }
+  },
+  "corrected_task3_manifest_sha256": "31eac1bede0af8e2c4e2cacebb1bd29131bf38d7609a5f364e523c8dd9dcb73a",
+  "prior_task1_manifest_sha256": "c533fc03519efa2cb2c2d91ca002ced49179eb161007162a1aebae3ee79954bf",
+  "unchanged_checkpoints": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "unchanged_protected_files": 897
+}

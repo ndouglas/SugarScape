@@ -109,10 +109,33 @@ const GOLDEN: &[(&str, u64)] = &[
     ("theft-arena-2", 0x403d0fd47b215e1d),
     ("theft-arena-4", 0x5aab49c65af8928d),
     ("theft-arena-8", 0x24f7fb0d39bfc02),
+    // Minds 8, re-recorded for Minds 8b's default `raid_if: better`. The
+    // first round's watch-winter (0xd0ecb91d218578c7) is reproduced under
+    // `raid_if: always` (minds/caching/watching.rs).
+    ("watch-winter", 0xa57ae7d89c3fb6d),
+    ("watch-winter-stumble", 0xcf858c2b12679f0c),
+    ("watch-half", 0x6adc8be6bd1d0fde),
+    ("watch-scroungers", 0x14a1f4f2cfe8b7af),
+    ("watch-scroungers-only", 0x5d5bfa38a76c9368),
+    ("watch-scroungers-forgo", 0xb1abef5e1f2bfac1),
+    ("watch-ak", 0x7d3e4e1903e7d55f),
+    // Enabled spatial episodes include authoritative spatial configuration,
+    // stores, intentions, guard state and recorded observations.
+    ("spatial-scatter", 0xc7e8bffd577af990),
+    ("spatial-larder", 0x1cf19eed5ef4bae4),
+    ("spatial-larder-guard", 0x1293b223b1add84e),
+    ("watch-arena", 0x35bf42deadfb8424),
 ];
 
 /// Other models (milestone 9): (preset id, fingerprint after 200 ticks from seed 1).
 const MODEL_GOLDEN: &[(&str, u64)] = &[
+    // Polarity reconstruction: source-labelled presets, 200 ticks from seed 1.
+    ("polarity-original", 0x489849cf252544a3),
+    ("polarity-defense", 0x6c55f6f41448e503),
+    ("polarity-alliances", 0x93f744fba37cb327),
+    ("polarity-pra", 0xd1b184350e70d728),
+    ("polarity-two-level", 0x999de30e70e8da90),
+    ("polarity-overextension", 0xfb0f1a4e1a11adc7),
     ("s71-board", 0x8be271afb20afb6f),
     ("s71-center-out", 0x4d984d3877efd40e),
     ("s71-third", 0x1ad27c86391e5a56),
@@ -399,6 +422,32 @@ const MODEL_GOLDEN: &[(&str, u64)] = &[
     ("firms-hiring-100", 0xd8fb44c3f2acfa13),
     ("firms-random-choices", 0xd5650a4bd4548db4),
     ("firms-2013", 0xc7acf4a34472ca50),
+    // Algorithmic Collusion (200 ticks of 1 000 periods). The deviation presets learn as the
+    // baseline does (they differ only in the analysis after convergence).
+    ("collusion-calvano", 0xbfdc574972d2efcd),
+    ("collusion-code", 0xa6ab4cce772a8a70),
+    ("collusion-no-memory", 0x172d003af01b8b94),
+    ("collusion-myopic", 0xf53b3963ec92f7f8),
+    ("collusion-two-phase", 0xff7d1eb24dd21e2f),
+    ("collusion-synchronous", 0xcbb6eed6a17dd495),
+    ("collusion-explore-more", 0x90e7c74eb3f03d51),
+    ("collusion-every-price", 0xbfdc574972d2efcd),
+    ("collusion-invitation", 0xbfdc574972d2efcd),
+    ("collusion-below-nash", 0x4b11e4afb4a24a8c),
+    // Fixed-value auctions: 200 ticks = 200,000 sequential periods, seed 1.
+    ("auctions-first-price", 0xd6f95485bf58b982),
+    ("auctions-second-price", 0xab1d9e3ead922ca6),
+    ("auctions-feedback", 0xe58e059e872861fc),
+    ("auctions-unused-feedback", 0xf6982f42d0402707),
+    ("auctions-local", 0x5eef4250fb3c289b),
+    ("auctions-biased", 0x1cf42e64fa1cd854),
+    ("auctions-downward", 0xa3b3d1d58df1d7a9),
+    ("auctions-nonparticipation", 0x1f458eab202bd4b8),
+    ("auctions-reserve", 0xf8f7251341f734eb),
+    ("auctions-three", 0xcc94c68dbee95532),
+    ("auctions-three-patient", 0xe888da5e81c4a9f9),
+    ("auctions-fringe", 0xa40e0d5efdbf0c2),
+    ("auctions-persistent", 0x3a3f369d629840af),
 ];
 
 fn fingerprint(id: &str) -> u64 {
@@ -485,6 +534,52 @@ const IMAGE_GOLDEN: &[(&str, u32, u64)] = &[
     ("lh-fig-4c", 20, 0x6371653b544f6387),
 ];
 
+// GeoSim is pinned at ten source periods, before the measured observation window.
+// This fixture does not run any registered study or certify the archived port.
+const GEOSIM_GOLDEN: &[(&str, u64)] = &[
+    ("geosim-paper", 0x04829677e9ba7931),
+    ("geosim-no-technology", 0x1099ce892cb5f5eb),
+    ("geosim-no-context", 0x8691545150a0d824),
+    ("geosim-smaller-shocks", 0x00f499ddfdd23ead),
+    ("geosim-artifact-2017", 0x58d616930e045b69),
+];
+#[test]
+fn geosim_presets_are_reproducible() {
+    for &(id, expected) in GEOSIM_GOLDEN {
+        assert_eq!(image_fingerprint(id, 10), expected, "preset {id} changed");
+    }
+}
+#[test]
+#[ignore]
+fn print_geosim_golden() {
+    for &(id, _) in GEOSIM_GOLDEN {
+        println!("    (\"{id}\", {:#x}),", image_fingerprint(id, 10));
+    }
+}
+
+// Compact deterministic fixtures only; no registered source study.
+const DEMOCRATIC_PEACE_GOLDEN: &[(&str, u64)] = &[
+    ("democratic-peace-printed-2001", 0x3388ec029f1bf609),
+    ("democratic-peace-prose-probability", 0x10578253f9fff482),
+    ("democratic-peace-tagging", 0x3c0c1a219cbe94cc),
+    ("democratic-peace-alliances", 0x4da0cabf985c6040),
+    ("democratic-peace-collective-security", 0x3388ec029f1bf609),
+    ("democratic-peace-nondemocratic", 0xc68d58478b6b238d),
+];
+#[test]
+fn democratic_peace_presets_are_reproducible() {
+    for &(id, expected) in DEMOCRATIC_PEACE_GOLDEN {
+        assert_eq!(image_fingerprint(id, 10), expected, "preset {id} changed");
+    }
+}
+#[test]
+#[ignore]
+fn print_democratic_peace_golden() {
+    for &(id, _) in DEMOCRATIC_PEACE_GOLDEN {
+        println!("(\"{id}\", {:#x}),", image_fingerprint(id, 10));
+    }
+}
+
 fn image_fingerprint(id: &str, ticks: u32) -> u64 {
     let preset = presets::find(id).unwrap_or_else(|| panic!("unknown preset {id}"));
     let mut world = ModelWorld::new(preset.config, 1).unwrap();
@@ -514,7 +609,12 @@ fn other_models_are_unchanged() {
 fn every_model_preset_has_a_golden_entry() {
     for p in presets::catalog() {
         assert!(
-            GOLDEN.iter().chain(MODEL_GOLDEN).any(|&(id, _)| id == p.id)
+            GOLDEN
+                .iter()
+                .chain(MODEL_GOLDEN)
+                .chain(GEOSIM_GOLDEN)
+                .chain(DEMOCRATIC_PEACE_GOLDEN)
+                .any(|&(id, _)| id == p.id)
                 || IMAGE_GOLDEN
                     .iter()
                     .chain(BIG_GOLDEN)

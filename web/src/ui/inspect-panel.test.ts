@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { agentText, cachesText, cachingRows, carryingText, centralRows, headingText, memoryText, planText, rateText, theftRows } from './inspect-panel';
+import { agentText, cachesText, cachingRows, carryingText, centralRows, headingText, memoryText, planText, rateText, theftRows, watchingRows } from './inspect-panel';
 
 const plan = (path: [number, number][]) => ({ target_x: 3, target_y: 4, path, walked: true });
 const memory = (sites: number, spots: number) => ({ remembers: true, sites, spots });
@@ -175,6 +175,17 @@ describe('theftRows', () => {
       ['Stole', '0'],
       ['Lost to thieves', '7'],
     ]);
+  });
+});
+
+describe('watchingRows', () => {
+  it('says whether the agent watches and lists what it remembers, by site coordinates', () => {
+    expect(watchingRows({ watches: true, scrounger: true, seen: [{ site: 52, owner: 4, amount: 2.5, age: 3 }, { site: 7, owner: 9, amount: 1, age: 0 }] }, 50)).toEqual([
+      ['Watches', 'yes (scrounger)'],
+      ['Remembers seeing', '(2, 1): #4, 2.50, 3 ticks ago'],
+      ['', '(7, 0): #9, 1, 0 ticks ago'],
+    ]);
+    expect(watchingRows({ watches: false, scrounger: false, seen: [] }, 50)).toEqual([['Watches', 'no']]);
   });
 });
 

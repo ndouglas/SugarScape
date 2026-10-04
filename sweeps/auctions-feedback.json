@@ -1,0 +1,45 @@
+{
+  "name": "Q-learning Auctions: feedback",
+  "description": "Figure 5 compares receiving rival bids and updating every action with chosen-action learning. Sessions run to their fixed horizon; terminal stability and discarded sessions must be inspected separately. This is a reconstruction, not author-code docking.",
+  "base": {
+    "preset": "auctions-first-price"
+  },
+  "x": {
+    "label": "Treatment",
+    "values": [
+      {
+        "at": 1,
+        "name": "Outcome, chosen",
+        "set": {
+          "feedback": "outcome",
+          "update": "chosen"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Rival bids, chosen",
+        "set": {
+          "feedback": "rival_bids",
+          "update": "chosen"
+        }
+      },
+      {
+        "at": 3,
+        "name": "Rival bids, all",
+        "set": {
+          "feedback": "rival_bids",
+          "update": "all"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 1000,
+  "metric": {
+    "kind": "final",
+    "series": "terminal_revenue"
+  }
+}

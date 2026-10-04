@@ -1,0 +1,3312 @@
+{
+  "schema_version": 1,
+  "model": "geosim",
+  "execution_mode": "registered",
+  "provenance_status": "frozen",
+  "spec": "docs/superpowers/specs/2026-10-03-geosim-design.md",
+  "source_draws": 100000,
+  "ks_draws": 1000,
+  "analysis_seed": 2026100301,
+  "source_table_sha256": "44a7d45d5206081ed179febae5285546924a894e55ebfb25e93222e59a1ed976",
+  "method_contract": {
+    "revision": "geosim-offline-v1-premeasurement-correction-2026-10-03-round2",
+    "runtime": {
+      "python": "3.13.5",
+      "numpy": "2.4.6",
+      "scipy": "1.17.1"
+    },
+    "source": {
+      "cutoff_log10": 2.5,
+      "ccdf": "strict_unique_positive",
+      "minimum_fit_points": 3,
+      "range": "full_positive_selected_census",
+      "count": "all_selected_completed_including_zero",
+      "ols_roundoff_tolerance": 1e-12,
+      "definition_checks": {
+        "status": "inferred_descriptive_source_equivalence_unresolved",
+        "inclusive": "unique_positive_thresholds_count(S>=s)/N_positive",
+        "rank": "descending_positive_observation_rank_r/N_positive; retain_separate_tied_ranks",
+        "fit": "OLS_log10; cutoff_log10>=2.5; at_least3_distinct_x; positive_x_y_variance",
+        "fit_tail": "all_positive_selected_observations_log10>=2.5_including_maximum_and_ties; count_distinct_count_log_range",
+        "integer100": "same_selected_raw_wars; truncating_saturating_int32(raw*100); strict_inclusive_rank_and_fit_tail",
+        "diagnostic_strata": [
+          "complete_all",
+          "complete_selected",
+          "partial_all",
+          "partial_selected",
+          "completed_records",
+          "censored",
+          "backlog",
+          "legacy_visible"
+        ],
+        "counters": "emitted_java_flags_separate_from_recomputed_integer100_saturated_subunit_zero_unavailable; overlapping_strata_not_summed"
+      },
+      "prediction_history_count": 15,
+      "precision_history_count": 100,
+      "draws": 100000,
+      "family_size": 88,
+      "holm_reject_below": 0.05,
+      "p": "inclusive_two_sided_plus_one_maximize_closed_source_interval"
+    },
+    "contrasts": {
+      "ids": [
+        "base_minus_shock0",
+        "base_minus_context_off"
+      ],
+      "metrics": [
+        "slope",
+        "r2",
+        "log_range"
+      ],
+      "draws": 100000,
+      "resampling": "independent_whole_history",
+      "family_size": 6,
+      "holm_reject_below": 0.05
+    },
+    "rng": {
+      "root": 2026100301,
+      "jobs": 72,
+      "generator": "PCG64",
+      "child": "SeedSequence(root,spawn_key=(fixed_job_index,))",
+      "batch_size": 1024,
+      "contrast_order": "base_block_then_control_block",
+      "ks_order": "binomial_tail_count,body_indices,tail_exponential"
+    },
+    "interval": {
+      "level": 0.95,
+      "quantile_method": "linear"
+    },
+    "pareto": {
+      "minimum_tail": 50,
+      "individual_search": "all_observed",
+      "pool_search": "grid100",
+      "grid_indices": "j*(M-1)//99 for j=0..99 when M>100",
+      "log_ratios": "log1p((x-xmin)/xmin)_when_x/2<=xmin_else_log(x)-log(xmin)",
+      "fit_authority": "one_sorted_centered_ratio_MLE_for_cutoff_KS_alpha_logpdf_likelihood_ratios",
+      "numeric_failure": "nondegenerate_candidate_unrepresentable_alpha_or_density_unresolved",
+      "ks": "max_left_and_right_ecdf_at_unique_ties",
+      "cutoff_ties": "smallest_xmin_exact"
+    },
+    "ks_test": {
+      "tail_generation": "E=exponential(1/(alpha-1)); xmin*exp(E) when E<=log(float64_max), else exp(log(xmin)+E); final_overflow_fails; unchanged_draws_and_order",
+      "draws": 1000,
+      "level": 0.1,
+      "exceedance": "Dstar>=Dobs",
+      "p": "(b+1)/(B+1)",
+      "interval": "95%_Clopper_Pearson_b_of_B",
+      "failure": "any_predetermined_failed_replicate_unresolved_no_replacements",
+      "calibration": "iid_semiparametric_generated_refitted_grid100"
+    },
+    "quadrature": {
+      "epsabs": 1e-11,
+      "epsrel": 1e-10,
+      "limit": 250,
+      "max_relative_error": 1e-08,
+      "normalizer": "scaled_positive_dimensionless_integral"
+    },
+    "optimizer": {
+      "method": "L-BFGS-B",
+      "ftol": 1e-13,
+      "gtol": 1e-08,
+      "maxiter": 1000,
+      "maxls": 50,
+      "accept_gradient_inf_below": 1e-06,
+      "guard_contact": "unresolved"
+    },
+    "lognormal": {
+      "coordinates": "mean_scaled_natural_a_b",
+      "starts": [
+        [
+          -1.0,
+          0.5
+        ],
+        [
+          0.0,
+          0.5
+        ],
+        [
+          1.0,
+          0.1
+        ],
+        [
+          1.0,
+          0.01
+        ]
+      ],
+      "bounds": [
+        [
+          -100.0,
+          100.0
+        ],
+        [
+          1e-08,
+          10000.0
+        ]
+      ],
+      "nonexistence": "scaled_second_moment>=2"
+    },
+    "stretched": {
+      "beta_bounds": [
+        1e-08,
+        100.0
+      ],
+      "brent_xtol": 1e-10,
+      "brent_rtol": 1e-10,
+      "maxiter": 200,
+      "domain": "beta>0_including_beta>1",
+      "nonexistence": "endpoint_score<=0"
+    },
+    "cutoff": {
+      "bounds": [
+        [
+          -100.0,
+          100.0
+        ],
+        [
+          -32.0,
+          32.0
+        ]
+      ],
+      "starts": "alpha=[min(99,pareto_alpha),1,0] x k=[1,.1,.01]/mean_excess; clip_logk[-31,31]",
+      "boundary": "exact_convex_KKT_alpha>2_and_mean_excess>=1/(alpha-2)",
+      "near_boundary_gain_per_observation": 1e-10,
+      "near_boundary": "unresolved"
+    },
+    "ratios": {
+      "level": 0.1,
+      "nonnested": "CSN_normalized_two_sided",
+      "variance_divisor": "n",
+      "variance_floor": 1e-24,
+      "nested": "declared_half_chi_square_1",
+      "exact_equal_p": 1.0,
+      "calibration_validity": "unvalidated",
+      "qualification": "alpha<=3_lacks_finite_boundary_information; alpha>3_not_validation"
+    },
+    "parameter_bootstrap": {
+      "draws": 100000,
+      "metrics": [
+        "alpha_mean",
+        "alpha_median",
+        "xmin_mean",
+        "xmin_median"
+      ],
+      "sampling": "all_registered_history_rows_with_joint_eligibility_masks",
+      "positive_mean": "max_scaled_mean",
+      "positive_median": "arithmetic_midpoint_with_overflow_safe_branch",
+      "empty_or_incomplete": "primary_unresolved",
+      "conditional_eligible_interval": "descriptive_only",
+      "rng": "independent_fixed_per_arm_parameter_child",
+      "contrasts": [
+        "precision.base-minus-precision.shock0",
+        "precision.base-minus-precision.context_off"
+      ],
+      "contrast_method": "same_index_independent_arm_replicate_array_differences",
+      "contrast_inference": "descriptive_linear95_interval_no_p_family_or_verdict"
+    },
+    "availability": {
+      "successful_completion": "end_period<=Outcome.periods",
+      "invalid_history": "partial_diagnostics_only_no_primary_pool_or_bootstrap",
+      "incomplete_pool": "unresolved_reserved_ks_slot",
+      "zero_eligible_parameter_replicate": "unresolved_no_replacements"
+    },
+    "reference_agreement": {
+      "parameters_absolute": 2e-05,
+      "log_density_absolute": 1e-08,
+      "ks_absolute": 1e-12,
+      "relative_normalization_error": 1e-09,
+      "nll_per_observation_absolute": 1e-09,
+      "rescaling_alpha_ks_absolute": 1e-10
+    }
+  },
+  "method_contract_json": "{\"availability\":{\"incomplete_pool\":\"unresolved_reserved_ks_slot\",\"invalid_history\":\"partial_diagnostics_only_no_primary_pool_or_bootstrap\",\"successful_completion\":\"end_period<=Outcome.periods\",\"zero_eligible_parameter_replicate\":\"unresolved_no_replacements\"},\"contrasts\":{\"draws\":100000,\"family_size\":6,\"holm_reject_below\":0.05,\"ids\":[\"base_minus_shock0\",\"base_minus_context_off\"],\"metrics\":[\"slope\",\"r2\",\"log_range\"],\"resampling\":\"independent_whole_history\"},\"cutoff\":{\"boundary\":\"exact_convex_KKT_alpha>2_and_mean_excess>=1/(alpha-2)\",\"bounds\":[[-100.0,100.0],[-32.0,32.0]],\"near_boundary\":\"unresolved\",\"near_boundary_gain_per_observation\":1e-10,\"starts\":\"alpha=[min(99,pareto_alpha),1,0] x k=[1,.1,.01]/mean_excess; clip_logk[-31,31]\"},\"interval\":{\"level\":0.95,\"quantile_method\":\"linear\"},\"ks_test\":{\"calibration\":\"iid_semiparametric_generated_refitted_grid100\",\"draws\":1000,\"exceedance\":\"Dstar>=Dobs\",\"failure\":\"any_predetermined_failed_replicate_unresolved_no_replacements\",\"interval\":\"95%_Clopper_Pearson_b_of_B\",\"level\":0.1,\"p\":\"(b+1)/(B+1)\",\"tail_generation\":\"E=exponential(1/(alpha-1)); xmin*exp(E) when E<=log(float64_max), else exp(log(xmin)+E); final_overflow_fails; unchanged_draws_and_order\"},\"lognormal\":{\"bounds\":[[-100.0,100.0],[1e-08,10000.0]],\"coordinates\":\"mean_scaled_natural_a_b\",\"nonexistence\":\"scaled_second_moment>=2\",\"starts\":[[-1.0,0.5],[0.0,0.5],[1.0,0.1],[1.0,0.01]]},\"optimizer\":{\"accept_gradient_inf_below\":1e-06,\"ftol\":1e-13,\"gtol\":1e-08,\"guard_contact\":\"unresolved\",\"maxiter\":1000,\"maxls\":50,\"method\":\"L-BFGS-B\"},\"parameter_bootstrap\":{\"conditional_eligible_interval\":\"descriptive_only\",\"contrast_inference\":\"descriptive_linear95_interval_no_p_family_or_verdict\",\"contrast_method\":\"same_index_independent_arm_replicate_array_differences\",\"contrasts\":[\"precision.base-minus-precision.shock0\",\"precision.base-minus-precision.context_off\"],\"draws\":100000,\"empty_or_incomplete\":\"primary_unresolved\",\"metrics\":[\"alpha_mean\",\"alpha_median\",\"xmin_mean\",\"xmin_median\"],\"positive_mean\":\"max_scaled_mean\",\"positive_median\":\"arithmetic_midpoint_with_overflow_safe_branch\",\"rng\":\"independent_fixed_per_arm_parameter_child\",\"sampling\":\"all_registered_history_rows_with_joint_eligibility_masks\"},\"pareto\":{\"cutoff_ties\":\"smallest_xmin_exact\",\"fit_authority\":\"one_sorted_centered_ratio_MLE_for_cutoff_KS_alpha_logpdf_likelihood_ratios\",\"grid_indices\":\"j*(M-1)//99 for j=0..99 when M>100\",\"individual_search\":\"all_observed\",\"ks\":\"max_left_and_right_ecdf_at_unique_ties\",\"log_ratios\":\"log1p((x-xmin)/xmin)_when_x/2<=xmin_else_log(x)-log(xmin)\",\"minimum_tail\":50,\"numeric_failure\":\"nondegenerate_candidate_unrepresentable_alpha_or_density_unresolved\",\"pool_search\":\"grid100\"},\"quadrature\":{\"epsabs\":1e-11,\"epsrel\":1e-10,\"limit\":250,\"max_relative_error\":1e-08,\"normalizer\":\"scaled_positive_dimensionless_integral\"},\"ratios\":{\"calibration_validity\":\"unvalidated\",\"exact_equal_p\":1.0,\"level\":0.1,\"nested\":\"declared_half_chi_square_1\",\"nonnested\":\"CSN_normalized_two_sided\",\"qualification\":\"alpha<=3_lacks_finite_boundary_information; alpha>3_not_validation\",\"variance_divisor\":\"n\",\"variance_floor\":1e-24},\"reference_agreement\":{\"ks_absolute\":1e-12,\"log_density_absolute\":1e-08,\"nll_per_observation_absolute\":1e-09,\"parameters_absolute\":2e-05,\"relative_normalization_error\":1e-09,\"rescaling_alpha_ks_absolute\":1e-10},\"revision\":\"geosim-offline-v1-premeasurement-correction-2026-10-03-round2\",\"rng\":{\"batch_size\":1024,\"child\":\"SeedSequence(root,spawn_key=(fixed_job_index,))\",\"contrast_order\":\"base_block_then_control_block\",\"generator\":\"PCG64\",\"jobs\":72,\"ks_order\":\"binomial_tail_count,body_indices,tail_exponential\",\"root\":2026100301},\"runtime\":{\"numpy\":\"2.4.6\",\"python\":\"3.13.5\",\"scipy\":\"1.17.1\"},\"source\":{\"ccdf\":\"strict_unique_positive\",\"count\":\"all_selected_completed_including_zero\",\"cutoff_log10\":2.5,\"definition_checks\":{\"counters\":\"emitted_java_flags_separate_from_recomputed_integer100_saturated_subunit_zero_unavailable; overlapping_strata_not_summed\",\"diagnostic_strata\":[\"complete_all\",\"complete_selected\",\"partial_all\",\"partial_selected\",\"completed_records\",\"censored\",\"backlog\",\"legacy_visible\"],\"fit\":\"OLS_log10; cutoff_log10>=2.5; at_least3_distinct_x; positive_x_y_variance\",\"fit_tail\":\"all_positive_selected_observations_log10>=2.5_including_maximum_and_ties; count_distinct_count_log_range\",\"inclusive\":\"unique_positive_thresholds_count(S>=s)/N_positive\",\"integer100\":\"same_selected_raw_wars; truncating_saturating_int32(raw*100); strict_inclusive_rank_and_fit_tail\",\"rank\":\"descending_positive_observation_rank_r/N_positive; retain_separate_tied_ranks\",\"status\":\"inferred_descriptive_source_equivalence_unresolved\"},\"draws\":100000,\"family_size\":88,\"holm_reject_below\":0.05,\"minimum_fit_points\":3,\"ols_roundoff_tolerance\":1e-12,\"p\":\"inclusive_two_sided_plus_one_maximize_closed_source_interval\",\"precision_history_count\":100,\"prediction_history_count\":15,\"range\":\"full_positive_selected_census\"},\"stretched\":{\"beta_bounds\":[1e-08,100.0],\"brent_rtol\":1e-10,\"brent_xtol\":1e-10,\"domain\":\"beta>0_including_beta>1\",\"maxiter\":200,\"nonexistence\":\"endpoint_score<=0\"}}",
+  "method_contract_sha256": "56ce49b6b77808c7cbfef0b9a182f6a573ab097925590cec78c8ed88567a10a0",
+  "source_inventory": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 22042,
+      "sha256": "58141f9ff3fa5cb5dc2a6dbb7e41b75ce12ccffa3dbb66c6bdd1e9d14bc16754"
+    },
+    {
+      "path": "Cargo.toml",
+      "bytes": 812,
+      "sha256": "7fb254110e779b6c45d4bf96fbae5f382529ea0493dc82a587e6717c71baa6cd"
+    },
+    {
+      "path": "crates/sugarscape-core/Cargo.toml",
+      "bytes": 548,
+      "sha256": "9f36b17597f0a97f8ca9bbb14d13961c9f9c11ff9ad644965a16692c803ddc04"
+    },
+    {
+      "path": "crates/sugarscape-core/assets/sugar-map.txt",
+      "bytes": 5000,
+      "sha256": "cd9b4661c8813d3e268995676d5ba84394ee813986adb0d657dc9be4a1fab675"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agent.rs",
+      "bytes": 25775,
+      "sha256": "7e2d5d2233754463d8a6f45ced456fa415c161f06a81d0c7d84c6e4cd5388479"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/config.rs",
+      "bytes": 22912,
+      "sha256": "51056a033e6ce26655919998477a5d6490e8ba4852cb459a6c4af4ec0e18bd6e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/mod.rs",
+      "bytes": 1057,
+      "sha256": "c66dbbdc868eeec27ac877386af0323e726611fc5125cb1a65d5ebcf21bad7a0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/network.rs",
+      "bytes": 6389,
+      "sha256": "e959cf60491b60ebbc2e48f48acffe43952a68f3e486d6b800708b8715ca0956"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/presets.rs",
+      "bytes": 16389,
+      "sha256": "97d523988a490e71692e33136afb76746b35b0adb22cbb98a65115b2011bc8f5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/stats.rs",
+      "bytes": 5741,
+      "sha256": "553995ece39e55b8f8e066bbb32a172eccc67e9e6140ddc9aae61bc068caffb2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/view.rs",
+      "bytes": 2749,
+      "sha256": "f0a369da1cd1dfe7c803cbb930e7dd3fc2fd397ba8320c2c1c416c4b099225c7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/world.rs",
+      "bytes": 43010,
+      "sha256": "3dd62261457afae350b907631ea4bf6d28d1e2493a8ff2839a7ce74cdae9170b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/config.rs",
+      "bytes": 25249,
+      "sha256": "34fba071eeff23cbe0308611d20723a1142c46161baf503de79af690dfce27d1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/household.rs",
+      "bytes": 4771,
+      "sha256": "e322e778f1a68e48a65ce875156fd497f988190cdd65a465926fc0b19b3fbda8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/mod.rs",
+      "bytes": 791,
+      "sha256": "7857324ab1f77ca7ae71882859f95ab8035762f48e784b47a732f52834af65a6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/random.rs",
+      "bytes": 2096,
+      "sha256": "7c8033829d3d8cebeac011028eb47b1ac5e4ef583fba677f34818e45b44f963d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/valley.rs",
+      "bytes": 25806,
+      "sha256": "7c73ef1402fdf4b509b3a94402346e2b973ddba6e53ddfee6409ada8b933b1cc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/world.rs",
+      "bytes": 56040,
+      "sha256": "0f06dce79600533367372dbd975679dfcf2edb399698433e1fb086c33b39081a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/config.rs",
+      "bytes": 15707,
+      "sha256": "2bd2c3e1c2d4ca538114fcc989155870eb2679509b91480136d7ab4b652d4eef"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/mod.rs",
+      "bytes": 847,
+      "sha256": "cbc2a55835f583d5496f00b9ca781c4ee4288e172ec51fec1d9f3f8d2c5debdb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/presets.rs",
+      "bytes": 10135,
+      "sha256": "8926f8a8546ed7e4e6fb0f724e5fb917f97958713dd08f644facd2d248397fc5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/stats.rs",
+      "bytes": 4597,
+      "sha256": "e0950539698185893ed7570b1d4966ed2f1f6a262ba02acf175b7fb0c2072486"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/theory.rs",
+      "bytes": 7859,
+      "sha256": "a1265cc6feb2948a41928361185c7d746d9f881b30d9d86751d4c505dfe25c91"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/view.rs",
+      "bytes": 2343,
+      "sha256": "f7a7792a8523d24391b53530c0978b6b0dad4b32d5f96f160cff017309714f3a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/world.rs",
+      "bytes": 35204,
+      "sha256": "3734879efaeae67548dd846d50141fc18d608862f01c8f7a65da85c15cbf0030"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/analysis.rs",
+      "bytes": 3088,
+      "sha256": "c09a758cd9ea3d204954688f1e991068233c72d27257884dcc1968e9b3056dc3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/config.rs",
+      "bytes": 20910,
+      "sha256": "f5242edca83cebf1f8a5e7c68a7eeff9c632bf14870ec6e1c36f48eaa10c46d2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/learner.rs",
+      "bytes": 7375,
+      "sha256": "ba70bb1c0cdbe0823cd676f188255d88d143f6aec9ac99562b0ecf56fe9a9185"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/mechanism.rs",
+      "bytes": 5219,
+      "sha256": "4ca6cbb440b89dfb184b0d615ee057fcbc929ea35a59cd5a7f089d4d414d64bb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/mod.rs",
+      "bytes": 419,
+      "sha256": "ea0ac3d08184b29339419f5fcd721688f5cda6f442e542ae6229c71516cc23e9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/presets.rs",
+      "bytes": 11001,
+      "sha256": "f7575064b2bc4e0c8edcf7e803cb43b65b6746ff0d3d5845fb0e44843847bea9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/stats.rs",
+      "bytes": 3209,
+      "sha256": "00fe77119abc2fc4296d46e53359aa854927f0e10963a2781c288e0e93d1a697"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/view.rs",
+      "bytes": 147,
+      "sha256": "e45e46444f24bdbc89874d4bd3980266f24d7d69a84096ad1ea68ed7952cbb78"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/world.rs",
+      "bytes": 32659,
+      "sha256": "b971b77313834c47e2e7cf0ae2910790fe8e19fa4098de14c8518463190e54d5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/config.rs",
+      "bytes": 17515,
+      "sha256": "b2bd9d59fe591aa2c6344958128e16d424dbbb67931ab814ff0b20a714fd4c61"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/data.rs",
+      "bytes": 6821,
+      "sha256": "0761c87b61a5627514827ede8fdc5dbd3039629089c3ad4f134dfd490be3b8cf"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/engine.rs",
+      "bytes": 17804,
+      "sha256": "61c5c467df85b789367d608f1828d7d1c1021fb6031cb89e08d8ef89ba29b482"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/mod.rs",
+      "bytes": 1062,
+      "sha256": "19617a5fc7a2c3c74df52f77234b737b9f34b160894103ca774a5758662fc1ec"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/presets.rs",
+      "bytes": 7596,
+      "sha256": "cbd361afa3e0a53733eb04e84f96b2e55f1583bc3797fc7c7403d3e3a1f4b503"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/search.rs",
+      "bytes": 8065,
+      "sha256": "cc096a88ace806d62721f3371005dc2490a4d5ebc39e593dfbb5ee1b0b8d2cf8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/stats.rs",
+      "bytes": 4028,
+      "sha256": "dc52793c92db0c454ec666c1eb9db147c9727527cb8520c9aff632c8c7c2150f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/two_node.rs",
+      "bytes": 7044,
+      "sha256": "6759ee3b0c7967757bd43dc4ca2a99b8629aa84f1c98d3ead748100de28ffa52"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/view.rs",
+      "bytes": 2963,
+      "sha256": "8cd0b01db10420bb6d09930d46e3d7c63ea315e00793291b1077cc896fd21f65"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/world.rs",
+      "bytes": 41657,
+      "sha256": "c583a88e34dcd12705f93dae03ea1edc59764597978c06bc0fdb2568cca7d680"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bits.rs",
+      "bytes": 7651,
+      "sha256": "f2431954d38177779d4c2834d6b95890f6f8eaa7f89f3d173866ff5ff200bd43"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/config.rs",
+      "bytes": 20781,
+      "sha256": "eff0d4cb09a65931cae4f11650a8359cef59f48525328e58771798317b3f16a4"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/mod.rs",
+      "bytes": 898,
+      "sha256": "c7bb814664c0ce135b5c37b3505f093e4ae98d6957d95181fff398db8a98c955"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/presets.rs",
+      "bytes": 9333,
+      "sha256": "10f4ba225ed35d73378370e6fb0467a14f2b1d2ec2c15843aae54730a32e76ee"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/stats.rs",
+      "bytes": 5651,
+      "sha256": "177a8c5092e1eaacf26198c7a4c56f544e903a9e81389b757adb6da14e07ee09"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/world.rs",
+      "bytes": 52113,
+      "sha256": "d000d4e411ac53f2c35389099fc222a8950d8d5952c12c227604ba584226e33d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/config.rs",
+      "bytes": 11031,
+      "sha256": "311c5471d6e92edffee374a04aa5a2c44b7967eb8ddc96e014fe47d373158bf1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/mod.rs",
+      "bytes": 856,
+      "sha256": "d3cdf36807738822a77ee8a4e8c96c84d537b5474ff93306e4ba4923d48ad1fd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/presets.rs",
+      "bytes": 8727,
+      "sha256": "514cec2d0d97d01932570ec8a554b809421a0f5b455f7987c90e1062d6ad6104"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/simplex.rs",
+      "bytes": 4170,
+      "sha256": "f3ebcdb94ddd7ef63643ce773bdeaae8c8bb86c16f3965655430a11936335154"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/stats.rs",
+      "bytes": 9453,
+      "sha256": "67fadb94707ec0a287553b764d61d4f033a2bf894365a5fa512d502c5b3506f1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/world.rs",
+      "bytes": 38076,
+      "sha256": "6154472acc27695fa47ee0308d088909a0a5be61614b7bd5731746167a0e9048"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/analysis.rs",
+      "bytes": 22141,
+      "sha256": "af41f3decd7e3f7d9b61cb18068a544774c2199cba0982be5a95fc91ec50a538"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/config.rs",
+      "bytes": 23181,
+      "sha256": "d8b1cfcb300bb66ff43c86e2765ed50eb2dbe11cc4accf30a4f55e64530bb25e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/demand.rs",
+      "bytes": 12188,
+      "sha256": "18c49d2a1f3f7f30fb46e1ae30688a0a88071c6eb33e9a54f1ef7039122eecc9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/learner.rs",
+      "bytes": 11241,
+      "sha256": "da9dff8766deed4480aa5afad5245ab2798edec8bcf9f5cc66b4272f2c557062"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/mod.rs",
+      "bytes": 911,
+      "sha256": "f477b4e2d9cf4bb8c940f74168993c06a80b1f75e169eb63684e071331b018eb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/presets.rs",
+      "bytes": 9754,
+      "sha256": "2ef1736c9474559e6dd18d75c354868795f09a5aba87c29a5f3fb6c4cd2e2ec2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/ran2.rs",
+      "bytes": 3315,
+      "sha256": "178ce1704341478cde4809a12f662ae9b91a7b46a3358980eedae77329874c58"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/stats.rs",
+      "bytes": 3984,
+      "sha256": "d986194e3e298ddedc65bcfae52788053706de733909af86b58a9c3be08715f5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/view.rs",
+      "bytes": 2551,
+      "sha256": "69347e394541707738a671770cc01c4b9e5eb8b5d8cb4ced604be66bcd57c711"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/world.rs",
+      "bytes": 42691,
+      "sha256": "13f9f1685f7b959a94ad986403da4059c28d52cbf74777306dfcac90544060b7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/config.rs",
+      "bytes": 189317,
+      "sha256": "c5f4c776744afdbc2db8d36b525734c9ed7736ede9b337bccc992244268c40e2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/config.rs",
+      "bytes": 10165,
+      "sha256": "8a62cd3e9ea4e937045b4a47a4652f653bb43721fe327e38b0afa933ca8c6a96"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/mod.rs",
+      "bytes": 730,
+      "sha256": "2ffa0c34f141cae7e28b623b648ab74b42463967643f96d4c34543982617b98c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/presets.rs",
+      "bytes": 8688,
+      "sha256": "b6573c58f5c9e1f7925bb664e5a9ad7a665c65960afa65cd7bdac5fc92a698b4"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/stats.rs",
+      "bytes": 4668,
+      "sha256": "af1e0ad4cf28395d853d23f01e540644baba037bc24092f969ed4a1c4d5ee31b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/world.rs",
+      "bytes": 40797,
+      "sha256": "ed48c832c8edfb9bcfc9345535ee5e09cd5c66f9b15e0541280d69d591d8ab8e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/config.rs",
+      "bytes": 22027,
+      "sha256": "cc15306415e69e785c4dd93f182e552a3a0fdc96988b1f53d5a3beffac3add05"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/mod.rs",
+      "bytes": 866,
+      "sha256": "7beb01c3173c2c12fc0bf9c3ae892cc7744323b83f7e0486cb83f9627a7917dd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/presets.rs",
+      "bytes": 10627,
+      "sha256": "d9c9d692af3ca28ab1d50fdba9952fc2e7bced146e0c2b685eb4a99efebc11d1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/stats.rs",
+      "bytes": 1846,
+      "sha256": "e07f373fcf9caecfe78eb2fcad76d617c7196fb0f998c2602f57fb5833a60593"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/world.rs",
+      "bytes": 53841,
+      "sha256": "085b55e56bcf8a19a7d96241b4fccd211182b453f210eadc613dcc1ce9e79e7e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/econ.rs",
+      "bytes": 7309,
+      "sha256": "12be1920cae7cfa2fdc249216f3dfaeb31d6d790619a4c95731edf9467c53b46"
+    },
+    {
+      "path": "crates/sugarscape-core/src/edit.rs",
+      "bytes": 65380,
+      "sha256": "4d64496ebdadc37ea7767daf51f85ec2cfe951c4a217c93875cd9da1954633a0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/config.rs",
+      "bytes": 21926,
+      "sha256": "9baf267bceaacd029e82c6b62d577c14c5cef9ab6855283c681deb83f1991e49"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/mod.rs",
+      "bytes": 798,
+      "sha256": "e5ecd986860dbaad0bc80381da786ae014386a5ace08027c219a7aacb5b31818"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/presets.rs",
+      "bytes": 10616,
+      "sha256": "535a5b0dd139346b47062091cd3e5e4502cc3b4562b309d3c893c0908d2b2c41"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/stats.rs",
+      "bytes": 3089,
+      "sha256": "19596fa23d07f23a016b1bae3f6aaf14b89f1df9676cf136d9f016f84bbe9f45"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/world.rs",
+      "bytes": 49454,
+      "sha256": "baa9a702ff1ffd8e364572a948fa0673c0f88e52a29e78b90b6036885d71442e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/export.rs",
+      "bytes": 5588,
+      "sha256": "2dcab618df2c981f25c2474c7b83d812c977d38235e06b1a5860dfb2aa06f954"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/config.rs",
+      "bytes": 21459,
+      "sha256": "4fcfe23cf775d3e8c11681ad85a2dd6d2c5864c85710be7f67dc32d72293652c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/mod.rs",
+      "bytes": 1035,
+      "sha256": "c72eecf634e36da263b2ed7fdd5515f475db9ca698be51474a25487810dfa497"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/predictors.rs",
+      "bytes": 6022,
+      "sha256": "b158186288997dbd7d8ad99de4704ab03235e8cee4ce2fe23b2f633afb343540"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/presets.rs",
+      "bytes": 12183,
+      "sha256": "fa0df569958c56ada05d8f2549f1de273fd12ba42690935fc23f44f021b94fe8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/stats.rs",
+      "bytes": 2901,
+      "sha256": "80e1bb9603ef703199ba69bf6e939e1fe45d81a54ee90e7229dbd0b15813ad0a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/view.rs",
+      "bytes": 2627,
+      "sha256": "20e37b9436149e214a011cfffaa889aa05d3dea894abc5a8c8a0ca6d6b37ad43"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/world.rs",
+      "bytes": 44544,
+      "sha256": "44f4634c833e87ff520b0616dbf5ebd06fd94d6050b13d3214830891ab2041a6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/config.rs",
+      "bytes": 26239,
+      "sha256": "fd13b293e5d42b6599ca14d4f8f73e3ff0b76e935f76796f989d1c1865db7103"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/effort.rs",
+      "bytes": 31779,
+      "sha256": "608252daddb3f7950852aa21548256298c43e0e921fbb75399533029a4d4f587"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/fit.rs",
+      "bytes": 15713,
+      "sha256": "1b66ba7c35377e637ba898637306c55720b8958fcaffcba9f532a4d17e96c4b7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/mod.rs",
+      "bytes": 858,
+      "sha256": "7eaf779c003a9212b68bccab00cd27f5c06841758da76a70642ee5b4b4ba1a58"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/presets.rs",
+      "bytes": 10330,
+      "sha256": "a39002179908918083f2e73f3699476cbe00c718729aea4e18bc670f1c9fe3f6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/stats.rs",
+      "bytes": 2458,
+      "sha256": "90ce3cd4d043c068510e2d2cecc1ca74bb10d13a72c05b96715606d72fd92bd9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/view.rs",
+      "bytes": 2112,
+      "sha256": "c65994dd7178c2bfab7bae17bb4618cfc820159832285dc67ef50590043decf7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/world.rs",
+      "bytes": 61183,
+      "sha256": "708c23c67eef902a122d6ecd6b3084870740c169a44ee0d046c6a79c86803e24"
+    },
+    {
+      "path": "crates/sugarscape-core/src/frames.rs",
+      "bytes": 94256,
+      "sha256": "6242953ed111497342d03ce5ef9e9e143ae3ba84731d41edfb8f5936fae4d1ed"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geometry.rs",
+      "bytes": 4892,
+      "sha256": "32ad1397076da50a8dadc943e6e6528671eee5aad711ec237bc452e0ed32a558"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/analysis.rs",
+      "bytes": 2220,
+      "sha256": "f12c274a054551bc5724020e4dc34191c99c70805cd361dd10747f9dda06a85f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/claims.rs",
+      "bytes": 13047,
+      "sha256": "134147e2572ccde8d010f39fc23bc7f032a9ac7bc563dad3f8226d7104cf522d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/combat.rs",
+      "bytes": 14347,
+      "sha256": "6e1e811031e455065c64c67d9cebac535d35c0beb84a0f36445da0cacee3af5f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/config.rs",
+      "bytes": 28314,
+      "sha256": "4d88163ac1702cee05b8c7d359cb64f8b9d7759aedc5d8ec5b632c6f854c7fbe"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/decision.rs",
+      "bytes": 15538,
+      "sha256": "2a20983dce167d8d46629861f38b7d39e0f75d8339cd69000bdcbc9437d67806"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/mod.rs",
+      "bytes": 686,
+      "sha256": "fb562bbb40a0254fd708b843c974f72404ad3ae82b3a9e2af99deab5bda27b31"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/presets.rs",
+      "bytes": 1124,
+      "sha256": "6ba9bc8eb37c0c9334eea881471def4c5528aa9bca6629c4ab69598d9909b299"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/resources.rs",
+      "bytes": 1536,
+      "sha256": "516d17e62165ebb81d5d340575b242bee957c2d982d4ac80341ffa382a5944b0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/stats.rs",
+      "bytes": 2106,
+      "sha256": "8134cdaec9b1403468b6b05afa186ad8232828ed57b1b1abdf49374849c4cf6c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/territory.rs",
+      "bytes": 2655,
+      "sha256": "2f7356a3c5e2de9d9bb52130e16a7177da53b5324f8f4db8c71ac3911e9a31a7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/tests.rs",
+      "bytes": 2605,
+      "sha256": "4d074b08a666302590e523f09c53834935d4d37883e2128e804a1444bbf87033"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/view.rs",
+      "bytes": 6957,
+      "sha256": "77b9584f079c9da138a21c8345845fab264d2cf0e944523cd2f82e607e05ba22"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/wars.rs",
+      "bytes": 12719,
+      "sha256": "ad01f67295f55892d3e6abf240766a80d1aa9c7744c6d56ef0c36582c60fd34a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/world.rs",
+      "bytes": 31872,
+      "sha256": "342c3d6129747abd8b0f2f5b3cdcff8ade9fefcc7c52bb64d87dd6ef420c4564"
+    },
+    {
+      "path": "crates/sugarscape-core/src/graph.rs",
+      "bytes": 9974,
+      "sha256": "8ac66dbf0a4f7d2abb1bfc33da635fe338e4e1af3789ab5eb8d907ecd48c0fd1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/config.rs",
+      "bytes": 20660,
+      "sha256": "c07d63e74a3e6abb3038fcc7f8486fedef151e6f7fa284865c17f22895a2a6d6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/mod.rs",
+      "bytes": 907,
+      "sha256": "19003ab1170695ea75fa909958271dcf181800c8e84b565f39b824314507e1cb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/presets.rs",
+      "bytes": 9642,
+      "sha256": "18549481175703384688927bf9df588b7e03ea9ae3fa8b360729d65842702eb1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/stats.rs",
+      "bytes": 4566,
+      "sha256": "d52d367378d256ce6c83efec2f09a4a00f94eafdde21b4820f038aca2a065109"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/view.rs",
+      "bytes": 2137,
+      "sha256": "8a9a53391a89bade48c75133cce1f3114887537b02d5c573f932a50445f14fbc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/world.rs",
+      "bytes": 111194,
+      "sha256": "0b6c6edf16194b54448115e668dafb9b13d987ad029d0a0f878d405880f92c5e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/analytic.rs",
+      "bytes": 18343,
+      "sha256": "018a0002013ef1cfd08b19729f6ed9670c9ae80df1a31c3da2d7adf76e920849"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/config.rs",
+      "bytes": 26667,
+      "sha256": "f92dcb2c47a894ff62f0079e4e72c1b6d9420968e502812904b3000f001aef4c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/mod.rs",
+      "bytes": 789,
+      "sha256": "c4d7f9736a943231a07c6978c4b03c0c7f6f5328a4348de4183d4286d4bc9b5b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/presets.rs",
+      "bytes": 15719,
+      "sha256": "ee89d1fcf7c27e4476b5cb746963e8a95880460847e84d35b16394ad7f9f778a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/stats.rs",
+      "bytes": 2631,
+      "sha256": "6c7bd8994f116212fc9ed1b3fd3f4cfcc5708f0bcfe1c0db0d00d12670c0e103"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/strategy.rs",
+      "bytes": 14171,
+      "sha256": "3789a13869554f30ff4dced3a7b4e168b5e0178fd1a6026296a3b59702e8afc5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/world.rs",
+      "bytes": 56521,
+      "sha256": "84ebc19e43164ae78422e1e960ea895051299642b2c577caf541f4944974aebd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/landscape.rs",
+      "bytes": 18133,
+      "sha256": "fb86f769517dcee118f1b47faffe1c7a280db3f3dd5485c6e3a01aaf0de69920"
+    },
+    {
+      "path": "crates/sugarscape-core/src/legacy.rs",
+      "bytes": 8575,
+      "sha256": "4c076ed8732daa04186c1b25fe73a9b77f652f9a1675f21d8255e5b955bc3fce"
+    },
+    {
+      "path": "crates/sugarscape-core/src/lib.rs",
+      "bytes": 1118,
+      "sha256": "b0d40870e74593d8b749c955191ebab0c44d6b0a7bba59cf6fc0ff1ce3ff5c98"
+    },
+    {
+      "path": "crates/sugarscape-core/src/line.rs",
+      "bytes": 36131,
+      "sha256": "8af725de6e3253fba40a13178f7e63395cc4f994cebaf167762d05d07cc3fe31"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/astar.rs",
+      "bytes": 6275,
+      "sha256": "d806d47ce51574192f30a96bc238e0d3ae3a6a9942814453772bc5845d81cff0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/episodes.rs",
+      "bytes": 9347,
+      "sha256": "651897bdbcbf0bfea5e84224a4dab13485dc98ed31c625fca1a0f192f15f782b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/fates.rs",
+      "bytes": 26310,
+      "sha256": "f59a7b2eeb90c5cc41fe455de80068e9f2f9c6b06048f7b1d881642323e9b01a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/lab.rs",
+      "bytes": 30269,
+      "sha256": "25f6eadeec86cedd6270c03f009748eb6a6d43f65a49a2c5e338cb0c79a4e725"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/mod.rs",
+      "bytes": 37739,
+      "sha256": "dbec26d9c486a68ab8757d93a76202f21fd782e0574ada599dec81806fa2e416"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/rules.rs",
+      "bytes": 36984,
+      "sha256": "2dfbf6876f5081ec032d81efbce4863b0f4f5201a95b499eb572b367a07b3ca0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/theft.rs",
+      "bytes": 43074,
+      "sha256": "c2417cb48556b34b9d35889f9f03a12dde8cbecebbb58ca9222a4cf303a0878c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/watching.rs",
+      "bytes": 85481,
+      "sha256": "cb317f9aac47cd361965c80973f7934985ad78475a18cdd63bbc7a4e4c205c98"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/central.rs",
+      "bytes": 44556,
+      "sha256": "7a6e9b3abf8f7a36e07df9098bfdb53b3cc6d84c791f9062bdb89add4fc0991c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/goap/forage.rs",
+      "bytes": 30823,
+      "sha256": "993ce759124e0d15c90d4a41804cbd6251e09bd1bb17d306fe3bce759a30ca9f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/goap/mod.rs",
+      "bytes": 7837,
+      "sha256": "6ff718d88ab52724581d76128a09ce7b1f9938e8da894baf1701c14d98ed6551"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/goap/strips.rs",
+      "bytes": 12951,
+      "sha256": "e85daae220858f25ed89f5fb1e7aff6b618ea4afc99c77fe127dbe0a518f5aaf"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/grid.rs",
+      "bytes": 4408,
+      "sha256": "c40ceb2bf17647c5996985e556a890c757b63a255e662390de7c079aa2bdaae2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/memory.rs",
+      "bytes": 27455,
+      "sha256": "67d7c5024a621986075fa70123a4e914085c5fdef9e25affc0ec50d60a8c20a0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/mod.rs",
+      "bytes": 1735,
+      "sha256": "8cb0ba5b167385ec18e34f2d4b00578cb1370187173c766d4c426eac8ef609ec"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/mvt.rs",
+      "bytes": 12609,
+      "sha256": "fbc73520ed33dbed835a512b0c52e1626c94b88542a43135c5684cd74b5e64f2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/access.rs",
+      "bytes": 4429,
+      "sha256": "ecd0eee15bb7cbb366c91de03a70c36d205c60e17ac4e4a0faff5e6a3cb77549"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/controller_tests.rs",
+      "bytes": 12863,
+      "sha256": "30508f8989a24dcb6ef7532f627332bcd865e0fd30f9727549766fa1042f5726"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/delivery.rs",
+      "bytes": 3842,
+      "sha256": "32ce7ddcb6e70c75406a7f4df6d79eabfb6985b314d31987c983d0d4aa00a27f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/guard.rs",
+      "bytes": 2894,
+      "sha256": "19067bbd32cb26c8fe8f14244f8fff6e56c924ecd6a49f49783167313d24d9a2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/inheritance.rs",
+      "bytes": 6697,
+      "sha256": "8f1e73dbb5e12a52f91c4ea5a5231d9444bda29394dc1435af075113afc543b9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/mod.rs",
+      "bytes": 7337,
+      "sha256": "8dc31434a4efbaea8bb6193d5c75c401d2264b6f3364d04443178c6524041276"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/runner.rs",
+      "bytes": 29979,
+      "sha256": "32c69d8b363be954c0b89533c1cc4634450decd87fcf130cc66110bab8438a77"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/state.rs",
+      "bytes": 1648,
+      "sha256": "4730e91e480b063d412ebda2e6ef9eeec0dff48de619b92b22d55a3190f22474"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/stores.rs",
+      "bytes": 18699,
+      "sha256": "cf084a6d830396adcb7c64ff80032077dd1db602790e75672c9b3deaf56bf358"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/watching.rs",
+      "bytes": 26482,
+      "sha256": "f2dd5d1171dda614647202d1fe413ccdea01e86cf867d0fee3bf3fff7d5cb41e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/utility.rs",
+      "bytes": 10241,
+      "sha256": "6d48db4613158ac220d0422cc8db5f8f2943e793d83751d01e5e12eeaa17a572"
+    },
+    {
+      "path": "crates/sugarscape-core/src/model.rs",
+      "bytes": 84331,
+      "sha256": "4584d7c76f5fcb900ed79377c790de6068e541d18514895f8586aadce3c78bb3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/network.rs",
+      "bytes": 6787,
+      "sha256": "4c5c0740b3d09a4977d6abe2ee8ce03a850cfab6737928dfc99b19d91ec0e512"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/config.rs",
+      "bytes": 14186,
+      "sha256": "a70d935f04cde03644939013c6ea56e6d49333cf5da6216982588c7bf1983671"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/mod.rs",
+      "bytes": 760,
+      "sha256": "e6162a75108f0eec5679b53ad36667d5f4aae27b5d37363dd3773384258caaed"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/presets.rs",
+      "bytes": 8164,
+      "sha256": "5edecd7fb31f91878e7ad40beab018cdc483013633f1a48b54fbf0c8af4c529c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/stats.rs",
+      "bytes": 3140,
+      "sha256": "fec463645e822208773a09b92bd1918d425ef0ab25599e9a4ab1d3ab2a9dde4f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/view.rs",
+      "bytes": 4928,
+      "sha256": "b54cfb4330a8635fe1549ccdcaa66bca326ac89b6780e853541b8ff199edbbf0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/world.rs",
+      "bytes": 41833,
+      "sha256": "f91be21038d83846f753d514a670aa94e4e441391b67964e7e3db640a08647af"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/config.rs",
+      "bytes": 13283,
+      "sha256": "dd508e445b18b1b17a3586fa8de0712db8a93128b65b1efe8f0a839aade36552"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/mod.rs",
+      "bytes": 813,
+      "sha256": "7825d3baaa63c8bd8a6a863981990643c4a4a6cfde248f8359e4e5bf53cfc522"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/presets.rs",
+      "bytes": 8523,
+      "sha256": "d8d84ab5b721707a05fd96b13108e818355cb2022d900a09ca436eacb82f99b5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/stats.rs",
+      "bytes": 4702,
+      "sha256": "1cd7cad45e85337a75f6ed438aae3f73a7541dda04389ae9b0f265ed08ee1475"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/view.rs",
+      "bytes": 3441,
+      "sha256": "a3e656ef268a5be899c1dc6398fa6d4be6be60a9612cacb81eab764f59608e16"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/world.rs",
+      "bytes": 31482,
+      "sha256": "75348ca05c680a97e466e7151263a8616acde03b707f01d0149baec55d164a24"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/alliance.rs",
+      "bytes": 7336,
+      "sha256": "435b9a87a4cc6a19c29dacba050ea908f4dd0090f1d0bd1a9f95e886d0e8c99b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/analysis.rs",
+      "bytes": 4028,
+      "sha256": "e07253726bedddc60ffa66444dd76878d24c5512bb33ebc778e99854e01f02d7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/combat.rs",
+      "bytes": 13636,
+      "sha256": "b861f8bc43ba09082cadcecc34bf9c5c24de8aaff9782e8a001fc429dd77acfc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/config.rs",
+      "bytes": 37979,
+      "sha256": "b3444b63e436b2d3f6cd560e4ee6e2d5b46ced222f3cb84540693b505c93f387"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/decision.rs",
+      "bytes": 12198,
+      "sha256": "a12b659649df1ef954de2db8bfa8192dfd5366f26623a9721d9cd9b7a7bef624"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/mod.rs",
+      "bytes": 430,
+      "sha256": "87a6032e6c080f55d7d1df11dd00c2f6eb4ba4ce7a18025ec457bfe3f4bcceb3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/presets.rs",
+      "bytes": 1493,
+      "sha256": "6b2e6303ea3f684af3f0fe5a9decb05c55232c36d4c819558f28e61d2c9fb379"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/resources.rs",
+      "bytes": 10079,
+      "sha256": "c59615803e4fbf7edb34be3ca1e6d91d905264588b5c3813f68b5057eab23dd1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/stats.rs",
+      "bytes": 4345,
+      "sha256": "eb43fbf64c1453be52208d4d612559f718891b0ca1b95a964cb64712bbee8cde"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/territory.rs",
+      "bytes": 15270,
+      "sha256": "d7c7334bb2daa2c26509eb4819cb0b118eeb5fbc4ba0a1ceb957de55d0025b07"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/tests.rs",
+      "bytes": 40449,
+      "sha256": "4d5cea5d2e68c022837b46e97bd42b965ef865cecf12a57362b086ccc0e0b2dd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/view.rs",
+      "bytes": 8377,
+      "sha256": "da10a726b824d58e4dd7388d490106b05bea9e5a10fad96f607e83727d61e345"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/world.rs",
+      "bytes": 22311,
+      "sha256": "9fedf8b4c2035a8a9f5e69a2e0f9ede07fe21d78ac93683737a6cbd0706a0951"
+    },
+    {
+      "path": "crates/sugarscape-core/src/portable.rs",
+      "bytes": 3989,
+      "sha256": "f6fc3e202b2ed0463b6957eb28597d95f6e8b0670a174ce743790d570661cc23"
+    },
+    {
+      "path": "crates/sugarscape-core/src/presets.rs",
+      "bytes": 166208,
+      "sha256": "da9741c50a3cbaf2ff26f6fda21b5623f9ea4be06d97f905944013d1597dc220"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/config.rs",
+      "bytes": 17802,
+      "sha256": "57dea31048062453b7fe0b2d144451b8ccac22ac95e3349ac5e7eec1d71c4c83"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/mod.rs",
+      "bytes": 760,
+      "sha256": "86973e9ac8b2e2f67017c4027129d697784e8929ac9c84c6de258f3823e63365"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/presets.rs",
+      "bytes": 8796,
+      "sha256": "6780c497298377d566dbcbac61f2fd555c64f00149444732e007a1de74bb66f3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/stats.rs",
+      "bytes": 2181,
+      "sha256": "66b72d06ef6a0f582b3c8fb437aec0af557908145a5993dd54899bc9fcb14167"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/view.rs",
+      "bytes": 3873,
+      "sha256": "1a89b2651fe570cffc525a9aac2559b6c36addeabc898e17486efc06903f6b22"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/world.rs",
+      "bytes": 46590,
+      "sha256": "821339aee3c674446ecfc50b5501164f18165ba672ffd90764d9fb3a7bcdfb74"
+    },
+    {
+      "path": "crates/sugarscape-core/src/render.rs",
+      "bytes": 24778,
+      "sha256": "4f411007d2f0865100ee2e8e4fb35843d37b165c0270f91a1e6f2c02eaea4c84"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/config.rs",
+      "bytes": 14909,
+      "sha256": "8585d0e4659898b77374c1d6135302f887b6f7d6c808f5ebd5175faa553a0b8d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/mod.rs",
+      "bytes": 840,
+      "sha256": "50fa54612798e45a0fc745c4e694e9c9ad0b8aa4a7bba3df924513b3fad9f0d7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/presets.rs",
+      "bytes": 7592,
+      "sha256": "9170c50524b734e67b575ba9d2c8864c63bf7ba9a5485c190ceba00dbc7d5652"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/stats.rs",
+      "bytes": 2407,
+      "sha256": "f4da0f5d7c74dabbad00cb6674f24fca2956ff10362fcc45453aa1c42026305d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/view.rs",
+      "bytes": 1954,
+      "sha256": "f7ad9d74c6f16d030dcd084a15129bc6071820d21591fb2516322739542a907f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/world.rs",
+      "bytes": 44808,
+      "sha256": "c4c3c44c67128b023b60e56f50b38ece1953c323d99ee7b974c4d6065514d9b6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ring.rs",
+      "bytes": 27278,
+      "sha256": "c3631094c2f102d97a22bc6fe8629c95a97f5a84150601740baa0389e23553d6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rng.rs",
+      "bytes": 178,
+      "sha256": "af425707764621e3e11eed48574498671d3ba52927ab266a660295b51b9e2d1d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/combat.rs",
+      "bytes": 10021,
+      "sha256": "75ecbfc1957dbac790f4d901247fd553a816c54b16c76fb0a170c4cff9dccb41"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/credit.rs",
+      "bytes": 16849,
+      "sha256": "43e826845e5cdf5039dc516ef22a22a9ed4c780ca48f75538f4c32f92224e7d1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/culture.rs",
+      "bytes": 4940,
+      "sha256": "2113dcce3122f2f586f156135971d3e480bca4dfbd1cf6d8f5c55a3630a71b86"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/disease.rs",
+      "bytes": 20608,
+      "sha256": "6bcd0ce5970c82f7a203982888cdaefb01bc42755d9f199d0a27486af1bcc207"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/growback.rs",
+      "bytes": 6005,
+      "sha256": "8377cb3bdda25e1da0d6c7542665a0a4195bfb48bd968c949e6d5a808d91561f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/lifecycle.rs",
+      "bytes": 12075,
+      "sha256": "68fe9b35850805af8056b431af00774180f50e0ba2b4bc739636f9d1e733a0b6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/mod.rs",
+      "bytes": 3406,
+      "sha256": "86f996b30576f45e9fa7ae95e2aac9368a01f83d2f19d79c42869682a4770b7e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/movement.rs",
+      "bytes": 56619,
+      "sha256": "f63b367d95fdcd34e0cc38d24c93e7aa9b01c64759edf6e912ff1b981f8677f5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/pollution.rs",
+      "bytes": 3999,
+      "sha256": "92512a110030af7e7495ac5b7c19bdf3f5d02964baca44e57ff0585d2d66b0be"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/replacement.rs",
+      "bytes": 3510,
+      "sha256": "db91df25518f2166d4b0ab9547783dcd111d11415c35ccd2fac3db203b48de3f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/sex.rs",
+      "bytes": 15873,
+      "sha256": "0b2112a79ea29ed634ab5bb0c018ca8eab71d1b3af8cdb9d4cc1ab8c8eed5bd6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/trade.rs",
+      "bytes": 16775,
+      "sha256": "b8a6e006e8208278ce46783e7ec6ea2e62d8135dc25118d681be41c9fe169a87"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/truffles.rs",
+      "bytes": 2252,
+      "sha256": "4ae84e990ad3312f3a85df9869e8dbfd7615b2f46e88c43f48c9cf8a1bba97a3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/schelling.rs",
+      "bytes": 118129,
+      "sha256": "17395b9fe8cb2c7f5186b9176c3700da583c373b83cc149e68b2c7d11eb1a387"
+    },
+    {
+      "path": "crates/sugarscape-core/src/schema.rs",
+      "bytes": 9004,
+      "sha256": "725cbedf40a17694d6afdb1792d7efefc33922ede7992510df5980e4cdc595bf"
+    },
+    {
+      "path": "crates/sugarscape-core/src/social.rs",
+      "bytes": 19059,
+      "sha256": "8ba9fb3986f6e54cf0ab095414f1b66bf952c84e12c3f95780c98b0212bcb42f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/config.rs",
+      "bytes": 18582,
+      "sha256": "14d0a9a956aa159110093cf22355286b911dda744cd96a07336aa75d883e2cb9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/geometry.rs",
+      "bytes": 9079,
+      "sha256": "cee656ad640d6e2d0ce05cb325752460ab0a1f3bd17792580ef1766de4c8c9b3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/mod.rs",
+      "bytes": 848,
+      "sha256": "4f2434164682d386da239075f13d953379129b923bcf7741235cefaf605e9e86"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/presets.rs",
+      "bytes": 8558,
+      "sha256": "389f07ee571bbd594cb370766a4a869c36755eee2ae770631ace2f325659c3f6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/stats.rs",
+      "bytes": 1467,
+      "sha256": "09535e57b7513d48bf0015d562cfdf354deadfad51f3bfa17ef60441e12dc34b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/world.rs",
+      "bytes": 30713,
+      "sha256": "fea3a86c8c70e16cf1ac4949682260fbbcc87adf4b2c9cc69de0ffad540dd937"
+    },
+    {
+      "path": "crates/sugarscape-core/src/stats.rs",
+      "bytes": 119496,
+      "sha256": "50148ec3e03cc148011f53199daea129d9056af28a989195a38767029dcac736"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/config.rs",
+      "bytes": 11246,
+      "sha256": "117a038eee82caba408909e1bba83244645f6f844fcfaf337c8c71648f26b7c0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/graph.rs",
+      "bytes": 8070,
+      "sha256": "d82bdaf59162b1f81ca78a22495a1f87e359d6b7bf92c01302da127da5d7c7c9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/mod.rs",
+      "bytes": 810,
+      "sha256": "7e6a906bd81fb65cfcd81cfaf9ef5338453cbddb71e248c64ab241380c8b6804"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/presets.rs",
+      "bytes": 6292,
+      "sha256": "1128bba8bac3dfa955d11892d2a06e5073229f2094a4e1d11d8abcc94e3cb336"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/stats.rs",
+      "bytes": 4153,
+      "sha256": "8245c25d27398c10573f6063f17608322c3f9c8269fb0ccb4319fb45191ebe14"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/view.rs",
+      "bytes": 4126,
+      "sha256": "6bb67134560cccaa0a16e6ced2b29120cae62e1a04da7bf027935c134273c9d6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/world.rs",
+      "bytes": 32372,
+      "sha256": "f5e42bbf4fdac8c2138f36c61f3feaf0277ea90f9a06ed65840706b9527e62ca"
+    },
+    {
+      "path": "crates/sugarscape-core/src/sweep.rs",
+      "bytes": 98400,
+      "sha256": "b5ef5be2a16fe66d8df9abdb7ace691c39e5491ef8cbc47aa8e2fed7adf2349f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/config.rs",
+      "bytes": 11538,
+      "sha256": "5f7968b2b170ab2e4f584b9774acc6a396889ef8f2eb42f4da0f3bbb1a4ebce9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/mod.rs",
+      "bytes": 687,
+      "sha256": "9623e7855629474eacadc8a0099554db5a673de8272f05b4f0cfc1b8be9f5cac"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/presets.rs",
+      "bytes": 8787,
+      "sha256": "400e86b41bab90a7c0ba8182b1c7f7d87f502b39756aeb8b6876ca9615b83d86"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/stats.rs",
+      "bytes": 5442,
+      "sha256": "0c506f9022a1ce2720428d592db4397f38c3006e8803eedcd3e08eb57768bc50"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/world.rs",
+      "bytes": 32579,
+      "sha256": "48fa765a287962b91d7eea5213a16c6b9f5a198db4ba619fc6fe6de72c6b300f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/testkit.rs",
+      "bytes": 4311,
+      "sha256": "277dc46c585927440de92bc696883de83d7598c0570b42867972b13c6e02f393"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/config.rs",
+      "bytes": 20602,
+      "sha256": "c200fec28d52118f999e905d13b2da355067f379eee20f40b67299bdb4b47477"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/crowd.rs",
+      "bytes": 10300,
+      "sha256": "cd6e54cb9bff52594bd38fbb7b98f491c41051df6e0d5e9236bf75cb300c440e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/mod.rs",
+      "bytes": 1111,
+      "sha256": "05021d6f52edb660e7c15a7a7c4d423e73185418fefd1da6409a912117050c8c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/presets.rs",
+      "bytes": 14067,
+      "sha256": "40780f89acb9e682646c3a7b2b94dc621fa88d90e0caf8979311830815750dfe"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/stats.rs",
+      "bytes": 2039,
+      "sha256": "cd1665508a2f3a754390b1d3fc3de1077faffacff68e536ba3d10694a6aae503"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/theory.rs",
+      "bytes": 5547,
+      "sha256": "aa20eca4dfa383fef871d4201a25002459f461ce7f994babae12fabfbb3b360a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/view.rs",
+      "bytes": 2525,
+      "sha256": "d99b1fc1f1adcf5c5e0a1197b06816eb390aa4d4e010cc672838332631b8da81"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/world.rs",
+      "bytes": 44964,
+      "sha256": "8e297613a34d862bf6e6a41eed97f2f18a9aec40fca591cb0eeb05e173e869d1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tipping.rs",
+      "bytes": 37335,
+      "sha256": "1a8fcb5610be30683d82cc73283fd176ecb6a4d3d9308b93999dc6259dc3b6fc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/titles.rs",
+      "bytes": 47066,
+      "sha256": "483a5e560a9d200bb98a4332a306f7a6280953e697601402f1603da354282783"
+    },
+    {
+      "path": "crates/sugarscape-core/src/world.rs",
+      "bytes": 65784,
+      "sha256": "086e7cb482805ca1564703fd0d12a5cf3adb8a56c822cac96051f1e8af19947a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/config.rs",
+      "bytes": 14808,
+      "sha256": "76fb4c606fd66de09c9fa483b0fafe1acbcde119c22fb6aea555cd05db27c05d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/market.rs",
+      "bytes": 8171,
+      "sha256": "d6528ec094dd90980eaf823a66a45a76fac7069ee7115ab61f1408eb3ceb8618"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/mod.rs",
+      "bytes": 897,
+      "sha256": "e170e389adf1e53f7e0149a442a78681d028ca5765a5f671524604dab1e0e23b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/presets.rs",
+      "bytes": 11142,
+      "sha256": "23db1228a268182f37df372b21929fb7d2d229889da9710a00f2f4a5eb372e0c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/stats.rs",
+      "bytes": 2690,
+      "sha256": "22ea07dbff98808943cc0aad54e3ea09073a1596901669476c49e2c9de0a7093"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/view.rs",
+      "bytes": 1589,
+      "sha256": "23351b8ee3e9e9a31b3ad87c947fff21f65bbc748514295b9cc8aeb713f48dec"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/world.rs",
+      "bytes": 45506,
+      "sha256": "03380114d85f206688c51e0ffddb6ca0b1f48b8c3752543fb6ca6e39f90e91c2"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/astar.rs",
+      "bytes": 6213,
+      "sha256": "e969eaf373f549ef278416d912110c91aa0f5c9af52770b5bddf873fbfaabbe5"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/auctions_discovery.rs",
+      "bytes": 598,
+      "sha256": "0f5595fd5b9b6db65ff71520ad649292921c356a2cfe7cdf6c0bd3490bcb8a03"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/book.rs",
+      "bytes": 39333,
+      "sha256": "5dea74be27c27ba57ae32919edd824cfeef862341820a5d7233c68e80a3f3259"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/caching_lab.rs",
+      "bytes": 7719,
+      "sha256": "7e9ee0ec95e7bdc0dffcc192898fd2c05691c8dff997d84f9d07a5a3ddc53dfa"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/checkpoint.rs",
+      "bytes": 18360,
+      "sha256": "777d29537fba5ba0304539fefdec0068bc55fb16a5a018e03e8002f6861da2ce"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/civil.rs",
+      "bytes": 6908,
+      "sha256": "566c452148da78610849c0fad9530d9014aebfe37d0fc362b6882e7b9753afa9"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/collusion.rs",
+      "bytes": 2012,
+      "sha256": "6b234453aabe03ff4f3ff269c699aedfa971809d2cae006e724d19ea2a92db4b"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/dpd.rs",
+      "bytes": 21478,
+      "sha256": "bd7bb7eb5d2bedd6a2af8d68adff1987ed31aaf90f52d6e6cd7868ebf5c575ed"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/ethno.rs",
+      "bytes": 20971,
+      "sha256": "eea330225e8f15a6edd3cc871571a372a548771502b9867b0b89674d1cd82e3b"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/geosim_discovery.rs",
+      "bytes": 2516,
+      "sha256": "5fb794348c56b82d2d83650e79b865b2088dd08d7e1f7c05c01139e0045d2a6e"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/geosim_host_sweep.rs",
+      "bytes": 768,
+      "sha256": "a8069b791443cb8642f20e518ed9c6a4a055407d00479a175adab437c82903be"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/geosim_invalid_sweep.rs",
+      "bytes": 2847,
+      "sha256": "14325f2bae98f83a7c9a70d8b5e96e83693deecb35fc17656975c530502302c0"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/goap.rs",
+      "bytes": 6115,
+      "sha256": "296f62f4504efed0dcd5f0f8832bd75eb8351bbbbcbcd3827c67a3f30f17bdb0"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/golden.rs",
+      "bytes": 26293,
+      "sha256": "2ab70a03e62efe9f0113192a2b7fd90d336b6dc86a9e21fce42f18712c987835"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/image.rs",
+      "bytes": 21947,
+      "sha256": "92206e7836e466f5d8c0395347aa2283bd99fed36d1a1bbfe49a87c975536543"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/invariants.rs",
+      "bytes": 8562,
+      "sha256": "a4a25ec6748223c83af9956c62ea409e0c7aeb86f9d5c412bd91fb0905884775"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/legacy.rs",
+      "bytes": 3163,
+      "sha256": "685a9d13e715e9107c9795942ca96a3af331a8c7874825ad048a43b33f0e77fc"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/minds.rs",
+      "bytes": 4925,
+      "sha256": "e37a84facee23f77cb37bcf0889d6d18e7e3da218835516e985d15cd58eb1d14"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/polarity_discovery.rs",
+      "bytes": 755,
+      "sha256": "526e1fd5c73e40f4622b98c540da2ea5b45b38a4762f60625762eab04b6fc031"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/spatial.rs",
+      "bytes": 8025,
+      "sha256": "aa02a416c68925e72f64e90d0fdc7375524b09d7ccaae6b775572adbc580aad2"
+    },
+    {
+      "path": "crates/sugarscape-core/tests/tags.rs",
+      "bytes": 1431,
+      "sha256": "744af0930062d2ebc5b36f8434e70756b47f80bb3c709f1619cd9fdacc4e72a9"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-artifact-audit.md",
+      "bytes": 12916,
+      "sha256": "329d6160e9454a0a553abdda55c5b3e14ceb0db3a02be17f207bbf05c322ea98"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-author-code-reading-notes.md",
+      "bytes": 20595,
+      "sha256": "a9635c9d1a09693c53731998b66c7157bbc78acb3496cfeba8a255ce857f2938"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-damage-incidence-audit.md",
+      "bytes": 2638,
+      "sha256": "dc2739e3b379aebf0afdca58a868c9cee58ae3de2beba93305ac61587f8f7e64"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-defender-threshold-amendment.md",
+      "bytes": 3245,
+      "sha256": "09ad1cc8e19344fec24401e14a8c884e1884d22c9b034a8147b266287bbd43a7"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-design.md",
+      "bytes": 40488,
+      "sha256": "49e3b73eaf6df870b238febccab3ddfb13021aab47a0c99326a8a303dd367ee5"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-finite-technology-amendment.md",
+      "bytes": 3981,
+      "sha256": "a289753f324454c692e0715f4b8d9d1ac6ca8e58732af1dac3498efc2a3a2487"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-mechanics-reading-notes.md",
+      "bytes": 11729,
+      "sha256": "a063cbeb07e0a7ef1e81127064087fc13ba04ff2be9ae70ed6b8c67128ed6d8f"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-portability-amendment.md",
+      "bytes": 4544,
+      "sha256": "28738081acfad2f467b7c1df9a5fe6d3e9709344eb7ef51a0a1e917c3493e138"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-reading-notes.md",
+      "bytes": 9190,
+      "sha256": "908314c2d817662ff060c77c087eb19eac336eca51138bcd295fc7c1d398fb8e"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-source-extraction.md",
+      "bytes": 3341,
+      "sha256": "789246405f3ea8ca60e091733559a78c9777c6326c21016d5874eefa7319aab0"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-10-03-geosim-source-table.json",
+      "bytes": 21367,
+      "sha256": "44a7d45d5206081ed179febae5285546924a894e55ebfb25e93222e59a1ed976"
+    },
+    {
+      "path": "survey/Cargo.lock",
+      "bytes": 5884,
+      "sha256": "1ebf300527d73c5fab50afe7451d8d41b7cce9d5aca13d62adbaeae58df88c81"
+    },
+    {
+      "path": "survey/Cargo.toml",
+      "bytes": 537,
+      "sha256": "e8a720a196e6e097cc2806801893793147ebd0f8943f0b3e5c7e2017bc11c337"
+    },
+    {
+      "path": "survey/geosim/.python-version",
+      "bytes": 7,
+      "sha256": "e72b03ed5b70312f2782f2b05055c55b24670e126d50e24c4f2c559bf288f810"
+    },
+    {
+      "path": "survey/geosim/NUMERICAL_METHODS.md",
+      "bytes": 14977,
+      "sha256": "247e51627f6a246ce870750640ab3128ddd433daaf8e7f19163de33805975a12"
+    },
+    {
+      "path": "survey/geosim/README.md",
+      "bytes": 6395,
+      "sha256": "f267c6e08159db3503138701331a4fdbe771bd4c1dcff4d47acb30d8c078f44b"
+    },
+    {
+      "path": "survey/geosim/analysis.py",
+      "bytes": 9067,
+      "sha256": "bd46225c22bd701f6d4a89d3119db8d563340287345cdb8fad4736923d512a86"
+    },
+    {
+      "path": "survey/geosim/manifest.py",
+      "bytes": 5345,
+      "sha256": "e2e86f7482938d454c536ac937d5da7dc307176937f69bf7f65d2dfce267a0d1"
+    },
+    {
+      "path": "survey/geosim/methods.py",
+      "bytes": 6538,
+      "sha256": "2f35c276b5de8401fc9caa684812ec483c504d4cdf8dd69e726eb03d22bbb43b"
+    },
+    {
+      "path": "survey/geosim/modern.py",
+      "bytes": 13123,
+      "sha256": "2a14bca16c471af045470fad5ec22bcacf7117e14ca2f0d839f59319157eac8e"
+    },
+    {
+      "path": "survey/geosim/numerics.py",
+      "bytes": 11820,
+      "sha256": "736b80ec8cf2c49014b18f3de47939d31ce37bd1fdfa21d1b86a59df08ff4304"
+    },
+    {
+      "path": "survey/geosim/provenance.py",
+      "bytes": 4900,
+      "sha256": "1cb8e8be557281be0eb2e486a879d8cfbf1b91dd691cb93a6aea8b42cd285af5"
+    },
+    {
+      "path": "survey/geosim/records.py",
+      "bytes": 26740,
+      "sha256": "1f029432e3cf063bbea90a6db2952f65bb1379126e726f16a1ef2b54b35edbf6"
+    },
+    {
+      "path": "survey/geosim/reference/GeoSimReferenceProbe.java",
+      "bytes": 3497,
+      "sha256": "b95e1ab276dd3da823ba8b66d86c5bfd57d1b7cb708294d2b071d9bd0f08a064"
+    },
+    {
+      "path": "survey/geosim/reference/extract.py",
+      "bytes": 3699,
+      "sha256": "c4c4b30233dd5f0778c51d026ebef58feabbaaf6b6c0b8cedd500784b55da7ab"
+    },
+    {
+      "path": "survey/geosim/reference/test_extract.py",
+      "bytes": 2352,
+      "sha256": "ee163c4ac3f4824e2d2812a149ce52cc3a15d8955238e90457ab3aeb46681c67"
+    },
+    {
+      "path": "survey/geosim/reference/test_launch.py",
+      "bytes": 1778,
+      "sha256": "9bf1b479b2deb936383aedd6d1b3514e8321d79797f271bba588379b40b0ea83"
+    },
+    {
+      "path": "survey/geosim/reporting.py",
+      "bytes": 6329,
+      "sha256": "caa9c2f7a86d6dccb8d877e09fb6cdbfa96ef92ae47591c42fdafdba021f38e1"
+    },
+    {
+      "path": "survey/geosim/requirements.txt",
+      "bytes": 111,
+      "sha256": "a9d91bc2acb7c454523c844c70fd40b4edc3c8755a7b6f96973afaec23086e3d"
+    },
+    {
+      "path": "survey/geosim/run.py",
+      "bytes": 3981,
+      "sha256": "bbf689ed650eff451a272e07cbe785241717823d6cfa4ebd1b3b99204a0a24dc"
+    },
+    {
+      "path": "survey/geosim/source.py",
+      "bytes": 12548,
+      "sha256": "4b599ad80ee9f933f68eb5cba4ad023c7b8fc1eb768b0dabcf248baac1537078"
+    },
+    {
+      "path": "survey/geosim/test_analysis.py",
+      "bytes": 6049,
+      "sha256": "3fbeafb5293699786d265f668ed99dfe0be7e6ed962f472563c7adad9a350916"
+    },
+    {
+      "path": "survey/geosim/test_cli.py",
+      "bytes": 3144,
+      "sha256": "ddbea59f5ec86d489085c6a6b4a07c1fc83104f8e05bfc0a23f003889df22167"
+    },
+    {
+      "path": "survey/geosim/test_manifest.py",
+      "bytes": 2615,
+      "sha256": "8325865ba5cc9ce124f6539071bb0defbc5c7e7035440def0b9d10cbf69ac711"
+    },
+    {
+      "path": "survey/geosim/test_modern.py",
+      "bytes": 9242,
+      "sha256": "03291cfb4e242a5ec3790b053d346a9b28469ed196d6aaa1e7cd1bbcbdc1e072"
+    },
+    {
+      "path": "survey/geosim/test_numerics.py",
+      "bytes": 5999,
+      "sha256": "ea9c04f95fb8a6e6d412d30c4fd3d2ba5c6591b1799ae3e6cc1e5fd925c603dc"
+    },
+    {
+      "path": "survey/geosim/test_provenance.py",
+      "bytes": 4330,
+      "sha256": "687d5c777d37cb01568df421be43090b24c58d6a80caeb7c592525b1178861b3"
+    },
+    {
+      "path": "survey/geosim/test_records.py",
+      "bytes": 20225,
+      "sha256": "537a314de542d217b80dcc3ab7dc5696d962c934213fadd9cdb67a580504f1b2"
+    },
+    {
+      "path": "survey/geosim/test_run.py",
+      "bytes": 3428,
+      "sha256": "ff2b4143ad18a77dfada8f02a54017dfeddb13f4a9b3a4d9849260e31e35f43e"
+    },
+    {
+      "path": "survey/geosim/test_source.py",
+      "bytes": 5243,
+      "sha256": "7eb5dfc05ee3000407083bd780abbc1f89cae49438baf8710129327fae611b1e"
+    },
+    {
+      "path": "survey/geosim/test_source_findings.py",
+      "bytes": 3452,
+      "sha256": "593f048d2e8f52128bc48723d4dbf5ccbfd09eada60cfc85383b8ded0fe6294c"
+    },
+    {
+      "path": "survey/src/bin/geosim.rs",
+      "bytes": 65695,
+      "sha256": "23b7daad2b66dfa6442ca0913e8c4343db20a904113a166d686131aea636da78"
+    },
+    {
+      "path": "survey/tests/fixtures/geosim-registered-manifest.json",
+      "bytes": 28793,
+      "sha256": "ea8a30237e06ef3f664a52e9b8f5a0c9d4cb71c66fb188a52e8173773cb24f3a"
+    },
+    {
+      "path": "survey/tests/geosim_native.rs",
+      "bytes": 14070,
+      "sha256": "4c448bafcd4edee018d82e93c88a315a2820699fc1504cae05d73ca2f333475c"
+    }
+  ],
+  "source_inventory_sha256": "5d7f78abd30f8dee86abb63f11f110b36a7119f554c0ae0d663a9aab7f579181",
+  "arms": [
+    {
+      "id": "original.base",
+      "family": "original",
+      "index": 0,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100
+      },
+      "sessions": 15,
+      "first_seed": 370000001
+    },
+    {
+      "id": "original.shock10",
+      "family": "original",
+      "index": 1,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "shock_shift": 10
+      },
+      "sessions": 15,
+      "first_seed": 370010001
+    },
+    {
+      "id": "original.shock0",
+      "family": "original",
+      "index": 2,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "shock_shift": 0
+      },
+      "sessions": 15,
+      "first_seed": 370020001
+    },
+    {
+      "id": "original.context_off",
+      "family": "original",
+      "index": 3,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "context_activation": false
+      },
+      "sessions": 15,
+      "first_seed": 370030001
+    },
+    {
+      "id": "original.shadow10",
+      "family": "original",
+      "index": 4,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "war_shadow": 10
+      },
+      "sessions": 15,
+      "first_seed": 370040001
+    },
+    {
+      "id": "original.shadow40",
+      "family": "original",
+      "index": 5,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "war_shadow": 40
+      },
+      "sessions": 15,
+      "first_seed": 370050001
+    },
+    {
+      "id": "original.thresholds2_5_shock10",
+      "family": "original",
+      "index": 6,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "superiority_threshold": 2.5,
+        "victory_threshold": 2.5,
+        "shock_shift": 10
+      },
+      "sessions": 15,
+      "first_seed": 370060001
+    },
+    {
+      "id": "original.mobile0_9",
+      "family": "original",
+      "index": 7,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "mobile_share": 0.9
+      },
+      "sessions": 15,
+      "first_seed": 370070001
+    },
+    {
+      "id": "original.distance_offset0_2",
+      "family": "original",
+      "index": 8,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "distance_offset": 0.2
+      },
+      "sessions": 15,
+      "first_seed": 370080001
+    },
+    {
+      "id": "original.distance_exponent5",
+      "family": "original",
+      "index": 9,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "distance_exponent": 5
+      },
+      "sessions": 15,
+      "first_seed": 370090001
+    },
+    {
+      "id": "original.grid75",
+      "family": "original",
+      "index": 10,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "width": 75,
+        "height": 75,
+        "initial_states": 450
+      },
+      "sessions": 15,
+      "first_seed": 370100001
+    },
+    {
+      "id": "precision.base",
+      "family": "precision",
+      "index": 11,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100
+      },
+      "sessions": 100,
+      "first_seed": 370110001
+    },
+    {
+      "id": "precision.shock10",
+      "family": "precision",
+      "index": 12,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "shock_shift": 10
+      },
+      "sessions": 100,
+      "first_seed": 370120001
+    },
+    {
+      "id": "precision.shock0",
+      "family": "precision",
+      "index": 13,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "shock_shift": 0
+      },
+      "sessions": 100,
+      "first_seed": 370130001
+    },
+    {
+      "id": "precision.context_off",
+      "family": "precision",
+      "index": 14,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "context_activation": false
+      },
+      "sessions": 100,
+      "first_seed": 370140001
+    },
+    {
+      "id": "precision.shadow10",
+      "family": "precision",
+      "index": 15,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "war_shadow": 10
+      },
+      "sessions": 100,
+      "first_seed": 370150001
+    },
+    {
+      "id": "precision.shadow40",
+      "family": "precision",
+      "index": 16,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "war_shadow": 40
+      },
+      "sessions": 100,
+      "first_seed": 370160001
+    },
+    {
+      "id": "precision.thresholds2_5_shock10",
+      "family": "precision",
+      "index": 17,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "superiority_threshold": 2.5,
+        "victory_threshold": 2.5,
+        "shock_shift": 10
+      },
+      "sessions": 100,
+      "first_seed": 370170001
+    },
+    {
+      "id": "precision.mobile0_9",
+      "family": "precision",
+      "index": 18,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "mobile_share": 0.9
+      },
+      "sessions": 100,
+      "first_seed": 370180001
+    },
+    {
+      "id": "precision.distance_offset0_2",
+      "family": "precision",
+      "index": 19,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "distance_offset": 0.2
+      },
+      "sessions": 100,
+      "first_seed": 370190001
+    },
+    {
+      "id": "precision.distance_exponent5",
+      "family": "precision",
+      "index": 20,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "distance_exponent": 5
+      },
+      "sessions": 100,
+      "first_seed": 370200001
+    },
+    {
+      "id": "precision.grid75",
+      "family": "precision",
+      "index": 21,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "width": 75,
+        "height": 75,
+        "initial_states": 450
+      },
+      "sessions": 100,
+      "first_seed": 370210001
+    },
+    {
+      "id": "reading.printed_increasing",
+      "family": "reading",
+      "index": 22,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "distance_formula": "printed_increasing"
+      },
+      "sessions": 15,
+      "first_seed": 370220001
+    },
+    {
+      "id": "reading.manhattan",
+      "family": "reading",
+      "index": 23,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "distance_metric": "manhattan"
+      },
+      "sessions": 15,
+      "first_seed": 370230001
+    },
+    {
+      "id": "reading.attacker_first",
+      "family": "reading",
+      "index": 24,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "path_sampling": "attacker_first"
+      },
+      "sessions": 15,
+      "first_seed": 370240001
+    },
+    {
+      "id": "reading.global_no_action",
+      "family": "reading",
+      "index": 25,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "initiation_guard": "global_no_action"
+      },
+      "sessions": 15,
+      "first_seed": 370250001
+    },
+    {
+      "id": "reading.all_fronts",
+      "family": "reading",
+      "index": 26,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "enemy_total": "all_fronts"
+      },
+      "sessions": 15,
+      "first_seed": 370260001
+    },
+    {
+      "id": "reading.own_commitment",
+      "family": "reading",
+      "index": 27,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "damage_basis": "own_commitment"
+      },
+      "sessions": 15,
+      "first_seed": 370270001
+    },
+    {
+      "id": "reading.exclusive",
+      "family": "reading",
+      "index": 28,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "victory_draws": "exclusive"
+      },
+      "sessions": 15,
+      "first_seed": 370280001
+    },
+    {
+      "id": "reading.collapse_only",
+      "family": "reading",
+      "index": 29,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "capital_capture": "collapse_only"
+      },
+      "sessions": 15,
+      "first_seed": 370290001
+    },
+    {
+      "id": "reading.affected_states",
+      "family": "reading",
+      "index": 30,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "locking": "affected_states"
+      },
+      "sessions": 15,
+      "first_seed": 370300001
+    },
+    {
+      "id": "reading.adjacent_active_states",
+      "family": "reading",
+      "index": 31,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "cluster_linkage": "adjacent_active_states"
+      },
+      "sessions": 15,
+      "first_seed": 370310001
+    },
+    {
+      "id": "reading.add_losses",
+      "family": "reading",
+      "index": 32,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "damage_feedback": "add_losses"
+      },
+      "sessions": 15,
+      "first_seed": 370320001
+    },
+    {
+      "id": "reading.initiator_curve",
+      "family": "reading",
+      "index": 33,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "attack_projection": "initiator_curve"
+      },
+      "sessions": 15,
+      "first_seed": 370330001
+    },
+    {
+      "id": "reading.mutual_only",
+      "family": "reading",
+      "index": 34,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "severity_damage": "mutual_only"
+      },
+      "sessions": 15,
+      "first_seed": 370340001
+    },
+    {
+      "id": "reading.java_int100",
+      "family": "reading",
+      "index": 35,
+      "preset": "paper",
+      "config_overrides": {
+        "periods_per_tick": 100,
+        "severity_export": "java_int100"
+      },
+      "sessions": 15,
+      "first_seed": 370350001
+    },
+    {
+      "id": "artifact.reference_2017",
+      "family": "artifact",
+      "index": 36,
+      "preset": "artifact_2017",
+      "config_overrides": {
+        "periods_per_tick": 100
+      },
+      "sessions": 15,
+      "first_seed": 370360001
+    }
+  ],
+  "analysis_jobs": [
+    {
+      "index": 0,
+      "id": "predictive.source.base",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        0
+      ],
+      "state_u32": [
+        376766346,
+        1901801382,
+        2357989843,
+        2916848472
+      ]
+    },
+    {
+      "index": 1,
+      "id": "predictive.source.shock10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        1
+      ],
+      "state_u32": [
+        2468243366,
+        788597120,
+        34736020,
+        3474193711
+      ]
+    },
+    {
+      "index": 2,
+      "id": "predictive.source.shock0",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        2
+      ],
+      "state_u32": [
+        868247881,
+        499304744,
+        835127734,
+        4206723746
+      ]
+    },
+    {
+      "index": 3,
+      "id": "predictive.source.context_off",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        3
+      ],
+      "state_u32": [
+        2416277492,
+        1681468797,
+        1060838809,
+        3886732608
+      ]
+    },
+    {
+      "index": 4,
+      "id": "predictive.source.shadow10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        4
+      ],
+      "state_u32": [
+        3094907371,
+        225163940,
+        3557800625,
+        4008327263
+      ]
+    },
+    {
+      "index": 5,
+      "id": "predictive.source.shadow40",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        5
+      ],
+      "state_u32": [
+        906024990,
+        1307637400,
+        1775072471,
+        3050822830
+      ]
+    },
+    {
+      "index": 6,
+      "id": "predictive.source.thresholds2_5_shock10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        6
+      ],
+      "state_u32": [
+        2110282419,
+        1482537562,
+        361419758,
+        670929100
+      ]
+    },
+    {
+      "index": 7,
+      "id": "predictive.source.mobile0_9",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        7
+      ],
+      "state_u32": [
+        2684587148,
+        35614507,
+        4214199133,
+        2726144170
+      ]
+    },
+    {
+      "index": 8,
+      "id": "predictive.source.distance_offset0_2",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        8
+      ],
+      "state_u32": [
+        1477528113,
+        2580105654,
+        2928149193,
+        3977136783
+      ]
+    },
+    {
+      "index": 9,
+      "id": "predictive.source.distance_exponent5",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        9
+      ],
+      "state_u32": [
+        3008223028,
+        606381300,
+        2274174520,
+        1048358533
+      ]
+    },
+    {
+      "index": 10,
+      "id": "predictive.source.grid75",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        10
+      ],
+      "state_u32": [
+        886740411,
+        4155722253,
+        739086459,
+        4001414796
+      ]
+    },
+    {
+      "index": 11,
+      "id": "contrast.base_minus_shock0",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        11
+      ],
+      "state_u32": [
+        3393276491,
+        3996474797,
+        3902454931,
+        74398514
+      ]
+    },
+    {
+      "index": 12,
+      "id": "contrast.base_minus_context_off",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        12
+      ],
+      "state_u32": [
+        3846237607,
+        111709135,
+        1202247928,
+        3683814643
+      ]
+    },
+    {
+      "index": 13,
+      "id": "ks.original.base",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        13
+      ],
+      "state_u32": [
+        3086169509,
+        62524836,
+        2653371102,
+        582556395
+      ]
+    },
+    {
+      "index": 14,
+      "id": "ks.original.shock10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        14
+      ],
+      "state_u32": [
+        2444442577,
+        3381957068,
+        2657705292,
+        3377221352
+      ]
+    },
+    {
+      "index": 15,
+      "id": "ks.original.shock0",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        15
+      ],
+      "state_u32": [
+        4069792306,
+        2669854049,
+        2738554530,
+        2544859128
+      ]
+    },
+    {
+      "index": 16,
+      "id": "ks.original.context_off",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        16
+      ],
+      "state_u32": [
+        3486098549,
+        788174475,
+        499712658,
+        4007581330
+      ]
+    },
+    {
+      "index": 17,
+      "id": "ks.original.shadow10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        17
+      ],
+      "state_u32": [
+        472540893,
+        2921633189,
+        475653753,
+        2298692357
+      ]
+    },
+    {
+      "index": 18,
+      "id": "ks.original.shadow40",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        18
+      ],
+      "state_u32": [
+        2176431256,
+        2731094973,
+        1619841635,
+        422139784
+      ]
+    },
+    {
+      "index": 19,
+      "id": "ks.original.thresholds2_5_shock10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        19
+      ],
+      "state_u32": [
+        993282993,
+        3888435601,
+        1217922915,
+        149188554
+      ]
+    },
+    {
+      "index": 20,
+      "id": "ks.original.mobile0_9",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        20
+      ],
+      "state_u32": [
+        2377251854,
+        3967861300,
+        1980575793,
+        3336755566
+      ]
+    },
+    {
+      "index": 21,
+      "id": "ks.original.distance_offset0_2",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        21
+      ],
+      "state_u32": [
+        1676405930,
+        1419657312,
+        1797110293,
+        3507350717
+      ]
+    },
+    {
+      "index": 22,
+      "id": "ks.original.distance_exponent5",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        22
+      ],
+      "state_u32": [
+        1889351214,
+        178973458,
+        2209380846,
+        904677601
+      ]
+    },
+    {
+      "index": 23,
+      "id": "ks.original.grid75",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        23
+      ],
+      "state_u32": [
+        3707443889,
+        701232191,
+        1368224599,
+        383446873
+      ]
+    },
+    {
+      "index": 24,
+      "id": "ks.precision.base",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        24
+      ],
+      "state_u32": [
+        447778035,
+        4222751930,
+        356919991,
+        2638923070
+      ]
+    },
+    {
+      "index": 25,
+      "id": "ks.precision.shock10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        25
+      ],
+      "state_u32": [
+        15647244,
+        3746332479,
+        1035033277,
+        388450249
+      ]
+    },
+    {
+      "index": 26,
+      "id": "ks.precision.shock0",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        26
+      ],
+      "state_u32": [
+        3766777133,
+        2587644801,
+        1685175195,
+        1954912990
+      ]
+    },
+    {
+      "index": 27,
+      "id": "ks.precision.context_off",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        27
+      ],
+      "state_u32": [
+        639311611,
+        3374683714,
+        1432729639,
+        3320601424
+      ]
+    },
+    {
+      "index": 28,
+      "id": "ks.precision.shadow10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        28
+      ],
+      "state_u32": [
+        1741450436,
+        3224769178,
+        2451517991,
+        428758222
+      ]
+    },
+    {
+      "index": 29,
+      "id": "ks.precision.shadow40",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        29
+      ],
+      "state_u32": [
+        1456885264,
+        4159716063,
+        2865380499,
+        3999139149
+      ]
+    },
+    {
+      "index": 30,
+      "id": "ks.precision.thresholds2_5_shock10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        30
+      ],
+      "state_u32": [
+        331275787,
+        450182866,
+        2085109597,
+        3154182726
+      ]
+    },
+    {
+      "index": 31,
+      "id": "ks.precision.mobile0_9",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        31
+      ],
+      "state_u32": [
+        1409708243,
+        3873751674,
+        286330874,
+        603583201
+      ]
+    },
+    {
+      "index": 32,
+      "id": "ks.precision.distance_offset0_2",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        32
+      ],
+      "state_u32": [
+        3201433655,
+        616509115,
+        963017647,
+        303529567
+      ]
+    },
+    {
+      "index": 33,
+      "id": "ks.precision.distance_exponent5",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        33
+      ],
+      "state_u32": [
+        3084574599,
+        2677499640,
+        1357110372,
+        2030330679
+      ]
+    },
+    {
+      "index": 34,
+      "id": "ks.precision.grid75",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        34
+      ],
+      "state_u32": [
+        4013838154,
+        4137402286,
+        3287734855,
+        381451195
+      ]
+    },
+    {
+      "index": 35,
+      "id": "parameters.original.base",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        35
+      ],
+      "state_u32": [
+        2294397411,
+        2577941739,
+        467797056,
+        3904651628
+      ]
+    },
+    {
+      "index": 36,
+      "id": "parameters.original.shock10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        36
+      ],
+      "state_u32": [
+        3376014647,
+        717861913,
+        1287563482,
+        2953537000
+      ]
+    },
+    {
+      "index": 37,
+      "id": "parameters.original.shock0",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        37
+      ],
+      "state_u32": [
+        1762461459,
+        836724279,
+        57192992,
+        2955393685
+      ]
+    },
+    {
+      "index": 38,
+      "id": "parameters.original.context_off",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        38
+      ],
+      "state_u32": [
+        1848523854,
+        2413260226,
+        4077303306,
+        2211517772
+      ]
+    },
+    {
+      "index": 39,
+      "id": "parameters.original.shadow10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        39
+      ],
+      "state_u32": [
+        3963139272,
+        2532408557,
+        357489988,
+        2739114157
+      ]
+    },
+    {
+      "index": 40,
+      "id": "parameters.original.shadow40",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        40
+      ],
+      "state_u32": [
+        713497705,
+        2379077426,
+        959354361,
+        321288865
+      ]
+    },
+    {
+      "index": 41,
+      "id": "parameters.original.thresholds2_5_shock10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        41
+      ],
+      "state_u32": [
+        3030669290,
+        3401065684,
+        2273220451,
+        1751660468
+      ]
+    },
+    {
+      "index": 42,
+      "id": "parameters.original.mobile0_9",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        42
+      ],
+      "state_u32": [
+        2824915272,
+        856448435,
+        2216785745,
+        1417445609
+      ]
+    },
+    {
+      "index": 43,
+      "id": "parameters.original.distance_offset0_2",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        43
+      ],
+      "state_u32": [
+        3352154166,
+        2429435523,
+        3549273084,
+        1063393082
+      ]
+    },
+    {
+      "index": 44,
+      "id": "parameters.original.distance_exponent5",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        44
+      ],
+      "state_u32": [
+        3037390942,
+        1577729607,
+        1233815454,
+        653862123
+      ]
+    },
+    {
+      "index": 45,
+      "id": "parameters.original.grid75",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        45
+      ],
+      "state_u32": [
+        944861890,
+        2141776856,
+        3199545041,
+        3942139671
+      ]
+    },
+    {
+      "index": 46,
+      "id": "parameters.precision.base",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        46
+      ],
+      "state_u32": [
+        2242384935,
+        4081237035,
+        1142179766,
+        293342160
+      ]
+    },
+    {
+      "index": 47,
+      "id": "parameters.precision.shock10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        47
+      ],
+      "state_u32": [
+        3388048042,
+        1279803849,
+        962262609,
+        742202892
+      ]
+    },
+    {
+      "index": 48,
+      "id": "parameters.precision.shock0",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        48
+      ],
+      "state_u32": [
+        2861389242,
+        1421888703,
+        3765080653,
+        1126301899
+      ]
+    },
+    {
+      "index": 49,
+      "id": "parameters.precision.context_off",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        49
+      ],
+      "state_u32": [
+        1235460348,
+        281004286,
+        3878868734,
+        2392078531
+      ]
+    },
+    {
+      "index": 50,
+      "id": "parameters.precision.shadow10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        50
+      ],
+      "state_u32": [
+        4098031538,
+        3957571006,
+        3241154098,
+        3037871636
+      ]
+    },
+    {
+      "index": 51,
+      "id": "parameters.precision.shadow40",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        51
+      ],
+      "state_u32": [
+        2224983746,
+        483717722,
+        2324720038,
+        1529002797
+      ]
+    },
+    {
+      "index": 52,
+      "id": "parameters.precision.thresholds2_5_shock10",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        52
+      ],
+      "state_u32": [
+        3444519001,
+        3134124842,
+        2799067201,
+        1164027237
+      ]
+    },
+    {
+      "index": 53,
+      "id": "parameters.precision.mobile0_9",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        53
+      ],
+      "state_u32": [
+        1631856882,
+        3893120312,
+        3716457654,
+        3170924321
+      ]
+    },
+    {
+      "index": 54,
+      "id": "parameters.precision.distance_offset0_2",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        54
+      ],
+      "state_u32": [
+        2617686530,
+        1424050565,
+        960821669,
+        2388577781
+      ]
+    },
+    {
+      "index": 55,
+      "id": "parameters.precision.distance_exponent5",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        55
+      ],
+      "state_u32": [
+        1020016087,
+        4217622801,
+        636365061,
+        3656413804
+      ]
+    },
+    {
+      "index": 56,
+      "id": "parameters.precision.grid75",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        56
+      ],
+      "state_u32": [
+        3845453731,
+        612499642,
+        3117091408,
+        3747703645
+      ]
+    },
+    {
+      "index": 57,
+      "id": "parameters.reading.printed_increasing",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        57
+      ],
+      "state_u32": [
+        1890393881,
+        1348596610,
+        613543951,
+        3441864273
+      ]
+    },
+    {
+      "index": 58,
+      "id": "parameters.reading.manhattan",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        58
+      ],
+      "state_u32": [
+        268362327,
+        1028538289,
+        2615551654,
+        2110042509
+      ]
+    },
+    {
+      "index": 59,
+      "id": "parameters.reading.attacker_first",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        59
+      ],
+      "state_u32": [
+        3582243721,
+        2322233072,
+        17975244,
+        3249749364
+      ]
+    },
+    {
+      "index": 60,
+      "id": "parameters.reading.global_no_action",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        60
+      ],
+      "state_u32": [
+        1348903342,
+        77874899,
+        2927165245,
+        1788458348
+      ]
+    },
+    {
+      "index": 61,
+      "id": "parameters.reading.all_fronts",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        61
+      ],
+      "state_u32": [
+        1872416017,
+        3378661914,
+        3268716672,
+        2793545705
+      ]
+    },
+    {
+      "index": 62,
+      "id": "parameters.reading.own_commitment",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        62
+      ],
+      "state_u32": [
+        203679156,
+        3912365568,
+        1291162890,
+        2694274960
+      ]
+    },
+    {
+      "index": 63,
+      "id": "parameters.reading.exclusive",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        63
+      ],
+      "state_u32": [
+        2709084991,
+        3991372634,
+        1730128633,
+        3091454542
+      ]
+    },
+    {
+      "index": 64,
+      "id": "parameters.reading.collapse_only",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        64
+      ],
+      "state_u32": [
+        3747813860,
+        2177719796,
+        3047306457,
+        1490172790
+      ]
+    },
+    {
+      "index": 65,
+      "id": "parameters.reading.affected_states",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        65
+      ],
+      "state_u32": [
+        3112760646,
+        1134380105,
+        3157725245,
+        3767226255
+      ]
+    },
+    {
+      "index": 66,
+      "id": "parameters.reading.adjacent_active_states",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        66
+      ],
+      "state_u32": [
+        640717119,
+        4135024675,
+        2568836674,
+        2722420469
+      ]
+    },
+    {
+      "index": 67,
+      "id": "parameters.reading.add_losses",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        67
+      ],
+      "state_u32": [
+        2946549660,
+        141086195,
+        594347580,
+        3038485837
+      ]
+    },
+    {
+      "index": 68,
+      "id": "parameters.reading.initiator_curve",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        68
+      ],
+      "state_u32": [
+        3565881880,
+        1988520347,
+        3368185712,
+        1487140514
+      ]
+    },
+    {
+      "index": 69,
+      "id": "parameters.reading.mutual_only",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        69
+      ],
+      "state_u32": [
+        3004224231,
+        3549576455,
+        1952528167,
+        447789057
+      ]
+    },
+    {
+      "index": 70,
+      "id": "parameters.reading.java_int100",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        70
+      ],
+      "state_u32": [
+        4033523898,
+        3259772537,
+        1216226107,
+        1715363411
+      ]
+    },
+    {
+      "index": 71,
+      "id": "parameters.artifact.reference_2017",
+      "root_entropy": 2026100301,
+      "spawn_key": [
+        71
+      ],
+      "state_u32": [
+        2228602343,
+        2296156366,
+        3588236916,
+        3814597306
+      ]
+    }
+  ]
+}

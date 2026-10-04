@@ -1,0 +1,22 @@
+# Premeasurement amendment — 2026-10-03
+
+Historical record of Task 1 packet revision `cd1de5fb0f9392609bf64e02dd3b3243d01893fe`: all hashes, checkpoint states and “only stage 2” statements below describe that preserved revision. The current additional Task 2 correction is recorded in [ACCESSIBILITY-AMENDMENT.md](ACCESSIBILITY-AMENDMENT.md) and [accessibility-verification.json](accessibility-verification.json).
+
+The approved source-only base is `4ab07d31fedc7e8f3cf35a36252da71218668fce`. The original approved packet at `65bfa9eae59622a824d7c6f09db93b68c83c1dbb` remains unchanged and independently auditable. Task 1's original implementation was `b8d320f4da9dbb4c19cbb1e716e950a76fd0cd3b`; independently reviewed correction `0b26aa867411526256b5bf8af9ee440eb9521efe` resolves the structural claim lock violation and delegates the duplicated exported damage helper. Its exact `claims.rs`, `combat.rs` and required design amendment bytes are incorporated into checkpoint 2 and every later checkpoint. This correction precedes registered measurement.
+
+The only regenerated patch is `01-core-implementation.patch` (stage 2). Stage 1 and stages 3–6 are byte-identical to the approved packet. Replay tools are unchanged. The sole formerly protected file reclassified as an explicit product file is `docs/superpowers/specs/2026-10-03-geosim-design.md`; it has an exact inventoried preimage and postimage at every checkpoint. All other 846 protected files retain their original entries. Metadata exclusions gain only the exact prefix `docs/superpowers/plans/2026-10-03-geosim-amended/`.
+
+| Binding | Original SHA256 | Amended SHA256 |
+| --- | --- | --- |
+| Replay manifest | `7065eea0d28bb0cecbf8b8abcddef2d4dfc5ae8feddbb8d2d86a472b6053389a` | `ff98e449fa8b493604968f7887b8a2534ae16b1e613b676188d687d1dff53df2` |
+| Stage 2 patch | `901b213164efc05e9e62ac1fdb506a99ab31c9c99e846faaee13701d0187dc46` | `5114c6c3e73865aafdb18b08197aa9f7496ae748b7b456466e2696fea6ce9b43` |
+| Scientific source inventory | `a2695f217568a08ed370a0ab5a7f0581dc58acce33b615037fde760a13cfdae8` | `e84e46c4573c4e5ac217f1f57c45ce8f28174a902f24756bef494a27c252a04a` |
+| Premeasurement study declaration | `c984743ce12f3a2433221a43f6db04e7b43f33e5f022a3e1f581b128f5d82cc2` | `8b5043e2c2a1be68d161231861e295f3dfb61fa98a8871ac6ad645917ff418b5` |
+
+The expected final Git tree changes from `6a17d993a8a2dfe635cd90925d639973dd342d8c` to `4fdd94aad9a2ab4db3aa85dc80e0672eafd35601`. Product inventory counts at checkpoints 0–6 are 504, 513, 520, 524, 525, 538 and 552; the design file adds one product entry while reducing protected entries from 847 to 846. Final whole inventory remains 1,398 files.
+
+The scientific source roster remains exactly 325 paths, with no additions or removals. Only `claims.rs`, `combat.rs` and the reviewed design have changed byte counts/hashes; [declaration-differences.json](declaration-differences.json) gives their exact old/new entries. The 37 arms, 1,490 attempted keys and seeds, 72 analysis jobs, source-table bytes, method contract, statistical settings and uncertainty rules are unchanged. In particular, source-table SHA256 remains `44a7d45d5206081ed179febae5285546924a894e55ebfb25e93222e59a1ed976` and method-contract SHA256 remains `23dfcea82e39a0a869aa60df5e6d2b22244e70a837a05ac3b22185e94f7630e7`.
+
+Fresh verification passed all 18 actual temporary-Git security/roundtrip tests, actual stage 1 discovery RED (`exit 101`, `E0433` missing `geosim`), complete clean six-stage amended replay, independent execution checkpoint 2 verification and full final byte/mode equality. Declaration generation and source inventory validation used the complete temporary final product, never premature downstream code in execution. Focused mutation probes also rejected the reviewed design and an unchanged protected source table. Execution product/spec and root `IMPLEMENTATION_PLAN.md` remain unchanged. The temporary expected/replay worktrees, indexes and unique raw logs remain retained at the locations in [amendment-verification.json](amendment-verification.json).
+
+This amendment does not certify artifact docking, statistical findings or an execution binary freeze. The next implementers retain the existing host parity, recorder, real build/freeze, measurement, independent review and deployment gates. The previously deferred minor inner-step panic-fixture observation remains for final review.

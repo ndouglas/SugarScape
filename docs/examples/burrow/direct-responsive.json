@@ -1,0 +1,15 @@
+{
+  "fixture": {
+    "growing": {
+      "width": 41,
+      "height": 25,
+      "workers": 8
+    }
+  },
+  "transport": "direct",
+  "cue": "responsive",
+  "freshness_window": 32,
+  "relay_distance": 3,
+  "response_weight": 3,
+  "minimum_recent_units": 2
+}

@@ -8,6 +8,7 @@ import {
   hoardSeasonTable,
   bandData,
   barsData,
+  SPATIAL_HOARDING_CHARTS,
   chartsBehind,
   distributionsDue,
   distributionWants,
@@ -20,6 +21,7 @@ import {
   positionBars,
   positionSteps,
   shownCharts,
+  stumbledData,
   showsAgeHist,
   showsGoodWealth,
   showsTagHist,
@@ -235,6 +237,13 @@ describe('firms charts', () => {
   it('chart firms, sizes, effort and pay, output and the scaling exponent over periods', () => {
     expect(MODEL_CHARTS.firms.map((c) => c.title)).toEqual(['Firms', 'Sizes', 'Effort and pay', 'Output', 'Scaling']);
     expect(timeAxisLabel('firms')).toBe('Periods');
+  });
+});
+
+describe('collusion charts', () => {
+  it('chart prices, the profit gain, learning and settling over ticks', () => {
+    expect(MODEL_CHARTS.collusion.map((c) => c.title)).toEqual(['Prices', 'Profit gain', 'Learning', 'Settling']);
+    expect(timeAxisLabel('collusion')).toBe('Ticks');
   });
 });
 
@@ -520,5 +529,22 @@ describe('hoard charts (Minds 7)', () => {
       [0.1, 0.2],
     ]);
     expect(hoardSeasonTable(null, c)).toEqual([[], []]);
+  });
+});
+
+describe('stumbledData', () => {
+  it('turns the pilfered column into what was stumbled on (pilfered − raided), keeping gaps', () => {
+    expect(stumbledData([[1, 2, 3], [0, 1, null], [2, 1, 4]])).toEqual([[1, 2, 3], [0, 1, null], [2, 0, null]]);
+  });
+});
+
+describe('spatial episode chart series', () => {
+  it('separates kinds and exposes unused-store gaps', () => {
+    const keys = SPATIAL_HOARDING_CHARTS.flatMap(c => c.lines.map(l => l.key));
+    expect(keys).toContain('scatter_stock_ticks');
+    expect(keys).toContain('larder_stock_ticks');
+    expect(keys).toContain('guard_executed');
+    expect(keys).toContain('delivery_return_turns');
+    expect(lineData({ ticks: Float64Array.of(0,1), columns: [Float64Array.of(NaN,0.25)] })).toEqual([[0,1],[null,0.25]]);
   });
 });

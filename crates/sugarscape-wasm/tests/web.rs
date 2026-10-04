@@ -426,6 +426,8 @@ fn builtins_and_series_names_are_listed() {
             "theft-find",
             "theft-cheaters",
             "theft-winter",
+            "watch-span",
+            "watch-scroungers",
             "hoard-ratio",
             "hoard-recovery",
             "hoard-cheaters",
@@ -441,7 +443,33 @@ fn builtins_and_series_names_are_listed() {
             "firms-base-pay",
             "firms-hiring",
             "firms-readings",
-            "firms-population"
+            "firms-population",
+            "collusion-table-i",
+            "collusion-alpha-beta",
+            "collusion-delta",
+            "collusion-memory",
+            "collusion-myopic",
+            "collusion-two-phase",
+            "collusion-every-price",
+            "collusion-below-nash",
+            "collusion-invitation",
+            "collusion-synchronous",
+            "collusion-exploration",
+            "collusion-timescale",
+            "collusion-rp-complete",
+            "auctions-formats",
+            "auctions-feedback",
+            "auctions-initialization",
+            "auctions-ties",
+            "auctions-hindsight",
+            "auctions-local",
+            "auctions-biased",
+            "auctions-downward",
+            "auctions-market",
+            "auctions-bidders",
+            "auctions-persistent",
+            "auctions-duration",
+            "polarity-predators"
         ]
     );
     assert!(list[0]["sweep"]["name"]
@@ -800,6 +828,22 @@ fn presets_list_every_model_with_sugarscape_configs_untagged() {
             .map(String::from)
     };
     assert_eq!(model("ii-2-unit"), None);
+    let geosim_ids = list
+        .iter()
+        .filter(|p| p["config"]["model"] == "geosim")
+        .map(|p| p["id"].as_str().unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        geosim_ids,
+        vec![
+            "geosim-paper",
+            "geosim-no-technology",
+            "geosim-no-context",
+            "geosim-smaller-shocks",
+            "geosim-artifact-2017"
+        ]
+    );
+    assert_eq!(model("geosim-paper").as_deref(), Some("geosim"));
     assert_eq!(model("vi-4-schelling-25").as_deref(), Some("schelling"));
     assert_eq!(model("vi-9-ring-megagroup").as_deref(), Some("ring"));
     // Sugarscape presets serialize as before, plus the menu's title.
@@ -814,6 +858,21 @@ fn presets_list_every_model_with_sugarscape_configs_untagged() {
 fn schemas_are_listed_for_the_other_models() {
     let schemas: serde_json::Value = serde_json::from_str(&model_schemas_json()).unwrap();
     assert!(schemas.get("sugarscape").is_none());
+    let geosim = schemas["geosim"].as_array().unwrap();
+    for path in [
+        "damage_incidence",
+        "defender_threshold",
+        "severity_export",
+        "completed_export",
+        "numerical_policy",
+    ] {
+        assert!(
+            geosim
+                .iter()
+                .any(|p| p["path"] == path && p["kind"] == "choice" && p["apply"] == "reset"),
+            "missing GeoSim reading {path}"
+        );
+    }
     let schelling = schemas["schelling"].as_array().unwrap();
     assert!(schelling
         .iter()
@@ -1332,6 +1391,66 @@ fn firms_with_beta_drawn_per_firm_match_the_native_fingerprint() {
 }
 
 #[wasm_bindgen_test]
+fn collusion_sims_match_the_native_golden_entries() {
+    // crates/sugarscape-core/tests/golden.rs, MODEL_GOLDEN: the paper's
+    // readings, the authors' RAN2, no memory, two-phase exploration,
+    // synchronous updates and the shifted grid.
+    for (id, fp) in [
+        ("collusion-calvano", "0xbfdc574972d2efcd"),
+        ("collusion-code", "0xa6ab4cce772a8a70"),
+        ("collusion-no-memory", "0x172d003af01b8b94"),
+        ("collusion-two-phase", "0xff7d1eb24dd21e2f"),
+        ("collusion-synchronous", "0xcbb6eed6a17dd495"),
+        ("collusion-below-nash", "0x4b11e4afb4a24a8c"),
+    ] {
+        let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();
+        assert_eq!(sim.model_kind(), "collusion");
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), fp, "{id}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn a_finished_collusion_session_matches_the_native_results() {
+    // `collusion::world::tests::a_finished_session_reaches_its_pinned_results`
+    // pins the same session natively: the analysis after convergence (the
+    // cycle, Δ, both equilibrium tests, the responses) is portable too.
+    let mut c: serde_json::Value = serde_json::from_str(&preset_json("collusion-calvano")).unwrap();
+    c["beta"] = serde_json::json!(2e-4);
+    c["window"] = serde_json::json!(2000);
+    let mut sim = Sim::new(&c.to_string(), 1, JsValue::NULL).unwrap();
+    while !sim.finished() {
+        sim.step(100);
+    }
+    assert_eq!(sim.tick(), 44.0);
+    assert_eq!(
+        sim.latest_value("cycle_gain").unwrap().to_bits(),
+        4604541580735232753
+    );
+    assert_eq!(sim.latest_value("equilibrium_on_path"), Some(0.0));
+    assert_eq!(sim.latest_value("punishment_like"), Some(0.0));
+}
+
+#[wasm_bindgen_test]
+fn collusion_boltzmann_and_three_firms_match_the_native_fingerprints() {
+    // `collusion::world::tests::boltzmann_and_three_firms_reach_their_pinned_fingerprints`
+    // pins the same configs and values natively.
+    let mut b: serde_json::Value = serde_json::from_str(&preset_json("collusion-calvano")).unwrap();
+    b["exploration"] = serde_json::json!("boltzmann");
+    b["temperature"] = serde_json::json!(0.01);
+    b["cooling"] = serde_json::json!(1e-4);
+    let mut sim = Sim::new(&b.to_string(), 1, JsValue::NULL).unwrap();
+    sim.step(500);
+    assert_eq!(sim.fingerprint(), "0xffb749a8db1a5481");
+    let mut t: serde_json::Value = serde_json::from_str(&preset_json("collusion-calvano")).unwrap();
+    t["q_init"] = serde_json::json!("random");
+    t["firms"] = serde_json::json!(3);
+    let mut sim = Sim::new(&t.to_string(), 1, JsValue::NULL).unwrap();
+    sim.step(200);
+    assert_eq!(sim.fingerprint(), "0x0bab95a370db18eb");
+}
+
+#[wasm_bindgen_test]
 fn a_hoard_agent_is_inspected_with_its_traits_stores_and_losses() {
     let mut sim = Sim::new(&preset_json("hoard-threshold"), 1, JsValue::NULL).unwrap();
     sim.step(200);
@@ -1758,4 +1877,100 @@ fn minds_view_lists_every_cache_the_season_and_renders_the_minds_modes() {
     assert_eq!(view["lab"]["phase"], "morning");
     assert_eq!(view["lab"]["day"], 1);
     assert!(view["winter"].is_null());
+}
+
+#[wasm_bindgen_test]
+fn watch_presets_match_native_goldens() {
+    // crates/sugarscape-core/tests/golden.rs
+    for (name, hex) in [
+        ("watch-winter", "0x0a57ae7d89c3fb6d"),
+        ("watch-arena", "0x35bf42deadfb8424"),
+        ("watch-scroungers-forgo", "0xb1abef5e1f2bfac1"),
+        ("watch-ak", "0x7d3e4e1903e7d55f"),
+    ] {
+        let mut sim = Sim::new(&preset_json(name), 1, JsValue::NULL).unwrap();
+        sim.step(200);
+        assert_eq!(sim.fingerprint(), hex, "{name}");
+    }
+}
+
+#[wasm_bindgen_test]
+fn inspect_reports_watching_and_renders_its_color_mode() {
+    let mut sim = Sim::new(&preset_json("watch-winter"), 1, JsValue::NULL).unwrap();
+    sim.step(100);
+    sim.render("watching", "sugar").unwrap();
+    let (width, height) = (sim.width(), sim.height());
+    let mut watchers = 0;
+    for y in 0..height {
+        for x in 0..width {
+            let view: serde_json::Value =
+                serde_json::from_str(&sim.inspect(x, y).unwrap()).unwrap();
+            let Some(agent) = view.get("agent").and_then(|a| a.as_object()) else {
+                continue;
+            };
+            let w = agent
+                .get("watching")
+                .and_then(|t| t.as_object())
+                .expect("watching is on for every agent in this preset");
+            assert!(w.get("scrounger").unwrap().is_boolean());
+            for s in w.get("seen").and_then(|s| s.as_array()).unwrap() {
+                assert!(s["site"].is_u64() && s["owner"].is_u64() && s["age"].is_u64());
+                assert!(s["amount"].as_f64().unwrap() >= 0.0);
+            }
+            if w["watches"].as_bool().unwrap() {
+                watchers += 1;
+            }
+        }
+    }
+    assert!(watchers > 0);
+}
+
+#[wasm_bindgen_test]
+fn auction_partial_batches_reach_exact_horizon_and_then_hold() {
+    let config = r#"{"model":"auctions","horizon":23,"window":5,"periods_per_tick":7}"#;
+    let mut sim = Sim::new(config, 1, JsValue::NULL).unwrap();
+    sim.step(3);
+    assert!(!sim.finished());
+    sim.step(1);
+    assert!(sim.finished());
+    assert_eq!(sim.tick(), 4.0);
+    let view: serde_json::Value = serde_json::from_str(&sim.inspect(0, 0).unwrap()).unwrap();
+    assert_eq!(view["period"], 23);
+    assert_eq!(view["late_count"], 5);
+    let before = sim.fingerprint();
+    for mode in ["bids", "late", "values"] {
+        assert_ne!(sim.render(mode, "sugar").unwrap(), 0);
+    }
+    sim.step(100);
+    assert_eq!(sim.fingerprint(), before);
+}
+
+#[wasm_bindgen_test]
+fn auction_short_sessions_match_native_protocol_fingerprints() {
+    // auctions::world::tests::short_native_fingerprints: same exact horizon and seed.
+    for (edits, expected) in [
+        (serde_json::json!({}), "0x8736a8664d834a2d"),
+        (
+            serde_json::json!({"auction":"second_price"}),
+            "0x1ba7cb1e9d3ff993",
+        ),
+        (
+            serde_json::json!({"feedback":"rival_bids","update":"all"}),
+            "0x949a7d400b127f20",
+        ),
+        (
+            serde_json::json!({"fringe":"uniform"}),
+            "0x5f621ad6482502e7",
+        ),
+        (serde_json::json!({"bidders":3}), "0x5c5c0013fee7f42b"),
+    ] {
+        let mut config =
+            serde_json::json!({"model":"auctions","horizon":23,"window":5,"periods_per_tick":7});
+        for (key, value) in edits.as_object().unwrap() {
+            config[key] = value.clone();
+        }
+        let mut sim = Sim::new(&config.to_string(), 1, JsValue::NULL).unwrap();
+        sim.step(4);
+        assert_eq!(sim.fingerprint(), expected);
+    }
 }

@@ -1,0 +1,121 @@
+{
+  "classification": "preparation_packet_verification_no_registered_histories",
+  "date": "2026-10-03",
+  "source_base_commit": "4ab07d31fedc7e8f3cf35a36252da71218668fce",
+  "frozen_scratch_commit": "1d5d1cceacc594f0a5c4df4f5cc8c595ec265c60",
+  "final_product_files": 551,
+  "protected_files": 847,
+  "security_tests": 18,
+  "core_units": 55,
+  "final_discovery_invalid_horizon_tests": 8,
+  "cli_clock_tests": 1,
+  "native_tests": 21,
+  "python_tests": 92,
+  "actual_wasm_engine_tests": 9,
+  "scientific_source_files": 325,
+  "scientific_source_inventory_sha256": "a2695f217568a08ed370a0ab5a7f0581dc58acce33b615037fde760a13cfdae8",
+  "regenerated_study_manifest_byte_equal": true,
+  "study_manifest_sha256": "c984743ce12f3a2433221a43f6db04e7b43f33e5f022a3e1f581b128f5d82cc2",
+  "receipts": [
+    {
+      "check": "core_test_red",
+      "exit_status": 101,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan-replay/survey/out/geosim-replay-core-RED.txt",
+      "bytes": 1772,
+      "sha256": "814fc1d65861e62fd954f787e5d8e1dc97f3907c1b6208ae7208c64542d3d08a"
+    },
+    {
+      "check": "core_green",
+      "exit_status": 0,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan-replay/survey/out/geosim-replay-core-GREEN.txt",
+      "bytes": 10009,
+      "sha256": "b3a46284a85fc5b85c41b3a98e19525a5b7576befc4efdcc22282db5ba019ef4"
+    },
+    {
+      "check": "cli_red",
+      "exit_status": 101,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan-replay/survey/out/geosim-replay-cli-RED.txt",
+      "bytes": 1837,
+      "sha256": "cad7b1a5f079c7323b86233ecfd50556a2b01813eb0e6939c05fffe6528f978b"
+    },
+    {
+      "check": "cli_green",
+      "exit_status": 0,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan-replay/survey/out/geosim-replay-cli-GREEN.txt",
+      "bytes": 791,
+      "sha256": "5e6941ed70bc62e70d83cbbf7acb5c4f59b8fadca230d191c4d16d5e0bec6580"
+    },
+    {
+      "check": "native_red",
+      "exit_status": 101,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan-replay/survey/out/geosim-replay-native-RED-final-support.txt",
+      "bytes": 25704,
+      "sha256": "787175324a68a3d3a4bf2087fd1e536c73b2a7e195a3de87b260392ef5fe0de4"
+    },
+    {
+      "check": "native_green",
+      "exit_status": 0,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan-replay/survey/out/geosim-replay-native-GREEN-final.txt",
+      "bytes": 2474,
+      "sha256": "5897d85f78971c56725f60416bf0002bf7f55c945e0021b111946823f2e8af3c"
+    },
+    {
+      "check": "python_green",
+      "exit_status": 0,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan-replay/survey/out/geosim-replay-python-GREEN.txt",
+      "bytes": 191,
+      "sha256": "58da9715719b183d3c5bddd9fa75cfc09ad86eca12a18908af44f8f8fcf463a1"
+    },
+    {
+      "check": "core_final_focused",
+      "exit_status": 0,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan-replay/survey/out/geosim-replay-core-final-focused.txt",
+      "bytes": 1428,
+      "sha256": "a84df08d8501d4a7d505826ccc0e4386f2372aa66dc9c0a3d0b2db4fff3608a6"
+    },
+    {
+      "check": "production_web_build",
+      "exit_status": 0,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan-replay/survey/out/geosim-replay-web-build.txt",
+      "bytes": 2876,
+      "sha256": "a22cb82b10299600e1ddaf3762485db0dbfed4fb6876d8cea647360d8068bcaa"
+    },
+    {
+      "check": "actual_wasm_engine",
+      "exit_status": 0,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan-replay/survey/out/geosim-replay-wasm-engine.txt",
+      "bytes": 343,
+      "sha256": "4ed584b266f81c1f319d802a79c7f3b31fcfa74734e30c8804aeae10eebb8ee2"
+    },
+    {
+      "check": "geosim-packet-replay-tests-final.txt",
+      "exit_status": 0,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan/survey/out/geosim-packet-replay-tests-final.txt",
+      "bytes": 117,
+      "sha256": "085fc2dd66f2877ada026720cd89664f1d3b18cabc71f0614721140971ad1b36"
+    },
+    {
+      "check": "geosim-packet-all-six-clean-application.txt",
+      "exit_status": 0,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan/survey/out/geosim-packet-all-six-clean-application.txt",
+      "bytes": 89,
+      "sha256": "8a4c4c614be877be131950be6955d1e6a25bbc350fcc4cf5b8d93bcda9c5649a"
+    },
+    {
+      "check": "geosim-packet-replay-final-identity.txt",
+      "exit_status": 0,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan/survey/out/geosim-packet-replay-final-identity.txt",
+      "bytes": 89,
+      "sha256": "8a4c4c614be877be131950be6955d1e6a25bbc350fcc4cf5b8d93bcda9c5649a"
+    },
+    {
+      "check": "geosim-packet-scratch-exact-verification.txt",
+      "exit_status": 0,
+      "retained_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/geosim-plan/survey/out/geosim-packet-scratch-exact-verification.txt",
+      "bytes": 89,
+      "sha256": "8a4c4c614be877be131950be6955d1e6a25bbc350fcc4cf5b8d93bcda9c5649a"
+    }
+  ],
+  "boundary_correction": "Scientific test stage includes exact recorder Cargo.toml and Cargo.lock dependency support. The initial unlocked test changed its lockfile and stage6 correctly rejected the preimage. Final locked RED and independent clean six-patch application pass their respective gates.",
+  "reference_identity": "Unresolved; native/WASM equality does not certify archived Java artifact identity."
+}

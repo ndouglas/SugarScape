@@ -1,7 +1,7 @@
 // The Long House Valley's page-side overlays and readout (milestone 10).
 import { calendarYear, modelOf } from './models';
 import type { ValleyOverlay, ValleyState } from './protocol';
-import type { AnasaziConfig, ModelConfig, ValleyCellView } from './types';
+import type { AnasaziConfig, ModelConfig, ModelStats, PolarityStats, ValleyCellView } from './types';
 import { wrappedSegments } from './ui/overlay';
 
 /** The Display panel's checkboxes for the valley's overlays, in order. */
@@ -47,13 +47,17 @@ export function linkSegments(
 }
 
 /** A world for the toolbar's readout. */
-export interface ReadoutWorld { config: ModelConfig; tick: number; population: number }
+export interface ReadoutWorld { config: ModelConfig; tick: number; population: number; latest?: ModelStats | null }
 
 /**
  * The toolbar's readout: `t = 42 · 400 agents`, or for the anasazi the calendar year and its
  * households (`AD 1142 · 213 households`); in Compare both worlds' counts.
  */
 export function readoutText(a: ReadoutWorld, b: ReadoutWorld | null): string {
+  if (modelOf(a.config) === 'polarity' || modelOf(a.config) === 'geosim' || modelOf(a.config) === 'democratic_peace') {
+    const periods = (w: ReadoutWorld) => (w.latest as PolarityStats | null)?.periods ?? 0;
+    return b ? `t = ${a.tick} · A ${periods(a)} periods, ${a.population} · B ${periods(b)} periods, ${b.population} sovereign governments` : `t = ${a.tick} · ${periods(a)} periods · ${a.population} sovereign governments`;
+  }
   const year = calendarYear(a.config, a.tick);
   const when = year === null ? `t = ${a.tick}` : `AD ${year}`;
   const noun = year === null ? 'agents' : 'households';

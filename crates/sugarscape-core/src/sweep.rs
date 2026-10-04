@@ -391,6 +391,21 @@ impl Sweep {
         })?;
         if let Some(max) = config.max_ticks().filter(|&max| self.ticks > max) {
             let why = match config.kind() {
+                crate::model::ModelKind::DemocraticPeace => {
+                    let crate::model::ModelConfig::DemocraticPeace(c) = &config else {
+                        unreachable!()
+                    };
+                    format!("Democratic peace source horizon of {} periods requires {max} display ticks in this config", c.horizon_periods)
+                }
+                crate::model::ModelKind::Geosim => {
+                    let crate::model::ModelConfig::Geosim(c) = &config else {
+                        unreachable!()
+                    };
+                    format!("GeoSim source horizon of {} periods requires {max} display ticks in this config", c.horizon())
+                }
+                crate::model::ModelKind::Polarity => {
+                    format!("polarity reaches its economic horizon after {max} display ticks in this config")
+                }
                 crate::model::ModelKind::Tags => {
                     format!("the tags model stops at its last generation, {max} in this config")
                 }
@@ -484,6 +499,20 @@ pub struct RunResult {
     pub seed: u64,
     #[serde(flatten)]
     pub outcome: Outcome,
+    /// Exploratory source-clock/availability receipt; absent in legacy and other-model results.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub democratic_peace: Option<DemocraticPeaceAvailability>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct DemocraticPeaceAvailability {
+    pub status: String,
+    pub completed_periods: u64,
+    pub attempted_period: u64,
+    pub last_tick_periods: u32,
+    pub invalid_reason: Option<String>,
+    pub invalid_phase: Option<String>,
+    pub clustering_reason: Option<String>,
 }
 
 /// The mean of the finite values (summed in order from 0.0), or NaN when
@@ -555,6 +584,36 @@ pub fn run_config(sweep: &Sweep, point: &Point, config: ModelConfig) -> RunResul
         .model()
         .series(sweep.metric.series())
         .expect("the metric's series is checked against every config");
+    let democratic_peace = match &world {
+        ModelWorld::DemocraticPeace(w) => {
+            let latest = w.snapshot();
+            let outcome = w.outcome();
+            Some(DemocraticPeaceAvailability {
+                status: outcome
+                    .map_or(
+                        "incomplete",
+                        |o| if o.valid { "complete" } else { "invalid" },
+                    )
+                    .into(),
+                completed_periods: latest.completed_periods,
+                attempted_period: latest.attempted_period,
+                last_tick_periods: latest.last_tick_periods,
+                invalid_reason: outcome.and_then(|o| o.invalid_reason.clone()),
+                invalid_phase: outcome.and_then(|o| o.invalid_phase.clone()),
+                clustering_reason: latest.clustering_reason,
+            })
+        }
+        _ => None,
+    };
+    // Raw GeoSim statistics remain inspectable after an invalid attempted period,
+    // but no portion of that run may enter experiment metric aggregates.
+    if matches!(&world, ModelWorld::Geosim(w) if w.outcome().is_some_and(|outcome| !outcome.valid))
+        || democratic_peace
+            .as_ref()
+            .is_some_and(|receipt| receipt.status == "invalid")
+    {
+        history.fill(f64::NAN);
+    }
     // A world that stopped on its own for good (Axelrod's culture once stable,
     // a Sugarscape whose cultures settled) holds its last state: the ticks it
     // did not run repeat its last values. Any other stopped world reads NaN.
@@ -564,6 +623,7 @@ pub fn run_config(sweep: &Sweep, point: &Point, config: ModelConfig) -> RunResul
         }
     }
     RunResult {
+        democratic_peace,
         point: point.index,
         series: point.series,
         x: point.x,
@@ -865,6 +925,38 @@ pub fn runs_csv(result: &SweepResult) -> String {
             }
         }
     }
+    if result.runs.iter().any(|run| run.democratic_peace.is_some()) {
+        let mut lines = out.lines();
+        let header = lines.next().unwrap_or_default();
+        let mut enriched = format!("{header},status,completed_periods,attempted_period,last_tick_periods,invalid_reason,invalid_phase,clustering_reason\n");
+        let mut rows = lines;
+        for run in &result.runs {
+            let row_count = match &run.outcome {
+                Outcome::Scalar { .. } => 1,
+                Outcome::Series { values } => values.len(),
+            };
+            let suffix = run
+                .democratic_peace
+                .as_ref()
+                .map(|receipt| {
+                    format!(
+                        "{},{},{},{},{},{},{}",
+                        csv_text(&receipt.status),
+                        receipt.completed_periods,
+                        receipt.attempted_period,
+                        receipt.last_tick_periods,
+                        csv_text(receipt.invalid_reason.as_deref().unwrap_or("")),
+                        csv_text(receipt.invalid_phase.as_deref().unwrap_or("")),
+                        csv_text(receipt.clustering_reason.as_deref().unwrap_or(""))
+                    )
+                })
+                .unwrap_or_else(|| ",,,,,,".into());
+            for row in rows.by_ref().take(row_count) {
+                writeln!(enriched, "{row},{suffix}").unwrap();
+            }
+        }
+        return enriched;
+    }
     out
 }
 
@@ -965,7 +1057,7 @@ pub struct Builtin {
     pub json: &'static str,
 }
 
-const BUILTINS: [Builtin; 187] = [
+const BUILTINS: [Builtin; 215] = [
     Builtin {
         id: "fig-ii-5",
         json: include_str!("../../../sweeps/fig-ii-5.json"),
@@ -1651,6 +1743,14 @@ const BUILTINS: [Builtin; 187] = [
         json: include_str!("../../../sweeps/theft-winter.json"),
     },
     Builtin {
+        id: "watch-span",
+        json: include_str!("../../../sweeps/watch-span.json"),
+    },
+    Builtin {
+        id: "watch-scroungers",
+        json: include_str!("../../../sweeps/watch-scroungers.json"),
+    },
+    Builtin {
         id: "hoard-ratio",
         json: include_str!("../../../sweeps/hoard-ratio.json"),
     },
@@ -1714,6 +1814,110 @@ const BUILTINS: [Builtin; 187] = [
         id: "firms-population",
         json: include_str!("../../../sweeps/firms-population.json"),
     },
+    Builtin {
+        id: "collusion-table-i",
+        json: include_str!("../../../sweeps/collusion-table-i.json"),
+    },
+    Builtin {
+        id: "collusion-alpha-beta",
+        json: include_str!("../../../sweeps/collusion-alpha-beta.json"),
+    },
+    Builtin {
+        id: "collusion-delta",
+        json: include_str!("../../../sweeps/collusion-delta.json"),
+    },
+    Builtin {
+        id: "collusion-memory",
+        json: include_str!("../../../sweeps/collusion-memory.json"),
+    },
+    Builtin {
+        id: "collusion-myopic",
+        json: include_str!("../../../sweeps/collusion-myopic.json"),
+    },
+    Builtin {
+        id: "collusion-two-phase",
+        json: include_str!("../../../sweeps/collusion-two-phase.json"),
+    },
+    Builtin {
+        id: "collusion-every-price",
+        json: include_str!("../../../sweeps/collusion-every-price.json"),
+    },
+    Builtin {
+        id: "collusion-below-nash",
+        json: include_str!("../../../sweeps/collusion-below-nash.json"),
+    },
+    Builtin {
+        id: "collusion-invitation",
+        json: include_str!("../../../sweeps/collusion-invitation.json"),
+    },
+    Builtin {
+        id: "collusion-synchronous",
+        json: include_str!("../../../sweeps/collusion-synchronous.json"),
+    },
+    Builtin {
+        id: "collusion-exploration",
+        json: include_str!("../../../sweeps/collusion-exploration.json"),
+    },
+    Builtin {
+        id: "collusion-timescale",
+        json: include_str!("../../../sweeps/collusion-timescale.json"),
+    },
+    Builtin {
+        id: "collusion-rp-complete",
+        json: include_str!("../../../sweeps/collusion-rp-complete.json"),
+    },
+    Builtin {
+        id: "auctions-formats",
+        json: include_str!("../../../sweeps/auctions-formats.json"),
+    },
+    Builtin {
+        id: "auctions-feedback",
+        json: include_str!("../../../sweeps/auctions-feedback.json"),
+    },
+    Builtin {
+        id: "auctions-initialization",
+        json: include_str!("../../../sweeps/auctions-initialization.json"),
+    },
+    Builtin {
+        id: "auctions-ties",
+        json: include_str!("../../../sweeps/auctions-ties.json"),
+    },
+    Builtin {
+        id: "auctions-hindsight",
+        json: include_str!("../../../sweeps/auctions-hindsight.json"),
+    },
+    Builtin {
+        id: "auctions-local",
+        json: include_str!("../../../sweeps/auctions-local.json"),
+    },
+    Builtin {
+        id: "auctions-biased",
+        json: include_str!("../../../sweeps/auctions-biased.json"),
+    },
+    Builtin {
+        id: "auctions-downward",
+        json: include_str!("../../../sweeps/auctions-downward.json"),
+    },
+    Builtin {
+        id: "auctions-market",
+        json: include_str!("../../../sweeps/auctions-market.json"),
+    },
+    Builtin {
+        id: "auctions-bidders",
+        json: include_str!("../../../sweeps/auctions-bidders.json"),
+    },
+    Builtin {
+        id: "auctions-persistent",
+        json: include_str!("../../../sweeps/auctions-persistent.json"),
+    },
+    Builtin {
+        id: "auctions-duration",
+        json: include_str!("../../../sweeps/auctions-duration.json"),
+    },
+    Builtin {
+        id: "polarity-predators",
+        json: include_str!("../../../sweeps/polarity-predators.json"),
+    },
 ];
 
 /// The built-in sweeps, in display order.
@@ -1731,6 +1935,20 @@ pub fn builtin(id: &str) -> Option<Sweep> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn polarity_playground_sweep_couples_defense_and_victory_ratios() {
+        let sweep =
+            super::builtin("polarity-predators").expect("the polarity experiment is discoverable");
+        let points = sweep.points().unwrap();
+        let config = sweep.config_for(&points[24]).unwrap();
+        let crate::model::ModelConfig::Polarity(c) = config else {
+            panic!("polarity preset required")
+        };
+        assert_eq!((c.superiority, c.victory), (3.0, 3.0));
+        assert_eq!(c.source_profile, crate::polarity::SourceProfile::Chapter4);
+        assert_eq!(sweep.metric.series(), "sovereign_count");
+    }
+
     use super::*;
     use crate::config::Config;
     use crate::world::World;
@@ -2169,6 +2387,7 @@ mod tests {
     #[test]
     fn run_results_write_nan_as_null() {
         let run = RunResult {
+            democratic_peace: None,
             point: 3,
             series: 1,
             x: 0,
@@ -2279,6 +2498,7 @@ mod tests {
     fn scalar_run(point: usize, s: &Sweep, value: f64) -> RunResult {
         let p = s.point(point).unwrap();
         RunResult {
+            democratic_peace: None,
             point,
             series: p.series,
             x: p.x,
@@ -2289,6 +2509,7 @@ mod tests {
 
     fn series_run(point: usize, s: &Sweep, values: Vec<f64>) -> RunResult {
         RunResult {
+            democratic_peace: None,
             outcome: Outcome::Series { values },
             ..scalar_run(point, s, 0.0)
         }
@@ -2708,6 +2929,8 @@ mod tests {
                 "theft-find",
                 "theft-cheaters",
                 "theft-winter",
+                "watch-span",
+                "watch-scroungers",
                 "hoard-ratio",
                 "hoard-recovery",
                 "hoard-cheaters",
@@ -2723,7 +2946,33 @@ mod tests {
                 "firms-base-pay",
                 "firms-hiring",
                 "firms-readings",
-                "firms-population"
+                "firms-population",
+                "collusion-table-i",
+                "collusion-alpha-beta",
+                "collusion-delta",
+                "collusion-memory",
+                "collusion-myopic",
+                "collusion-two-phase",
+                "collusion-every-price",
+                "collusion-below-nash",
+                "collusion-invitation",
+                "collusion-synchronous",
+                "collusion-exploration",
+                "collusion-timescale",
+                "collusion-rp-complete",
+                "auctions-formats",
+                "auctions-feedback",
+                "auctions-initialization",
+                "auctions-ties",
+                "auctions-hindsight",
+                "auctions-local",
+                "auctions-biased",
+                "auctions-downward",
+                "auctions-market",
+                "auctions-bidders",
+                "auctions-persistent",
+                "auctions-duration",
+                "polarity-predators"
             ]
         );
         for b in builtins() {

@@ -1,0 +1,66 @@
+{
+  "name": "Q-learning Auctions: market",
+  "description": "Source extensions add sitting out, a reserve, or a uniformly random fringe bidder. Sessions run to their fixed horizon; terminal stability and discarded sessions must be inspected separately. This is a reconstruction, not author-code docking.",
+  "base": {
+    "preset": "auctions-first-price"
+  },
+  "x": {
+    "label": "Treatment",
+    "values": [
+      {
+        "at": 1,
+        "name": "Baseline",
+        "set": {}
+      },
+      {
+        "at": 2,
+        "name": "Sitting out",
+        "set": {
+          "out_bids": 7
+        }
+      },
+      {
+        "at": 3,
+        "name": "Reserve .20",
+        "set": {
+          "reserve": 0.2
+        }
+      },
+      {
+        "at": 4,
+        "name": "Uniform fringe",
+        "set": {
+          "fringe": "uniform"
+        }
+      }
+    ]
+  },
+  "seeds": {
+    "from": 1,
+    "count": 100
+  },
+  "ticks": 1000,
+  "metric": {
+    "kind": "final",
+    "series": "terminal_revenue"
+  },
+  "series": {
+    "label": "Auction",
+    "values": [
+      {
+        "at": 1,
+        "name": "First price",
+        "set": {
+          "auction": "first_price"
+        }
+      },
+      {
+        "at": 2,
+        "name": "Second price",
+        "set": {
+          "auction": "second_price"
+        }
+      }
+    ]
+  }
+}

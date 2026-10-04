@@ -1,1 +1,3 @@
 /target
+# Native auction sessions retain full Q/occupancy state and can be large.
+out/auctions-sessions.jsonl

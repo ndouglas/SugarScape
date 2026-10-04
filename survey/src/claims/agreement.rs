@@ -93,7 +93,7 @@ fn summarize(w: &ModelWorld) -> Run {
             }
             let (lo, hi) = (sorted[best.0], sorted[best.1 - 1]);
             let mut by_degree = rows.clone();
-            by_degree.sort_by_key(|r| std::cmp::Reverse(r.1));
+            by_degree.sort_by_key(|row| std::cmp::Reverse(row.1));
             let hubs = &by_degree[..10];
             hubs.iter().filter(|r| r.0 >= lo && r.0 <= hi).count() as f64 / 10.0
         }
