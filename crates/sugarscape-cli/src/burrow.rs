@@ -22,7 +22,7 @@ pub struct BurrowArgs {
     pub out: PathBuf,
 }
 
-fn prepare_directory(path: &Path) -> Result<(), Failure> {
+pub(crate) fn prepare_directory(path: &Path) -> Result<(), Failure> {
     if path.exists() {
         if !path.is_dir() {
             return Err(Failure::Io(format!(
@@ -57,6 +57,24 @@ fn prepare_directory(path: &Path) -> Result<(), Failure> {
         })?;
     }
     Ok(())
+}
+
+pub(crate) fn write_export_file(out: &Path, name: &str, contents: &str) -> Result<(), Failure> {
+    // Exclusive creation also prevents overwriting an entry created after the emptiness check.
+    use std::io::Write;
+    let path = out.join(name);
+    let result = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&path)
+        .and_then(|mut file| file.write_all(contents.as_bytes()));
+    result.map_err(|error| {
+        Failure::Io(format!(
+            "cannot write {}: {error}; output directory {} may contain partial output",
+            path.display(),
+            out.display()
+        ))
+    })
 }
 
 pub fn run(args: BurrowArgs) -> Result<(), Failure> {
@@ -99,21 +117,7 @@ pub fn run(args: BurrowArgs) -> Result<(), Failure> {
         ),
     ];
     for (name, contents) in files {
-        // Exclusive creation also prevents overwriting an entry created after the emptiness check.
-        use std::io::Write;
-        let path = args.out.join(name);
-        let result = std::fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&path)
-            .and_then(|mut file| file.write_all(contents.as_bytes()));
-        result.map_err(|error| {
-            Failure::Io(format!(
-                "cannot write {}: {error}; output directory {} may contain partial output",
-                path.display(),
-                args.out.display()
-            ))
-        })?;
+        write_export_file(&args.out, name, &contents)?;
     }
     print!(
         "{}",
@@ -127,4 +131,30 @@ pub fn run(args: BurrowArgs) -> Result<(), Failure> {
         inventory.disposed, inventory.carried, inventory.loose, summary.blocked, summary.waits
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod export_tests {
+    use super::*;
+
+    #[test]
+    fn entry_created_after_directory_check_is_preserved_and_reports_partial_path() {
+        let out = std::env::temp_dir().join(format!("burrow-exclusive-{}", std::process::id()));
+        std::fs::create_dir_all(&out).unwrap();
+        prepare_directory(&out).unwrap();
+        let file = out.join("episode.json");
+        std::fs::write(&file, "keep").unwrap();
+        let error = write_export_file(&out, "episode.json", "replace").unwrap_err();
+        let message = match error {
+            Failure::Io(message) => message,
+            _ => panic!("expected I/O error"),
+        };
+        assert!(message.contains(file.to_str().unwrap()));
+        assert!(message.contains(&format!(
+            "output directory {} may contain partial output",
+            out.display()
+        )));
+        assert_eq!(std::fs::read_to_string(file).unwrap(), "keep");
+        std::fs::remove_dir_all(out).unwrap();
+    }
 }

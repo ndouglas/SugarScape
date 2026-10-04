@@ -1,0 +1,25 @@
+{
+  "lab": {
+    "fixture": {
+      "growing": {
+        "width": 41,
+        "height": 25,
+        "workers": 8
+      }
+    },
+    "transport": "direct",
+    "cue": "blind",
+    "freshness_window": 32,
+    "relay_distance": 3,
+    "response_weight": 3,
+    "minimum_recent_units": 2
+  },
+  "task": {
+    "goal": {
+      "x": 7,
+      "y": 12
+    },
+    "objective": "known_goal",
+    "goal_weight": 3
+  }
+}

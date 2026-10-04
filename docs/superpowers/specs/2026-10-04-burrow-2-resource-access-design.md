@@ -1,7 +1,7 @@
 # Burrow 2 resource access design
 
 **Date:** 2026-10-04
-**Status:** architectural design approved by the user on 2026-10-04; [implementation plan](../plans/2026-10-04-burrow-2-resource-access.md) approved 2026-10-04; execution has not started. No runtime changes or scientific execution have occurred.
+**Status:** architectural design approved by the user on 2026-10-04; [implementation plan](../plans/2026-10-04-burrow-2-resource-access.md) approved 2026-10-04; implementation and independent task/whole-branch reviews are complete; integration awaits the user's choice. The checked core and native/WASM exports are implemented; scientific execution remains unchanged and has not occurred.
 **Baseline:** [implemented Burrow 1](2026-10-03-burrow-1-excavation-design.md).
 **Programme:** [collective construction B3](../../studies/2026-10-03-cultures-construction-and-underworlds.md#b3-add-inhabitation-and-competing-functions).
 **Parallel study:** [Burrow 1 protocol draft](2026-10-04-burrow-1-measured-protocol.md).
@@ -27,6 +27,19 @@ This is a deliberately small first functional layer. Support, collapse, ventilat
 The [source audit](../../studies/2026-10-04-burrow-studies-reading.md) distinguishes transport/cue evidence from this new benchmark. Pielström and Roces provide the Burrow 1 anchor. [Prasath and colleagues](https://pubmed.ncbi.nlm.nih.gov/36214457/) study collective excavation of a confining corral with models and robots, which makes task completion a useful related research question. Escape is not resource access, and this design imports no numerical model parameters or reproduction targets from that study.
 
 Resource coordinates, positive goal weights, worker task memory and structural-access evaluation below are engineering assumptions. No source currently establishes that animals use this particular known-coordinate rule. The proposed access predicate is an explicit relation between a layout and the present movement capability, a first practical step toward later affordance studies; body-dependent, cultural or ecological-psychology conclusions require additional designs and sources.
+
+## Ontology record
+
+Use the [shared ontology review](../../studies/2026-10-04-minds-construction-ontology.md) to preserve the distinction between physical state, agent information and researcher measurements. These records clarify the approved scope; they introduce no new runtime fields or controller behavior.
+
+| Concept and category | State carrier and visibility | Change mechanism and measurement | Origin and evidence boundary |
+|---|---|---|---|
+| Goal site: task designation attached to a coordinate | Outer AccessTask; researcher sees it, KnownGoal workers receive the coordinate, Explore workers do not | Physical digging opens the designated cell; the marker changes no material rules | Supplied benchmark metadata; no food quantity, ownership or learned resource discovery |
+| Worker and spoil unit: physical entities | Existing World identities, positions and unit locations; workers receive ordinary local observations | Existing paid transactions move workers/material and excavate; inventory and material histories record consequences | Existing verified Burrow physics; bookkeeping units are not calibrated mass or energy |
+| Structural access: layout–movement relation | Observer evaluates goal openness and the existing exit topology field; no completion truth is broadcast | Check after every recorded action; preserve first opportunity and route distance, report final access and censoring | Researcher-defined function for the current mover; transient occupancy and actual consumer use are separate |
+| Coordinate guidance: decision process | KnownGoal's supplied coordinate and positive weight, own position and local frontier | Bias only newly selected improving frontiers with a Manhattan factor; count evaluated candidates | Supplied heuristic; no scent propagation, inferred blueprint, model learning or guaranteed success |
+| Completion memory: private observation history | One seen_open latch per KnownGoal worker; only its ordinary local observation updates it | Check before every decision, including loaded turns; record each worker's first observation with pre-action opportunity count | Supplied finite-state memory; remote workers retain uncertainty, no shared discovery or message |
+| Outcome record: researcher evidence | Outer AccessEpisode contains task, base episode, milestones, assumptions and separate diagnostics | Run the whole budget, freeze historical first access and compare exact Explore reductions | Engineering behavior and consistency evidence; biological benefit, culture and scientific treatment effects require later studies |
 
 ## World and task overlay
 
@@ -106,7 +119,7 @@ pub struct AccessEpisode {
 }
 ```
 
-The outer access configuration is necessary to reproduce goal-guided runs; the nested lab config alone is insufficient. Validators require `config.lab == episode.config`. Whole-record native/WASM comparisons use the outer record. Labels state supplied coordinates, the local completion latch, the heuristic and structural rather than realized consumer access.
+The outer access configuration is necessary to reproduce goal-guided runs; the nested lab config alone is insufficient. Generated records guarantee `config.lab == episode.config`, and tests assert that equality. This increment provides no saved AccessEpisode ingestion or validation API. Deserialization alone does not validate a saved record's physical state, task history or provenance; any future saved-access validator must check outer/nested configuration equality. Whole-record native/WASM comparisons use the outer record. Labels state supplied coordinates, the local completion latch, the heuristic and structural rather than realized consumer access.
 
 Task diagnostics retain one first local completion observation per worker, with worker ID, tick and committed-opportunity count before the observation. Also count known-goal completion checks and frontier weight evaluations as separate deterministic computation proxies. These diagnostics consume no RNG and provide no information to another worker. Completion-observation records are bounded by worker count; account for their logical storage separately. Explore has no completion latch/check/evaluation work, so its nested base record remains unchanged.
 
@@ -120,7 +133,7 @@ Keep the task layer inside `sugarscape_core::burrow`, in a separate access modul
 
 The legacy `LabConfig`, `Setup`, `Episode`, `burrow` CLI outputs and `burrow_replay_json` schema remain unchanged. Existing entry points construct no active task. Add optional private task state to the world only where necessary; legacy fingerprints must not hash additional sentinel values. Known-goal fingerprints include task identity, coordinate, weight and every worker's completion latch because these affect continuation. Explore remains the legacy physical/controller state with external task diagnostics.
 
-Add separate checked adapters: proposed CLI `sugarscape burrow-access --config FILE --seed U64 --ticks U32 --sample-every U32 --out DIRECTORY` and WASM `burrow_access_replay_json(config_json, seed, ticks, sample_every)`. Both serialize one shared AccessEpisode. Reuse full-width decimal seeds, f64 finite/integral boundary validation before u32 conversion, existing error codes, fixed exclusive output files and partial-output reporting. Exports are normalized access `config.json`, outer `episode.json`, sampled `maps.txt` and combined access/base integer `summary.json`.
+The implemented separate checked adapters are CLI `sugarscape burrow-access --config FILE --seed U64 --ticks U32 --sample-every U32 --out DIRECTORY` and WASM `burrow_access_replay_json(config_json, seed, ticks, sample_every)`. Both serialize one shared AccessEpisode. Reuse full-width decimal seeds, f64 finite/integral boundary validation before u32 conversion, existing error codes, fixed exclusive output files and partial-output reporting. Exports are normalized access `config.json`, outer `episode.json`, sampled `maps.txt` and combined access/base integer `summary.json`.
 
 Keep base ASCII maps unchanged; attach task coordinate and access state in outer metadata and adapter headings rather than overwriting a solid glyph with a misleading passable resource marker. No web controls, ModelKind registration, Minds changes or Hornvale modifications belong here.
 
@@ -142,6 +155,6 @@ Run relevant core/CLI/parity checks and existing regressions after an approved s
 
 ## Research sequence and remaining questions
 
-First review this design and write its implementation plan. In parallel, the Burrow 1 protocol can become an executable archive/analysis implementation after its own review. Neither track needs to wait for the other's treatment outcomes, and neither should tune against those outcomes.
+The design and implementation plan were approved and the engineering implementation and independent task/whole-branch reviews are complete; integration awaits the user's choice. The Burrow 1 archive/analysis harness has engineering acceptance. Neither track depends on scientific treatment outcomes, and neither should tune against them.
 
 After resource access works, Burrow 2B can add actual extraction and delivery, accounting for finite resources and shared hands, and then ask who benefits. Later distinguish supplied destination knowledge from locally discovered resources, add physical signals or practices with appropriate source support, vary body and substrate, and preserve/repair layouts across cohorts. That creates the route toward differentiated homes, storage, fortifications, neighborhoods and inherited underworlds without crediting supplied goals or labels as emergent culture.
