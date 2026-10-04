@@ -4,7 +4,8 @@
 
 **Status:** living research programme; campaign outline preserved for refinement.
 
-**Selected first direction:** collective burrow construction.
+**Selected first direction:** collective burrow construction. Burrow 1 implementation and
+independent reviews are complete; a judged scientific campaign remains future work.
 
 **Scope:** campaign families and research questions, not an approved implementation spec or run protocol.
 
@@ -377,8 +378,10 @@ inventing implementation commitments during archival work.
   selected sequential soil transport and local spoil cues as the proposed first anchor. The
   [Burrow 1 design](../superpowers/specs/2026-10-03-burrow-1-excavation-design.md) was approved
   by the user. Its [four-stage plan](../superpowers/plans/2026-10-03-burrow-1-excavation.md)
-  has implemented and independently reviewed core stages, with CLI/WASM implementation and
-  acceptance/regression checks complete; whole-branch review remains pending. The [replay guide](../burrow.md) documents the checked lab.
+  is complete across all four stages, acceptance/regression checks and independent task/final
+  reviews. The final WASM numeric-boundary and stale-prose findings were resolved in one fix
+  wave and independently rereviewed. The [replay guide](../burrow.md) documents the checked lab;
+  the retained plan preserves execution rulings and verification evidence.
   Controller rules remain supplied abstractions; no judged campaign or comparative result exists.
 - **2026-10-03:** preserve all seven campaign families as a living research programme.
 - **2026-10-03:** select collective burrow construction as the first branch to refine; retain

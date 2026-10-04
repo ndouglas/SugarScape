@@ -2,9 +2,9 @@
 
 **Date:** 2026-10-03
 
-**Status:** approved by the user on 2026-10-03; core stages implemented and independently reviewed;
-CLI/WASM implementation, acceptance replay and repository checks complete. Whole-branch review
-is pending; no judged campaign has begun.
+**Status:** approved by the user on 2026-10-03; all implementation stages, acceptance replay,
+repository checks and independent reviews complete. Final review findings are resolved and
+independently rereviewed; a judged scientific campaign remains future work.
 
 **Implementation:** [staged plan](../plans/2026-10-03-burrow-1-excavation.md); [CLI and replay guide](../../burrow.md).
 

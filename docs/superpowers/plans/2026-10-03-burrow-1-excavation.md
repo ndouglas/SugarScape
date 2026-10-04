@@ -1,6 +1,6 @@
 # Burrow 1 Excavation Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. The user has already selected that method. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. The user has already selected that method. Completed steps use checked checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** deliver a reproducible excavation lab with explicit spoil transport, local cue treatments and an inspectable CLI replay.
 
@@ -10,7 +10,10 @@
 
 **Spec:** [approved Burrow 1 design](../specs/2026-10-03-burrow-1-excavation-design.md).
 
-**Status:** Stages 1–3 implemented and independently reviewed; Stage 4 adapters, acceptance and repository checks complete. Whole-branch review remains pending. Design approved by the user on 2026-10-03. Implementation method is subagent-driven; implementation completion authorizes demonstrations and correctness checks, not judged scientific runs.
+**Status:** Complete. All four stages, per-task reviews, whole-branch review, one fix wave and
+scoped rereview are complete. Design approved by the user on 2026-10-03; execution was
+subagent-driven. The completed root tracker has been removed. Implementation completion
+authorizes demonstrations and correctness checks; a judged campaign remains future work.
 
 ## Global Constraints
 
@@ -414,10 +417,10 @@ No chamber extractor, success classification or inferred individual learning.
 
 **Tests:** core/CLI workspace tests, focused Vitest native/WASM parity and repository formatting/lints.
 
-**Status:** In Progress
+**Status:** Complete
 
-Implementation and all runtime checks are complete; per-task and whole-branch reviews remain
-pending with the controller. Step 5 and tracker removal follow those reviews.
+Implementation and all required checks are complete. Per-task reviews and whole-branch review
+are clean after the verified numeric-boundary amendment below; the completed tracker is removed.
 
 ### Task 4: checked boundaries, example configurations and final review
 
@@ -521,10 +524,10 @@ npm --prefix web run build
 Use a fresh empty acceptance directory. Inspect the actual map, trace and conservation summary;
 replay into another directory and compare `episode.json` bytes. Reuse the generated WASM build
 for focused checks, then run the existing web suite for boundary regressions. Run survey tests
-using the existing survey manifest if core changes affect them. These commands are future checks,
-not evidence of currently passing code.
+using the existing survey manifest if core changes affect them. These checks were completed;
+results and review dispositions are retained below.
 
-- [ ] **Step 5:** obtain fresh whole-branch review after per-task reviews; resolve findings,
+- [x] **Step 5:** obtain fresh whole-branch review after per-task reviews; resolve findings,
   update status/documentation, remove the completed tracker, and commit
   `feat(burrow): expose replay with checked CLI and native WASM parity`.
 
@@ -535,6 +538,104 @@ history/measurements to Task 3, and presentation/parity/regressions to Task 4. A
 conditions have named tests. Interface names are shared across tasks; the approved spec travels
 with each implementer. Resource caps and CLI flags are explicit implementation choices for plan review.
 
-Review this plan before implementation, preserving the user's subagent-driven execution method.
+Execution used the user's approved subagent-driven method, with fresh independent task and final reviews.
 Implementation completion permits demonstrations and correctness checks, not biological validation
 or registered scientific claims. A judged campaign needs a separate reviewed protocol and manifest.
+
+## Execution rulings
+
+The controller's execution decisions are preserved verbatim, in order, including each cost if wrong.
+
+Ruling: Choice fixture exit is the central open cell (4,3) — the spec leaves its location unspecified and the symmetric choice must have no side-specific navigation aid — if wrong, later choice/transport integration may need a different prepared entrance.
+
+Ruling: Growing fixtures require dimensions covering the fixed staging and exit coordinates; checked custom setups are internal test fixtures and need not match a named fixture's generated topology — fixed coordinates are authoritative while explicit action tests need controlled variants — if wrong, fixture validation may need a narrower public schema.
+
+Ruling: Use internal measured wrappers returning the required observation, exit field or decision plus BfsStats; retain required signatures as forwarding entry points — immutable World APIs cannot mutate counters and measurements belong outside decision inputs — if wrong, runner integration may require revised wrapper plumbing.
+
+Ruling: Determine local target validity by observed geometry while checking occupancy for actual routing; wait if a retained target has no available next step — temporary congestion should not invalidate a visible target and the plan explicitly requires waiting — if wrong, target persistence may need different congestion semantics.
+
+Ruling: Implement accumulated histories as Ledger::record(&mut self, &ActionEvent, &World) and Ledger::finish(&self, &World), without redundant free forwarding functions — the brief omitted the mutable ledger receiver needed to retain history, while immutable World observations and separate accounting remain authoritative — if wrong, callers may need a ledger adapter.
+
+Ruling: Add a checked 64 MiB retained ASCII budget from the conservative maximum initial/cadence/final frame count times exact frame length, validated before stepping or reserving — the prescribed opportunity cap alone permits hundreds of GB of sampled maps — if wrong, an early-stopping request may be rejected conservatively and need fewer requested ticks or a larger sampling interval.
+
+Ruling: SpatialWork and DigDistance positions denote the excavated target cell, whose event-time exit distance is minimum prior open-neighbor distance plus one — this aligns per-cell diagnostics with opened geometry and preserves historical distances; ActionEvent.from records the worker standing site — if wrong, standing-site analyses need event-state derivation or an additional diagnostic.
+
+Ruling: Example JSON follows the reviewed core Fixture external tagging, e.g. {"growing": {...}}, rather than the kind-tagged inline plan example — the task explicitly follows Task 1 chosen schema and serialized core records are authoritative — if wrong, clients expecting a kind discriminator require an explicit schema migration.
+
+Ruling: Change only the Burrow WASM numeric ABI to f64 and validate finite integral ticks in 0..=u32::MAX and sampling in 1..=u32::MAX before conversion — the plan's u32 ABI silently truncates/wraps JS inputs, violating checked requested-budget provenance — if wrong, Rust callers of the exported adapter need numeric conversion; valid core requests and TypeScript number calls are unchanged.
+
+Ruling: Keep sampled Snapshot series with complete action events, as specified by runner plan and guide — full tick totals can be reconstructed from events and sampling must not alter trajectories — if wrong, analyses needing every tick must reconstruct totals or add a full-cadence series.
+
+## Verification and review record
+
+Implementation baseline was `39f461b`; runtime head is `ed8f373`. The completed working commits
+were `4a4df2f` (checked world/material), `b30654f` (local controllers), `5562c03` (episodes/history),
+`631f03d` (CLI/WASM exports and parity) and `ed8f373` (original WASM numeric validation).
+Each task received fresh independent specification/quality review; all passed without deferred
+runtime findings. The whole-branch review of `39f461b..631f03d` identified F1 (Important: the
+literal `u32` WASM ABI silently coerced invalid JavaScript numbers) and F2 (Minor: obsolete
+preimplementation prose). One combined fix wave resolved both. Independent scoped review of
+`631f03d..ed8f373` marked F1 and F2 **ADDRESSED**, with no new Critical/Important breakage.
+
+The amended Burrow WASM ABI is `f64` at the adapter only. It checks the original JavaScript
+numbers for finite integral values, ticks `0..=4294967295` and sampling `1..=4294967295`, before
+conversion to unchanged core `RunOptions`. This preserves valid integer full-record parity and
+core opportunity/ASCII limits. Tests cover fractional, negative, NaN, positive/negative Infinity
+and overflow inputs for each field, plus zero-tick acceptance and zero-sampling rejection.
+F2 now points readers to the implemented [CLI/replay guide](../../burrow.md).
+
+| Evidence | Recorded result |
+| --- | --- |
+| Task 1 missing-API RED → core action/configuration GREEN | 24 focused tests passed. |
+| Task 2 missing-API RED → combined core GREEN | 49 combined tests passed. |
+| Task 3 missing-API RED, including checked ASCII cap → combined core GREEN | 67 combined tests passed. |
+| Task 4 CLI missing-command RED → GREEN | Eight intended failures/preset regression pass → nine tests passed. |
+| Task 4 initialized WASM missing-export RED → full-record parity GREEN | Fourteen intended failures → fourteen tests passed; four treatments × seeds `7` and `18446744073709551615`. |
+| Final F1 real-WASM behavioral RED → GREEN | Twelve invalid-number failures/fifteen passes → all 27 focused checks passed. |
+| `cargo test --workspace` at Task 4 and final fix | Each passed: 2100 passed, zero failed, 102 pre-existing ignored. |
+| `cargo fmt --all -- --check` and `git diff --check` | Passed without diagnostics at implementation and final fix. |
+| `cargo clippy --workspace --all-targets -- -D warnings` | Passed at Task 4. Final adapter fix also passed strict `sugarscape-wasm` all-target lint. |
+| `npm --prefix web run wasm` and focused parity | Generated/optimized WASM successfully; regenerated after the boundary fix, with 27 checks passing. |
+| `npm --prefix web test` | Passed: 63 files, 962 tests before the scoped adapter fix. |
+| `cargo test --manifest-path survey/Cargo.toml` | Passed once: 205 tests, zero failures/ignored. |
+| `npm --prefix web run typecheck` and `npm --prefix web run build` | Passed after Task 4 fixture repair and again after final F1/F2 fix; production build includes WASM regeneration. |
+
+The first Task 4 web build caught fixture-only TypeScript errors: `node:path` was absent from
+the project's minimal Node shims, and `execFileSync` required `cwd`. One corrective attempt
+adopted existing string-path and explicit-cwd conventions, then typechecking, focused parity and
+production build passed. No dependency/shim/runtime change was needed. The earlier passing
+broad web/survey evidence precedes the final narrow adapter fix; those unaffected suites were
+not repeated. Final focused parity, workspace, strict adapter lint, typecheck and production
+build cover the final runtime revision.
+
+Pre-existing optional WASM repository/license packaging suggestions and existing web/survey
+status or long-running output were reviewed as nonblocking maintenance. There were no remaining
+compiler/linter warnings or failing tests, no disabled tests or bypassed hooks, and no generated
+assets committed. Runtime limits, sampled snapshots and complete events remain authoritative;
+intermediate tick totals can be reconstructed from events. Biological calibration, comparative
+success, chamber extraction, learned roles and Hornvale integration require future designs.
+Wall-clock SLAs/profiling, unlimited low-level `World::step` callers, lossless consumer arithmetic
+on non-seed `u64` timestamps, multi-file rollback and unrelated packaging/output cleanup were
+explicitly outside the reviewed replay contract; they are not deferred implementation findings.
+
+## Acceptance record
+
+The exact Stage 4 command above created a fresh `/tmp/sugarscape-burrow-1-review` containing
+`config.json`, `episode.json`, `maps.txt` and `summary.json`. A second identical run with output
+`/tmp/sugarscape-burrow-1-replay` passed `cmp` of both `episode.json` files byte-for-byte.
+The controller inspected the actual 41×25 final map, trace and inventory. These temporary paths
+identify the inspected artifacts; the retained result below survives their later deletion.
+
+```text
+tick=512 completed_ticks=512 opportunities=4096 digs=129 disposed=116 carried=2 loose=11 blocked=0 waits=55
+```
+
+Conservation was `0 initial + 129 excavated = 116 disposed + 2 carried + 11 loose`, with thirteen
+censored deliveries. Action totals were 3401 successful moves, 129 digs, 192 pickups, 203 drops,
+116 disposals, zero blocked and 55 waits, totaling 4096 opportunities (512 rounds × eight workers).
+Seventeen frames covered clocks `0,32,...,512`; terminal frame matched stdout and exported summary
+matched the episode's final snapshot. Connected open area was 144 (15 supplied + 129 excavated).
+Exit/observation/controller BFS calls were 130/4096/2964, visits 10335/44697/32741 and peak queues
+21/8/8. Logical retained records totaled 5016 and retained ASCII 21131 bytes. The map's overlays
+hide loose units/co-occupants, so conservation was checked in structured inventory rather than
+inferred from glyph counts. This establishes an inspectable replay, not a judged scientific result.
