@@ -4,9 +4,13 @@
 //! simulate movement, resources, or the waypoint server.
 
 mod config;
+mod information;
 mod rules;
 
 pub use config::CpfaParameters;
+pub use information::{
+    departure, publication, Departure, FindRecord, Waypoint, WaypointSelection, WaypointThreshold,
+};
 pub use rules::{informed_variation, poisson_cdf, uninformed_variation, waypoint_strength};
 
 /// Supplied reference-utility count bound, not a biological limit.

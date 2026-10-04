@@ -85,3 +85,9 @@ pub(super) fn checked(errors: Vec<FieldError>) -> Result<(), Vec<FieldError>> {
         Err(errors)
     }
 }
+
+pub(super) fn uniform_draw(errors: &mut Vec<FieldError>, field: &str, value: f64) {
+    if !value.is_finite() || !(0.0..1.0).contains(&value) {
+        errors.push(FieldError::new(field, "must be finite and in [0,1)"));
+    }
+}
