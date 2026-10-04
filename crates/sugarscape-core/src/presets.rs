@@ -1600,6 +1600,7 @@ pub fn catalog() -> Vec<ModelPreset> {
     out.extend(crate::auctions::presets());
     out.extend(crate::polarity::presets());
     out.extend(crate::geosim::presets());
+    out.extend(crate::democratic_peace::presets());
     out
 }
 

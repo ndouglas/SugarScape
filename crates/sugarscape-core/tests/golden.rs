@@ -557,6 +557,29 @@ fn print_geosim_golden() {
     }
 }
 
+// Compact deterministic fixtures only; no registered source study.
+const DEMOCRATIC_PEACE_GOLDEN: &[(&str, u64)] = &[
+    ("democratic-peace-printed-2001", 0x51c87aa05ae89971),
+    ("democratic-peace-prose-probability", 0x10578253f9fff482),
+    ("democratic-peace-tagging", 0x3c0c1a219cbe94cc),
+    ("democratic-peace-alliances", 0x20e6355f23f1e9c4),
+    ("democratic-peace-collective-security", 0x51c87aa05ae89971),
+    ("democratic-peace-nondemocratic", 0x444b1ebb87249f09),
+];
+#[test]
+fn democratic_peace_presets_are_reproducible() {
+    for &(id, expected) in DEMOCRATIC_PEACE_GOLDEN {
+        assert_eq!(image_fingerprint(id, 10), expected, "preset {id} changed");
+    }
+}
+#[test]
+#[ignore]
+fn print_democratic_peace_golden() {
+    for &(id, _) in DEMOCRATIC_PEACE_GOLDEN {
+        println!("(\"{id}\", {:#x}),", image_fingerprint(id, 10));
+    }
+}
+
 fn image_fingerprint(id: &str, ticks: u32) -> u64 {
     let preset = presets::find(id).unwrap_or_else(|| panic!("unknown preset {id}"));
     let mut world = ModelWorld::new(preset.config, 1).unwrap();
@@ -590,6 +613,7 @@ fn every_model_preset_has_a_golden_entry() {
                 .iter()
                 .chain(MODEL_GOLDEN)
                 .chain(GEOSIM_GOLDEN)
+                .chain(DEMOCRATIC_PEACE_GOLDEN)
                 .any(|&(id, _)| id == p.id)
                 || IMAGE_GOLDEN
                     .iter()

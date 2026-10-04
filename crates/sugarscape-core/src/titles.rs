@@ -3,7 +3,7 @@
 //! paper (`source`) stay on the preset as its reference.
 
 /// Titles by preset id, in catalog order.
-pub const TITLES: [(&str, &str); 424] = [
+pub const TITLES: [(&str, &str); 430] = [
     (
         "ii-1-instant",
         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
@@ -1580,6 +1580,13 @@ pub const TITLES: [(&str, &str); 424] = [
     ("polarity-pra", "Governments direct resources toward hostile fronts"),
     ("polarity-two-level", "Provincial revolts challenge expanding governments"),
     ("polarity-overextension", "Uncertain victories can limit territorial expansion"),
+
+("democratic-peace-printed-2001","Printed probability shapes the selection of cooperating states"),
+("democratic-peace-prose-probability","Superior states attack more often under the prose reading"),
+("democratic-peace-tagging","Partner tags prevent attacks between democracies"),
+("democratic-peace-alliances","Shared threats organize local defensive coalitions"),
+("democratic-peace-collective-security","Democracies open fronts against pariah states"),
+("democratic-peace-nondemocratic","Predatory states compete without democratic partners"),
 
 ];
 

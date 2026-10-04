@@ -61,4 +61,5 @@ pub mod zi;
 #[cfg(test)]
 pub(crate) mod testkit;
 
+pub mod democratic_peace;
 pub mod geosim;
