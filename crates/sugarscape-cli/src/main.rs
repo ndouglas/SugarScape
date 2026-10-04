@@ -2,6 +2,8 @@
 //! line (milestone 5). Exit codes: 0 success, 1 I/O error, 2 usage or
 //! validation error (printed as `field: message`, one per line).
 
+mod deduction;
+
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
@@ -25,6 +27,8 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Run the experimental deduction JSON host.
+    Deduction(deduction::DeductionArgs),
     /// List the presets of every model (id, source, name, title).
     Presets,
     /// List the built-in sweeps (id, name).
@@ -160,6 +164,7 @@ fn main() -> ExitCode {
 
 fn run(cli: Cli) -> Result<(), Failure> {
     match cli.command {
+        Command::Deduction(args) => deduction::run(args),
         Command::Presets => {
             for p in presets::catalog() {
                 println!("{}\t{}\t{}\t{}", p.id, p.source, p.name, p.title());

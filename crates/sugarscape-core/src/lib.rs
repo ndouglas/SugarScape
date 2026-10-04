@@ -13,6 +13,7 @@ pub mod civil;
 pub mod classes;
 pub mod config;
 pub mod culture;
+pub mod deduction;
 pub mod dpd;
 pub mod econ;
 pub mod edit;
