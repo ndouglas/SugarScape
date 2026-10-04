@@ -1,7 +1,7 @@
 # Research-anchored foraging and construction design
 
 **Date:** 2026-10-04.
-**Status:** draft for user review. The research direction was approved; this written spec and its implementation plan have not yet been approved. No runtime implementation or scientific execution is authorized by this status.
+**Status:** written design approved by the user on 2026-10-04. The [F1 implementation plan](../plans/2026-10-04-foraging-1-cpfa-rules.md) awaits review. Runtime implementation has not begun; scientific registration/execution remain separate.
 **Programme:** construction B3, with later bridges to collective-agency communication and costly assistance.
 **Evidence:** [source audit](../../studies/2026-10-04-foraging-construction-reading.md).
 **Implemented starting point:** [Burrow resource access](2026-10-04-burrow-2-resource-access-design.md), integrated into main.
@@ -115,4 +115,4 @@ Quantitative reproduction of the paper's optimized performance requires its evol
 
 ## Review handoff
 
-This draft has been checked for scope, source provenance and separation of verified rules from supplied choices. User review of this written spec is the next gate. After approval, write an F1 implementation plan and execute it using the user's standing subagent-driven preference. Scientific registration/execution remain separate from engineering implementation.
+The written design was checked for scope, source provenance and separation of verified rules from supplied choices, and approved by the user on 2026-10-04. Review of the [F1 implementation plan](../plans/2026-10-04-foraging-1-cpfa-rules.md) is the next gate. After plan approval, execute it using the user's standing subagent-driven preference. Scientific registration/execution remain separate from engineering implementation.

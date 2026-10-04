@@ -232,7 +232,7 @@ The following remains a proposed sequence for refinement, not a frozen implement
 Burrow 1 now implements B1 and the transport/cue portion of B2. Its
 [measured protocol draft](../superpowers/specs/2026-10-04-burrow-1-measured-protocol.md) proposes
 a prospective comparison; [Burrow 2 resource access](../superpowers/specs/2026-10-04-burrow-2-resource-access-design.md)
-is the first B3 increment and is implemented, reviewed and merged. Its milestones measure structural access; food collection and delivery remain future work. The [research-anchored foraging sequence](../superpowers/specs/2026-10-04-foraging-construction-design.md) now proposes a CPFA rule reference, a fixed-world baseline, a passage adaptation, construction coupling and a later termite shortcut comparison. That written design awaits review. Burrow scientific registration and execution remain separate.
+is the first B3 increment and is implemented, reviewed and merged. Its milestones measure structural access; food collection and delivery remain future work. The [research-anchored foraging sequence](../superpowers/specs/2026-10-04-foraging-construction-design.md) specifies a CPFA rule reference, a fixed-world baseline, a passage adaptation, construction coupling and a later termite shortcut comparison. The written design is approved; its [F1 implementation plan](../superpowers/plans/2026-10-04-foraging-1-cpfa-rules.md) awaits review. Burrow scientific registration and execution remain separate.
 Later mechanisms and judged claims still need their own literature, designs and protocols.
 
 ### B1. Establish a bounded excavation world
@@ -372,7 +372,7 @@ simple controllers, test changed conditions, and distinguish aesthetic diversity
 benefit. Do not credit supplied roles, room purposes, protocols or beliefs as emergent.
 
 Burrow resource access is implemented, reviewed and merged. The next engineering review concerns the
-[foraging/construction draft](../superpowers/specs/2026-10-04-foraging-construction-design.md), informed by its [source audit](2026-10-04-foraging-construction-reading.md). It proposes verifying published CPFA rules before introducing resource delivery and excavation into the same world. Existing Burrow scientific registration/execution gates remain separate. The [Burrow study audit](2026-10-04-burrow-studies-reading.md) preserves its earlier source and capability limits; later mechanisms still require designs and protocols.
+[F1 implementation plan](../superpowers/plans/2026-10-04-foraging-1-cpfa-rules.md) for the approved [foraging/construction design](../superpowers/specs/2026-10-04-foraging-construction-design.md), informed by its [source audit](2026-10-04-foraging-construction-reading.md). It verifies published CPFA rules before introducing resource delivery and excavation into the same world. Existing Burrow scientific registration/execution gates remain separate. The [Burrow study audit](2026-10-04-burrow-studies-reading.md) preserves its earlier source and capability limits; later mechanisms still require designs and protocols.
 
 ## Decision record
 
