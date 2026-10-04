@@ -1,0 +1,553 @@
+{
+  "classification": "fresh_replay_preparation_no_registered_histories",
+  "source_only_base": "4cf60ebf47e9e6585aa366ac1f2cca1d8b2456e9",
+  "product_files": 613,
+  "protected_files": 897,
+  "complete_file_bytes_and_git_modes_equal": true,
+  "registered_history_rows": 0,
+  "checks": [
+    {
+      "name": "apply-1",
+      "command": [
+        "python3",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-research/docs/superpowers/plans/2026-10-03-democratic-peace/replay.py",
+        "--target",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-replay",
+        "--through",
+        "1"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 1.2976312506943941,
+      "passed": true
+    },
+    {
+      "name": "core-discovery-red",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-core",
+        "--test",
+        "democratic_peace_discovery"
+      ],
+      "exit_code": 101,
+      "expected": "failure",
+      "elapsed_seconds": 33.93416975066066,
+      "passed": true
+    },
+    {
+      "name": "apply-2",
+      "command": [
+        "python3",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-research/docs/superpowers/plans/2026-10-03-democratic-peace/replay.py",
+        "--target",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-replay",
+        "--through",
+        "2"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 1.3694960419088602,
+      "passed": true
+    },
+    {
+      "name": "core-green",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-core",
+        "democratic_peace"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 74.94666749984026,
+      "passed": true
+    },
+    {
+      "name": "golden-green",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-core",
+        "--test",
+        "golden"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 33.15695683285594,
+      "passed": true
+    },
+    {
+      "name": "apply-3",
+      "command": [
+        "python3",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-research/docs/superpowers/plans/2026-10-03-democratic-peace/replay.py",
+        "--target",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-replay",
+        "--through",
+        "3"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 1.3480329997837543,
+      "passed": true
+    },
+    {
+      "name": "host-cli-red",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-cli",
+        "--test",
+        "democratic_peace_host"
+      ],
+      "exit_code": 101,
+      "expected": "failure",
+      "elapsed_seconds": 40.40698670782149,
+      "passed": true
+    },
+    {
+      "name": "host-sweep-red",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-core",
+        "--test",
+        "democratic_peace_host_sweep"
+      ],
+      "exit_code": 101,
+      "expected": "failure",
+      "elapsed_seconds": 0.4899275414645672,
+      "passed": true
+    },
+    {
+      "name": "apply-4",
+      "command": [
+        "python3",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-research/docs/superpowers/plans/2026-10-03-democratic-peace/replay.py",
+        "--target",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-replay",
+        "--through",
+        "4"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 1.3779567908495665,
+      "passed": true
+    },
+    {
+      "name": "host-cli-green",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-cli",
+        "--test",
+        "democratic_peace_host"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 31.640829666517675,
+      "passed": true
+    },
+    {
+      "name": "host-sweep-green",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-core",
+        "--test",
+        "democratic_peace_host_sweep"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 27.31430433318019,
+      "passed": true
+    },
+    {
+      "name": "apply-5",
+      "command": [
+        "python3",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-research/docs/superpowers/plans/2026-10-03-democratic-peace/replay.py",
+        "--target",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-replay",
+        "--through",
+        "5"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 1.346754708327353,
+      "passed": true
+    },
+    {
+      "name": "native-discovery-red",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--manifest-path",
+        "survey/Cargo.toml",
+        "--bin",
+        "democratic_peace",
+        "--test",
+        "democratic_peace_native"
+      ],
+      "exit_code": 101,
+      "expected": "failure",
+      "elapsed_seconds": 0.07151891756802797,
+      "passed": true
+    },
+    {
+      "name": "python-discovery-red",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "survey/democratic_peace",
+        "-p",
+        "test_*.py"
+      ],
+      "exit_code": 1,
+      "expected": "failure",
+      "elapsed_seconds": 0.11096408404409885,
+      "passed": true
+    },
+    {
+      "name": "apply-6",
+      "command": [
+        "python3",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-research/docs/superpowers/plans/2026-10-03-democratic-peace/replay.py",
+        "--target",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-replay",
+        "--through",
+        "6"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 1.321963082998991,
+      "passed": true
+    },
+    {
+      "name": "native-green",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--manifest-path",
+        "survey/Cargo.toml",
+        "--bin",
+        "democratic_peace",
+        "--test",
+        "democratic_peace_native"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 38.20729716680944,
+      "passed": true
+    },
+    {
+      "name": "python-green",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "survey/democratic_peace",
+        "-p",
+        "test_*.py"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 0.3206359576433897,
+      "passed": true
+    },
+    {
+      "name": "fmt-green",
+      "command": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 13.410256790928543,
+      "passed": true
+    },
+    {
+      "name": "survey-fmt-green",
+      "command": [
+        "cargo",
+        "fmt",
+        "--manifest-path",
+        "survey/Cargo.toml",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 13.77440670877695,
+      "passed": true
+    },
+    {
+      "name": "final-replay-verify",
+      "command": [
+        "python3",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-research/docs/superpowers/plans/2026-10-03-democratic-peace/replay.py",
+        "--target",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-replay",
+        "--verify-only"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 0.7799108745530248,
+      "passed": true
+    },
+    {
+      "name": "scratch-final-verify",
+      "command": [
+        "python3",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-research/docs/superpowers/plans/2026-10-03-democratic-peace/replay.py",
+        "--target",
+        "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-scratch",
+        "--verify-only"
+      ],
+      "exit_code": 0,
+      "expected": "success",
+      "elapsed_seconds": 0.843060708604753,
+      "passed": true
+    }
+  ],
+  "evidence": [
+    {
+      "path": "survey/out/democratic-peace-replay/apply-1.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/apply-1.stdout.log",
+      "sha256": "dc57222b5ab8470dba5aa4542ea99c1f7ac7a6ce34fec780ed4187b8c4ccc6d3",
+      "bytes": 89
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/apply-2.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/apply-2.stdout.log",
+      "sha256": "6f214e478e618b631e14c67af7616d55f5a97f86f401bf2ab42294fca54da179",
+      "bytes": 89
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/apply-3.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/apply-3.stdout.log",
+      "sha256": "dd787b35e5727c2cb7f747beb901e666683d17569e4c6412e796703ae68fb470",
+      "bytes": 89
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/apply-4.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/apply-4.stdout.log",
+      "sha256": "65ced019d7756df9f6cb0de312839448811948d71c8408fa1be975b3273b4800",
+      "bytes": 89
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/apply-5.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/apply-5.stdout.log",
+      "sha256": "799df7077c83c54fdc82a8dc656e440e71dd7c393062cb9d5d8a874adc001e08",
+      "bytes": 89
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/apply-6.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/apply-6.stdout.log",
+      "sha256": "d769d6b9099819aa5ef3596d0bbf07df74b2d04764a742f87d78be5ba8307091",
+      "bytes": 89
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/core-discovery-red.stderr.log",
+      "sha256": "1b4baf54456a0841ca6e0c04b9fa51c3c4d095b8d632a0f80c8d5fd1777e7176",
+      "bytes": 494
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/core-discovery-red.stdout.log",
+      "sha256": "d6d8cf738d18cd6e4a56b994b0ce4ee16d9f607e9a826f6dd964b72a55538d5f",
+      "bytes": 2499
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/core-green.stderr.log",
+      "sha256": "87da92bd7ca33c88be8a5bb690e0e14777c59b950a2672f14b08f2f058f1e9ea",
+      "bytes": 4070
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/core-green.stdout.log",
+      "sha256": "1e153e7c4195fe448219a0e623d5afef7d4620d3501baa589690de5423f48951",
+      "bytes": 7090
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/final-replay-verify.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/final-replay-verify.stdout.log",
+      "sha256": "d769d6b9099819aa5ef3596d0bbf07df74b2d04764a742f87d78be5ba8307091",
+      "bytes": 89
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/fmt-green.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/fmt-green.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/golden-green.stderr.log",
+      "sha256": "3b78e71d1c858f96a73b464d7e5097499e380af8486eeb84ea3d4d9c48a08678",
+      "bytes": 224
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/golden-green.stdout.log",
+      "sha256": "6562b0e8cc6bbc3645d0a162ed1bee7aa1348575d970b9ac286d9db3ae7e856f",
+      "bytes": 579
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/host-cli-green.stderr.log",
+      "sha256": "1ed0c02946e0e0513f8602dadba6345036dfa0477296cf449af2a68ddee6a869",
+      "bytes": 533
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/host-cli-green.stdout.log",
+      "sha256": "d228029a9f1caf497c8b52ed4d45de106975fad05ff16e0d55becb0c903f020d",
+      "bytes": 191
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/host-cli-red.stderr.log",
+      "sha256": "b1fe29773d3a86ab6f7e7e1360a53ab50aa785e2dc625b7bc97fa0c3d5575f1b",
+      "bytes": 616
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/host-cli-red.stdout.log",
+      "sha256": "97c6fe6700841ffadd289effefecbcbd84f5f7a48d60c5ead2045ce1777cdc42",
+      "bytes": 788
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/host-sweep-green.stderr.log",
+      "sha256": "19fe2e5163c6f36dc535d8d2c207bdc21ddd34dca834c58c04b0e88f11c67b19",
+      "bytes": 407
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/host-sweep-green.stdout.log",
+      "sha256": "759f1e7b78202622e25a4c6473609d2330347e749c755063a984b9bccbc795bb",
+      "bytes": 341
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/host-sweep-red.stderr.log",
+      "sha256": "52ee3f727e1626288574ed8126b486f0a234a88c430dbfff9b008c683a32bd51",
+      "bytes": 496
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/host-sweep-red.stdout.log",
+      "sha256": "f5c0cc860e38f4d4578070f0a921cd7b569759f2c01fe87975bff8a98ea84f16",
+      "bytes": 1214
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/native-discovery-red.stderr.log",
+      "sha256": "6332e8b64e9072d3c3f1215cbdafd75cc85a7b6ca05301a435a690a2545da9b5",
+      "bytes": 134
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/native-discovery-red.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/native-green.stderr.log",
+      "sha256": "21373b08d9e85152af91acc43df0da98ef73a29ebe10211c8e75f3e61c40e880",
+      "bytes": 1291
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/native-green.stdout.log",
+      "sha256": "aa22d9fe7c6f8ca90f68a75553b3e2cfc3fbe82c689dee25e50dbbdf941d4d57",
+      "bytes": 913
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/python-discovery-red.stderr.log",
+      "sha256": "82eda71ed5b4fa65ee8ffd10a07bd3e3978981acc581ec22809d0a820797318b",
+      "bytes": 7146
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/python-discovery-red.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/python-green.stderr.log",
+      "sha256": "5eb28c38d961685fa289af493b206faf29a128ee9ce818580843d54accc7e401",
+      "bytes": 135
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/python-green.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/scratch-final-verify.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/scratch-final-verify.stdout.log",
+      "sha256": "d769d6b9099819aa5ef3596d0bbf07df74b2d04764a742f87d78be5ba8307091",
+      "bytes": 89
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/survey-fmt-green.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "survey/out/democratic-peace-replay/survey-fmt-green.stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "normalized_patch_representation": {
+    "change": "empty unified-diff context lines normalized; code bytes unchanged",
+    "fresh_worktree": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-replay-normalized",
+    "source_only_base": "4cf60ebf47e9e6585aa366ac1f2cca1d8b2456e9",
+    "all_six_patches_applied": true,
+    "all_1510_declared_file_bytes_and_modes_equal_to_scratch": true,
+    "manifest_sha256": "186c47a9b489bc14f511b28a7b31f2ad0eb0f4dfea38b51ba19c89181d0cb9de",
+    "checks_reuse_same_product_images": true
+  }
+}

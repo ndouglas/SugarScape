@@ -1,0 +1,3744 @@
+diff --git a/crates/sugarscape-core/src/democratic_peace/alliances.rs b/crates/sugarscape-core/src/democratic_peace/alliances.rs
+new file mode 100644
+index 0000000..41ea1c0
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/alliances.rs
+@@ -0,0 +1,176 @@
++//! Threat-driven defensive alignment and explicit one-pass obligations.
++use super::*;
++use super::{
++    territory::{key, side},
++    types::bump,
++    world::Engine,
++};
++use std::collections::{BTreeMap, BTreeSet};
++impl Engine {
++    fn threatening(
++        &self,
++        c: &DemocraticPeaceConfig,
++        actor: StateId,
++        neighbor: StateId,
++    ) -> Result<Option<f64>, String> {
++        if self.states[&actor].regime == Regime::Democratic
++            && self.states[&neighbor].regime == Regime::Democratic
++        {
++            return Ok(None);
++        }
++        let k = key(actor, neighbor);
++        let i = side(k, actor);
++        let f = &self.fronts[&k];
++        let b =
++            super::resources::threat_ratio(f.commitments[1 - i], f.commitments[i], c.zero_ratio)?;
++        Ok((b > c.min_threat).then_some(b))
++    }
++    pub(crate) fn align(&mut self, c: &DemocraticPeaceConfig) -> Result<(), String> {
++        self.pariahs.clear();
++        if c.mechanism == Mechanism::Tagging {
++            self.alliances.clear();
++            return Ok(());
++        }
++        let old = std::mem::take(&mut self.alliances);
++        let mut groups: BTreeMap<StateId, (u64, u64, Vec<StateId>)> = BTreeMap::new();
++        let mut assigned = BTreeSet::new();
++        if c.alliance_maintenance == AllianceMaintenance::PersistWhileThreatened {
++            for a in old {
++                if !self.states.contains_key(&a.threat_id) {
++                    continue;
++                }
++                let mut members = Vec::new();
++                for m in a.members {
++                    if self.states.contains_key(&m)
++                        && self.fronts.contains_key(&key(m, a.threat_id))
++                        && self.threatening(c, m, a.threat_id)?.is_some()
++                    {
++                        members.push(m);
++                    }
++                }
++                if members.len() >= 2 {
++                    assigned.extend(members.iter().copied());
++                    groups.insert(a.threat_id, (a.creation_period, a.serial, members));
++                }
++            }
++        }
++        let actors: Vec<_> = self.states.keys().copied().collect();
++        let mut proposals: BTreeMap<StateId, Vec<StateId>> = BTreeMap::new();
++        for actor in actors {
++            if assigned.contains(&actor) {
++                continue;
++            }
++            let mut best = None;
++            let mut ties = Vec::new();
++            for neighbor in self.neighbors(actor) {
++                if let Some(b) = self.threatening(c, actor, neighbor)? {
++                    if best.is_none_or(|v| b > v) {
++                        best = Some(b);
++                        ties.clear();
++                        ties.push(neighbor);
++                    } else if best == Some(b) {
++                        ties.push(neighbor);
++                    }
++                }
++            }
++            if !ties.is_empty() {
++                let target = if c.threat_ties == ThreatTies::RandomTie {
++                    super::world::pick(&ties, &mut self.rng).unwrap()
++                } else {
++                    ties[0]
++                };
++                proposals.entry(target).or_default().push(actor);
++            }
++        }
++        for (threat, mut members) in proposals {
++            if let Some((_, _, existing)) = groups.get_mut(&threat) {
++                existing.append(&mut members);
++                existing.sort();
++            } else if members.len() >= 2 {
++                let serial = self.next_alliance;
++                bump(&mut self.next_alliance)?;
++                groups.insert(threat, (self.period, serial, members));
++            }
++        }
++        for (threat, (creation_period, serial, members)) in groups {
++            let pooled_resources = members
++                .iter()
++                .map(|m| {
++                    let k = key(*m, threat);
++                    self.fronts[&k].commitments[side(k, *m)]
++                })
++                .sum();
++            if !f64::is_finite(pooled_resources) {
++                return Err("nonfinite alliance pool".into());
++            }
++            self.alliances.push(Alliance {
++                threat_id: threat,
++                creation_period,
++                serial,
++                members,
++                pooled_resources,
++            });
++        }
++        Ok(())
++    }
++    pub(crate) fn obligations(&mut self, c: &DemocraticPeaceConfig, current: bool) {
++        let actions: BTreeMap<_, _> = self
++            .fronts
++            .iter()
++            .map(|(&k, f)| (k, if current { f.actions } else { f.previous }))
++            .collect();
++        self.pariahs.clear();
++        if c.mechanism == Mechanism::CollectiveSecurity {
++            for (k, a) in &actions {
++                if a[0] && a[1] {
++                    let regimes = [self.states[&k[0]].regime, self.states[&k[1]].regime];
++                    if regimes[0] != regimes[1] {
++                        let d = usize::from(regimes[1] == Regime::Democratic);
++                        self.pariahs.entry(k[1 - d]).or_default().push(k[d]);
++                    }
++                }
++            }
++            for sources in self.pariahs.values_mut() {
++                sources.sort();
++                sources.dedup();
++            }
++        }
++        let mut obligations: Vec<([StateId; 2], usize, String)> = Vec::new();
++        for alliance in &self.alliances {
++            let attacked = alliance.members.iter().any(|m| {
++                let k = key(*m, alliance.threat_id);
++                actions
++                    .get(&k)
++                    .is_some_and(|a| a[side(k, alliance.threat_id)])
++            });
++            if attacked {
++                for m in &alliance.members {
++                    let k = key(*m, alliance.threat_id);
++                    if self.fronts.contains_key(&k) {
++                        obligations.push((k, side(k, *m), "attacked_ally".into()));
++                    }
++                }
++            }
++        }
++        for (&pariah, sources) in &self.pariahs {
++            for (&actor, s) in &self.states {
++                if s.regime != Regime::Democratic {
++                    continue;
++                }
++                let permitted = c.security_scope == SecurityScope::AllDemocracies
++                    || self.alliances.iter().any(|a| {
++                        a.members.contains(&actor) && sources.iter().any(|d| a.members.contains(d))
++                    });
++                let k = key(actor, pariah);
++                if permitted && self.fronts.contains_key(&k) {
++                    obligations.push((k, side(k, actor), "pariah".into()));
++                }
++            }
++        }
++        for (k, i, reason) in obligations {
++            let f = self.fronts.get_mut(&k).unwrap();
++            f.actions[i] = true;
++            f.obligations[i].push(reason);
++        }
++    }
++}
+diff --git a/crates/sugarscape-core/src/democratic_peace/claims.rs b/crates/sugarscape-core/src/democratic_peace/claims.rs
+new file mode 100644
+index 0000000..071384f
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/claims.rs
+@@ -0,0 +1,156 @@
++//! Prospective complete claim footprints and single-cell sovereign release.
++use super::*;
++use super::{
++    types::{bump, Claim},
++    world::Engine,
++};
++use std::collections::BTreeSet;
++impl Engine {
++    fn release(&mut self, cell: usize) -> Result<StateId, String> {
++        self.cells[cell].next_generation = self.cells[cell]
++            .next_generation
++            .checked_add(1)
++            .ok_or("sovereignty generation overflow")?;
++        let id = StateId {
++            capital_cell: cell,
++            sovereignty_generation: self.cells[cell].next_generation,
++        };
++        self.cells[cell].owner = id;
++        self.states.insert(
++            id,
++            State {
++                id,
++                regime: self.cells[cell].latent_regime,
++                resources: 10.,
++                members: vec![cell],
++            },
++        );
++        bump(&mut self.counters.released_states)?;
++        Ok(id)
++    }
++    pub(crate) fn apply_claims(
++        &mut self,
++        c: &DemocraticPeaceConfig,
++        claims: Vec<Claim>,
++    ) -> Result<(), String> {
++        if claims.is_empty() {
++            return Ok(());
++        }
++        let mut actors: Vec<_> = self.states.keys().copied().collect();
++        super::world::shuffle(&mut actors, &mut self.rng);
++        let mut locked_cells = BTreeSet::new();
++        let mut locked_states = BTreeSet::new();
++        for actor in actors {
++            let mut own: Vec<_> = claims
++                .iter()
++                .filter(|q| q.states[q.side] == actor)
++                .collect();
++            own.sort_by_key(|q| q.states);
++            for q in own {
++                let winner = q.states[q.side];
++                let loser = q.states[1 - q.side];
++                let agent = q.path[q.side];
++                let target = q.path[1 - q.side];
++                if !self.states.contains_key(&winner)
++                    || !self.states.contains_key(&loser)
++                    || self.cells[agent].owner != winner
++                    || self.cells[target].owner != loser
++                    || !self.adjacent(agent).contains(&target)
++                {
++                    bump(&mut self.counters.stale_claims)?;
++                    continue;
++                }
++                let members = self.member_cells(loser);
++                let capital = target == loser.capital_cell;
++                let releases: Vec<usize> = if capital && members.len() > 1 {
++                    members
++                        .iter()
++                        .copied()
++                        .filter(|&cell| {
++                            c.capital_capture == CapitalCapture::CollapseOnly || cell != target
++                        })
++                        .collect()
++                } else if !capital {
++                    let reached = self.reached(loser, Some(target));
++                    members
++                        .iter()
++                        .copied()
++                        .filter(|&cell| cell != target && !reached.contains(&cell))
++                        .collect()
++                } else {
++                    Vec::new()
++                };
++                let footprint: BTreeSet<_> = std::iter::once(target)
++                    .chain(releases.iter().copied())
++                    .collect();
++                let blocked = match c.claim_locking {
++                    ClaimLocking::AffectedCells => {
++                        locked_cells.contains(&agent)
++                            || footprint.iter().any(|cell| locked_cells.contains(cell))
++                    }
++                    ClaimLocking::AffectedStates => {
++                        locked_states.contains(&winner) || locked_states.contains(&loser)
++                    }
++                };
++                if blocked {
++                    bump(&mut self.counters.locked_claims)?;
++                    continue;
++                }
++                let retired = capital;
++                if retired {
++                    self.states.remove(&loser);
++                    bump(&mut self.counters.retired_states)?;
++                }
++                let absorb = !(capital
++                    && members.len() > 1
++                    && c.capital_capture == CapitalCapture::CollapseOnly);
++                if absorb {
++                    self.cells[target].owner = winner;
++                    if c.latent_regime == LatentRegime::OverwriteOnConquest {
++                        self.cells[target].latent_regime = self.states[&winner].regime;
++                    }
++                }
++                let mut new_ids = Vec::new();
++                for cell in releases {
++                    new_ids.push(self.release(cell)?);
++                }
++                if c.claim_locking == ClaimLocking::AffectedCells {
++                    locked_cells.extend(footprint.iter().copied());
++                    locked_cells.insert(agent);
++                } else {
++                    locked_states.extend([winner, loser]);
++                    locked_states.extend(new_ids);
++                }
++                bump(&mut self.counters.successful_claims)?;
++                let event = Event {
++                    period: self.period,
++                    kind: if capital && members.len() > 1 {
++                        "capital_collapse"
++                    } else {
++                        "conquest"
++                    }
++                    .into(),
++                    states: vec![winner, loser],
++                    cells: footprint.into_iter().collect(),
++                };
++                self.last_structural_event = Some(event.clone());
++                self.record(c, event)?;
++            }
++        }
++        self.rebuild()?;
++        let alive: BTreeSet<_> = self.states.keys().copied().collect();
++        let fronts = &self.fronts;
++        for a in &mut self.alliances {
++            a.members.retain(|m| {
++                alive.contains(m) && fronts.contains_key(&super::territory::key(*m, a.threat_id))
++            });
++        }
++        self.alliances
++            .retain(|a| alive.contains(&a.threat_id) && a.members.len() >= 2);
++        self.pariahs.retain(|p, sources| {
++            sources.retain(|s| alive.contains(s));
++            alive.contains(p) && !sources.is_empty()
++        });
++        Ok(())
++    }
++}
+diff --git a/crates/sugarscape-core/src/democratic_peace/combat.rs b/crates/sugarscape-core/src/democratic_peace/combat.rs
+new file mode 100644
+index 0000000..4ee803b
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/combat.rs
+@@ -0,0 +1,98 @@
++//! Local mutual-defection battles with no resource damage.
++use super::*;
++use super::{
++    types::{bump, Claim},
++    world::Engine,
++};
++impl Engine {
++    pub(crate) fn combat(&mut self, c: &DemocraticPeaceConfig) -> Result<Vec<Claim>, String> {
++        let keys: Vec<_> = self.fronts.keys().copied().collect();
++        let mut claims = Vec::new();
++        for k in keys {
++            let acts = self.fronts[&k].actions;
++            if !acts.iter().any(|a| *a) {
++                continue;
++            }
++            let valid = self.fronts[&k].path.is_some_and(|p| {
++                self.cells[p[0]].owner == k[0]
++                    && self.cells[p[1]].owner == k[1]
++                    && self.adjacent(p[0]).contains(&p[1])
++            });
++            if !valid {
++                let actor = k[usize::from(!acts[0])];
++                let target = if actor == k[0] { k[1] } else { k[0] };
++                let p = self.path(actor, target)?;
++                let f = self.fronts.get_mut(&k).unwrap();
++                f.path = Some(p);
++                f.path_proposer = Some(actor);
++            }
++            if !(acts[0] && acts[1]) {
++                continue;
++            }
++            bump(&mut self.counters.mutual_d_front_periods)?;
++            let v = self.fronts[&k].commitments;
++            let q = [
++                super::resources::probability(
++                    v[0],
++                    v[1],
++                    c.victory_threshold,
++                    c.victory_exponent,
++                    c.probability_direction,
++                    c.zero_ratio,
++                )?,
++                super::resources::probability(
++                    v[1],
++                    v[0],
++                    c.victory_threshold,
++                    c.victory_exponent,
++                    c.probability_direction,
++                    c.zero_ratio,
++                )?,
++            ];
++            let success = if c.opposing_victories == OpposingVictories::IndependentClaims {
++                [
++                    super::world::chance(q[0], &mut self.rng),
++                    super::world::chance(q[1], &mut self.rng),
++                ]
++            } else {
++                let scale = (q[0] + q[1]).max(1.);
++                let r = super::world::draw(&mut self.rng);
++                [
++                    r < q[0] / scale,
++                    r >= q[0] / scale && r < (q[0] + q[1]) / scale,
++                ]
++            };
++            let victory = success.iter().any(|a| *a);
++            let stalemate =
++                !victory && super::world::chance(c.stalemate_probability, &mut self.rng);
++            let f = self.fronts.get_mut(&k).unwrap();
++            f.victory_probabilities = [Some(q[0]), Some(q[1])];
++            f.victory_ratios = [Some(Ratio::new(v[0], v[1])), Some(Ratio::new(v[1], v[0]))];
++            f.claims = success;
++            if victory {
++                bump(&mut self.counters.completed_victory_battles)?;
++                if success[0] && success[1] {
++                    bump(&mut self.counters.opposing_claims)?;
++                }
++                for (i, &won) in success.iter().enumerate() {
++                    if won {
++                        claims.push(Claim {
++                            states: k,
++                            side: i,
++                            path: f.path.unwrap(),
++                        });
++                    }
++                }
++            }
++            if stalemate {
++                bump(&mut self.counters.completed_stalemate_battles)?;
++            }
++            if victory || stalemate {
++                f.actions = [false; 2];
++                f.path = None;
++                f.path_proposer = None;
++            }
++        }
++        Ok(claims)
++    }
++}
+diff --git a/crates/sugarscape-core/src/democratic_peace/config.rs b/crates/sugarscape-core/src/democratic_peace/config.rs
+new file mode 100644
+index 0000000..b257331
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/config.rs
+@@ -0,0 +1,594 @@
++//! Complete source defaults and explicit reconstruction readings.
++use crate::{
++    config::FieldError,
++    schema::{Apply, Param},
++};
++use serde::{Deserialize, Serialize};
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Mechanism {
++    Tagging,
++    Alliances,
++    CollectiveSecurity,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ProbabilityDirection {
++    PrintedDecreasing,
++    ProseIncreasing,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ZeroRatio {
++    EqualZeroNeutral,
++    RejectZeroDenominator,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Assignment {
++    IndependentBernoulli,
++    RoundedQuota,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum DistanceMetric {
++    Euclidean,
++    Manhattan,
++    TerritorialPath,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum EnemyTotal {
++    ActiveFronts,
++    AllFronts,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum InactiveCommitment {
++    PerFrontOpponent,
++    FirstInactiveOpponent,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum LatentRegime {
++    PersistentCellTags,
++    OverwriteOnConquest,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum CapitalCapture {
++    CollapseOnly,
++    CaptureAndFragment,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ClaimLocking {
++    AffectedCells,
++    AffectedStates,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum OpposingVictories {
++    IndependentClaims,
++    SingleDraw,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum AllianceMaintenance {
++    RebuildEachPeriod,
++    PersistWhileThreatened,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ThreatTies {
++    LowestStateId,
++    RandomTie,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ObligationObservation {
++    PriorActions,
++    CurrentPlansOnce,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum SecurityScope {
++    AllDemocracies,
++    SameAlliance,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ClusteringExposure {
++    UniqueStateNeighbors,
++    BorderEdges,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum ClusteringWeights {
++    TerritoryWeighted,
++    EqualStates,
++}
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++#[serde(default, deny_unknown_fields)]
++pub struct DemocraticPeaceConfig {
++    pub width: u32,
++    pub height: u32,
++    pub superiority_exponent: u32,
++    pub victory_exponent: u32,
++    pub horizon_periods: u32,
++    pub periods_per_tick: u32,
++    pub event_limit: u32,
++    pub initial_democratic_share: f64,
++    pub initial_resourced_share: f64,
++    pub mobile_share: f64,
++    pub superiority_threshold: f64,
++    pub victory_threshold: f64,
++    pub stalemate_probability: f64,
++    pub tax_rate: f64,
++    pub distance_gradient: f64,
++    pub min_threat: f64,
++    pub event_recording: bool,
++    pub mechanism: Mechanism,
++    pub probability_direction: ProbabilityDirection,
++    pub zero_ratio: ZeroRatio,
++    pub assignment: Assignment,
++    pub distance_metric: DistanceMetric,
++    pub enemy_total: EnemyTotal,
++    pub inactive_commitment: InactiveCommitment,
++    pub latent_regime: LatentRegime,
++    pub capital_capture: CapitalCapture,
++    pub claim_locking: ClaimLocking,
++    pub opposing_victories: OpposingVictories,
++    pub alliance_maintenance: AllianceMaintenance,
++    pub threat_ties: ThreatTies,
++    pub obligation_observation: ObligationObservation,
++    pub security_scope: SecurityScope,
++    pub clustering_exposure: ClusteringExposure,
++    pub clustering_weights: ClusteringWeights,
++}
++impl Default for DemocraticPeaceConfig {
++    fn default() -> Self {
++        Self {
++            width: 15,
++            height: 15,
++            superiority_exponent: 30,
++            victory_exponent: 10,
++            horizon_periods: 1000,
++            periods_per_tick: 1,
++            event_limit: 1000,
++            initial_democratic_share: 0.1,
++            initial_resourced_share: 0.05,
++            mobile_share: 0.5,
++            superiority_threshold: 2.2,
++            victory_threshold: 2.2,
++            stalemate_probability: 0.2,
++            tax_rate: 1.0,
++            distance_gradient: 0.95,
++            min_threat: 2.0,
++            event_recording: false,
++            mechanism: Mechanism::CollectiveSecurity,
++            probability_direction: ProbabilityDirection::PrintedDecreasing,
++            zero_ratio: ZeroRatio::EqualZeroNeutral,
++            assignment: Assignment::IndependentBernoulli,
++            distance_metric: DistanceMetric::Euclidean,
++            enemy_total: EnemyTotal::ActiveFronts,
++            inactive_commitment: InactiveCommitment::PerFrontOpponent,
++            latent_regime: LatentRegime::PersistentCellTags,
++            capital_capture: CapitalCapture::CollapseOnly,
++            claim_locking: ClaimLocking::AffectedCells,
++            opposing_victories: OpposingVictories::IndependentClaims,
++            alliance_maintenance: AllianceMaintenance::RebuildEachPeriod,
++            threat_ties: ThreatTies::LowestStateId,
++            obligation_observation: ObligationObservation::PriorActions,
++            security_scope: SecurityScope::AllDemocracies,
++            clustering_exposure: ClusteringExposure::UniqueStateNeighbors,
++            clustering_weights: ClusteringWeights::TerritoryWeighted,
++        }
++    }
++}
++impl DemocraticPeaceConfig {
++    pub fn horizon(&self) -> u64 {
++        u64::from(self.horizon_periods)
++    }
++    pub fn validate(&self) -> Result<(), Vec<FieldError>> {
++        let mut e = Vec::new();
++        if !(2..=100).contains(&self.width) {
++            e.push(FieldError::new("width", "outside validated integer range"));
++        }
++        if !(2..=100).contains(&self.height) {
++            e.push(FieldError::new("height", "outside validated integer range"));
++        }
++        if !(1..=100).contains(&self.superiority_exponent) {
++            e.push(FieldError::new(
++                "superiority_exponent",
++                "outside validated integer range",
++            ));
++        }
++        if !(1..=100).contains(&self.victory_exponent) {
++            e.push(FieldError::new(
++                "victory_exponent",
++                "outside validated integer range",
++            ));
++        }
++        if !(1..=1000000).contains(&self.horizon_periods) {
++            e.push(FieldError::new(
++                "horizon_periods",
++                "outside validated integer range",
++            ));
++        }
++        if !(1..=10000).contains(&self.periods_per_tick) {
++            e.push(FieldError::new(
++                "periods_per_tick",
++                "outside validated integer range",
++            ));
++        }
++        if !(0..=100000).contains(&self.event_limit) {
++            e.push(FieldError::new(
++                "event_limit",
++                "outside validated integer range",
++            ));
++        }
++        if !self.initial_democratic_share.is_finite()
++            || self.initial_democratic_share < 0.0
++            || self.initial_democratic_share > 1.0
++        {
++            e.push(FieldError::new(
++                "initial_democratic_share",
++                "outside validated finite range",
++            ));
++        }
++        if !self.initial_resourced_share.is_finite()
++            || self.initial_resourced_share < 0.0
++            || self.initial_resourced_share > 1.0
++        {
++            e.push(FieldError::new(
++                "initial_resourced_share",
++                "outside validated finite range",
++            ));
++        }
++        if !self.mobile_share.is_finite() || self.mobile_share < 0.0 || self.mobile_share > 1.0 {
++            e.push(FieldError::new(
++                "mobile_share",
++                "outside validated finite range",
++            ));
++        }
++        if !self.superiority_threshold.is_finite() || self.superiority_threshold <= 0.0 {
++            e.push(FieldError::new(
++                "superiority_threshold",
++                "outside validated finite range",
++            ));
++        }
++        if !self.victory_threshold.is_finite() || self.victory_threshold <= 0.0 {
++            e.push(FieldError::new(
++                "victory_threshold",
++                "outside validated finite range",
++            ));
++        }
++        if !self.stalemate_probability.is_finite()
++            || self.stalemate_probability < 0.0
++            || self.stalemate_probability > 1.0
++        {
++            e.push(FieldError::new(
++                "stalemate_probability",
++                "outside validated finite range",
++            ));
++        }
++        if !self.tax_rate.is_finite() || self.tax_rate < 0.0 || self.tax_rate > 1.0 {
++            e.push(FieldError::new(
++                "tax_rate",
++                "outside validated finite range",
++            ));
++        }
++        if !self.distance_gradient.is_finite()
++            || self.distance_gradient <= 0.0
++            || self.distance_gradient > 1.0
++        {
++            e.push(FieldError::new(
++                "distance_gradient",
++                "outside validated finite range",
++            ));
++        }
++        if !self.min_threat.is_finite() || self.min_threat <= 0.0 {
++            e.push(FieldError::new(
++                "min_threat",
++                "outside validated finite range",
++            ));
++        }
++        if u64::from(self.width) * u64::from(self.height) > 10000 {
++            e.push(FieldError::new("width", "grid exceeds10000 cells"));
++        }
++        if self.event_recording && self.event_limit == 0 {
++            e.push(FieldError::new(
++                "event_limit",
++                "positive limit required while recording",
++            ));
++        }
++        if e.is_empty() {
++            Ok(())
++        } else {
++            Err(e)
++        }
++    }
++}
++pub fn schema() -> Vec<Param> {
++    vec![
++        Param::integer("Source", "width", "width", (2, 100), Apply::Reset),
++        Param::integer("Source", "height", "height", (2, 100), Apply::Reset),
++        Param::integer(
++            "Source",
++            "superiority_exponent",
++            "superiority exponent",
++            (1, 100),
++            Apply::Reset,
++        ),
++        Param::integer(
++            "Source",
++            "victory_exponent",
++            "victory exponent",
++            (1, 100),
++            Apply::Reset,
++        ),
++        Param::integer(
++            "Source",
++            "horizon_periods",
++            "horizon periods",
++            (1, 1000000),
++            Apply::Reset,
++        ),
++        Param::integer(
++            "Source",
++            "periods_per_tick",
++            "periods per tick",
++            (1, 10000),
++            Apply::Reset,
++        ),
++        Param::integer(
++            "Source",
++            "event_limit",
++            "event limit",
++            (0, 100000),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Source",
++            "initial_democratic_share",
++            "initial democratic share",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Source",
++            "initial_resourced_share",
++            "initial resourced share",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Source",
++            "mobile_share",
++            "mobile share",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Source",
++            "superiority_threshold",
++            "superiority threshold",
++            (0.0, 100.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Source",
++            "victory_threshold",
++            "victory threshold",
++            (0.0, 100.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Source",
++            "stalemate_probability",
++            "stalemate probability",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Source",
++            "tax_rate",
++            "tax rate",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Source",
++            "distance_gradient",
++            "distance gradient",
++            (0.0, 1.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::number(
++            "Source",
++            "min_threat",
++            "min threat",
++            (0.0, 100.0, 0.01),
++            Apply::Reset,
++        ),
++        Param::bool(
++            "Recording",
++            "event_recording",
++            "Record events",
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "mechanism",
++            "mechanism",
++            &[
++                ("tagging", "tagging"),
++                ("alliances", "alliances"),
++                ("collective_security", "collective security"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "probability_direction",
++            "probability direction",
++            &[
++                ("printed_decreasing", "printed decreasing"),
++                ("prose_increasing", "prose increasing"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "zero_ratio",
++            "zero ratio",
++            &[
++                ("equal_zero_neutral", "equal zero neutral"),
++                ("reject_zero_denominator", "reject zero denominator"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "assignment",
++            "assignment",
++            &[
++                ("independent_bernoulli", "independent bernoulli"),
++                ("rounded_quota", "rounded quota"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "distance_metric",
++            "distance metric",
++            &[
++                ("euclidean", "euclidean"),
++                ("manhattan", "manhattan"),
++                ("territorial_path", "territorial path"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "enemy_total",
++            "enemy total",
++            &[
++                ("active_fronts", "active fronts"),
++                ("all_fronts", "all fronts"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "inactive_commitment",
++            "inactive commitment",
++            &[
++                ("per_front_opponent", "per front opponent"),
++                ("first_inactive_opponent", "first inactive opponent"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "latent_regime",
++            "latent regime",
++            &[
++                ("persistent_cell_tags", "persistent cell tags"),
++                ("overwrite_on_conquest", "overwrite on conquest"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "capital_capture",
++            "capital capture",
++            &[
++                ("collapse_only", "collapse only"),
++                ("capture_and_fragment", "capture and fragment"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "claim_locking",
++            "claim locking",
++            &[
++                ("affected_cells", "affected cells"),
++                ("affected_states", "affected states"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "opposing_victories",
++            "opposing victories",
++            &[
++                ("independent_claims", "independent claims"),
++                ("single_draw", "single draw"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "alliance_maintenance",
++            "alliance maintenance",
++            &[
++                ("rebuild_each_period", "rebuild each period"),
++                ("persist_while_threatened", "persist while threatened"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "threat_ties",
++            "threat ties",
++            &[
++                ("lowest_state_id", "lowest state id"),
++                ("random_tie", "random tie"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "obligation_observation",
++            "obligation observation",
++            &[
++                ("prior_actions", "prior actions"),
++                ("current_plans_once", "current plans once"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "security_scope",
++            "security scope",
++            &[
++                ("all_democracies", "all democracies"),
++                ("same_alliance", "same alliance"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "clustering_exposure",
++            "clustering exposure",
++            &[
++                ("unique_state_neighbors", "unique state neighbors"),
++                ("border_edges", "border edges"),
++            ],
++            Apply::Reset,
++        ),
++        Param::choice(
++            "Readings",
++            "clustering_weights",
++            "clustering weights",
++            &[
++                ("territory_weighted", "territory weighted"),
++                ("equal_states", "equal states"),
++            ],
++            Apply::Reset,
++        ),
++    ]
++}
+diff --git a/crates/sugarscape-core/src/democratic_peace/decisions.rs b/crates/sugarscape-core/src/democratic_peace/decisions.rs
+new file mode 100644
+index 0000000..28385e4
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/decisions.rs
+@@ -0,0 +1,164 @@
++//! Snapshot commitments and decisions; no same-phase voluntary-action leakage.
++use super::*;
++use super::{
++    territory::{key, side},
++    types::bump,
++    world::Engine,
++};
++impl Engine {
++    pub(crate) fn allocate(&mut self, c: &DemocraticPeaceConfig) -> Result<(), String> {
++        let mut next = Vec::new();
++        for (&id, s) in &self.states {
++            let neighbors: Vec<_> = self
++                .neighbors(id)
++                .into_iter()
++                .filter(|n| {
++                    s.regime != Regime::Democratic || self.states[n].regime != Regime::Democratic
++                })
++                .collect();
++            let n = neighbors.len();
++            let enemy: f64 = neighbors
++                .iter()
++                .filter(|&&neighbor| {
++                    c.enemy_total == EnemyTotal::AllFronts
++                        || self.fronts[&key(id, neighbor)].previous.iter().any(|a| *a)
++                })
++                .map(|&neighbor| {
++                    let k = key(id, neighbor);
++                    self.fronts[&k].old_commitments[1 - side(k, id)]
++                })
++                .sum();
++            let first = neighbors
++                .iter()
++                .filter(|&&neighbor| !self.fronts[&key(id, neighbor)].previous.iter().any(|a| *a))
++                .map(|&neighbor| {
++                    let k = key(id, neighbor);
++                    self.fronts[&k].old_commitments[1 - side(k, id)]
++                })
++                .next()
++                .unwrap_or(0.);
++            for neighbor in self.neighbors(id) {
++                let k = key(id, neighbor);
++                let i = side(k, id);
++                if !neighbors.contains(&neighbor) {
++                    next.push((k, i, 0., Allocation::default()));
++                    continue;
++                }
++                let f = &self.fronts[&k];
++                let old_opposing = f.old_commitments[1 - i];
++                let active = f.previous.iter().any(|a| *a);
++                let term = if c.inactive_commitment == InactiveCommitment::PerFrontOpponent {
++                    old_opposing
++                } else {
++                    first
++                };
++                let v = super::resources::commitment(
++                    s.resources,
++                    c.mobile_share,
++                    n,
++                    old_opposing,
++                    enemy,
++                    active,
++                    term,
++                )?;
++                next.push((
++                    k,
++                    i,
++                    v,
++                    Allocation {
++                        fixed: (1. - c.mobile_share) * s.resources / n as f64,
++                        mobile_pool: c.mobile_share * s.resources,
++                        eligible_fronts: n,
++                        old_opposing,
++                        enemy_total: enemy,
++                        inactive_term: term,
++                        active,
++                    },
++                ));
++            }
++        }
++        for (k, i, v, a) in next {
++            let f = self.fronts.get_mut(&k).unwrap();
++            f.commitments[i] = v;
++            f.allocations[i] = a;
++        }
++        Ok(())
++    }
++    pub(crate) fn decide(&mut self, c: &DemocraticPeaceConfig) -> Result<(), String> {
++        for f in self.fronts.values_mut() {
++            f.actions = [f.previous.iter().any(|a| *a); 2];
++            f.initiations = [false; 2];
++            f.obligations = Default::default();
++            f.attack_probabilities = [None; 2];
++            f.attack_ratios = Default::default();
++            f.victory_probabilities = [None; 2];
++            f.victory_ratios = Default::default();
++            f.claims = [false; 2];
++        }
++        if c.obligation_observation == ObligationObservation::PriorActions {
++            self.obligations(c, false);
++        }
++        let actors: Vec<_> = self.states.keys().copied().collect();
++        let mut proposals = Vec::new();
++        for id in actors {
++            let neighbors = self.neighbors(id);
++            if neighbors.iter().any(|&n| {
++                let k = key(id, n);
++                self.fronts[&k].actions[side(k, id)]
++            }) {
++                continue;
++            }
++            let eligible: Vec<_> = neighbors
++                .into_iter()
++                .filter(|n| {
++                    self.states[&id].regime != Regime::Democratic
++                        || self.states[n].regime != Regime::Democratic
++                })
++                .collect();
++            let Some(target) = super::world::pick(&eligible, &mut self.rng) else {
++                continue;
++            };
++            let k = key(id, target);
++            let i = side(k, id);
++            let n = self.fronts[&k].commitments[i];
++            let d = self
++                .alliances
++                .iter()
++                .find(|a| a.threat_id == id && a.members.contains(&target))
++                .map(|a| a.pooled_resources)
++                .unwrap_or(self.fronts[&k].commitments[1 - i]);
++            let p = super::resources::probability(
++                n,
++                d,
++                c.superiority_threshold,
++                c.superiority_exponent,
++                c.probability_direction,
++                c.zero_ratio,
++            )?;
++            let f = self.fronts.get_mut(&k).unwrap();
++            f.attack_probabilities[i] = Some(p);
++            f.attack_ratios[i] = Some(Ratio::new(n, d));
++            if super::world::chance(p, &mut self.rng) {
++                let path = self.path(id, target)?;
++                proposals.push((k, i, id, path));
++            }
++        }
++        for (k, i, id, path) in proposals {
++            let f = self.fronts.get_mut(&k).unwrap();
++            let already_initiated = f.initiations.iter().any(|v| *v);
++            f.actions[i] = true;
++            f.initiations[i] = true;
++            if f.path.is_none() {
++                f.path = Some(path);
++                f.path_proposer = Some(id);
++            }
++            if !already_initiated {
++                bump(&mut self.counters.initiated_fronts)?;
++            }
++        }
++        if c.obligation_observation == ObligationObservation::CurrentPlansOnce {
++            self.obligations(c, true);
++        }
++        Ok(())
++    }
++}
+diff --git a/crates/sugarscape-core/src/democratic_peace/mod.rs b/crates/sugarscape-core/src/democratic_peace/mod.rs
+new file mode 100644
+index 0000000..1aba4fb
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/mod.rs
+@@ -0,0 +1,20 @@
++//! Cederman2001 selection with independently specified dynamics.
++mod config;
++pub use config::*;
++mod resources;
++mod types;
++pub use types::*;
++mod world;
++pub use world::DemocraticPeaceWorld;
++mod stats;
++pub use stats::{series_names, DemocraticPeaceSnapshot, SERIES};
++mod presets;
++mod view;
++pub use presets::presets;
++mod alliances;
++mod claims;
++mod combat;
++mod decisions;
++mod territory;
++#[cfg(test)]
++mod tests;
+diff --git a/crates/sugarscape-core/src/democratic_peace/presets.rs b/crates/sugarscape-core/src/democratic_peace/presets.rs
+new file mode 100644
+index 0000000..473ead3
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/presets.rs
+@@ -0,0 +1,12 @@
++use super::*;
++use crate::{model::ModelConfig, presets::ModelPreset};
++pub fn presets() -> Vec<ModelPreset> {
++    [
++("democratic-peace-printed-2001","Democratic peace: printed2001",DemocraticPeaceConfig::default()),
++("democratic-peace-prose-probability","Superiority increases aggression",DemocraticPeaceConfig{probability_direction:ProbabilityDirection::ProseIncreasing,..Default::default()}),
++("democratic-peace-tagging","Tagging only",DemocraticPeaceConfig{mechanism:Mechanism::Tagging,..Default::default()}),
++("democratic-peace-alliances","Defensive alliances",DemocraticPeaceConfig{mechanism:Mechanism::Alliances,..Default::default()}),
++("democratic-peace-collective-security","Collective security",DemocraticPeaceConfig::default()),
++("democratic-peace-nondemocratic","Predatory reference",DemocraticPeaceConfig{initial_democratic_share:0.,..Default::default()}),
++].into_iter().map(|(id,name,c)|ModelPreset{id,name,source:"Cederman2001 JCR45(4):470–502",description:"Selection through conquest, partner tags, defensive alliances and collective security. Printed probability conflicts with superiority prose; resolved readings are explicit. No learning or historical validation.",config:ModelConfig::DemocraticPeace(c)}).collect()
++}
+diff --git a/crates/sugarscape-core/src/democratic_peace/resources.rs b/crates/sugarscape-core/src/democratic_peace/resources.rs
+new file mode 100644
+index 0000000..f0ee21a
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/resources.rs
+@@ -0,0 +1,196 @@
++//! Conditional commitments and source-direction probability, independent of GeoSim.
++use super::*;
++pub(crate) fn probability(
++    n: f64,
++    d: f64,
++    t: f64,
++    c: u32,
++    direction: ProbabilityDirection,
++    zero: ZeroRatio,
++) -> Result<f64, String> {
++    if !n.is_finite() || !d.is_finite() || n < 0. || d < 0. {
++        return Err("invalid resources in probability".into());
++    }
++    if d == 0. {
++        if zero == ZeroRatio::RejectZeroDenominator {
++            return Err("zero probability denominator".into());
++        }
++        if n == 0. {
++            return Ok(0.5);
++        }
++        return Ok(if direction == ProbabilityDirection::PrintedDecreasing {
++            0.
++        } else {
++            1.
++        });
++    }
++    if n == 0. {
++        return Ok(if direction == ProbabilityDirection::PrintedDecreasing {
++            1.
++        } else {
++            0.
++        });
++    }
++    if !(n / d).is_finite() {
++        return Err("nonfinite probability balance with positive denominator".into());
++    }
++    let z = (libm::log(n) - libm::log(d) - libm::log(t)) * f64::from(c);
++    let z = if direction == ProbabilityDirection::PrintedDecreasing {
++        z
++    } else {
++        -z
++    };
++    let p = if z >= 0. {
++        let e = libm::exp(-z);
++        e / (1. + e)
++    } else {
++        1. / (1. + libm::exp(z))
++    };
++    if p.is_finite() {
++        Ok(p)
++    } else {
++        Err("nonfinite probability".into())
++    }
++}
++pub(crate) fn commitment(
++    r: f64,
++    mobile: f64,
++    n: usize,
++    opposing: f64,
++    enemy: f64,
++    active: bool,
++    inactive_term: f64,
++) -> Result<f64, String> {
++    if [r, opposing, enemy, inactive_term]
++        .iter()
++        .any(|v| !v.is_finite() || *v < 0.)
++    {
++        return Err("invalid allocation input".into());
++    }
++    if n == 0 {
++        return Ok(0.);
++    }
++    let fixed = (1. - mobile) * r / n as f64;
++    let fraction = if enemy == 0. {
++        1.
++    } else if active {
++        opposing / enemy
++    } else {
++        let d = enemy + inactive_term;
++        if !d.is_finite() || d <= 0. {
++            return Err("invalid inactive allocation denominator".into());
++        }
++        opposing / d
++    };
++    let value = fixed + mobile * r * fraction;
++    if value.is_finite() {
++        Ok(value)
++    } else {
++        Err("nonfinite commitment".into())
++    }
++}
++pub(crate) fn threat_ratio(n: f64, d: f64, zero: ZeroRatio) -> Result<f64, String> {
++    if !n.is_finite() || !d.is_finite() || n < 0. || d < 0. {
++        return Err("invalid threat resources".into());
++    }
++    if d == 0. {
++        if zero == ZeroRatio::RejectZeroDenominator {
++            return Err("zero threat denominator".into());
++        }
++        return Ok(if n == 0. { 1. } else { f64::INFINITY });
++    }
++    let ratio = n / d;
++    if ratio.is_finite() {
++        Ok(ratio)
++    } else {
++        Err("nonfinite threat ratio with positive denominator".into())
++    }
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn printed_probability_declines_with_superiority() {
++        assert!(
++            probability(
++                4.4,
++                1.0,
++                2.2,
++                30,
++                ProbabilityDirection::PrintedDecreasing,
++                ZeroRatio::EqualZeroNeutral
++            )
++            .unwrap()
++                < 0.5
++        );
++    }
++    #[test]
++    fn prose_probability_increases_with_superiority() {
++        assert!(
++            probability(
++                4.4,
++                1.0,
++                2.2,
++                30,
++                ProbabilityDirection::ProseIncreasing,
++                ZeroRatio::EqualZeroNeutral
++            )
++            .unwrap()
++                > 0.5
++        );
++    }
++    #[test]
++    fn zero_limits_are_direction_sensitive() {
++        assert_eq!(
++            probability(
++                0.,
++                1.,
++                2.2,
++                30,
++                ProbabilityDirection::PrintedDecreasing,
++                ZeroRatio::EqualZeroNeutral
++            )
++            .unwrap(),
++            1.0
++        );
++    }
++    #[test]
++    fn strict_zero_policy_rejects_denominator() {
++        assert!(probability(
++            1.,
++            0.,
++            2.2,
++            30,
++            ProbabilityDirection::PrintedDecreasing,
++            ZeroRatio::RejectZeroDenominator
++        )
++        .is_err());
++    }
++    #[test]
++    fn fixed_allocation_uses_distinct_eligible_fronts() {
++        assert_eq!(
++            commitment(100., 0.5, 5, 15., 40., true, 15.).unwrap(),
++            28.75
++        );
++    }
++    #[test]
++    fn inactive_front_uses_own_opponent() {
++        assert!(
++            (commitment(100., 0.5, 5, 20., 40., false, 20.).unwrap() - 26.666666666666667).abs()
++                < 1e-12
++        );
++    }
++    #[test]
++    fn zero_fronts_never_divide() {
++        assert_eq!(commitment(100., 0.5, 0, 0., 0., false, 0.).unwrap(), 0.);
++    }
++}
++
++#[cfg(test)]
++mod overflow_tests {
++    use super::*;
++    #[test]
++    fn finite_denominator_overflow_is_invalid() {
++        assert!(threat_ratio(10., 1e-320, ZeroRatio::EqualZeroNeutral).is_err());
++    }
++}
+diff --git a/crates/sugarscape-core/src/democratic_peace/stats.rs b/crates/sugarscape-core/src/democratic_peace/stats.rs
+new file mode 100644
+index 0000000..f5afe37
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/stats.rs
+@@ -0,0 +1,65 @@
++use super::*;
++use crate::stats::Series;
++use serde::Serialize;
++pub const SERIES: &[&str] = &[
++    "period",
++    "periods",
++    "completed_periods",
++    "attempted_period",
++    "last_tick_periods",
++    "democratic_share",
++    "clustering_ratio",
++    "sovereign_count",
++    "democratic_states",
++    "predatory_states",
++    "conflict_fronts",
++    "alliance_count",
++    "pariah_count",
++];
++pub fn series_names() -> Vec<String> {
++    SERIES.iter().map(|s| s.to_string()).collect()
++}
++#[derive(Clone, Debug, Default, Serialize)]
++pub struct DemocraticPeaceSnapshot {
++    pub tick: u64,
++    pub period: u64,
++    pub periods: u64,
++    pub completed_periods: u64,
++    pub attempted_period: u64,
++    pub last_tick_periods: u32,
++    pub democratic_share: f64,
++    pub clustering_ratio: Option<f64>,
++    pub clustering_reason: Option<String>,
++    pub sovereign_count: u32,
++    pub democratic_states: u32,
++    pub predatory_states: u32,
++    pub conflict_fronts: u32,
++    pub alliance_count: u32,
++    pub pariah_count: u32,
++    pub finish_reason: Option<String>,
++    pub invalidity: Option<String>,
++    pub invalid_phase: Option<String>,
++    pub metrics: Metrics,
++}
++impl Series for DemocraticPeaceSnapshot {
++    fn tick(&self) -> u64 {
++        self.tick
++    }
++    fn value(&self, n: &str) -> Option<f64> {
++        Some(match n {
++            "tick" => self.tick as f64,
++            "period" | "periods" | "completed_periods" => self.period as f64,
++            "attempted_period" => self.attempted_period as f64,
++            "last_tick_periods" => self.last_tick_periods as f64,
++            "democratic_share" => self.democratic_share,
++            "clustering_ratio" => return self.clustering_ratio,
++            "sovereign_count" => self.sovereign_count as f64,
++            "democratic_states" => self.democratic_states as f64,
++            "predatory_states" => self.predatory_states as f64,
++            "conflict_fronts" => self.conflict_fronts as f64,
++            "alliance_count" => self.alliance_count as f64,
++            "pariah_count" => self.pariah_count as f64,
++            _ => return None,
++        })
++    }
++}
+diff --git a/crates/sugarscape-core/src/democratic_peace/territory.rs b/crates/sugarscape-core/src/democratic_peace/territory.rs
+new file mode 100644
+index 0000000..50cc6d2
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/territory.rs
+@@ -0,0 +1,201 @@
++//! Bounded cardinal topology and source distance choices.
++use super::world::Engine;
++use super::*;
++use std::collections::{BTreeSet, VecDeque};
++impl Engine {
++    pub(crate) fn adjacent(&self, id: usize) -> Vec<usize> {
++        let w = self.width as usize;
++        let n = self.cells.len();
++        let mut v = Vec::with_capacity(4);
++        if !id.is_multiple_of(w) {
++            v.push(id - 1);
++        }
++        if id % w + 1 < w {
++            v.push(id + 1);
++        }
++        if id >= w {
++            v.push(id - w);
++        }
++        if id + w < n {
++            v.push(id + w);
++        }
++        v.sort_unstable();
++        v
++    }
++    pub(crate) fn neighbors(&self, id: StateId) -> Vec<StateId> {
++        self.fronts
++            .keys()
++            .filter_map(|k| {
++                if k[0] == id {
++                    Some(k[1])
++                } else if k[1] == id {
++                    Some(k[0])
++                } else {
++                    None
++                }
++            })
++            .collect()
++    }
++    pub(crate) fn member_cells(&self, id: StateId) -> Vec<usize> {
++        self.cells
++            .iter()
++            .filter(|c| c.owner == id)
++            .map(|c| c.id)
++            .collect()
++    }
++    pub(crate) fn reached(&self, id: StateId, excluded: Option<usize>) -> BTreeSet<usize> {
++        let mut reached = BTreeSet::new();
++        let mut todo = vec![id.capital_cell];
++        while let Some(cell) = todo.pop() {
++            if Some(cell) == excluded || self.cells[cell].owner != id || !reached.insert(cell) {
++                continue;
++            }
++            for next in self.adjacent(cell) {
++                if Some(next) != excluded && self.cells[next].owner == id {
++                    todo.push(next);
++                }
++            }
++        }
++        reached
++    }
++    pub(crate) fn rebuild(&mut self) -> Result<(), String> {
++        for s in self.states.values_mut() {
++            s.members.clear();
++        }
++        for c in &self.cells {
++            self.states
++                .get_mut(&c.owner)
++                .ok_or("cell owner has no state")?
++                .members
++                .push(c.id);
++        }
++        let mut keys = BTreeSet::new();
++        for c in &self.cells {
++            for next in self.adjacent(c.id) {
++                let other = self.cells[next].owner;
++                if other != c.owner {
++                    keys.insert(key(c.owner, other));
++                }
++            }
++        }
++        let mut old = std::mem::take(&mut self.fronts);
++        self.fronts = keys
++            .into_iter()
++            .map(|k| (k, old.remove(&k).unwrap_or_else(|| Front::new(k))))
++            .collect();
++        Ok(())
++    }
++    pub(crate) fn distance(
++        &self,
++        c: &DemocraticPeaceConfig,
++        id: StateId,
++        cell: usize,
++    ) -> Result<f64, String> {
++        let w = self.width as usize;
++        let dx = (id.capital_cell % w).abs_diff(cell % w);
++        let dy = (id.capital_cell / w).abs_diff(cell / w);
++        match c.distance_metric {
++            DistanceMetric::Euclidean => Ok(libm::sqrt((dx * dx + dy * dy) as f64)),
++            DistanceMetric::Manhattan => Ok((dx + dy) as f64),
++            DistanceMetric::TerritorialPath => {
++                let mut todo = VecDeque::from([(id.capital_cell, 0)]);
++                let mut seen = BTreeSet::new();
++                while let Some((p, d)) = todo.pop_front() {
++                    if !seen.insert(p) {
++                        continue;
++                    }
++                    if p == cell {
++                        return Ok(d as f64);
++                    }
++                    for q in self.adjacent(p) {
++                        if self.cells[q].owner == id {
++                            todo.push_back((q, d + 1));
++                        }
++                    }
++                }
++                Err("unreachable territorial distance".into())
++            }
++        }
++    }
++    pub(crate) fn path(
++        &mut self,
++        attacker: StateId,
++        target: StateId,
++    ) -> Result<[usize; 2], String> {
++        let targets: Vec<_> = self
++            .cells
++            .iter()
++            .filter(|c| {
++                c.owner == target
++                    && self
++                        .adjacent(c.id)
++                        .iter()
++                        .any(|&q| self.cells[q].owner == attacker)
++            })
++            .map(|c| c.id)
++            .collect();
++        let victim =
++            super::world::pick(&targets, &mut self.rng).ok_or("no bordering target cell")?;
++        let agents: Vec<_> = self
++            .adjacent(victim)
++            .into_iter()
++            .filter(|&q| self.cells[q].owner == attacker)
++            .collect();
++        let agent = super::world::pick(&agents, &mut self.rng).ok_or("no bordering agent cell")?;
++        Ok(if attacker < target {
++            [agent, victim]
++        } else {
++            [victim, agent]
++        })
++    }
++    pub(crate) fn validate(&self) -> Result<(), String> {
++        for (id, s) in &self.states {
++            if s.members.is_empty()
++                || self.cells[id.capital_cell].owner != *id
++                || s.regime != self.cells[id.capital_cell].latent_regime
++            {
++                return Err("invalid capital/member/regime invariant".into());
++            }
++            if !s.resources.is_finite() || s.resources < 0. {
++                return Err("invalid sovereign resources".into());
++            }
++            if self.reached(*id, None).len() != s.members.len() {
++                return Err("disconnected sovereign territory".into());
++            }
++        }
++        for f in self.fronts.values() {
++            if f.commitments
++                .iter()
++                .chain(f.old_commitments.iter())
++                .any(|r| !r.is_finite() || *r < 0.)
++            {
++                return Err("invalid front commitment".into());
++            }
++        }
++        let mut membership = BTreeSet::new();
++        for a in &self.alliances {
++            if a.members.len() < 2
++                || !self.states.contains_key(&a.threat_id)
++                || !a.pooled_resources.is_finite()
++            {
++                return Err("invalid alliance".into());
++            }
++            for m in &a.members {
++                if !membership.insert(*m) || !self.fronts.contains_key(&key(*m, a.threat_id)) {
++                    return Err("invalid alliance member".into());
++                }
++            }
++        }
++        Ok(())
++    }
++}
++pub(crate) fn key(a: StateId, b: StateId) -> [StateId; 2] {
++    if a < b {
++        [a, b]
++    } else {
++        [b, a]
++    }
++}
++pub(crate) fn side(k: [StateId; 2], id: StateId) -> usize {
++    usize::from(k[1] == id)
++}
+diff --git a/crates/sugarscape-core/src/democratic_peace/tests.rs b/crates/sugarscape-core/src/democratic_peace/tests.rs
+new file mode 100644
+index 0000000..81d3ce9
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/tests.rs
+@@ -0,0 +1,744 @@
++use super::*;
++use crate::model::Model;
++fn small() -> DemocraticPeaceConfig {
++    DemocraticPeaceConfig {
++        width: 3,
++        height: 2,
++        horizon_periods: 7,
++        ..Default::default()
++    }
++}
++fn fixture(owners: &[usize], regimes: &[Regime]) -> DemocraticPeaceWorld {
++    let mut w = DemocraticPeaceWorld::new(small(), 9).unwrap();
++    w.engine.states.clear();
++    for (i, &capital) in owners.iter().enumerate() {
++        let id = StateId {
++            capital_cell: capital,
++            sovereignty_generation: 0,
++        };
++        w.engine.cells[i].owner = id;
++        w.engine.cells[i].latent_regime = regimes[i];
++        w.engine.states.entry(id).or_insert(State {
++            id,
++            regime: regimes[capital],
++            resources: 100.,
++            members: vec![],
++        });
++    }
++    w.engine.rebuild().unwrap();
++    w
++}
++#[test]
++fn rounded_quota_assigns_exact_counts() {
++    let w = DemocraticPeaceWorld::new(
++        DemocraticPeaceConfig {
++            assignment: Assignment::RoundedQuota,
++            initial_democratic_share: 0.5,
++            initial_resourced_share: 0.5,
++            ..small()
++        },
++        3,
++    )
++    .unwrap();
++    assert_eq!(w.setup.initial_democratic_cells, 3);
++    assert_eq!(w.setup.initial_resourced_cells, 3);
++}
++#[test]
++fn initial_all_democratic_first_passage_is_zero() {
++    let w = DemocraticPeaceWorld::new(
++        DemocraticPeaceConfig {
++            initial_democratic_share: 1.,
++            ..small()
++        },
++        3,
++    )
++    .unwrap();
++    assert_eq!(w.snapshot().metrics.first_all_democratic_period, Some(0));
++}
++#[test]
++fn grouped_periods_have_identical_state_and_rng() {
++    let mut a = DemocraticPeaceWorld::new(small(), 3).unwrap();
++    let mut b = DemocraticPeaceWorld::new(
++        DemocraticPeaceConfig {
++            periods_per_tick: 3,
++            ..small()
++        },
++        3,
++    )
++    .unwrap();
++    a.run(7);
++    b.run(3);
++    assert_eq!(a.economic_fingerprint(), b.economic_fingerprint());
++    assert_eq!(a.outcome(), b.outcome());
++}
++#[test]
++fn failed_period_preserves_engine_and_rng() {
++    let mut w = DemocraticPeaceWorld::new(
++        DemocraticPeaceConfig {
++            zero_ratio: ZeroRatio::RejectZeroDenominator,
++            initial_resourced_share: 0.,
++            initial_democratic_share: 0.,
++            ..small()
++        },
++        3,
++    )
++    .unwrap();
++    let before = w.economic_fingerprint();
++    w.run(1);
++    assert_eq!(w.economic_fingerprint(), before);
++    assert_eq!(w.completed_periods(), 0);
++    assert_eq!(
++        w.outcome().unwrap().invalid_phase.as_deref(),
++        Some("alignments")
++    );
++}
++#[test]
++fn democracies_allocate_only_against_predatory_neighbors() {
++    let mut w = fixture(
++        &[0, 1, 2, 3, 4, 5],
++        &[
++            Regime::Democratic,
++            Regime::Democratic,
++            Regime::Predatory,
++            Regime::Predatory,
++            Regime::Predatory,
++            Regime::Predatory,
++        ],
++    );
++    w.engine.allocate(&w.config).unwrap();
++    let id = w.engine.cells[0].owner;
++    let front = w
++        .engine
++        .fronts
++        .values()
++        .find(|f| f.states.contains(&id) && f.states.contains(&w.engine.cells[3].owner))
++        .unwrap();
++    assert_eq!(front.commitments[0], 100.);
++}
++#[test]
++fn extraction_uses_preclaim_territory() {
++    let mut w = fixture(&[0, 0, 2, 3, 4, 5], &[Regime::Predatory; 6]);
++    w.engine.extract(&w.config).unwrap();
++    assert_eq!(w.engine.states[&w.engine.cells[0].owner].resources, 19.5);
++}
++#[test]
++fn capital_collapse_releases_each_primitive_cell() {
++    let mut w = fixture(&[0, 0, 2, 3, 4, 5], &[Regime::Predatory; 6]);
++    let winner = w.engine.cells[3].owner;
++    let loser = w.engine.cells[0].owner;
++    w.engine
++        .apply_claims(
++            &w.config,
++            vec![types::Claim {
++                states: [loser, winner],
++                side: 1,
++                path: [0, 3],
++            }],
++        )
++        .unwrap();
++    assert_eq!(w.engine.states.len(), 6);
++    assert_eq!(w.engine.cells[1].owner.capital_cell, 1);
++    assert_eq!(w.engine.cells[0].owner.sovereignty_generation, 1);
++}
++#[test]
++fn capturing_bridge_releases_disconnected_cells() {
++    let mut w = fixture(&[0, 0, 0, 3, 4, 5], &[Regime::Predatory; 6]);
++    let winner = w.engine.cells[4].owner;
++    let loser = w.engine.cells[0].owner;
++    w.engine
++        .apply_claims(
++            &w.config,
++            vec![types::Claim {
++                states: [loser, winner],
++                side: 1,
++                path: [1, 4],
++            }],
++        )
++        .unwrap();
++    assert_eq!(w.engine.cells[2].owner.capital_cell, 2);
++    assert_eq!(w.engine.cells[1].owner, winner);
++}
++#[test]
++fn isolated_democracy_has_exposure_one() {
++    let w = fixture(&[0; 6], &[Regime::Democratic; 6]);
++    let m = w.engine.metrics(&w.config).unwrap();
++    assert_eq!(m.democratic_exposure, Some(1.));
++    assert_eq!(m.clustering_ratio, Some(10.));
++}
++#[test]
++fn legitimate_undefined_clustering_is_blank_csv_and_nan_series() {
++    let w = DemocraticPeaceWorld::new(
++        DemocraticPeaceConfig {
++            initial_democratic_share: 0.,
++            ..small()
++        },
++        3,
++    )
++    .unwrap();
++    assert!(w.series("clustering_ratio").unwrap()[0].is_nan());
++    assert!(!w.series_csv().contains("NaN"));
++}
++
++#[test]
++fn latent_democracy_can_return_after_extinction() {
++    let mut w = fixture(
++        &[0, 0, 2, 3, 4, 5],
++        &[
++            Regime::Predatory,
++            Regime::Democratic,
++            Regime::Predatory,
++            Regime::Predatory,
++            Regime::Predatory,
++            Regime::Predatory,
++        ],
++    );
++    w.engine.first_extinction = Some(0);
++    let loser = w.engine.cells[0].owner;
++    let winner = w.engine.cells[3].owner;
++    w.engine
++        .apply_claims(
++            &w.config,
++            vec![types::Claim {
++                states: [loser, winner],
++                side: 1,
++                path: [0, 3],
++            }],
++        )
++        .unwrap();
++    let m = w.engine.metrics(&w.config).unwrap();
++    assert!(!m.democratic_extinction);
++    assert_eq!(m.first_extinction_period, Some(0));
++    assert_eq!(m.democratic_states, 1);
++}
++#[test]
++fn internal_candidate_panic_is_terminal_and_preserves_committed_state() {
++    let mut w = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Predatory; 6]);
++    let front = w.engine.fronts.values_mut().next().unwrap();
++    front.path = Some([usize::MAX, 1]);
++    front.previous = [true; 2];
++    let before = w.economic_fingerprint();
++    let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| w.run(1)));
++    assert!(caught.is_ok());
++    assert_eq!(w.economic_fingerprint(), before);
++    assert_eq!(
++        w.outcome().unwrap().invalid_phase.as_deref(),
++        Some("interaction")
++    );
++    assert!(!w.outcome().unwrap().valid);
++}
++#[test]
++fn probability_denominator_overflow_is_invalid() {
++    assert!(resources::probability(
++        10.,
++        1e-320,
++        2.2,
++        30,
++        ProbabilityDirection::PrintedDecreasing,
++        ZeroRatio::EqualZeroNeutral
++    )
++    .is_err());
++}
++#[test]
++fn late_generation_failure_rolls_back_prior_mutations_and_rng() {
++    let mut w = fixture(&[0, 0, 2, 3, 4, 5], &[Regime::Predatory; 6]);
++    w.config.victory_exponent = 100;
++    let loser = w.engine.cells[0].owner;
++    w.engine.states.get_mut(&loser).unwrap().resources = 1e100;
++    w.engine.cells[1].next_generation = u64::MAX;
++    let k = territory::key(loser, w.engine.cells[3].owner);
++    let f = w.engine.fronts.get_mut(&k).unwrap();
++    f.previous = [true; 2];
++    f.path = Some([0, 3]);
++    let before = w.economic_fingerprint();
++    w.run(1);
++    assert_eq!(w.economic_fingerprint(), before);
++    assert_eq!(
++        w.outcome().unwrap().invalid_phase.as_deref(),
++        Some("structural_change")
++    );
++}
++#[test]
++fn schema_paths_roundtrip_and_all_changes_require_reset() {
++    crate::schema::check_schema(
++        &schema(),
++        &crate::model::ModelConfig::DemocraticPeace(small()),
++        || {
++            crate::model::ModelWorld::new(crate::model::ModelConfig::DemocraticPeace(small()), 3)
++                .unwrap()
++        },
++    );
++}
++#[test]
++fn independent_victories_can_record_opposing_claims() {
++    let mut w = fixture(&[0, 0, 0, 3, 3, 3], &[Regime::Predatory; 6]);
++    w.config.victory_threshold = 100.;
++    w.config.victory_exponent = 100;
++    let f = w.engine.fronts.values_mut().next().unwrap();
++    f.actions = [true; 2];
++    f.commitments = [1.; 2];
++    f.path = Some([0, 3]);
++    let claims = w.engine.combat(&w.config).unwrap();
++    assert_eq!(claims.len(), 2);
++    assert_eq!(w.engine.counters.opposing_claims, 1);
++    assert_eq!(w.engine.fronts.values().next().unwrap().actions, [false; 2]);
++}
++#[test]
++fn single_draw_victory_records_only_one_claim() {
++    let mut w = fixture(&[0, 0, 0, 3, 3, 3], &[Regime::Predatory; 6]);
++    w.config.victory_threshold = 100.;
++    w.config.victory_exponent = 100;
++    w.config.opposing_victories = OpposingVictories::SingleDraw;
++    let f = w.engine.fronts.values_mut().next().unwrap();
++    f.actions = [true; 2];
++    f.commitments = [1.; 2];
++    f.path = Some([0, 3]);
++    assert_eq!(w.engine.combat(&w.config).unwrap().len(), 1);
++}
++#[test]
++fn unilateral_defection_has_no_combat_consequence() {
++    let mut w = fixture(&[0, 0, 0, 3, 3, 3], &[Regime::Predatory; 6]);
++    let f = w.engine.fronts.values_mut().next().unwrap();
++    f.actions = [true, false];
++    f.commitments = [1.; 2];
++    f.path = Some([0, 3]);
++    assert!(w.engine.combat(&w.config).unwrap().is_empty());
++    assert_eq!(w.engine.counters.mutual_d_front_periods, 0);
++}
++#[test]
++fn conquest_yield_is_delayed_until_next_resource_update() {
++    let mut w = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Predatory; 6]);
++    w.engine.extract(&w.config).unwrap();
++    let loser = w.engine.cells[1].owner;
++    let winner = w.engine.cells[4].owner;
++    w.engine
++        .apply_claims(
++            &w.config,
++            vec![types::Claim {
++                states: [loser, winner],
++                side: 1,
++                path: [1, 4],
++            }],
++        )
++        .unwrap();
++    assert_eq!(w.engine.states[&winner].resources, 10.);
++    w.engine.extract(&w.config).unwrap();
++    assert_eq!(w.engine.states[&winner].resources, 19.5);
++}
++#[test]
++fn overwrite_on_conquest_changes_released_latent_tag() {
++    let mut w = fixture(
++        &[0, 1, 2, 3, 4, 5],
++        &[
++            Regime::Predatory,
++            Regime::Democratic,
++            Regime::Predatory,
++            Regime::Predatory,
++            Regime::Predatory,
++            Regime::Predatory,
++        ],
++    );
++    w.config.latent_regime = LatentRegime::OverwriteOnConquest;
++    let loser = w.engine.cells[1].owner;
++    let winner = w.engine.cells[4].owner;
++    w.engine
++        .apply_claims(
++            &w.config,
++            vec![types::Claim {
++                states: [loser, winner],
++                side: 1,
++                path: [1, 4],
++            }],
++        )
++        .unwrap();
++    assert_eq!(w.engine.cells[1].latent_regime, Regime::Predatory);
++}
++#[test]
++fn capture_and_fragment_absorbs_compound_capital() {
++    let mut w = fixture(&[0, 0, 2, 3, 4, 5], &[Regime::Predatory; 6]);
++    w.config.capital_capture = CapitalCapture::CaptureAndFragment;
++    let loser = w.engine.cells[0].owner;
++    let winner = w.engine.cells[3].owner;
++    w.engine
++        .apply_claims(
++            &w.config,
++            vec![types::Claim {
++                states: [loser, winner],
++                side: 1,
++                path: [0, 3],
++            }],
++        )
++        .unwrap();
++    assert_eq!(w.engine.cells[0].owner, winner);
++    assert_eq!(w.engine.cells[1].owner.capital_cell, 1);
++}
++#[test]
++fn collective_security_scope_changes_unaligned_democratic_obligation() {
++    let mut w = fixture(
++        &[0, 1, 2, 3, 4, 5],
++        &[
++            Regime::Democratic,
++            Regime::Predatory,
++            Regime::Democratic,
++            Regime::Predatory,
++            Regime::Democratic,
++            Regime::Predatory,
++        ],
++    );
++    let k = territory::key(w.engine.cells[0].owner, w.engine.cells[1].owner);
++    w.engine.fronts.get_mut(&k).unwrap().previous = [true; 2];
++    let target = territory::key(w.engine.cells[1].owner, w.engine.cells[4].owner);
++    w.config.security_scope = SecurityScope::SameAlliance;
++    w.engine.obligations(&w.config, false);
++    assert!(!w.engine.fronts[&target].actions[1]);
++    w.config.security_scope = SecurityScope::AllDemocracies;
++    w.engine.obligations(&w.config, false);
++    assert!(w.engine.fronts[&target].actions[1]);
++}
++#[test]
++fn current_plan_obligations_do_not_read_previous_buffer() {
++    let mut w = fixture(
++        &[0, 1, 2, 3, 4, 5],
++        &[
++            Regime::Democratic,
++            Regime::Predatory,
++            Regime::Democratic,
++            Regime::Predatory,
++            Regime::Democratic,
++            Regime::Predatory,
++        ],
++    );
++    let k = territory::key(w.engine.cells[0].owner, w.engine.cells[1].owner);
++    w.engine.fronts.get_mut(&k).unwrap().actions = [true; 2];
++    w.engine.obligations(&w.config, false);
++    assert!(w.engine.pariahs.is_empty());
++    w.engine.obligations(&w.config, true);
++    assert_eq!(w.engine.pariahs.len(), 1);
++}
++#[test]
++fn territory_path_distance_follows_owned_cells() {
++    let w = fixture(&[0, 1, 0, 0, 0, 0], &[Regime::Predatory; 6]);
++    let id = w.engine.cells[0].owner;
++    assert_eq!(
++        w.engine
++            .distance(
++                &DemocraticPeaceConfig {
++                    distance_metric: DistanceMetric::TerritorialPath,
++                    ..w.config.clone()
++                },
++                id,
++                2
++            )
++            .unwrap(),
++        4.
++    );
++    assert_eq!(
++        w.engine
++            .distance(
++                &DemocraticPeaceConfig {
++                    distance_metric: DistanceMetric::Manhattan,
++                    ..w.config.clone()
++                },
++                id,
++                2
++            )
++            .unwrap(),
++        2.
++    );
++}
++fn threats_fixture() -> DemocraticPeaceWorld {
++    let mut w = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Predatory; 6]);
++    for f in w.engine.fronts.values_mut() {
++        f.commitments = [1.; 2];
++    }
++    for member in [0, 2, 4] {
++        let id = w.engine.cells[1].owner;
++        let k = territory::key(w.engine.cells[member].owner, id);
++        w.engine.fronts.get_mut(&k).unwrap().commitments[territory::side(k, id)] = 9.;
++    }
++    w
++}
++#[test]
++fn shared_primary_threat_forms_one_defensive_alliance() {
++    let mut w = threats_fixture();
++    w.engine.align(&w.config).unwrap();
++    assert_eq!(w.engine.alliances.len(), 1);
++    assert_eq!(
++        w.engine.alliances[0]
++            .members
++            .iter()
++            .map(|id| id.capital_cell)
++            .collect::<Vec<_>>(),
++        vec![0, 2, 4]
++    );
++    assert_eq!(w.engine.alliances[0].pooled_resources, 3.);
++}
++#[test]
++fn persistent_alliance_keeps_old_threat_when_new_threat_is_stronger() {
++    let mut w = threats_fixture();
++    w.engine.align(&w.config).unwrap();
++    let k = territory::key(w.engine.cells[0].owner, w.engine.cells[3].owner);
++    w.engine.fronts.get_mut(&k).unwrap().commitments[1] = 10.;
++    let mut rebuilt = w.clone();
++    rebuilt.engine.align(&rebuilt.config).unwrap();
++    assert_eq!(
++        rebuilt.engine.alliances[0]
++            .members
++            .iter()
++            .map(|id| id.capital_cell)
++            .collect::<Vec<_>>(),
++        vec![2, 4]
++    );
++    w.config.alliance_maintenance = AllianceMaintenance::PersistWhileThreatened;
++    w.engine.align(&w.config).unwrap();
++    assert_eq!(
++        w.engine.alliances[0]
++            .members
++            .iter()
++            .map(|id| id.capital_cell)
++            .collect::<Vec<_>>(),
++        vec![0, 2, 4]
++    );
++}
++#[test]
++fn exact_threshold_does_not_count_as_threat() {
++    let mut w = threats_fixture();
++    w.config.min_threat = 9.;
++    w.engine.align(&w.config).unwrap();
++    assert!(w.engine.alliances.is_empty());
++}
++#[test]
++fn lowest_id_breaks_equal_threat_tie() {
++    let mut w = threats_fixture();
++    let k = territory::key(w.engine.cells[0].owner, w.engine.cells[3].owner);
++    w.engine.fronts.get_mut(&k).unwrap().commitments[1] = 9.;
++    w.engine.align(&w.config).unwrap();
++    assert_eq!(
++        w.engine.alliances[0]
++            .members
++            .iter()
++            .map(|id| id.capital_cell)
++            .collect::<Vec<_>>(),
++        vec![0, 2, 4]
++    );
++}
++#[test]
++fn border_exposure_counts_edges_not_distinct_states() {
++    let mut w = fixture(
++        &[0, 1, 2, 0, 1, 5],
++        &[
++            Regime::Democratic,
++            Regime::Democratic,
++            Regime::Predatory,
++            Regime::Democratic,
++            Regime::Democratic,
++            Regime::Predatory,
++        ],
++    );
++    assert!(
++        (w.engine
++            .metrics(&w.config)
++            .unwrap()
++            .democratic_exposure
++            .unwrap()
++            - 2. / 3.)
++            .abs()
++            < 1e-12
++    );
++    w.config.clustering_exposure = ClusteringExposure::BorderEdges;
++    assert_eq!(
++        w.engine.metrics(&w.config).unwrap().democratic_exposure,
++        Some(0.75)
++    );
++}
++#[test]
++fn equal_state_weights_change_exposure_average() {
++    let mut w = fixture(
++        &[0, 1, 2, 0, 4, 5],
++        &[
++            Regime::Democratic,
++            Regime::Democratic,
++            Regime::Predatory,
++            Regime::Democratic,
++            Regime::Predatory,
++            Regime::Predatory,
++        ],
++    );
++    assert!(
++        (w.engine
++            .metrics(&w.config)
++            .unwrap()
++            .democratic_exposure
++            .unwrap()
++            - 4. / 9.)
++            .abs()
++            < 1e-12
++    );
++    w.config.clustering_weights = ClusteringWeights::EqualStates;
++    assert!(
++        (w.engine
++            .metrics(&w.config)
++            .unwrap()
++            .democratic_exposure
++            .unwrap()
++            - 5. / 12.)
++            .abs()
++            < 1e-12
++    );
++}
++#[test]
++fn simultaneous_proposals_count_one_initiated_front() {
++    let mut w = fixture(&[0, 0, 0, 3, 3, 3], &[Regime::Predatory; 6]);
++    w.config.superiority_threshold = 100.;
++    w.config.superiority_exponent = 100;
++    for f in w.engine.fronts.values_mut() {
++        f.commitments = [1.; 2];
++    }
++    w.engine.decide(&w.config).unwrap();
++    assert_eq!(w.engine.counters.initiated_fronts, 1);
++    assert_eq!(
++        w.engine.fronts.values().next().unwrap().initiations,
++        [true; 2]
++    );
++}
++#[test]
++fn all_front_enemy_total_changes_active_commitment() {
++    let mut w = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Predatory; 6]);
++    let k01 = territory::key(w.engine.cells[0].owner, w.engine.cells[1].owner);
++    let k03 = territory::key(w.engine.cells[0].owner, w.engine.cells[3].owner);
++    w.engine.fronts.get_mut(&k01).unwrap().previous = [true; 2];
++    w.engine.fronts.get_mut(&k01).unwrap().old_commitments[1] = 15.;
++    w.engine.fronts.get_mut(&k03).unwrap().old_commitments[1] = 25.;
++    w.engine.allocate(&w.config).unwrap();
++    assert_eq!(w.engine.fronts[&k01].commitments[0], 75.);
++    w.config.enemy_total = EnemyTotal::AllFronts;
++    w.engine.allocate(&w.config).unwrap();
++    assert_eq!(w.engine.fronts[&k01].commitments[0], 43.75);
++}
++#[test]
++fn repeated_first_inactive_term_changes_other_inactive_front() {
++    let mut w = fixture(&[0, 1, 2, 3, 4, 5], &[Regime::Predatory; 6]);
++    w.config.mobile_share = 1.;
++    let ids: Vec<_> = w.engine.cells.iter().map(|c| c.owner).collect();
++    for (neighbor, v) in [(0, 15.), (2, 20.), (4, 30.)] {
++        let k = territory::key(ids[1], ids[neighbor]);
++        let f = w.engine.fronts.get_mut(&k).unwrap();
++        f.old_commitments[territory::side(k, ids[neighbor])] = v;
++        if neighbor == 0 {
++            f.previous = [true; 2];
++        }
++    }
++    let k = territory::key(ids[1], ids[4]);
++    w.engine.allocate(&w.config).unwrap();
++    assert!((w.engine.fronts[&k].commitments[0] - 66.66666666666667).abs() < 1e-12);
++    w.config.inactive_commitment = InactiveCommitment::FirstInactiveOpponent;
++    w.engine.allocate(&w.config).unwrap();
++    assert!((w.engine.fronts[&k].commitments[0] - 85.71428571428571).abs() < 1e-12);
++}
++#[test]
++fn stalemate_ends_mutual_battle_without_claims() {
++    let mut w = fixture(&[0, 0, 0, 3, 3, 3], &[Regime::Predatory; 6]);
++    w.config.probability_direction = ProbabilityDirection::ProseIncreasing;
++    w.config.victory_threshold = 1e10;
++    w.config.victory_exponent = 100;
++    w.config.stalemate_probability = 1.;
++    let f = w.engine.fronts.values_mut().next().unwrap();
++    f.actions = [true; 2];
++    f.commitments = [1.; 2];
++    f.path = Some([0, 3]);
++    assert!(w.engine.combat(&w.config).unwrap().is_empty());
++    assert_eq!(w.engine.counters.completed_stalemate_battles, 1);
++    assert_eq!(w.engine.fronts.values().next().unwrap().actions, [false; 2]);
++}
++#[test]
++fn probability_zero_boundaries_have_all_literal_limits() {
++    for (direction, n, d, want) in [
++        (ProbabilityDirection::PrintedDecreasing, 0., 0., 0.5),
++        (ProbabilityDirection::PrintedDecreasing, 1., 0., 0.),
++        (ProbabilityDirection::ProseIncreasing, 0., 0., 0.5),
++        (ProbabilityDirection::ProseIncreasing, 0., 1., 0.),
++        (ProbabilityDirection::ProseIncreasing, 1., 0., 1.),
++    ] {
++        assert_eq!(
++            resources::probability(n, d, 2.2, 30, direction, ZeroRatio::EqualZeroNeutral).unwrap(),
++            want
++        );
++    }
++}
++#[test]
++fn threshold_probability_is_half_in_both_directions() {
++    for direction in [
++        ProbabilityDirection::PrintedDecreasing,
++        ProbabilityDirection::ProseIncreasing,
++    ] {
++        assert_eq!(
++            resources::probability(2.2, 1., 2.2, 30, direction, ZeroRatio::EqualZeroNeutral)
++                .unwrap(),
++            0.5
++        );
++    }
++}
++#[test]
++fn cell_locks_allow_disjoint_claims_against_same_state() {
++    let mut w = fixture(&[0, 0, 2, 0, 4, 5], &[Regime::Predatory; 6]);
++    let ids: Vec<_> = w.engine.cells.iter().map(|c| c.owner).collect();
++    let claims = vec![
++        types::Claim {
++            states: territory::key(ids[0], ids[2]),
++            side: 1,
++            path: [1, 2],
++        },
++        types::Claim {
++            states: territory::key(ids[0], ids[4]),
++            side: 1,
++            path: [3, 4],
++        },
++    ];
++    let mut states = w.clone();
++    states.config.claim_locking = ClaimLocking::AffectedStates;
++    w.engine.apply_claims(&w.config, claims.clone()).unwrap();
++    states.engine.apply_claims(&states.config, claims).unwrap();
++    assert_eq!(w.engine.counters.successful_claims, 2);
++    assert_eq!(states.engine.counters.successful_claims, 1);
++    assert_eq!(states.engine.counters.locked_claims, 1);
++}
++#[test]
++fn prospective_release_footprint_honors_prior_locked_cells() {
++    let mut saw_locked = false;
++    for seed in 0..16 {
++        let mut w = fixture(&[0, 0, 0, 0, 4, 5], &[Regime::Predatory; 6]);
++        w.engine.rng = crate::rng::seeded(seed);
++        let ids: Vec<_> = w.engine.cells.iter().map(|c| c.owner).collect();
++        let claims = vec![
++            types::Claim {
++                states: territory::key(ids[0], ids[5]),
++                side: 0,
++                path: [2, 5],
++            },
++            types::Claim {
++                states: territory::key(ids[0], ids[4]),
++                side: 1,
++                path: [1, 4],
++            },
++        ];
++        w.engine.apply_claims(&w.config, claims).unwrap();
++        assert_eq!(w.engine.counters.successful_claims, 1);
++        saw_locked |= w.engine.counters.locked_claims == 1;
++    }
++    assert!(saw_locked);
++}
++#[test]
++fn random_threat_ties_are_reproducible_and_consume_stream() {
++    use rand::RngCore;
++    let mut w = threats_fixture();
++    let k = territory::key(w.engine.cells[0].owner, w.engine.cells[3].owner);
++    w.engine.fronts.get_mut(&k).unwrap().commitments[1] = 9.;
++    let mut a = w.clone();
++    a.config.threat_ties = ThreatTies::RandomTie;
++    let mut b = a.clone();
++    w.engine.align(&w.config).unwrap();
++    a.engine.align(&a.config).unwrap();
++    b.engine.align(&b.config).unwrap();
++    assert_eq!(a.engine.alliances, b.engine.alliances);
++    assert_eq!(a.engine.rng.next_u64(), b.engine.rng.next_u64());
++    assert_ne!(a.engine.rng.next_u64(), w.engine.rng.next_u64());
++}
+diff --git a/crates/sugarscape-core/src/democratic_peace/types.rs b/crates/sugarscape-core/src/democratic_peace/types.rs
+new file mode 100644
+index 0000000..4ef80dd
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/types.rs
+@@ -0,0 +1,192 @@
++//! Stable engine identities, finite diagnostic records and scientific census.
++use serde::{Deserialize, Serialize};
++#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
++pub struct StateId {
++    pub capital_cell: usize,
++    pub sovereignty_generation: u64,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++#[serde(rename_all = "snake_case")]
++pub enum Regime {
++    Democratic,
++    Predatory,
++}
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct Cell {
++    pub id: usize,
++    pub owner: StateId,
++    pub initial_regime: Regime,
++    pub latent_regime: Regime,
++    pub next_generation: u64,
++}
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct State {
++    pub id: StateId,
++    pub regime: Regime,
++    pub resources: f64,
++    pub members: Vec<usize>,
++}
++#[derive(Clone, Debug, Default, PartialEq, Serialize)]
++pub struct Ratio {
++    pub numerator: f64,
++    pub denominator: f64,
++    pub tag: String,
++    pub value: Option<f64>,
++}
++impl Ratio {
++    pub(crate) fn new(n: f64, d: f64) -> Self {
++        Self {
++            numerator: n,
++            denominator: d,
++            tag: if d == 0. {
++                if n == 0. {
++                    "equal_zero"
++                } else {
++                    "positive_over_zero"
++                }
++            } else {
++                "finite"
++            }
++            .into(),
++            value: (d > 0. && (n / d).is_finite()).then_some(n / d),
++        }
++    }
++}
++#[derive(Clone, Debug, Default, PartialEq, Serialize)]
++pub struct Allocation {
++    pub fixed: f64,
++    pub mobile_pool: f64,
++    pub eligible_fronts: usize,
++    pub old_opposing: f64,
++    pub enemy_total: f64,
++    pub inactive_term: f64,
++    pub active: bool,
++}
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct Front {
++    pub states: [StateId; 2],
++    pub previous: [bool; 2],
++    pub actions: [bool; 2],
++    pub old_commitments: [f64; 2],
++    pub commitments: [f64; 2],
++    pub allocations: [Allocation; 2],
++    pub initiations: [bool; 2],
++    pub previous_initiations: [bool; 2],
++    pub obligations: [Vec<String>; 2],
++    pub path: Option<[usize; 2]>,
++    pub path_proposer: Option<StateId>,
++    pub attack_probabilities: [Option<f64>; 2],
++    pub attack_ratios: [Option<Ratio>; 2],
++    pub victory_probabilities: [Option<f64>; 2],
++    pub victory_ratios: [Option<Ratio>; 2],
++    pub claims: [bool; 2],
++}
++impl Front {
++    pub(crate) fn new(states: [StateId; 2]) -> Self {
++        Self {
++            states,
++            previous: [false; 2],
++            actions: [false; 2],
++            old_commitments: [0.; 2],
++            commitments: [0.; 2],
++            allocations: Default::default(),
++            initiations: [false; 2],
++            previous_initiations: [false; 2],
++            obligations: Default::default(),
++            path: None,
++            path_proposer: None,
++            attack_probabilities: [None; 2],
++            attack_ratios: Default::default(),
++            victory_probabilities: [None; 2],
++            victory_ratios: Default::default(),
++            claims: [false; 2],
++        }
++    }
++}
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct Alliance {
++    pub threat_id: StateId,
++    pub creation_period: u64,
++    pub serial: u64,
++    pub members: Vec<StateId>,
++    pub pooled_resources: f64,
++}
++#[derive(Clone, Debug, Default, PartialEq, Serialize)]
++pub struct Counters {
++    pub initiated_fronts: u64,
++    pub mutual_d_front_periods: u64,
++    pub completed_victory_battles: u64,
++    pub completed_stalemate_battles: u64,
++    pub opposing_claims: u64,
++    pub successful_claims: u64,
++    pub stale_claims: u64,
++    pub locked_claims: u64,
++    pub retired_states: u64,
++    pub released_states: u64,
++}
++pub(crate) fn bump(n: &mut u64) -> Result<(), String> {
++    *n = n.checked_add(1).ok_or("census counter overflow")?;
++    Ok(())
++}
++#[derive(Clone, Debug, Default, PartialEq, Serialize)]
++pub struct SetupCensus {
++    pub initial_democratic_cells: u32,
++    pub initial_resourced_cells: u32,
++    pub total_cells: u32,
++}
++#[derive(Clone, Debug, Default, PartialEq, Serialize)]
++pub struct Metrics {
++    pub democratic_cells: u32,
++    pub total_cells: u32,
++    pub democratic_share: f64,
++    pub sovereign_count: u32,
++    pub democratic_states: u32,
++    pub predatory_states: u32,
++    pub democratic_mean_size: Option<f64>,
++    pub predatory_mean_size: Option<f64>,
++    pub democratic_max_size: Option<u32>,
++    pub predatory_max_size: Option<u32>,
++    pub democratic_size_reason: Option<String>,
++    pub predatory_size_reason: Option<String>,
++    pub democratic_exposure: Option<f64>,
++    pub clustering_ratio: Option<f64>,
++    pub clustering_reason: Option<String>,
++    pub conflict_fronts: u32,
++    pub alliance_count: u32,
++    pub pariah_count: u32,
++    pub democratic_extinction: bool,
++    pub all_democratic: bool,
++    pub first_extinction_period: Option<u64>,
++    pub first_all_democratic_period: Option<u64>,
++}
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct Outcome {
++    pub valid: bool,
++    pub finish_reason: String,
++    pub invalid_reason: Option<String>,
++    pub invalid_phase: Option<String>,
++    pub attempted_period: u64,
++    pub completed_periods: u64,
++    pub final_metrics: Option<Metrics>,
++    pub census: Counters,
++}
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct Event {
++    pub period: u64,
++    pub kind: String,
++    pub states: Vec<StateId>,
++    pub cells: Vec<usize>,
++}
++#[derive(Clone, Debug, PartialEq, Serialize)]
++pub struct Extraction {
++    pub state: StateId,
++    pub resources_before: f64,
++    pub resources_after: f64,
++    pub province_terms: Vec<(usize, f64, f64)>,
++}
++#[derive(Clone, Debug)]
++pub(crate) struct Claim {
++    pub states: [StateId; 2],
++    pub side: usize,
++    pub path: [usize; 2],
++}
+diff --git a/crates/sugarscape-core/src/democratic_peace/view.rs b/crates/sugarscape-core/src/democratic_peace/view.rs
+new file mode 100644
+index 0000000..13041d1
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/view.rs
+@@ -0,0 +1,222 @@
++use super::*;
++use crate::{
++    config::FieldError,
++    model::{wrong_model, Model, ModelConfig, ModelKind},
++    stats::Series,
++};
++use std::fmt::Write;
++impl Model for DemocraticPeaceWorld {
++    fn config(&self) -> ModelConfig {
++        ModelConfig::DemocraticPeace(self.config.clone())
++    }
++    fn run(&mut self, t: u32) {
++        DemocraticPeaceWorld::run(self, t)
++    }
++    fn tick(&self) -> u64 {
++        self.tick
++    }
++    fn population(&self) -> usize {
++        self.engine.states.len()
++    }
++    fn fingerprint(&self) -> u64 {
++        self.economic_fingerprint()
++    }
++    fn size(&self) -> (u32, u32) {
++        (self.config.width * 6, self.config.height * 6)
++    }
++    fn render(&self, mode: &str, _layer: &str, buf: &mut Vec<u8>) -> Result<(), String> {
++        if ![
++            "",
++            "territory",
++            "governing_regime",
++            "latent_regime",
++            "resources",
++            "alliances",
++            "pariahs",
++        ]
++        .contains(&mode)
++        {
++            return Err(format!("unknown democratic_peace mode {mode}"));
++        }
++        let width = self.config.width as usize * 6;
++        buf.clear();
++        buf.resize(width * self.config.height as usize * 6 * 4, 255);
++        for cell in &self.engine.cells {
++            let state = &self.engine.states[&cell.owner];
++            let k = (cell.owner.capital_cell as u32).wrapping_mul(2654435761);
++            let mut color = [
++                60 + (k % 160) as u8,
++                60 + ((k >> 8) % 160) as u8,
++                60 + ((k >> 16) % 160) as u8,
++            ];
++            match mode {
++                "governing_regime" => {
++                    color = if state.regime == Regime::Democratic {
++                        [40, 155, 175]
++                    } else {
++                        [215, 100, 70]
++                    }
++                }
++                "latent_regime" => {
++                    color = if cell.latent_regime == Regime::Democratic {
++                        [40, 155, 175]
++                    } else {
++                        [215, 100, 70]
++                    }
++                }
++                "resources" => {
++                    let v = (state.resources / 100.).clamp(0., 1.);
++                    color = [30, (40. + 200. * v) as u8, 100];
++                }
++                "alliances" => {
++                    color = self
++                        .engine
++                        .alliances
++                        .iter()
++                        .find(|a| a.members.contains(&cell.owner))
++                        .map(|a| {
++                            let v = a.threat_id.capital_cell as u32 * 17;
++                            [70 + (v % 150) as u8, 70 + ((v / 7) % 150) as u8, 180]
++                        })
++                        .unwrap_or([100, 105, 115]);
++                }
++                "pariahs" => {
++                    color = if self.engine.pariahs.contains_key(&cell.owner) {
++                        [230, 60, 65]
++                    } else {
++                        [90, 120, 125]
++                    }
++                }
++                _ => {}
++            }
++            let x = cell.id % self.config.width as usize;
++            let y = cell.id / self.config.width as usize;
++            for dy in 0..6 {
++                for dx in 0..6 {
++                    let i = ((y * 6 + dy) * width + x * 6 + dx) * 4;
++                    let pixel = if dx == 0 || dy == 0 {
++                        [20, 25, 30]
++                    } else if cell.id == cell.owner.capital_cell
++                        && (2..=3).contains(&dx)
++                        && (2..=3).contains(&dy)
++                    {
++                        [250, 250, 250]
++                    } else {
++                        color
++                    };
++                    buf[i..i + 3].copy_from_slice(&pixel);
++                }
++            }
++        }
++        Ok(())
++    }
++    fn latest_json(&self) -> String {
++        serde_json::to_string(&self.stats.latest()).unwrap()
++    }
++    fn series_names(&self) -> Vec<String> {
++        series_names()
++    }
++    fn series(&self, n: &str) -> Option<Vec<f64>> {
++        if n != "tick" && !SERIES.contains(&n) {
++            return None;
++        }
++        Some(
++            self.stats
++                .history()
++                .iter()
++                .map(|s| s.value(n).unwrap_or(f64::NAN))
++                .collect(),
++        )
++    }
++    fn latest_value(&self, n: &str) -> Option<f64> {
++        self.stats.latest().and_then(|s| s.value(n))
++    }
++    fn series_csv(&self) -> String {
++        let mut out = format!("tick,{}\n", SERIES.join(","));
++        for s in self.stats.history() {
++            write!(out, "{}", s.tick).unwrap();
++            for n in SERIES {
++                out.push(',');
++                if let Some(v) = s.value(n) {
++                    write!(out, "{v}").unwrap();
++                }
++            }
++            out.push('\n');
++        }
++        out
++    }
++    fn agents_csv(&self) -> String {
++        let mut out = "cell,x,y,capital,generation,regime,latent_regime,resources\n".to_string();
++        for c in &self.engine.cells {
++            let s = &self.engine.states[&c.owner];
++            let regime = if s.regime == Regime::Democratic {
++                "democratic"
++            } else {
++                "predatory"
++            };
++            let latent = if c.latent_regime == Regime::Democratic {
++                "democratic"
++            } else {
++                "predatory"
++            };
++            writeln!(
++                out,
++                "{},{},{},{},{},{},{},{}",
++                c.id,
++                c.id % self.config.width as usize,
++                c.id / self.config.width as usize,
++                c.owner.capital_cell,
++                c.owner.sovereignty_generation,
++                regime,
++                latent,
++                s.resources
++            )
++            .unwrap();
++        }
++        out
++    }
++    fn inspect_json(&self, x: u32, y: u32) -> Result<String, String> {
++        if x >= self.config.width * 6 || y >= self.config.height * 6 {
++            return Err("outside democratic_peace grid".into());
++        }
++        let id = ((y / 6) * self.config.width + x / 6) as usize;
++        let cell = &self.engine.cells[id];
++        let state = &self.engine.states[&cell.owner];
++        let fronts: Vec<_> = self
++            .engine
++            .fronts
++            .values()
++            .filter(|f| f.states.contains(&cell.owner))
++            .collect();
++        let alliances: Vec<_> = self
++            .engine
++            .alliances
++            .iter()
++            .filter(|a| a.members.contains(&cell.owner) || a.threat_id == cell.owner)
++            .collect();
++        Ok(serde_json::json!({"model":"democratic_peace","config":self.config,"seed":self.seed,"cell":cell,"state":state,"members":state.members,"fronts":fronts,"alliances":alliances,"extraction":self.engine.extraction.iter().find(|r|r.state==cell.owner),"distance":self.engine.distance(&self.config,cell.owner,id)?,"pariah_sources":self.engine.pariahs.get(&cell.owner).cloned().unwrap_or_default(),"metrics":self.snapshot().metrics,"setup":self.setup,"period":self.engine.period,"periods":self.engine.period,"completed_periods":self.engine.period,"attempted_period":self.attempted,"last_tick_periods":self.last_tick_periods,"horizon_periods":self.config.horizon_periods,"finish_reason":self.result.as_ref().map(|o|&o.finish_reason),"invalidity":self.result.as_ref().and_then(|o|o.invalid_reason.as_ref()),"invalid_phase":self.result.as_ref().and_then(|o|o.invalid_phase.as_ref()),"outcome":self.result,"census":self.engine.counters,"last_structural_event":self.engine.last_structural_event,"events":self.engine.events,"events_dropped":self.engine.events_dropped,"path_priority":"lower_id_path_priority","agent":null}).to_string())
++    }
++    fn locate(&self, id: u64) -> Option<(u32, u32)> {
++        (id < self.engine.cells.len() as u64).then_some((
++            (id as u32 % self.config.width) * 6 + 3,
++            (id as u32 / self.config.width) * 6 + 3,
++        ))
++    }
++    fn set_config(&mut self, next: ModelConfig) -> Result<(), Vec<FieldError>> {
++        let ModelConfig::DemocraticPeace(c) = next else {
++            return Err(wrong_model(ModelKind::DemocraticPeace, &next));
++        };
++        c.validate()?;
++        if c == self.config {
++            Ok(())
++        } else {
++            Err(vec![FieldError::new("config", "changes only on reset")])
++        }
++    }
++    fn finished(&self) -> bool {
++        self.result.is_some()
++    }
++    fn holds_when_finished(&self) -> bool {
++        self.result.as_ref().is_some_and(|o| o.valid)
++    }
++}
+diff --git a/crates/sugarscape-core/src/democratic_peace/world.rs b/crates/sugarscape-core/src/democratic_peace/world.rs
+new file mode 100644
+index 0000000..35120ea
+--- /dev/null
++++ b/crates/sugarscape-core/src/democratic_peace/world.rs
+@@ -0,0 +1,473 @@
++//! Atomic source periods with a private candidate state and RNG stream.
++use super::*;
++use crate::{
++    config::FieldError,
++    rng::{self, SimRng},
++    stats::Stats,
++};
++use rand::{Rng, RngCore};
++use std::collections::BTreeMap;
++#[derive(Clone)]
++pub(crate) struct Engine {
++    pub width: u32,
++    pub phase: &'static str,
++    pub period: u64,
++    pub cells: Vec<Cell>,
++    pub states: BTreeMap<StateId, State>,
++    pub fronts: BTreeMap<[StateId; 2], Front>,
++    pub alliances: Vec<Alliance>,
++    pub pariahs: BTreeMap<StateId, Vec<StateId>>,
++    pub rng: SimRng,
++    pub counters: Counters,
++    pub first_extinction: Option<u64>,
++    pub first_all_democratic: Option<u64>,
++    pub events: Vec<Event>,
++    pub events_dropped: u64,
++    pub last_structural_event: Option<Event>,
++    pub extraction: Vec<Extraction>,
++    pub next_alliance: u64,
++}
++#[derive(Clone)]
++pub struct DemocraticPeaceWorld {
++    pub config: DemocraticPeaceConfig,
++    pub tick: u64,
++    pub stats: Stats<DemocraticPeaceSnapshot>,
++    pub(crate) engine: Engine,
++    pub(crate) setup: SetupCensus,
++    pub(crate) seed: u64,
++    pub(crate) result: Option<Outcome>,
++    pub(crate) attempted: u64,
++    pub(crate) last_tick_periods: u32,
++}
++pub(crate) fn draw(rng: &mut SimRng) -> f64 {
++    rng.gen::<f64>()
++}
++pub(crate) fn chance(p: f64, rng: &mut SimRng) -> bool {
++    draw(rng) < p
++}
++pub(crate) fn pick<T: Copy>(v: &[T], rng: &mut SimRng) -> Option<T> {
++    match v.len() {
++        0 => None,
++        1 => {
++            rng.next_u32();
++            Some(v[0])
++        }
++        n => Some(v[rng.gen_range(0..n as u32) as usize]),
++    }
++}
++pub(crate) fn shuffle<T>(v: &mut [T], rng: &mut SimRng) {
++    for i in (1..v.len()).rev() {
++        let j = rng.gen_range(0..=i as u32) as usize;
++        v.swap(i, j);
++    }
++}
++pub(crate) fn hash(bytes: &[u8]) -> u64 {
++    bytes.iter().fold(14695981039346656037u64, |h, b| {
++        (h ^ u64::from(*b)).wrapping_mul(1099511628211)
++    })
++}
++impl DemocraticPeaceWorld {
++    pub fn new(config: DemocraticPeaceConfig, seed: u64) -> Result<Self, Vec<FieldError>> {
++        config.validate()?;
++        let n = (config.width * config.height) as usize;
++        let mut rng = rng::seeded(seed);
++        let mut assign = |share: f64| -> Vec<bool> {
++            if config.assignment == Assignment::IndependentBernoulli {
++                (0..n).map(|_| chance(share, &mut rng)).collect()
++            } else {
++                let mut order: Vec<_> = (0..n).collect();
++                shuffle(&mut order, &mut rng);
++                let count = libm::floor(share * n as f64 + 0.5) as usize;
++                let mut flags = vec![false; n];
++                for &id in &order[..count] {
++                    flags[id] = true;
++                }
++                flags
++            }
++        };
++        let regimes = assign(config.initial_democratic_share);
++        let resources = assign(config.initial_resourced_share);
++        let setup = SetupCensus {
++            initial_democratic_cells: regimes.iter().filter(|d| **d).count() as u32,
++            initial_resourced_cells: resources.iter().filter(|d| **d).count() as u32,
++            total_cells: n as u32,
++        };
++        let cells: Vec<_> = (0..n)
++            .map(|id| {
++                let owner = StateId {
++                    capital_cell: id,
++                    sovereignty_generation: 0,
++                };
++                let regime = if regimes[id] {
++                    Regime::Democratic
++                } else {
++                    Regime::Predatory
++                };
++                Cell {
++                    id,
++                    owner,
++                    initial_regime: regime,
++                    latent_regime: regime,
++                    next_generation: 0,
++                }
++            })
++            .collect();
++        let states = cells
++            .iter()
++            .map(|cell| {
++                (
++                    cell.owner,
++                    State {
++                        id: cell.owner,
++                        regime: cell.latent_regime,
++                        resources: if resources[cell.id] { 10. } else { 0. },
++                        members: vec![cell.id],
++                    },
++                )
++            })
++            .collect();
++        let mut engine = Engine {
++            width: config.width,
++            phase: "setup",
++            period: 0,
++            cells,
++            states,
++            fronts: BTreeMap::new(),
++            alliances: vec![],
++            pariahs: BTreeMap::new(),
++            rng,
++            counters: Counters::default(),
++            first_extinction: None,
++            first_all_democratic: None,
++            events: vec![],
++            events_dropped: 0,
++            last_structural_event: None,
++            extraction: vec![],
++            next_alliance: 0,
++        };
++        engine
++            .rebuild()
++            .map_err(|e| vec![FieldError::new("setup", e)])?;
++        engine
++            .census(&config)
++            .map_err(|e| vec![FieldError::new("setup", e)])?;
++        let mut w = Self {
++            config,
++            tick: 0,
++            stats: Stats::default(),
++            engine,
++            setup,
++            seed,
++            result: None,
++            attempted: 0,
++            last_tick_periods: 0,
++        };
++        w.stats.push(w.snapshot());
++        Ok(w)
++    }
++    pub fn run(&mut self, ticks: u32) {
++        for _ in 0..ticks {
++            if self.result.is_some() {
++                break;
++            }
++            self.last_tick_periods = 0;
++            for _ in 0..self.config.periods_per_tick {
++                if self.engine.period >= self.config.horizon() {
++                    break;
++                }
++                self.attempted = self.engine.period + 1;
++                let mut next = self.engine.clone();
++                next.period = self.attempted;
++                let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
++                    next.period(&self.config)
++                }));
++                let r = match r {
++                    Ok(result) => result,
++                    Err(payload) => {
++                        let message = payload
++                            .downcast_ref::<String>()
++                            .cloned()
++                            .or_else(|| payload.downcast_ref::<&str>().map(|s| s.to_string()))
++                            .unwrap_or_else(|| "non-string panic payload".into());
++                        Err((
++                            next.phase.to_string(),
++                            format!("internal engine panic: {message}"),
++                        ))
++                    }
++                };
++                match r {
++                    Ok(()) => {
++                        self.engine = next;
++                        self.last_tick_periods += 1;
++                    }
++                    Err((phase, reason)) => {
++                        self.result = Some(Outcome {
++                            valid: false,
++                            finish_reason: "invalid".into(),
++                            invalid_reason: Some(reason),
++                            invalid_phase: Some(phase),
++                            attempted_period: self.attempted,
++                            completed_periods: self.engine.period,
++                            final_metrics: None,
++                            census: self.engine.counters.clone(),
++                        });
++                        break;
++                    }
++                }
++            }
++            self.tick += 1;
++            if self.result.is_none() && self.engine.period == self.config.horizon() {
++                self.result = Some(Outcome {
++                    valid: true,
++                    finish_reason: "complete".into(),
++                    invalid_reason: None,
++                    invalid_phase: None,
++                    attempted_period: self.attempted,
++                    completed_periods: self.engine.period,
++                    final_metrics: Some(
++                        self.engine.metrics(&self.config).expect("validated census"),
++                    ),
++                    census: self.engine.counters.clone(),
++                });
++            }
++            self.stats.push(self.snapshot());
++        }
++    }
++    pub fn completed_periods(&self) -> u64 {
++        self.engine.period
++    }
++    pub fn outcome(&self) -> Option<&Outcome> {
++        self.result.as_ref()
++    }
++    pub fn snapshot(&self) -> DemocraticPeaceSnapshot {
++        let m = self
++            .engine
++            .metrics(&self.config)
++            .expect("last committed valid census");
++        DemocraticPeaceSnapshot {
++            tick: self.tick,
++            period: self.engine.period,
++            periods: self.engine.period,
++            completed_periods: self.engine.period,
++            attempted_period: self.attempted,
++            last_tick_periods: self.last_tick_periods,
++            democratic_share: m.democratic_share,
++            clustering_ratio: m.clustering_ratio,
++            clustering_reason: m.clustering_reason.clone(),
++            sovereign_count: m.sovereign_count,
++            democratic_states: m.democratic_states,
++            predatory_states: m.predatory_states,
++            conflict_fronts: m.conflict_fronts,
++            alliance_count: m.alliance_count,
++            pariah_count: m.pariah_count,
++            finish_reason: self.result.as_ref().map(|o| o.finish_reason.clone()),
++            invalidity: self.result.as_ref().and_then(|o| o.invalid_reason.clone()),
++            invalid_phase: self.result.as_ref().and_then(|o| o.invalid_phase.clone()),
++            metrics: m,
++        }
++    }
++    pub fn economic_fingerprint(&self) -> u64 {
++        let mut c = self.config.clone();
++        c.periods_per_tick = 1;
++        c.event_recording = false;
++        c.event_limit = 1000;
++        let mut r = self.engine.rng.clone();
++        let cursor = [r.next_u64(), r.next_u64(), r.next_u64(), r.next_u64()];
++        hash(&serde_json::to_vec(&(c, self.seed, self.engine.canonical(), cursor)).unwrap())
++    }
++    pub fn science_json(&self) -> String {
++        serde_json::json!({"model":"democratic_peace","config":self.config,"seed":self.seed,"period":self.engine.period,"periods":self.engine.period,"attempted_period":self.attempted,"completed_periods":self.engine.period,"tick":self.tick,"last_tick_periods":self.last_tick_periods,"setup":self.setup,"current_metrics":self.snapshot().metrics,"census":self.engine.counters,"outcome":self.result,"final_state_hash":format!("{:016x}",self.economic_fingerprint())}).to_string()
++    }
++    pub fn state_json(&self) -> String {
++        let mut r = self.engine.rng.clone();
++        serde_json::json!({"model":"democratic_peace","config":self.config,"seed":self.seed,"tick":self.tick,"attempted_period":self.attempted,"completed_periods":self.engine.period,"period":self.engine.period,"periods":self.engine.period,"last_tick_periods":self.last_tick_periods,"horizon_periods":self.config.horizon_periods,"current_metrics":self.snapshot().metrics,"census":self.engine.counters,"final_state_hash":format!("{:016x}",self.economic_fingerprint()),"state":self.engine.canonical(),"rng_cursor":[r.next_u64(),r.next_u64(),r.next_u64(),r.next_u64()],"setup":self.setup,"outcome":self.result,"events":self.engine.events,"events_dropped":self.engine.events_dropped}).to_string()
++    }
++    pub fn cells(&self) -> &[Cell] {
++        &self.engine.cells
++    }
++    pub fn states(&self) -> &BTreeMap<StateId, State> {
++        &self.engine.states
++    }
++    pub fn fronts(&self) -> &BTreeMap<[StateId; 2], Front> {
++        &self.engine.fronts
++    }
++    pub fn alliances(&self) -> &[Alliance] {
++        &self.engine.alliances
++    }
++    pub fn counters(&self) -> &Counters {
++        &self.engine.counters
++    }
++}
++impl Engine {
++    fn period(&mut self, c: &DemocraticPeaceConfig) -> Result<(), (String, String)> {
++        self.phase = "allocation";
++        self.allocate(c).map_err(|e| ("allocation".into(), e))?;
++        self.phase = "alignments";
++        self.align(c).map_err(|e| ("alignments".into(), e))?;
++        self.phase = "decisions";
++        self.decide(c).map_err(|e| ("decisions".into(), e))?;
++        self.phase = "interaction";
++        let claims = self.combat(c).map_err(|e| ("interaction".into(), e))?;
++        self.phase = "resource_update";
++        self.extract(c).map_err(|e| ("resource_update".into(), e))?;
++        self.phase = "structural_change";
++        self.apply_claims(c, claims)
++            .map_err(|e| ("structural_change".into(), e))?;
++        for f in self.fronts.values_mut() {
++            f.previous = f.actions;
++            f.old_commitments = f.commitments;
++            f.previous_initiations = f.initiations;
++        }
++        self.phase = "census";
++        self.census(c).map_err(|e| ("census".into(), e))?;
++        Ok(())
++    }
++    pub(crate) fn record(&mut self, c: &DemocraticPeaceConfig, e: Event) -> Result<(), String> {
++        if c.event_recording {
++            if self.events.len() < c.event_limit as usize {
++                self.events.push(e);
++            } else {
++                types::bump(&mut self.events_dropped)?;
++            }
++        }
++        Ok(())
++    }
++    pub(crate) fn canonical(&self) -> serde_json::Value {
++        serde_json::json!({"period":self.period,"cells":self.cells,"states":self.states.values().collect::<Vec<_>>(),"fronts":self.fronts.values().collect::<Vec<_>>(),"alliances":self.alliances,"pariahs":self.pariahs.iter().map(|(id,sources)|serde_json::json!({"state":id,"sources":sources})).collect::<Vec<_>>(),"census":self.counters,"first_extinction_period":self.first_extinction,"first_all_democratic_period":self.first_all_democratic,"last_structural_event":self.last_structural_event,"extraction":self.extraction,"next_alliance":self.next_alliance})
++    }
++    pub(crate) fn extract(&mut self, c: &DemocraticPeaceConfig) -> Result<(), String> {
++        let mut updates = Vec::new();
++        for (&id, s) in &self.states {
++            let mut province_terms = Vec::new();
++            let mut resources = 10.;
++            for &cell in &s.members {
++                if cell == id.capital_cell {
++                    continue;
++                }
++                let d = self.distance(c, id, cell)?;
++                let term = 10. * c.tax_rate * libm::pow(c.distance_gradient, d);
++                resources += term;
++                province_terms.push((cell, d, term));
++            }
++            if !resources.is_finite() {
++                return Err("nonfinite extracted resources".into());
++            }
++            updates.push(Extraction {
++                state: id,
++                resources_before: s.resources,
++                resources_after: resources,
++                province_terms,
++            });
++        }
++        for r in &updates {
++            self.states.get_mut(&r.state).unwrap().resources = r.resources_after;
++        }
++        self.extraction = updates;
++        Ok(())
++    }
++    pub(crate) fn census(&mut self, c: &DemocraticPeaceConfig) -> Result<(), String> {
++        self.validate()?;
++        let m = self.metrics(c)?;
++        if m.democratic_cells == 0 && self.first_extinction.is_none() {
++            self.first_extinction = Some(self.period);
++        }
++        if m.democratic_cells == m.total_cells && self.first_all_democratic.is_none() {
++            self.first_all_democratic = Some(self.period);
++        }
++        Ok(())
++    }
++    pub(crate) fn metrics(&self, c: &DemocraticPeaceConfig) -> Result<Metrics, String> {
++        let d: Vec<_> = self
++            .states
++            .values()
++            .filter(|s| s.regime == Regime::Democratic)
++            .collect();
++        let p: Vec<_> = self
++            .states
++            .values()
++            .filter(|s| s.regime == Regime::Predatory)
++            .collect();
++        let dc = d.iter().map(|s| s.members.len()).sum::<usize>() as u32;
++        let pc = p.iter().map(|s| s.members.len()).sum::<usize>() as u32;
++        let total = self.cells.len() as u32;
++        let mut exposure = 0.;
++        let mut weights = 0.;
++        for s in &d {
++            let (neighbors, democratic) =
++                if c.clustering_exposure == ClusteringExposure::UniqueStateNeighbors {
++                    let n = self.neighbors(s.id);
++                    let yes = n
++                        .iter()
++                        .filter(|id| self.states[id].regime == Regime::Democratic)
++                        .count();
++                    (n.len(), yes)
++                } else {
++                    let mut all = 0;
++                    let mut yes = 0;
++                    for &cell in &s.members {
++                        for q in self.adjacent(cell) {
++                            let owner = self.cells[q].owner;
++                            if owner != s.id {
++                                all += 1;
++                                if self.states[&owner].regime == Regime::Democratic {
++                                    yes += 1;
++                                }
++                            }
++                        }
++                    }
++                    (all, yes)
++                };
++            let fraction = if neighbors == 0 {
++                1.
++            } else {
++                democratic as f64 / neighbors as f64
++            };
++            let weight = if c.clustering_weights == ClusteringWeights::TerritoryWeighted {
++                s.members.len() as f64
++            } else {
++                1.
++            };
++            exposure += weight * fraction;
++            weights += weight;
++        }
++        let e = (!d.is_empty()).then(|| exposure / weights);
++        let (reason, ratio) = if c.initial_democratic_share == 0. {
++            (Some("undefined_initial_density".into()), None)
++        } else if d.is_empty() {
++            (Some("undefined_extinction".into()), None)
++        } else {
++            (None, Some(e.unwrap() / c.initial_democratic_share))
++        };
++        if [e, ratio].iter().flatten().any(|v| !v.is_finite()) {
++            return Err("nonfinite clustering metric".into());
++        }
++        Ok(Metrics {
++            democratic_cells: dc,
++            total_cells: total,
++            democratic_share: dc as f64 / total as f64,
++            sovereign_count: self.states.len() as u32,
++            democratic_states: d.len() as u32,
++            predatory_states: p.len() as u32,
++            democratic_mean_size: (!d.is_empty()).then(|| dc as f64 / d.len() as f64),
++            predatory_mean_size: (!p.is_empty()).then(|| pc as f64 / p.len() as f64),
++            democratic_max_size: d.iter().map(|s| s.members.len() as u32).max(),
++            predatory_max_size: p.iter().map(|s| s.members.len() as u32).max(),
++            democratic_size_reason: d.is_empty().then(|| "no_surviving_states".into()),
++            predatory_size_reason: p.is_empty().then(|| "no_surviving_states".into()),
++            democratic_exposure: e,
++            clustering_ratio: ratio,
++            clustering_reason: reason,
++            conflict_fronts: self
++                .fronts
++                .values()
++                .filter(|f| f.actions.iter().any(|a| *a))
++                .count() as u32,
++            alliance_count: self.alliances.len() as u32,
++            pariah_count: self.pariahs.len() as u32,
++            democratic_extinction: dc == 0,
++            all_democratic: dc == total,
++            first_extinction_period: self.first_extinction,
++            first_all_democratic_period: self.first_all_democratic,
++        })
++    }
++}
+diff --git a/crates/sugarscape-core/src/lib.rs b/crates/sugarscape-core/src/lib.rs
+index c26ac46..4d23a01 100644
+--- a/crates/sugarscape-core/src/lib.rs
++++ b/crates/sugarscape-core/src/lib.rs
+@@ -61,4 +61,5 @@ pub mod zi;
+ #[cfg(test)]
+ pub(crate) mod testkit;
+
++pub mod democratic_peace;
+ pub mod geosim;
+diff --git a/crates/sugarscape-core/src/model.rs b/crates/sugarscape-core/src/model.rs
+index 54dcead..2922297 100644
+--- a/crates/sugarscape-core/src/model.rs
++++ b/crates/sugarscape-core/src/model.rs
+@@ -15,6 +15,7 @@ use crate::classes::{ClassesConfig, ClassesWorld};
+ use crate::collusion::{CollusionConfig, CollusionWorld};
+ use crate::config::{Config, FieldError};
+ use crate::culture::{CultureConfig, CultureWorld};
++use crate::democratic_peace::{DemocraticPeaceConfig, DemocraticPeaceWorld};
+ use crate::dpd::{DpdConfig, DpdWorld};
+ use crate::ethno::{EthnoConfig, EthnoWorld};
+ use crate::farol::{FarolConfig, FarolWorld};
+@@ -80,10 +81,11 @@ pub enum ModelKind {
+     Auctions,
+     Polarity,
+     Geosim,
++    DemocraticPeace,
+ }
+
+ impl ModelKind {
+-    pub const ALL: [ModelKind; 31] = [
++    pub const ALL: [ModelKind; 32] = [
+         ModelKind::Sugarscape,
+         ModelKind::Schelling,
+         ModelKind::Ring,
+@@ -115,6 +117,7 @@ impl ModelKind {
+         ModelKind::Auctions,
+         ModelKind::Polarity,
+         ModelKind::Geosim,
++        ModelKind::DemocraticPeace,
+     ];
+
+     pub fn as_str(self) -> &'static str {
+@@ -150,6 +153,7 @@ impl ModelKind {
+             ModelKind::Auctions => "auctions",
+             ModelKind::Polarity => "polarity",
+             ModelKind::Geosim => "geosim",
++            ModelKind::DemocraticPeace => "democratic_peace",
+         }
+     }
+
+@@ -188,6 +192,7 @@ impl ModelKind {
+             ModelKind::Auctions => crate::auctions::schema(),
+             ModelKind::Polarity => crate::polarity::schema(),
+             ModelKind::Geosim => crate::geosim::schema(),
++            ModelKind::DemocraticPeace => crate::democratic_peace::schema(),
+         }
+     }
+ }
+@@ -232,6 +237,7 @@ pub enum ModelConfig {
+     Auctions(AuctionsConfig),
+     Polarity(PolarityConfig),
+     Geosim(GeosimConfig),
++    DemocraticPeace(DemocraticPeaceConfig),
+ }
+
+ /// Another model's config on the wire: its fields and `"model": "<kind>"`.
+@@ -268,6 +274,7 @@ enum Tagged<'a> {
+     Auctions(&'a AuctionsConfig),
+     Polarity(&'a PolarityConfig),
+     Geosim(&'a GeosimConfig),
++    DemocraticPeace(&'a DemocraticPeaceConfig),
+ }
+
+ impl From<Config> for ModelConfig {
+@@ -311,6 +318,7 @@ impl Serialize for ModelConfig {
+             ModelConfig::Auctions(c) => Tagged::Auctions(c).serialize(s),
+             ModelConfig::Polarity(c) => Tagged::Polarity(c).serialize(s),
+             ModelConfig::Geosim(c) => Tagged::Geosim(c).serialize(s),
++            ModelConfig::DemocraticPeace(c) => Tagged::DemocraticPeace(c).serialize(s),
+         }
+     }
+ }
+@@ -349,6 +357,7 @@ impl ModelConfig {
+             ModelConfig::Auctions(_) => ModelKind::Auctions,
+             ModelConfig::Polarity(_) => ModelKind::Polarity,
+             ModelConfig::Geosim(_) => ModelKind::Geosim,
++            ModelConfig::DemocraticPeace(_) => ModelKind::DemocraticPeace,
+         }
+     }
+
+@@ -462,6 +471,7 @@ impl ModelConfig {
+                 .map(ModelConfig::Polarity)
+                 .map_err(|e| FieldError::new("config", e.to_string())),
+             "geosim" => serde_json::from_value(value).map(ModelConfig::Geosim).map_err(|e|FieldError::new("config",e.to_string())),
++            "democratic_peace" => serde_json::from_value(value).map(ModelConfig::DemocraticPeace).map_err(|e|FieldError::new("config",e.to_string())),
+             "auctions" => serde_json::from_value(value)
+                 .map(ModelConfig::Auctions)
+                 .map_err(|e| FieldError::new("config", e.to_string())),
+@@ -516,6 +526,7 @@ impl ModelConfig {
+             ModelConfig::Auctions(c) => c.validate(),
+             ModelConfig::Polarity(c) => c.validate(),
+             ModelConfig::Geosim(c) => c.validate(),
++            ModelConfig::DemocraticPeace(c) => c.validate(),
+         }
+     }
+
+@@ -554,6 +565,9 @@ impl ModelConfig {
+             ModelConfig::Auctions(c) => set_path(c, path, value).map(ModelConfig::Auctions),
+             ModelConfig::Polarity(c) => set_path(c, path, value).map(ModelConfig::Polarity),
+             ModelConfig::Geosim(c) => set_path(c, path, value).map(ModelConfig::Geosim),
++            ModelConfig::DemocraticPeace(c) => {
++                set_path(c, path, value).map(ModelConfig::DemocraticPeace)
++            }
+         }
+     }
+
+@@ -564,6 +578,9 @@ impl ModelConfig {
+             ModelConfig::Polarity(c) => {
+                 Some(c.horizon.div_ceil(u64::from(c.periods_per_tick)) as u32)
+             }
++            ModelConfig::DemocraticPeace(c) => {
++                Some(c.horizon().div_ceil(u64::from(c.periods_per_tick)) as u32)
++            }
+             ModelConfig::Geosim(c) => {
+                 Some(c.horizon().div_ceil(u64::from(c.periods_per_tick)) as u32)
+             }
+@@ -641,6 +658,7 @@ impl ModelConfig {
+             ModelConfig::Auctions(c) => crate::auctions::series_names(c.bidders),
+             ModelConfig::Polarity(_) => crate::polarity::series_names(),
+             ModelConfig::Geosim(_) => crate::geosim::series_names(),
++            ModelConfig::DemocraticPeace(_) => crate::democratic_peace::series_names(),
+             ModelConfig::Collusion(_) => crate::collusion::SERIES
+                 .iter()
+                 .map(|s| s.to_string())
+@@ -845,6 +863,7 @@ pub enum ModelWorld {
+     Auctions(Box<AuctionsWorld>),
+     Polarity(Box<PolarityWorld>),
+     Geosim(Box<GeosimWorld>),
++    DemocraticPeace(Box<DemocraticPeaceWorld>),
+ }
+
+ impl ModelWorld {
+@@ -907,6 +926,9 @@ impl ModelWorld {
+                 ModelWorld::Polarity(Box::new(PolarityWorld::new(c, seed)?))
+             }
+             ModelConfig::Geosim(c) => ModelWorld::Geosim(Box::new(GeosimWorld::new(c, seed)?)),
++            ModelConfig::DemocraticPeace(c) => {
++                ModelWorld::DemocraticPeace(Box::new(DemocraticPeaceWorld::new(c, seed)?))
++            }
+             ModelConfig::Auctions(c) => {
+                 ModelWorld::Auctions(Box::new(AuctionsWorld::new(c, seed)?))
+             }
+@@ -949,6 +971,7 @@ impl ModelWorld {
+             ModelWorld::Auctions(_) => ModelKind::Auctions,
+             ModelWorld::Polarity(_) => ModelKind::Polarity,
+             ModelWorld::Geosim(_) => ModelKind::Geosim,
++            ModelWorld::DemocraticPeace(_) => ModelKind::DemocraticPeace,
+         }
+     }
+
+@@ -985,6 +1008,7 @@ impl ModelWorld {
+             ModelWorld::Auctions(w) => w.as_ref(),
+             ModelWorld::Polarity(w) => w.as_ref(),
+             ModelWorld::Geosim(w) => w.as_ref(),
++            ModelWorld::DemocraticPeace(w) => w.as_ref(),
+         }
+     }
+
+@@ -1021,6 +1045,7 @@ impl ModelWorld {
+             ModelWorld::Auctions(w) => w.as_mut(),
+             ModelWorld::Polarity(w) => w.as_mut(),
+             ModelWorld::Geosim(w) => w.as_mut(),
++            ModelWorld::DemocraticPeace(w) => w.as_mut(),
+         }
+     }
+
+@@ -1132,6 +1157,7 @@ impl ModelWorld {
+             ModelWorld::Collusion(w) => copy_without_history!(Collusion, w),
+             ModelWorld::Polarity(w) => copy_without_history!(Polarity, w),
+             ModelWorld::Geosim(w) => copy_without_history!(Geosim, w),
++            ModelWorld::DemocraticPeace(w) => copy_without_history!(DemocraticPeace, w),
+             ModelWorld::Auctions(w) => {
+                 let stats = std::mem::take(&mut w.stats);
+                 let mut copy = (**w).clone();
+@@ -1198,6 +1224,9 @@ impl ModelWorld {
+             (ModelWorld::Collusion(live), ModelWorld::Collusion(kept)) => restore_into!(live, kept),
+             (ModelWorld::Polarity(live), ModelWorld::Polarity(kept)) => restore_into!(live, kept),
+             (ModelWorld::Geosim(live), ModelWorld::Geosim(kept)) => restore_into!(live, kept),
++            (ModelWorld::DemocraticPeace(live), ModelWorld::DemocraticPeace(kept)) => {
++                restore_into!(live, kept)
++            }
+             (ModelWorld::Auctions(live), ModelWorld::Auctions(kept)) => {
+                 let mut stats = std::mem::take(&mut live.stats);
+                 let len = stats.history().partition_point(|s| s.tick <= kept.tick);
+@@ -1881,7 +1910,8 @@ mod tests {
+                 "collusion",
+                 "auctions",
+                 "polarity",
+-                "geosim"
++                "geosim",
++                "democratic_peace"
+             ]
+         );
+         assert!(ModelKind::Sugarscape.schema().is_empty());
+diff --git a/crates/sugarscape-core/src/presets.rs b/crates/sugarscape-core/src/presets.rs
+index 05cdda7..92156b5 100644
+--- a/crates/sugarscape-core/src/presets.rs
++++ b/crates/sugarscape-core/src/presets.rs
+@@ -1600,6 +1600,7 @@ pub fn catalog() -> Vec<ModelPreset> {
+     out.extend(crate::auctions::presets());
+     out.extend(crate::polarity::presets());
+     out.extend(crate::geosim::presets());
++    out.extend(crate::democratic_peace::presets());
+     out
+ }
+
+diff --git a/crates/sugarscape-core/src/titles.rs b/crates/sugarscape-core/src/titles.rs
+index 13bfa0c..fb5df2d 100644
+--- a/crates/sugarscape-core/src/titles.rs
++++ b/crates/sugarscape-core/src/titles.rs
+@@ -3,7 +3,7 @@
+ //! paper (`source`) stay on the preset as its reference.
+
+ /// Titles by preset id, in catalog order.
+-pub const TITLES: [(&str, &str); 424] = [
++pub const TITLES: [(&str, &str); 430] = [
+     (
+         "ii-1-instant",
+         "Sugar grows back at once: agents climb the best ridges and the poorly endowed starve",
+@@ -1581,6 +1581,13 @@ pub const TITLES: [(&str, &str); 424] = [
+     ("polarity-two-level", "Provincial revolts challenge expanding governments"),
+     ("polarity-overextension", "Uncertain victories can limit territorial expansion"),
+
++("democratic-peace-printed-2001","Printed probability shapes the selection of cooperating states"),
++("democratic-peace-prose-probability","Superior states attack more often under the prose reading"),
++("democratic-peace-tagging","Partner tags prevent attacks between democracies"),
++("democratic-peace-alliances","Shared threats organize local defensive coalitions"),
++("democratic-peace-collective-security","Democracies open fronts against pariah states"),
++("democratic-peace-nondemocratic","Predatory states compete without democratic partners"),
++
+ ];
+
+ /// The title of preset `id`, or "" if it has none.
+diff --git a/crates/sugarscape-core/tests/democratic_peace_discovery.rs b/crates/sugarscape-core/tests/democratic_peace_discovery.rs
+index 7b3e16d..2126add 100644
+--- a/crates/sugarscape-core/tests/democratic_peace_discovery.rs
++++ b/crates/sugarscape-core/tests/democratic_peace_discovery.rs
+@@ -8,30 +8,40 @@ fn democratic_peace_discovery_resolves_source_horizon_and_preset() {
+     assert_eq!(w.model().tick(), 3);
+     assert!(w.model().finished());
+     assert_eq!(w.model().latest_value("democratic_share"), Some(1.0));
+-    assert!(ModelKind::ALL.iter().any(|k| k.as_str()=="democratic_peace"));
++    assert!(ModelKind::ALL
++        .iter()
++        .any(|k| k.as_str() == "democratic_peace"));
+     assert!(sugarscape_core::presets::find("democratic-peace-printed-2001").is_some());
+ }
+ #[test]
+ fn democratic_peace_t0_census_and_inspection_are_read_only() {
+-    let c=ModelConfig::from_json(r#"{"model":"democratic_peace","width":2,"height":2,"initial_democratic_share":0}"#).expect("democratic_peace must parse");
+-    let w=ModelWorld::new(c,4).unwrap();
+-    let before=w.model().fingerprint();
+-    let j:serde_json::Value=serde_json::from_str(&w.model().inspect_json(3,3).unwrap()).unwrap();
+-    assert_eq!(j["metrics"]["first_extinction_period"],0);
+-    assert_eq!(j["metrics"]["clustering_reason"],"undefined_initial_density");
+-    let mut buf=Vec::new();
+-    w.model().render("governing_regime","",&mut buf).unwrap();
+-    assert_eq!(buf.len(),12*12*4);
+-    assert_eq!(before,w.model().fingerprint());
++    let c = ModelConfig::from_json(
++        r#"{"model":"democratic_peace","width":2,"height":2,"initial_democratic_share":0}"#,
++    )
++    .expect("democratic_peace must parse");
++    let w = ModelWorld::new(c, 4).unwrap();
++    let before = w.model().fingerprint();
++    let j: serde_json::Value =
++        serde_json::from_str(&w.model().inspect_json(3, 3).unwrap()).unwrap();
++    assert_eq!(j["metrics"]["first_extinction_period"], 0);
++    assert_eq!(
++        j["metrics"]["clustering_reason"],
++        "undefined_initial_density"
++    );
++    let mut buf = Vec::new();
++    w.model().render("governing_regime", "", &mut buf).unwrap();
++    assert_eq!(buf.len(), 12 * 12 * 4);
++    assert_eq!(before, w.model().fingerprint());
+ }
+ #[test]
+ fn democratic_peace_invalid_zero_policy_retains_committed_clock() {
+     let c=ModelConfig::from_json(r#"{"model":"democratic_peace","width":2,"height":2,"initial_resourced_share":0,"initial_democratic_share":0,"zero_ratio":"reject_zero_denominator"}"#).unwrap();
+-    let mut w=ModelWorld::new(c,4).unwrap();
++    let mut w = ModelWorld::new(c, 4).unwrap();
+     w.model_mut().run(1);
+-    let j:serde_json::Value=serde_json::from_str(&w.model().inspect_json(3,3).unwrap()).unwrap();
+-    assert_eq!(j["outcome"]["valid"],false);
+-    assert_eq!(j["completed_periods"],0);
+-    assert_eq!(j["attempted_period"],1);
++    let j: serde_json::Value =
++        serde_json::from_str(&w.model().inspect_json(3, 3).unwrap()).unwrap();
++    assert_eq!(j["outcome"]["valid"], false);
++    assert_eq!(j["completed_periods"], 0);
++    assert_eq!(j["attempted_period"], 1);
+     assert!(j["outcome"]["final_metrics"].is_null());
+ }
+diff --git a/crates/sugarscape-core/tests/golden.rs b/crates/sugarscape-core/tests/golden.rs
+index 868fd3e..e4ae2b1 100644
+--- a/crates/sugarscape-core/tests/golden.rs
++++ b/crates/sugarscape-core/tests/golden.rs
+@@ -557,6 +557,29 @@ fn print_geosim_golden() {
+     }
+ }
+
++// Compact deterministic fixtures only; no registered source study.
++const DEMOCRATIC_PEACE_GOLDEN: &[(&str, u64)] = &[
++    ("democratic-peace-printed-2001", 0x51c87aa05ae89971),
++    ("democratic-peace-prose-probability", 0x10578253f9fff482),
++    ("democratic-peace-tagging", 0x3c0c1a219cbe94cc),
++    ("democratic-peace-alliances", 0x20e6355f23f1e9c4),
++    ("democratic-peace-collective-security", 0x51c87aa05ae89971),
++    ("democratic-peace-nondemocratic", 0x444b1ebb87249f09),
++];
++#[test]
++fn democratic_peace_presets_are_reproducible() {
++    for &(id, expected) in DEMOCRATIC_PEACE_GOLDEN {
++        assert_eq!(image_fingerprint(id, 10), expected, "preset {id} changed");
++    }
++}
++#[test]
++#[ignore]
++fn print_democratic_peace_golden() {
++    for &(id, _) in DEMOCRATIC_PEACE_GOLDEN {
++        println!("(\"{id}\", {:#x}),", image_fingerprint(id, 10));
++    }
++}
++
+ fn image_fingerprint(id: &str, ticks: u32) -> u64 {
+     let preset = presets::find(id).unwrap_or_else(|| panic!("unknown preset {id}"));
+     let mut world = ModelWorld::new(preset.config, 1).unwrap();
+@@ -590,6 +613,7 @@ fn every_model_preset_has_a_golden_entry() {
+                 .iter()
+                 .chain(MODEL_GOLDEN)
+                 .chain(GEOSIM_GOLDEN)
++                .chain(DEMOCRATIC_PEACE_GOLDEN)
+                 .any(|&(id, _)| id == p.id)
+                 || IMAGE_GOLDEN
+                     .iter()
