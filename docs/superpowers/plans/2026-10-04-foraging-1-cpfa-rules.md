@@ -1,6 +1,6 @@
 # Foraging 1 CPFA Rule Reference Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Implement and verify CPFA's checked mathematical rules and explicit publication/departure decisions without adding a simulated world.
 
@@ -86,7 +86,7 @@ pub const WAYPOINT_THRESHOLD: f64 = 0.001;
 
 No serde/default derives are required. `p_search`/`p_return` are validated but not executed as movement transitions in F1. Count typing prevents fractional inputs; reject values above 256 without narrowing. Private `pub(super)` helpers append contextual errors for a finite closed interval, nonnegative finite values, `[0,1)` draws and counts; Task 2 may reuse them. Error field names match parameter names or function argument names. Parameter validation aggregates errors in declaration order.
 
-- [ ] **Step 1: Write failing tests and module declarations.** Add the module export and test wiring, then tests that refer to absent rule APIs; do not add successful placeholder bodies. Pin finite bounds, all seven invalid fields, NaN/infinities, negative inputs, count 257, and exact accepted endpoints. Mathematical expectations include:
+- [x] **Step 1: Write failing tests and module declarations.** Add the module export and test wiring, then tests that refer to absent rule APIs; do not add successful placeholder bodies. Pin finite bounds, all seven invalid fields, NaN/infinities, negative inputs, count 257, and exact accepted endpoints. Mathematical expectations include:
 
 ```rust
 #[test]
@@ -104,9 +104,9 @@ Additional independent CDF fixtures: `(0,1)=0.3678794411714423`, `(4,2)=0.947346
 
 Variation cases: age zero yields `4*pi`; zero decay yields `4*pi`; `omega=4*pi` stays constant; positive decay approaches `omega`; with `omega=0, rate=1, age=ln(2)` the expected value is `2*pi`. Verify increasing age never increases variation beyond tolerance. Decay fixtures: zero factors produce exactly one, `(rate=1,age=ln(2))` approximately 0.5, large positive products yield zero. Check zero times `f64::MAX` explicitly.
 
-- [ ] **Step 2: Run RED.** Run `cargo test -p sugarscape-core foraging::tests::rules`; expected failure is the absent module/API rather than an unrelated build failure. Record the actual failure.
+- [x] **Step 2: Run RED.** Run `cargo test -p sugarscape-core foraging::tests::rules`; expected failure is the absent module/API rather than an unrelated build failure. Record the actual failure.
 
-- [ ] **Step 3: Implement checked numerical functions.** Validate before calculation. Implement a small internal exponential helper handling zero factors, positive overflow and ordinary finite products. The core recurrence is:
+- [x] **Step 3: Implement checked numerical functions.** Validate before calculation. Implement a small internal exponential helper handling zero factors, positive overflow and ordinary finite products. The core recurrence is:
 
 ```rust
 // Called only after count/rate validation.
@@ -122,9 +122,9 @@ for k in 1..=count {
 
 Use `1e-12` as the maximum permitted endpoint correction for the CDF; reject nonfinite output or larger excursions. Do not broadly clamp arbitrary invalid calculations. `exp(-256)` remains representable, so the stated bounds avoid recurrence underflow/overflow. Use standard `exp`, consistent with the spec; cross-platform bit identity is not a claim of this F1 API. Keep bounds and source provenance in rustdoc.
 
-- [ ] **Step 4: Run GREEN and checks.** Run the targeted test command, `cargo fmt --all -- --check`, `cargo clippy -p sugarscape-core --all-targets -- -D warnings`, then `cargo test --workspace`. Fix failures without bypassing checks. Run formatting before the check if needed.
+- [x] **Step 4: Run GREEN and checks.** Run the targeted test command, `cargo fmt --all -- --check`, `cargo clippy -p sugarscape-core --all-targets -- -D warnings`, then `cargo test --workspace`. Fix failures without bypassing checks. Run formatting before the check if needed.
 
-- [ ] **Step 5: Commit and review.** Stage only Task 1 files and tracker; commit `feat(foraging): add checked CPFA numerical reference rules`. Have a fresh reviewer check the spec/plan and actual tests before Task 2 begins.
+- [x] **Step 5: Commit and review.** Stage only Task 1 files and tracker; commit `feat(foraging): add checked CPFA numerical reference rules`. Have a fresh reviewer check the spec/plan and actual tests before Task 2 begins.
 
 ### Task 2: Explicit publication and departure decisions
 
@@ -158,7 +158,7 @@ pub enum Departure {
 
 The returned publication site is a request, not a server insertion. Both functions validate all supplied parameters and draws even if no-find/fidelity/empty-list branches make some inputs irrelevant. Departure also validates the whole snapshot, inactive records included, before calculating probabilities. Duplicate IDs are rejected with indexed contextual errors; duplicate sites are legal. Use `BTreeSet` as in existing bounded core validation. Input structs have no defaults; identifiers use the whole `u64` range without sentinel meanings.
 
-- [ ] **Step 1: Write failing tests.** Verify independent draws, fidelity priority, uniform and weighted fallbacks, both threshold variants, inactive filtering, no-find publication and absent-memory departure. Use exact weighted intervals with strengths 0.25 and 0.75 and IDs 11/22:
+- [x] **Step 1: Write failing tests.** Verify independent draws, fidelity priority, uniform and weighted fallbacks, both threshold variants, inactive filtering, no-find publication and absent-memory departure. Use exact weighted intervals with strengths 0.25 and 0.75 and IDs 11/22:
 
 ```rust
 #[test]
@@ -181,9 +181,9 @@ Define `valid_parameters()` locally in this test module with probabilities 0.5, 
 
 For every API, inject NaN, positive/negative infinity, negative draw, draw one and the largest valid draw `f64::from_bits(1.0_f64.to_bits()-1)`. Test an invalid inactive strength or duplicate ID still rejects when fidelity would otherwise succeed. Test valid duplicate sites with distinct IDs, all inactive records, empty snapshot, exact 0.001 strength under both threshold policies, three uniform intervals at draws 0, 0.5 and the largest valid draw, and a weighted largest-draw case with strengths 0.001 and 0.2. Check indexed error field `waypoints[1].strength` for an invalid second record and duplicate-ID field `waypoints[1].id`.
 
-- [ ] **Step 2: Run RED.** `cargo test -p sugarscape-core foraging::tests::information` must fail for missing information APIs. Record that failure before implementing them.
+- [x] **Step 2: Run RED.** `cargo test -p sugarscape-core foraging::tests::information` must fail for missing information APIs. Record that failure before implementing them.
 
-- [ ] **Step 3: Implement validated decisions without RNG ownership.** After validation, publication returns None for no find; otherwise its strict CDF comparison returns the supplied site. Departure first tests valid memory using `lambda_fidelity`, then builds the eligible ordered record view, then selects or returns Uninformed. The threshold predicates are explicit:
+- [x] **Step 3: Implement validated decisions without RNG ownership.** After validation, publication returns None for no find; otherwise its strict CDF comparison returns the supplied site. Departure first tests valid memory using `lambda_fidelity`, then builds the eligible ordered record view, then selects or returns Uninformed. The threshold predicates are explicit:
 
 ```rust
 let active = match threshold {
@@ -194,9 +194,9 @@ let active = match threshold {
 
 Uniform selection uses equal intervals. Weighted selection sums active strengths in stable order and compares the original draw to cumulative normalized boundaries. Use the same ordered sum for total and the final cumulative value, making the last normalized upper boundary exactly one; this avoids multiplying a largest valid draw into a rounded out-of-range ticket. At exact equality advance to the next interval. No active records requires no selection calculation. Do not mutate snapshots, consult a resource grid, expire records internally, or suppress invalid inputs because fidelity succeeds. Parameter errors precede observation/snapshot errors; append indexed snapshot errors in order.
 
-- [ ] **Step 4: Run GREEN and regression checks.** Run `cargo test -p sugarscape-core foraging::`, `cargo fmt --all -- --check`, `cargo clippy -p sugarscape-core --all-targets -- -D warnings`, and `cargo test --workspace`. Self-review source labels and error contexts; keep information policy enums explicit rather than a silent default.
+- [x] **Step 4: Run GREEN and regression checks.** Run `cargo test -p sugarscape-core foraging::`, `cargo fmt --all -- --check`, `cargo clippy -p sugarscape-core --all-targets -- -D warnings`, and `cargo test --workspace`. Self-review source labels and error contexts; keep information policy enums explicit rather than a silent default.
 
-- [ ] **Step 5: Commit and review.** Stage only Task 2 files and tracker; commit `feat(foraging): add explicit CPFA information decision variants`. Fresh task review must pass before Task 3.
+- [x] **Step 5: Commit and review.** Stage only Task 2 files and tracker; commit `feat(foraging): add explicit CPFA information decision variants`. Fresh task review must pass before Task 3.
 
 ### Task 3: Public reference acceptance and research handoff
 
@@ -204,7 +204,7 @@ Uniform selection uses equal intervals. Weighted selection sums active strengths
 
 **Interfaces:** Consume the public exports from Tasks 1–2. Add no runtime API. The integration test is a caller example of the stateless contract, not a new simulator.
 
-- [ ] **Step 1: Write public-API acceptance tests.** A successful find at site 77 with count one and rates one, publication draw 0.8 and fidelity draw 0.7, must suppress publication while retaining private fidelity. A second call with publication draw 0.7 and fidelity draw 0.8 must publish while taking recruitment if a waypoint exists. Neither choice implies that the other draw was reused. Also test no publication for `find=None` alongside valid departure memory: an empty return and caller-retained memory are separate inputs.
+- [x] **Step 1: Write public-API acceptance tests.** A successful find at site 77 with count one and rates one, publication draw 0.8 and fidelity draw 0.7, must suppress publication while retaining private fidelity. A second call with publication draw 0.7 and fidelity draw 0.8 must publish while taking recruitment if a waypoint exists. Neither choice implies that the other draw was reused. Also test no publication for `find=None` alongside valid departure memory: an empty return and caller-retained memory are separate inputs.
 
 ```rust
 use sugarscape_core::foraging::{
@@ -232,9 +232,9 @@ fn recruitment_accepts_an_active_record_without_resource_truth() {
 
 These are composition regression tests. They may already pass when Tasks 1–2 are correct; record that honestly instead of inventing a RED phase or changing production behavior to force one. Use public imports to catch forgotten re-exports. Demonstrate publication and departure in rustdoc with the same explicit parameters and explain that the caller owns publication order, observations and random variates.
 
-- [ ] **Step 2: Write reference usage/evidence documentation.** `docs/foraging.md` must include the source equation/prose mismatch, lower-tail definition, engineering bounds, threshold and selection provenance, all seven parameter meanings, independent variates, contextual errors, and public examples. State that F1 verifies rules but neither simulates foraging nor reproduces evolved performance. Link the source audit, approved spec and this plan. State the F2 source-reconciliation questions without inserting new runtime commitments. Update the existing construction/ontology/papers links to the reference guide; mark implementation complete only after review and acceptance, not integrated before merging.
+- [x] **Step 2: Write reference usage/evidence documentation.** `docs/foraging.md` must include the source equation/prose mismatch, lower-tail definition, engineering bounds, threshold and selection provenance, all seven parameter meanings, independent variates, contextual errors, and public examples. State that F1 verifies rules but neither simulates foraging nor reproduces evolved performance. Link the source audit, approved spec and this plan. State the F2 source-reconciliation questions without inserting new runtime commitments. Update the existing construction/ontology/papers links to the reference guide; mark implementation complete only after review and acceptance, not integrated before merging.
 
-- [ ] **Step 3: Run acceptance sequentially.** Run:
+- [x] **Step 3: Run acceptance sequentially.** Run:
 
 ```bash
 cargo test -p sugarscape-core --test foraging_reference
@@ -257,3 +257,12 @@ Commands shown together are separate verification actions, not a shell script to
 Coverage: Task 1 implements the parameter/numeric contracts; Task 2 implements the separate information choices and all source variants; Task 3 exercises the public boundary and preserves the research handoff. Each Review Focus item has an owning test. Types/signatures match across tasks; later worlds are explicitly excluded. No new dependencies or schemas are required.
 
 The written design is approved. The user approved this implementation plan on 2026-10-04; execution is now authorized. Preserve the user's standing subagent-driven method; do not ask them to choose it again. After plan approval, read the execution/worktree/review skills and proceed task by task.
+
+
+## Task 3 acceptance evidence and execution rulings (2026-10-04)
+
+Starting revision `72e851b` provides independently approved Tasks 1–2. Public composition tests passed immediately; no artificial RED phase or production behavior change was made. Three tests cover independent publication/fidelity variates, empty publication with retained memory, and immutable active recruitment without resource truth. The public rustdoc example also passed in workspace doc tests.
+
+Final-source acceptance: `cargo test -p sugarscape-core --test foraging_reference` (3 passed), `cargo test -p sugarscape-core foraging::` (27 passed), `cargo test -p sugarscape-core burrow::` (102 passed), `cargo test --workspace` (2,236 passed, 103 ignored, 0 failed across 36 test-result groups, including doc tests), `cargo fmt --all -- --check`, `cargo clippy -p sugarscape-core --all-targets -- -D warnings`, and `git diff --check` all exited 0. Local Markdown targets resolved. Source-scope inspection found no Cargo manifest/lockfile, existing Burrow runtime, CLI/WASM or browser changes.
+
+Controller ruling: retain `IMPLEMENTATION_PLAN.md` through task and whole-branch review; Stage 3 remains In Progress. Controller owns final review closure and tracker removal. Steps 4–5 stay pending until those reviews pass. Implementation is awaiting final review, not yet integrated into `main`; no merge, push or scientific execution occurred. The lower-tail/prose discrepancy, supplied engineering bounds, paper/later-source threshold distinction and uniform/later-source selection distinction remain documented. F2 must reconcile historical simulator provenance and world conventions before implementation; F3–F5 and scientific gates remain separate.

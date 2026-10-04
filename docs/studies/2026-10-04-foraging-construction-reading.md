@@ -1,7 +1,7 @@
 # Foraging and construction: source audit
 
 **Date:** 2026-10-04.
-**Status:** initial methods/code audit supporting a draft campaign design; no new runtime or simulated results.
+**Status:** initial methods/code audit supporting the approved campaign design. The [F1 rule reference](../foraging.md) is implemented awaiting final review, not yet integrated; no simulated results.
 
 ## Purpose
 
@@ -78,4 +78,4 @@ This supplies a closely related biological phenomenon and potential geometry/mea
 4. Design a termite-inspired shortcut comparison after the composed world is verified.
 5. Add multiple depots, differentiated beneficiaries, assistance and conflict through further explicit designs.
 
-The [draft campaign and first-increment spec](../superpowers/specs/2026-10-04-foraging-construction-design.md) records this sequence, the implementation boundary and review gate.
+The [approved campaign and first-increment spec](../superpowers/specs/2026-10-04-foraging-construction-design.md) records this sequence, the implementation boundary and review gate.

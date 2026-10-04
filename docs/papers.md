@@ -44,8 +44,8 @@ methods/pseudocode were inspected; a personal copy is at
 It has not been reproduced here. Michael et al. (2023), *Finding shortcuts through collective
 tunnel excavations in a subterranean termite*, is a later biological comparison target,
 inspected through accessible indexed methods/discussion and not copied locally. The
-[draft sequence and first-increment spec](superpowers/specs/2026-10-04-foraging-construction-design.md)
-record the next review gate.
+[approved sequence and first-increment spec](superpowers/specs/2026-10-04-foraging-construction-design.md)
+record the next review gate. The [F1 reference guide](foraging.md) documents implemented rules awaiting final review, not yet integrated into `main`; scientific execution remains separate.
 
 ## Reproduced
 

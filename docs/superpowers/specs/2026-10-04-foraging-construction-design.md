@@ -1,7 +1,7 @@
 # Research-anchored foraging and construction design
 
 **Date:** 2026-10-04.
-**Status:** written design approved by the user on 2026-10-04. The [F1 implementation plan](../plans/2026-10-04-foraging-1-cpfa-rules.md) was approved by the user on 2026-10-04; implementation is in progress; scientific registration/execution remain separate.
+**Status:** written design approved by the user on 2026-10-04. The [F1 implementation plan](../plans/2026-10-04-foraging-1-cpfa-rules.md) was approved by the user on 2026-10-04; the [F1 reference](../../foraging.md) is implemented awaiting final review, not yet integrated into `main`; scientific registration/execution remain separate.
 **Programme:** construction B3, with later bridges to collective-agency communication and costly assistance.
 **Evidence:** [source audit](../../studies/2026-10-04-foraging-construction-reading.md).
 **Implemented starting point:** [Burrow resource access](2026-10-04-burrow-2-resource-access-design.md), integrated into main.
