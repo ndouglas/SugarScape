@@ -36,8 +36,6 @@ pub struct ActionEvent {
 }
 
 impl World {
-    // Stage three supplies the production caller; tests exercise these transactions now.
-    #[allow(dead_code)]
     pub(crate) fn apply(&mut self, worker: u32, action: Action) -> ActionEvent {
         let from = self
             .workers

@@ -110,9 +110,8 @@ pub struct World {
     pub(super) units: BTreeMap<u64, Unit>,
     pub(super) next_material: u64,
     pub(super) excavated: u64,
-    // The lab owns its single RNG before the runner is introduced.
-    #[allow(dead_code)]
     pub(super) rng: SimRng,
+    pub(super) recording: super::runner::Recording,
 }
 
 impl World {
@@ -265,7 +264,7 @@ impl World {
                 )
             })
             .collect();
-        Ok(Self {
+        let mut world = Self {
             config,
             tick: setup.start_tick,
             setup,
@@ -276,7 +275,10 @@ impl World {
             next_material,
             excavated: 0,
             rng: rng::seeded(seed),
-        })
+            recording: super::runner::Recording::default(),
+        };
+        world.recording = super::runner::Recording::new(&world);
+        Ok(world)
     }
 
     pub(super) fn index(&self, pos: Pos) -> Option<usize> {

@@ -49,8 +49,8 @@ pub(super) fn is_recent(now: u64, born: u64, window: u64) -> bool {
     now.checked_sub(born).is_some_and(|age| age < window)
 }
 
-// Stage three uses the measured entry point; retain the specified plain API.
-#[allow(dead_code)]
+// Tests retain the specified plain API; production consumes measured wrappers.
+#[cfg(test)]
 pub(crate) fn observe(world: &World, worker: u32) -> Observation {
     observe_measured(world, worker).0
 }
@@ -126,8 +126,8 @@ pub(crate) fn observe_measured(world: &World, worker: u32) -> (Observation, BfsS
     )
 }
 
-// Stage three uses the measured entry point; retain the specified plain API.
-#[allow(dead_code)]
+// Tests retain the specified plain API; production consumes measured wrappers.
+#[cfg(test)]
 pub(crate) fn exit_distances(world: &World) -> Vec<Option<u32>> {
     exit_distances_measured(world).0
 }

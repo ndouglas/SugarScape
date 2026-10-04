@@ -59,8 +59,8 @@ pub(super) fn adjacent(a: Pos, b: Pos) -> bool {
     u64::from(a.x.abs_diff(b.x)) + u64::from(a.y.abs_diff(b.y)) == 1
 }
 
-// Stage three uses the measured entry point; retain the specified plain API.
-#[allow(dead_code)]
+// Tests retain the specified plain API; production consumes measured wrappers.
+#[cfg(test)]
 pub(crate) fn decide(
     o: &Observation,
     w: &WorkerView,

@@ -18,7 +18,7 @@ Detailed plan: [Burrow 1](docs/superpowers/plans/2026-10-03-burrow-1-excavation.
 **Goal**: Execute worker opportunities and export replay, work and censored delivery records.
 **Success Criteria**: Same seed reproduces full records; diagnostics leave actions unchanged.
 **Tests**: cargo test -p sugarscape-core burrow::tests::runner
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 4: CLI acceptance and WASM parity
 **Goal**: Expose checked CLI replay and verify native/WASM full-record agreement.
