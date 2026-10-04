@@ -1,7 +1,7 @@
 # Burrow 2 resource access design
 
 **Date:** 2026-10-04
-**Status:** architectural design approved by the user on 2026-10-04; [implementation plan](../plans/2026-10-04-burrow-2-resource-access.md) approved 2026-10-04; execution has not started. No runtime changes or scientific execution have occurred.
+**Status:** architectural design approved by the user on 2026-10-04; [implementation plan](../plans/2026-10-04-burrow-2-resource-access.md) approved 2026-10-04; implementation is complete pending branch review. The checked core and native/WASM exports are implemented; scientific execution remains unchanged and has not occurred.
 **Baseline:** [implemented Burrow 1](2026-10-03-burrow-1-excavation-design.md).
 **Programme:** [collective construction B3](../../studies/2026-10-03-cultures-construction-and-underworlds.md#b3-add-inhabitation-and-competing-functions).
 **Parallel study:** [Burrow 1 protocol draft](2026-10-04-burrow-1-measured-protocol.md).
@@ -133,7 +133,7 @@ Keep the task layer inside `sugarscape_core::burrow`, in a separate access modul
 
 The legacy `LabConfig`, `Setup`, `Episode`, `burrow` CLI outputs and `burrow_replay_json` schema remain unchanged. Existing entry points construct no active task. Add optional private task state to the world only where necessary; legacy fingerprints must not hash additional sentinel values. Known-goal fingerprints include task identity, coordinate, weight and every worker's completion latch because these affect continuation. Explore remains the legacy physical/controller state with external task diagnostics.
 
-Add separate checked adapters: proposed CLI `sugarscape burrow-access --config FILE --seed U64 --ticks U32 --sample-every U32 --out DIRECTORY` and WASM `burrow_access_replay_json(config_json, seed, ticks, sample_every)`. Both serialize one shared AccessEpisode. Reuse full-width decimal seeds, f64 finite/integral boundary validation before u32 conversion, existing error codes, fixed exclusive output files and partial-output reporting. Exports are normalized access `config.json`, outer `episode.json`, sampled `maps.txt` and combined access/base integer `summary.json`.
+The implemented separate checked adapters are CLI `sugarscape burrow-access --config FILE --seed U64 --ticks U32 --sample-every U32 --out DIRECTORY` and WASM `burrow_access_replay_json(config_json, seed, ticks, sample_every)`. Both serialize one shared AccessEpisode. Reuse full-width decimal seeds, f64 finite/integral boundary validation before u32 conversion, existing error codes, fixed exclusive output files and partial-output reporting. Exports are normalized access `config.json`, outer `episode.json`, sampled `maps.txt` and combined access/base integer `summary.json`.
 
 Keep base ASCII maps unchanged; attach task coordinate and access state in outer metadata and adapter headings rather than overwriting a solid glyph with a misleading passable resource marker. No web controls, ModelKind registration, Minds changes or Hornvale modifications belong here.
 
@@ -155,6 +155,6 @@ Run relevant core/CLI/parity checks and existing regressions after an approved s
 
 ## Research sequence and remaining questions
 
-First review this design and write its implementation plan. In parallel, the Burrow 1 protocol can become an executable archive/analysis implementation after its own review. Neither track needs to wait for the other's treatment outcomes, and neither should tune against those outcomes.
+The design and implementation plan were approved and the engineering implementation is complete pending branch review. The Burrow 1 archive/analysis harness has engineering acceptance. Neither track depends on scientific treatment outcomes, and neither should tune against them.
 
 After resource access works, Burrow 2B can add actual extraction and delivery, accounting for finite resources and shared hands, and then ask who benefits. Later distinguish supplied destination knowledge from locally discovered resources, add physical signals or practices with appropriate source support, vary body and substrate, and preserve/repair layouts across cohorts. That creates the route toward differentiated homes, storage, fortifications, neighborhoods and inherited underworlds without crediting supplied goals or labels as emergent culture.

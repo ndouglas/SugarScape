@@ -1,13 +1,12 @@
-# Burrow 1 excavation lab
+# Burrow excavation and resource-access labs
 
 Burrow is a standalone checked replay lab for explicit excavation and spoil transport. Its
 controllers use supplied preferences. Replay correctness does not establish biological validity,
 learning, chamber counts, coordination or comparative success. A judged campaign requires a
 separately reviewed protocol and manifest. See the [approved design](superpowers/specs/2026-10-03-burrow-1-excavation-design.md)
-and [research programme](studies/2026-10-03-cultures-construction-and-underworlds.md). The next proposed artifacts are the
-[measured protocol and candidate manifest](superpowers/specs/2026-10-04-burrow-1-measured-protocol.md)
-and [resource-access design](superpowers/specs/2026-10-04-burrow-2-resource-access-design.md);
-both await review and introduce no runtime changes.
+and [research programme](studies/2026-10-03-cultures-construction-and-underworlds.md). The [measured protocol and candidate manifest](superpowers/specs/2026-10-04-burrow-1-measured-protocol.md)
+and [resource-access design](superpowers/specs/2026-10-04-burrow-2-resource-access-design.md) were approved on 2026-10-04.
+Their engineering implementations are complete; resource access awaits branch review. Scientific registration and execution remain separate.
 
 Run an acceptance demonstration from the repository root, using an absent or empty directory:
 
@@ -148,7 +147,7 @@ The measured-study protocol and resource-access design were approved on 2026-10-
 1. [Measured archive and analysis harness](superpowers/plans/2026-10-04-burrow-1-measured-harness.md): physical transaction validation, complete manifest, immutable raw archives and saved-only descriptive analysis. Engineering acceptance uses construction seeds; scientific registration and execution remain separate.
 2. [Resource access](superpowers/plans/2026-10-04-burrow-2-resource-access.md): private local goal guidance, event-time structural access and checked CLI/WASM exports, preserving ordinary excavation replay bytes.
 
-Implement and review the harness first, then resource access in a separate branch. Neither implementation depends on inspecting scientific treatment outcomes.
+The harness is merged and resource access is implemented in a separate branch pending review. Neither implementation depends on inspecting scientific treatment outcomes.
 
 
 ## Measured archive and saved analysis
@@ -179,3 +178,58 @@ acceptance. Report I/O failure can leave partial output; retry into a new destin
 `validate_episode` reconstructs checked physical transitions, round schedules, material ownership/conservation, histories, physical snapshots and derived work. It consumes no controller decisions or RNG continuation. Fingerprints are format-checked state identifiers; controller BFS counts are bounded consistent diagnostics, not independently authenticated policy replay. Code provenance and unchanged engine regression tests support policy fidelity separately. A report cannot turn connected-open area, supplied global exit navigation or a one-cell corridor into evidence of emergent coordination or production throughput.
 
 Scientific readiness still requires a separately reviewed, committed executable-registration amendment preserving the prespecified matrix and explicitly recording its status/authorization, then separate user authorization for the scientific run. The current pinned unregistered candidate rejects scientific execution before I/O. Full revisions and a nonblank `--approval-context` document provenance; those flags do not grant approval. No scientific campaign or scientific-seed demonstration was run for engineering acceptance.
+
+
+## Checked structural resource access
+
+`burrow-access` composes the existing lab with an explicit task. These two fixed engineering
+scenes differ only in `task.objective` (`explore` or `known_goal`):
+
+```bash
+cargo run --release -p sugarscape-cli -- burrow-access --config docs/examples/burrow/access-explore.json --seed 7 --ticks 512 --sample-every 32 --out /tmp/burrow-access-explore-review
+cargo run --release -p sugarscape-cli -- burrow-access --config docs/examples/burrow/access-known-goal.json --seed 7 --ticks 512 --sample-every 32 --out /tmp/burrow-access-known-goal-review
+```
+
+Use a new or empty destination for each export. The required flags, defaults, full-width seeds,
+validation/I/O exit codes and exclusive-write/partial-output behavior match `burrow`. Every task
+field is required and unknown fields, including extra coordinate keys, are rejected. The public
+route requires a growing fixture, an initially solid diggable in-bounds goal and a positive checked
+weight. Examples explicitly include every lab field: 41×25, eight workers, direct transport,
+blind cues, freshness 32, relay distance three, response weight three and minimum recent units two.
+Their task designates `(7,12)` with weight three.
+
+Structural access means the designated cell is open and connected to the entrance for the present
+one-cell four-neighbor mover, ignoring transient occupancy. No resource is harvested, delivered
+or consumed. Explore workers receive no task coordinate and reproduce the ordinary nested Episode
+exactly. KnownGoal workers receive a supplied coordinate and bias only new local frontier selections
+that improve Manhattan distance. This is an engineering benchmark, not discovery, scent, learning
+or culture. Existing transport, retained targets, material transactions and action prices apply.
+A worker privately latches completion only after its own ordinary local view contains the opened
+goal, including on a loaded turn; access measurement never broadcasts completion.
+
+The run completes its full requested budget after access. `first_access` freezes the first committed
+action's one-based opportunity, material quantities and actual shortest open-cell exit distance;
+subsequent shortcuts can change `final_exit_distance`. Inaccessible endpoints retain null milestones
+and route distance with `deadline_censored=true`. Success on the final action is distinct from
+censoring. Zero ticks retains the initial map and zero observed opportunities. Report success and
+censoring together; successful-only averages omit unfinished runs.
+
+The four exclusive files are normalized outer `config.json`, complete outer `episode.json`,
+`maps.txt` and `summary.json`. Summary contains `{ "base": Snapshot, "access": AccessSummary }`.
+Map metadata names the supplied coordinate, policy, weight and endpoint structural access;
+frame maps retain all base glyphs, including `#` at the initially solid goal. The CLI prints the
+final base map, task/access heading and integer action/inventory summary. KnownGoal reproduction
+requires the outer config; the nested Episode's lab config alone is insufficient.
+
+The outer record also retains `task_assumptions` and `task_diagnostics`. Completion observations
+store each worker's first local sighting with tick and pre-action opportunity count, bounded by
+worker count. Their logical storage is counted separately from unchanged base Episode storage;
+completion checks and weight evaluations are deterministic computation proxies separate from
+base BFS diagnostics and paid actions. Explore has no latch/check/evaluation work.
+
+`burrow_access_replay_json(config_json, seed, ticks, sample_every)` returns the complete core
+AccessEpisode with the same checked decimal seed and original-f64 numeric boundary as `burrow_replay_json`.
+Malformed JSON errors use `burrow_access_config`; semantic errors retain their contextual task/lab
+fields. Native/WASM parity compares every outer field for both policies at seeds `7` and
+`18446744073709551615`, ticks 16 and sampling four. The 512-tick seed-seven scenes are acceptance
+examples and deterministic replays, without a preferred outcome or scientific treatment claim.

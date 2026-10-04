@@ -3,6 +3,7 @@
 //! validation error (printed as `field: message`, one per line).
 
 mod burrow;
+mod burrow_access;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -31,6 +32,8 @@ enum Command {
     Presets,
     /// Run a checked standalone excavation replay.
     Burrow(burrow::BurrowArgs),
+    /// Run a checked structural resource-access replay.
+    BurrowAccess(burrow_access::BurrowAccessArgs),
     /// List the built-in sweeps (id, name).
     Sweeps,
     /// Run one world and write its statistics.
@@ -180,6 +183,7 @@ fn run(cli: Cli) -> Result<(), Failure> {
             Ok(())
         }
         Command::Burrow(args) => burrow::run(args),
+        Command::BurrowAccess(args) => burrow_access::run(args),
         Command::Run(args) => run_world(args),
         Command::Sweep(args) => run_sweep(args),
         Command::Shot(args) => run_shot(args),
