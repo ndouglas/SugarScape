@@ -137,7 +137,7 @@ fn poisson_is_monotone_in_count_and_bounded() {
         for count in 0..=256 {
             let actual = poisson_cdf(count, rate).unwrap();
             assert!((0.0..=1.0).contains(&actual));
-            assert!(actual + 1e-12 >= previous);
+            assert!(actual + 1e-14 >= previous);
             previous = actual;
         }
     }
@@ -149,7 +149,7 @@ fn poisson_is_inverse_monotone_in_rate() {
         let mut previous = 1.0;
         for rate in 0..=256 {
             let actual = poisson_cdf(count, f64::from(rate)).unwrap();
-            assert!(actual <= previous + 1e-12);
+            assert!(actual <= previous + 1e-14);
             previous = actual;
         }
     }
@@ -182,7 +182,7 @@ fn informed_variation_decreases_toward_omega() {
     for age in [0.0, 0.1, 1.0, 2.0, 20.0, 1000.0] {
         let actual = informed_variation(1.0, 1.0, age).unwrap();
         assert!((1.0..=4.0 * PI).contains(&actual));
-        assert!(actual <= previous + 1e-12);
+        assert!(actual <= previous + 1e-14);
         previous = actual;
     }
     assert_eq!(previous, 1.0);
