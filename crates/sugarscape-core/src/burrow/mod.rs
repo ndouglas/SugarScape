@@ -13,7 +13,10 @@ mod validation;
 mod view;
 pub use validation::validate_episode;
 
-pub use access::{AccessConfig, AccessDiagnostics, AccessObjective, AccessTask, GoalObservation};
+pub use access::{
+    run_access_episode, AccessConfig, AccessDiagnostics, AccessEpisode, AccessMilestone,
+    AccessObjective, AccessSummary, AccessTask, GoalObservation,
+};
 pub use actions::{Action, ActionEvent, Outcome};
 pub use config::{Cue, Fixture, LabConfig, Pile, Side, Transport};
 pub use controller::{Decision, WorkerView};

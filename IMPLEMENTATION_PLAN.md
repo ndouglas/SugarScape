@@ -10,7 +10,7 @@
 **Goal**: Record structural milestones and censoring through the existing action loop.
 **Success Criteria**: Exact Explore bytes, fixed budget, historical first distance and independent task diagnostics.
 **Tests**: Exact milestone, last-action/zero-budget/censoring, shortcut, sampling and reductions.
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 3: Native/WASM integration and acceptance
 **Goal**: Add checked exports, examples, parity and user documentation.

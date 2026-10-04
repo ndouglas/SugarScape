@@ -1,7 +1,7 @@
 //! Sequential seeded opportunities and deterministic replay diagnostics.
 
 use super::{
-    access::GoalGuidance,
+    access::{AccessDiagnostics, AccessObserver, AccessSummary, GoalGuidance},
     controller::{decide_measured, decide_with_goal_measured},
     ledger::Ledger,
     observation::{exit_distances_measured, observe_measured, BfsStats},
@@ -254,6 +254,9 @@ impl Recording {
 }
 impl World {
     pub fn step(&mut self) {
+        self.step_observed(None);
+    }
+    pub(super) fn step_observed(&mut self, mut observer: Option<&mut AccessObserver>) {
         if self.recording.stopped {
             return;
         }
@@ -264,7 +267,7 @@ impl World {
         let mut order = self.worker_ids();
         order.shuffle(&mut self.rng);
         for id in order {
-            self.worker_opportunity(id, &mut recording);
+            self.worker_opportunity(id, &mut recording, observer.as_deref_mut());
             if recording.stopped {
                 break;
             }
@@ -277,7 +280,12 @@ impl World {
     fn worker_ids(&self) -> Vec<u32> {
         self.workers.iter().map(|w| w.id).collect()
     }
-    fn worker_opportunity(&mut self, id: u32, recording: &mut Recording) {
+    fn worker_opportunity(
+        &mut self,
+        id: u32,
+        recording: &mut Recording,
+        observer: Option<&mut AccessObserver>,
+    ) {
         recording.ensure_exit_field(self);
         let (observation, stats) = observe_measured(self, id);
         let goal = self.goal_state.as_mut().map(|state| {
@@ -381,6 +389,9 @@ impl World {
         let event = self.apply(id, decision.action);
         recording.record(&event, self, dig_distance);
         recording.ensure_exit_field(self);
+        if let Some(observer) = observer {
+            observer.observe(self, recording, &event);
+        }
     }
     pub(super) fn snapshot(&self) -> Snapshot {
         self.recording.snapshot(self)
@@ -432,7 +443,16 @@ pub fn run_episode(
     seed: u64,
     options: RunOptions,
 ) -> Result<Episode, Vec<FieldError>> {
-    let mut world = World::new(c, seed)?;
+    let world = World::new(c, seed)?;
+    run_world(world, seed, options, None).map(|(episode, _, _)| episode)
+}
+
+pub(super) fn run_world(
+    mut world: World,
+    seed: u64,
+    options: RunOptions,
+    mut observer: Option<AccessObserver>,
+) -> Result<(Episode, Option<AccessSummary>, AccessDiagnostics), Vec<FieldError>> {
     validate_options(&world, &options)?;
     // Initialization and all sampling are deterministic observers, never RNG consumers.
     let mut recording = std::mem::take(&mut world.recording);
@@ -442,7 +462,7 @@ pub fn run_episode(
     let mut series = vec![world.snapshot()];
     let mut completed_ticks = 0;
     for _ in 0..options.ticks {
-        world.step();
+        world.step_observed(observer.as_mut());
         if world.recording.stopped {
             break;
         }
@@ -508,7 +528,13 @@ pub fn run_episode(
         "tick_budget_exhausted"
     }
     .into();
-    Ok(Episode {
+    let access = observer.as_ref().map(|observer| observer.summary(&world));
+    let task_diagnostics = world
+        .goal_state
+        .take()
+        .map(|state| state.diagnostics)
+        .unwrap_or_default();
+    let episode = Episode {
         config: world.config,
         setup: world.setup,
         seed: seed.to_string(),
@@ -528,5 +554,6 @@ pub fn run_episode(
         rates,
         labels: view::labels(),
         storage,
-    })
+    };
+    Ok((episode, access, task_diagnostics))
 }

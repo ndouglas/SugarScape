@@ -1,6 +1,10 @@
 //! Supplied task identity and private, locally observed completion memory.
 
-use super::{config::checked_cells, LabConfig, Pos, World};
+use super::{
+    config::checked_cells,
+    runner::{run_world, Recording},
+    ActionEvent, Episode, Fixture, LabConfig, Pos, RunOptions, World,
+};
 use crate::config::FieldError;
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -71,8 +75,6 @@ pub(super) struct GoalGuidance {
     pub seen_open: bool,
 }
 
-// Task 2's public access constructor consumes these helpers and removes both allowances.
-#[allow(dead_code)]
 pub(super) fn validate_task(task: &AccessTask, world: &World) -> Result<(), Vec<FieldError>> {
     let mut errors = Vec::new();
     match world.index(task.goal) {
@@ -114,7 +116,6 @@ pub(super) fn validate_task(task: &AccessTask, world: &World) -> Result<(), Vec<
     }
 }
 
-#[allow(dead_code)]
 pub(super) fn install_goal_state(
     world: &mut World,
     task: &AccessTask,
@@ -129,4 +130,124 @@ pub(super) fn install_goal_state(
         }),
     };
     Ok(())
+}
+
+/// Historical cost and shortest open-cell route at the first access action.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AccessMilestone {
+    pub tick: u64,
+    /// One-based committed action index, including blocked actions and waits.
+    pub opportunity: u64,
+    pub worker: u32,
+    pub goal: Pos,
+    pub digs: u64,
+    pub disposed: u64,
+    pub carried: u64,
+    pub loose: u64,
+    pub exit_distance: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AccessSummary {
+    pub structurally_accessible: bool,
+    pub first_access: Option<AccessMilestone>,
+    pub final_exit_distance: Option<u32>,
+    pub observed_opportunities: u64,
+    pub deadline_censored: bool,
+}
+
+/// KnownGoal replay requires the outer task config as well as the nested Episode.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AccessEpisode {
+    pub config: AccessConfig,
+    pub episode: Episode,
+    pub access: AccessSummary,
+    pub task_assumptions: Vec<String>,
+    /// Completion-record logical storage is completion_observations.len();
+    /// it is separate from the unchanged base Episode.storage accounting.
+    pub task_diagnostics: AccessDiagnostics,
+}
+
+/// Researcher observation only; never shared with worker completion memory.
+#[derive(Clone, Debug)]
+pub(super) struct AccessObserver {
+    pub(super) goal: Pos,
+    pub(super) first: Option<AccessMilestone>,
+}
+
+impl AccessObserver {
+    pub(super) fn observe(&mut self, world: &World, recording: &Recording, event: &ActionEvent) {
+        let index = world.index(self.goal).expect("validated access goal");
+        if self.first.is_none() && world.open[index] {
+            let inventory = world.inventory();
+            self.first = Some(AccessMilestone {
+                tick: event.tick,
+                opportunity: recording.events.len() as u64,
+                worker: event.worker,
+                goal: self.goal,
+                digs: world.excavated,
+                disposed: inventory.disposed,
+                carried: inventory.carried,
+                loose: inventory.loose,
+                exit_distance: recording.exit_field[index].expect("open goal connected to exit"),
+            });
+        }
+    }
+
+    pub(super) fn summary(&self, world: &World) -> AccessSummary {
+        let index = world.index(self.goal).expect("validated access goal");
+        let structurally_accessible = world.open[index];
+        AccessSummary {
+            structurally_accessible,
+            first_access: self.first.clone(),
+            final_exit_distance: world.recording.exit_field[index],
+            observed_opportunities: world.recording.events.len() as u64,
+            deadline_censored: !structurally_accessible,
+        }
+    }
+}
+
+/// Run the complete budget and observe structural access after each committed action.
+pub fn run_access_episode(
+    config: AccessConfig,
+    seed: u64,
+    options: RunOptions,
+) -> Result<AccessEpisode, Vec<FieldError>> {
+    if !matches!(config.lab.fixture, Fixture::Growing { .. }) {
+        return Err(vec![FieldError::new(
+            "lab.fixture",
+            "resource access requires a growing fixture",
+        )]);
+    }
+    let mut world = World::new(config.lab.clone(), seed)?;
+    install_goal_state(&mut world, &config.task)?;
+    let observer = AccessObserver {
+        goal: config.task.goal,
+        first: None,
+    };
+    let (episode, access, task_diagnostics) = run_world(world, seed, options, Some(observer))?;
+    let mut task_assumptions = vec![
+        "Access is structural for the present four-neighbor mover, ignoring transient occupancy; no realized consumer use or resource collection is measured.".into(),
+        "First access is observed after a committed action; the full requested budget continues after access.".into(),
+        "Task completion records consume one logical record per completion_observations entry, separately from base Episode storage; task checks and weight evaluations are separate from base BFS metrics.".into(),
+    ];
+    match config.task.objective {
+        AccessObjective::Explore => task_assumptions.push("Explore is observer-only: workers receive no task coordinate or completion signal.".into()),
+        AccessObjective::KnownGoal => task_assumptions.extend([
+            "KnownGoal workers receive the supplied goal coordinate; this is benchmark knowledge rather than resource discovery.".into(),
+            "Manhattan weighting is a supplied coordinate heuristic, not a physical signal or navigable route.".into(),
+            "Completion memory is private and local: each worker latches only its own ordinary open-cell observation.".into(),
+            "Reproducing KnownGoal requires the outer AccessConfig; the nested Episode lab config alone is insufficient.".into(),
+        ]),
+    }
+    Ok(AccessEpisode {
+        config,
+        episode,
+        access: access.expect("access observer produces summary"),
+        task_assumptions,
+        task_diagnostics,
+    })
 }
