@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Status: implementation plan and design approved 2026-10-04; implementation and independent reviews complete; integration awaits the user's choice. Scientific registration/execution remain unchanged. This builds engineering examples; it does not define or execute a scientific campaign.
+- Status: implementation plan and design approved 2026-10-04; implementation and independent reviews complete; integration into `main` is complete at `6076aed`. Scientific registration/execution remain unchanged. This builds engineering examples; it does not define or execute a scientific campaign.
 - Public fixtures are growing only; every task field is explicit, enum strings snake_case, unknown fields rejected. Goal starts in-bounds, solid and diggable; goal weight is positive and checked with cue weights and cell counts.
 - Reuse four-neighbor physics, capacity-one carrying, capacity-two occupancy, identical action prices and spoil histories; no food ledger, collection, reward optimizer or blueprint.
 - KnownGoal knows one supplied coordinate and its own local observations. Completion latches privately before decision, including loaded turns. No global completion signal, communicated discovery or hidden frontier.
@@ -310,5 +310,22 @@ All three task reviews and the whole-branch review are approved: Tasks 1, 2 and 
 commits, plus the full `f31c14f..eea12eb` review. The generated/saved-record validation wording is
 clarified in the design. Existing WASM packaging repository/license metadata INFO notices remain
 nonblocking. The accepted checks and counts, including the complete failed-run and isolated-rerun
-evidence above, are unchanged. No merge, push or scientific execution occurred; integration awaits
-the user's choice.
+evidence above, are unchanged. No merge, push or scientific execution occurred during implementation/review; user-authorized integration into `main` subsequently completed at `6076aed`.
+
+
+### Verified integration into main
+
+The user authorized local merge on 2026-10-04. `main` had advanced to `82753fb` with Democratic Peace publication/integration work. `git pull --ff-only` reported up to date; `git merge --no-edit burrow-resource-access` merged reviewed head `cbfbe5e` without conflicts at `6076aed`. The CLI and WASM auto-merge hunks preserve both lines of work.
+
+Fresh checks on the merged runtime exited zero:
+
+| Check | Result | Evidence |
+|---|---|---|
+| `cargo test --workspace` | 2205 passed, 0 failed, 103 existing ignored | `/tmp/burrow-access-merge-workspace.log` |
+| `cargo test --manifest-path survey/Cargo.toml` | 248 passed, 0 failed | `/tmp/burrow-access-merge-survey.log` |
+| `cargo fmt --all -- --check` | passed | direct command output, empty |
+| `cargo fmt --manifest-path survey/Cargo.toml -- --check` | passed | direct command output, empty |
+| `npm run build` in web | fresh merged WASM, type checking and Vite build passed | `/tmp/burrow-access-merge-web-build.log` |
+| `npm test` in web | 1030 passed across 70 files | `/tmp/burrow-access-merge-web-tests.log` |
+
+Heavy checks ran sequentially to avoid the contention observed during implementation. The post-merge bookkeeping changes only documentation; the verified runtime is unchanged. No push or Burrow scientific campaign was performed. The resource-access branch/worktree can be removed after this verified integration; other sessions' worktrees remain outside cleanup scope.

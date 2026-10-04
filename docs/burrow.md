@@ -6,7 +6,7 @@ learning, chamber counts, coordination or comparative success. A judged campaign
 separately reviewed protocol and manifest. See the [approved design](superpowers/specs/2026-10-03-burrow-1-excavation-design.md)
 and [research programme](studies/2026-10-03-cultures-construction-and-underworlds.md). The [measured protocol and candidate manifest](superpowers/specs/2026-10-04-burrow-1-measured-protocol.md)
 and [resource-access design](superpowers/specs/2026-10-04-burrow-2-resource-access-design.md) were approved on 2026-10-04.
-Their engineering implementations are complete; resource-access integration awaits the user's choice. Scientific registration and execution remain separate.
+Their engineering implementations are complete; resource-access integration into `main` is complete at `6076aed`. Scientific registration and execution remain separate.
 
 Run an acceptance demonstration from the repository root, using an absent or empty directory:
 
@@ -235,4 +235,7 @@ fields. Native/WASM parity compares every outer field for both policies at seeds
 examples and deterministic replays, without a preferred outcome or scientific treatment claim.
 
 
-Engineering review closure: Task and whole-branch reviews approved against `eea12eb`. Review checked generation/export only; saved-access validation remains outside this increment. Existing WASM packaging INFO notices are nonblocking. Resource-access integration awaits the user's choice.
+Engineering review closure: Task and whole-branch reviews approved against `eea12eb`. Review checked generation/export only; saved-access validation remains outside this increment. Existing WASM packaging INFO notices are nonblocking. Resource-access integration into `main` is complete at `6076aed`.
+
+
+Resource access merged into `main` at `6076aed` after user authorization. Fresh merged checks passed: 2205 workspace tests (103 existing ignored), 248 survey tests and 1030 web tests; both format checks and the rebuilt WASM/typechecked browser build passed. Complete commands and evidence are in the [integration closure](superpowers/plans/2026-10-04-burrow-2-resource-access.md#verified-integration-into-main). Burrow scientific registration/execution remain separate.
