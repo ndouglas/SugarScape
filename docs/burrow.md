@@ -63,7 +63,11 @@ do not consume random draws. Repeating a config, seed, ticks and sample interval
 
 The WASM function `burrow_replay_json(config_json, seed, ticks, sample_every)` returns the same
 serialized core episode. Its seed argument must contain only decimal digits and fit a `u64`;
-negative, floating point and overflow strings are rejected. Errors follow the existing boundary
+negative, floating point and overflow strings are rejected. Ticks and sampling are checked as
+finite integer JavaScript numbers before unsigned conversion: ticks must be in `0..=4294967295`,
+and sampling in `1..=4294967295`. Fractional, negative, nonfinite and out-of-range values are
+rejected with the corresponding field; core opportunity and ASCII limits still apply to valid
+integers. Errors follow the existing boundary
 contract: JSON strings of `[{"field":"...","message":"..."}]`. Full-record parity checks
 cover all four examples at seeds `7` and `18446744073709551615` without adding web controls.
 

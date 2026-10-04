@@ -443,8 +443,13 @@ pub struct BurrowArgs {
 // WASM uses the existing strict decimal_seed and field_errors helpers.
 #[wasm_bindgen]
 pub fn burrow_replay_json(config_json: &str, seed: &str,
-    ticks: u32, sample_every: u32) -> Result<String, JsValue>;
+    ticks: f64, sample_every: f64) -> Result<String, JsValue>;
 ```
+
+Final-review amendment: the WASM adapter accepts the original JavaScript numbers and requires
+finite integers in `0..=u32::MAX` for ticks and `1..=u32::MAX` for sampling before converting to
+core `RunOptions`. Invalid values return contextual `field_errors`; core opportunity and ASCII
+limits still apply. This prevents the original `u32` ABI from silently truncating or wrapping inputs.
 
 Validate config before writing; create absent output directories, accept empty directories, reject
 nonempty directories and paths that are files. Return existing I/O failure code 1 and validation
