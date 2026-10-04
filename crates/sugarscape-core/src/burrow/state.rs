@@ -81,8 +81,6 @@ pub(crate) struct Worker {
     pub id: u32,
     pub pos: Pos,
     pub carried: Option<u64>,
-    // Reserved for local frontier persistence in stage two.
-    #[allow(dead_code)]
     pub target: Option<Pos>,
     pub loaded_moves: u32,
 }
@@ -103,8 +101,6 @@ pub(crate) struct Unit {
 
 #[derive(Clone, Debug)]
 pub struct World {
-    // Used by the stage-two controller and stage-three seeded runner.
-    #[allow(dead_code)]
     pub(super) config: LabConfig,
     pub(super) setup: Setup,
     pub(super) tick: u64,

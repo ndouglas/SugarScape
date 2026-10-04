@@ -12,7 +12,7 @@ Detailed plan: [Burrow 1](docs/superpowers/plans/2026-10-03-burrow-1-excavation.
 **Goal**: Compare direct/relay transport and cue-blind/responsive local decisions.
 **Success Criteria**: Local sensing, exact choice weights, freshness and relay legs pass.
 **Tests**: cargo test -p sugarscape-core burrow::tests::controller
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 3: Deterministic episodes and accounting
 **Goal**: Execute worker opportunities and export replay, work and censored delivery records.
