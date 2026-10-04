@@ -1,7 +1,7 @@
 # Burrow 2 resource access design
 
 **Date:** 2026-10-04
-**Status:** architectural design approved by the user on 2026-10-04; [implementation plan](../plans/2026-10-04-burrow-2-resource-access.md) awaiting review. No runtime changes or scientific execution have occurred.
+**Status:** architectural design approved by the user on 2026-10-04; [implementation plan](../plans/2026-10-04-burrow-2-resource-access.md) approved 2026-10-04; execution has not started. No runtime changes or scientific execution have occurred.
 **Baseline:** [implemented Burrow 1](2026-10-03-burrow-1-excavation-design.md).
 **Programme:** [collective construction B3](../../studies/2026-10-03-cultures-construction-and-underworlds.md#b3-add-inhabitation-and-competing-functions).
 **Parallel study:** [Burrow 1 protocol draft](2026-10-04-burrow-1-measured-protocol.md).

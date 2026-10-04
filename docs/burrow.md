@@ -153,7 +153,7 @@ Implement and review the harness first, then resource access in a separate branc
 
 ## Measured archive and saved analysis
 
-The engineering harness is implemented on the measured-harness branch; fresh branch review remains the next gate. The candidate stays unregistered and scientific execution is not authorized. `survey --burrow` prints the pinned full manifest without simulating. The construction route uses only seeds 7 and 8, all 18 declared corridor conditions and 512 opportunities per episode. Saved analysis never steps the engine.
+The engineering harness is implemented on the measured-harness branch and has passed fresh task and whole-branch reviews; integration awaits the user’s decision. The candidate stays unregistered and scientific execution is not authorized. `survey --burrow` prints the pinned full manifest without simulating. The construction route uses only seeds 7 and 8, all 18 declared corridor conditions and 512 opportunities per episode. Saved analysis never steps the engine.
 
 The following commands were exercised from a clean committed tree. They create new directories exclusively; use different destinations when repeating them:
 

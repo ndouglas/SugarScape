@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Status: implementation plan approved 2026-10-04; engineering implementation and acceptance complete; controller-owned fresh branch review pending. Protocol design approved 2026-10-04. Scientific execution and executable registration remain separately gated.
+- Status: implementation plan approved 2026-10-04; engineering implementation, acceptance and independent task/whole-branch reviews complete; integration decision pending. Protocol design approved 2026-10-04. Scientific execution and executable registration remain separately gated.
 - Scientific seeds: decimal strings 10001–10040; construction seeds: 7 and 8. Never execute scientific seeds during implementation, tests or acceptance.
 - Exactly 32 scientific conditions / 1280 episodes; 18 construction conditions / 36 episodes. Growing scientific denominator 4096; corridor construction denominator 512; choice denominator zero.
 - Exactly six primary estimates: three signed contrasts × two rates. No overall Holds/Fails verdict, tuning, selected subset, sample-fit band or animal calibration claim.
@@ -284,7 +284,7 @@ Write canonical pretty `analysis.json` and `results.md` exclusively into a new d
 
 - [x] **Step 4: Verify engineering acceptance and update docs.** Run `cargo test --manifest-path survey/Cargo.toml`, `cargo test --workspace`, `cargo fmt --all -- --check`, `cargo fmt --manifest-path survey/Cargo.toml -- --check`, `cargo clippy --all-targets -- -D warnings` and `cargo clippy --manifest-path survey/Cargo.toml --all-targets -- -D warnings`. Use construction-only archive CLI on a clean committed tree, analyze twice into separate new `/tmp` directories and compare bytes with `cmp`. Malformed archive analysis must leave no results. Do not run a scientific campaign to produce a demonstration report. Update docs with exact CLI commands, unregistered gate, physical-validator limits, archive schema and separate registration/execution prerequisites. Record actual checks and review rulings here; remove root tracker when complete.
 
-- [ ] **Step 5: Commit and request whole-branch review.** Commit `feat(survey): report saved burrow contrasts and censored material histories` with report, routing and docs files. A fresh reviewer checks spec coverage, key/hash validation, all six contrasts, reductions, censoring and absence of scientific execution. Fix reviewed defects with tests and separate commits. Offer the completed engineering branch for review; do not merge/push/run the scientific matrix without the corresponding user authorization.
+- [x] **Step 5: Commit and request whole-branch review.** Commit `feat(survey): report saved burrow contrasts and censored material histories` with report, routing and docs files. A fresh reviewer checks spec coverage, key/hash validation, all six contrasts, reductions, censoring and absence of scientific execution. Fix reviewed defects with tests and separate commits. Offer the completed engineering branch for review; do not merge/push/run the scientific matrix without the corresponding user authorization.
 
 ## Self-review and next gate
 
@@ -381,3 +381,11 @@ Acceptance hashes and paths (`/tmp/burrow-task4-acceptance.json` is the operatio
 Physical reconstruction authenticates action legality and derived material/work quantities. It does not replay stochastic controller policy, RNG continuation or controller search counters; fingerprints are retained state identifiers, and code provenance plus unchanged engine regressions support policy fidelity. Reports retain zero/null rates, delivered-only means with denominators/censor counts, terminal carried/loose histories, opportunity-index versus tick clocks, observed loose waiting, conditional carrier distributions, duplicates and supplied mirrored-choice probabilities. Population strata remain separate, and redundant interaction is explicitly secondary. Supplied exit navigation, tick freshness, seeded geometry and descriptive interval limitations are fixed report assumptions. One-cell construction evidence is not a repeated-production throughput benchmark.
 
 No known functional blocker remains. Controller/root will conduct fresh reviews and record subsequent rulings here. After harness branch review, executable registration requires a separate reviewed committed amendment; scientific execution then requires separate authorization. Resource-access work remains a separate branch and does not depend on scientific outcomes.
+
+## Independent review closure
+
+Tasks 1–4 passed fresh spec-compliance and code-quality reviews. The whole implementation (`aff7283` through `e08f0b0`) received a merge-ready technical verdict with no Critical or Important findings. The formatting/documentation cleanup at `d88a88e` passed a fresh scoped re-review, ten focused report tests, both formatting checks and survey clippy with warnings denied. Fresh saved reanalysis preserved both accepted output hashes. Broad checks remain 2111 workspace tests and 234 survey tests passed, with 102 preexisting ignored workspace tests; the final cleanup changed whitespace and documentation only.
+
+Ruling: Leave the nonblocking table phrase “Ruling below” as a recorded documentation nit — the actual build-attestation ruling is immediately above and uniquely named — if wrong, readers may experience minor navigation ambiguity; no runtime or evidence behavior depends on the pointer.
+
+All rulings remain recorded here. The root implementation tracker is removed. The engineering branch awaits the user's integration decision; no merge, push, scientific registration or scientific seed execution has occurred. Resource-access implementation remains the next separately approved plan.

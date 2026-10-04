@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Status: implementation plan awaiting review; design approved 2026-10-04. This builds engineering examples; it does not define or execute a scientific campaign.
+- Status: implementation plan and design approved 2026-10-04; execution not started. This builds engineering examples; it does not define or execute a scientific campaign.
 - Public fixtures are growing only; every task field is explicit, enum strings snake_case, unknown fields rejected. Goal starts in-bounds, solid and diggable; goal weight is positive and checked with cue weights and cell counts.
 - Reuse four-neighbor physics, capacity-one carrying, capacity-two occupancy, identical action prices and spoil histories; no food ledger, collection, reward optimizer or blueprint.
 - KnownGoal knows one supplied coordinate and its own local observations. Completion latches privately before decision, including loaded turns. No global completion signal, communicated discovery or hidden frontier.
