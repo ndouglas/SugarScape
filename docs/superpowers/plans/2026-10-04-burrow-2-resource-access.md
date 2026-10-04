@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Status: implementation plan and design approved 2026-10-04; implementation complete pending branch review. Scientific registration/execution remain unchanged. This builds engineering examples; it does not define or execute a scientific campaign.
+- Status: implementation plan and design approved 2026-10-04; implementation and independent reviews complete; integration awaits the user's choice. Scientific registration/execution remain unchanged. This builds engineering examples; it does not define or execute a scientific campaign.
 - Public fixtures are growing only; every task field is explicit, enum strings snake_case, unknown fields rejected. Goal starts in-bounds, solid and diggable; goal weight is positive and checked with cue weights and cell counts.
 - Reuse four-neighbor physics, capacity-one carrying, capacity-two occupancy, identical action prices and spoil histories; no food ledger, collection, reward optimizer or blueprint.
 - KnownGoal knows one supplied coordinate and its own local observations. Completion latches privately before decision, including loaded turns. No global completion signal, communicated discovery or hidden frontier.
@@ -197,7 +197,7 @@ Examples contain every LabConfig field, growing41×25/workers8/direct/blind/fres
 
 - [x] **Step 4: Verify and record acceptance.** Run `cargo test --workspace`, `cargo test --manifest-path survey/Cargo.toml`, `cargo fmt --all -- --check`, `cargo fmt --manifest-path survey/Cargo.toml -- --check`, `cargo clippy --all-targets -- -D warnings`, `cargo clippy --manifest-path survey/Cargo.toml --all-targets -- -D warnings` and `wasm-pack test --node crates/sugarscape-wasm`. From web run `npm test`, `npm run typecheck`, `npm run build` after regenerated WASM; inspect complete parity fields for both policies/full-width seeds. Run both 512-tick seed-7 example exports twice into new temporary directories and compare outer Episode JSON byte-for-byte within each policy. Inspect maps and material/access summaries without a preferred result or required success. Verify legacy CLI and WASM regression tests remain unchanged and pass. Update docs with checked commands, structural definition, supplied-information caveat, censoring, private latch and separate task storage. Record actual evidence and rulings here; remove completed execution tracker.
 
-- [ ] **Step 5: Commit and final review.** Commit `feat(burrow): expose checked resource-access replays across native and wasm` with listed adapter/tests/examples/docs. Fresh whole-branch reviewer checks local information, no duplicate controller loop, optional hashing compatibility, event-time measurements, numeric boundary checks and regression evidence. Fix defects with tests and separate commits. Present branch for user review; merge/push only on authorization. No scientific treatment report is produced.
+- [x] **Step 5: Commit and final review.** Commit `feat(burrow): expose checked resource-access replays across native and wasm` with listed adapter/tests/examples/docs. Fresh whole-branch reviewer checks local information, no duplicate controller loop, optional hashing compatibility, event-time measurements, numeric boundary checks and regression evidence. Fix defects with tests and separate commits. Present branch for user review; merge/push only on authorization. No scientific treatment report is produced.
 
 ## Self-review and next gate
 
@@ -208,10 +208,11 @@ After plan review execute with the user's standing subagent-driven preference. A
 
 ## Engineering closure
 
-The three implementation stages are complete pending Task 3 and whole-branch review. Task 1
-was reviewed at `35da8fd`; Task 2 was reviewed at `e6f4067`. This increment implements checked
-resource-access core records and thin native/WASM exports. It does not register or execute a
-scientific campaign. The programme pointers and ontology evidence boundaries remain in place.
+The three implementation stages and independent reviews are complete. Task 1 was reviewed at
+`35da8fd`, Task 2 at `e6f4067`, Task 3 at `eea12eb`, and the whole branch from `f31c14f`
+through `eea12eb` was approved. This increment implements checked resource-access core records
+and thin native/WASM exports. It does not register or execute a scientific campaign. The programme
+pointers and ontology evidence boundaries remain in place.
 
 ### Recorded rulings and costs
 
@@ -224,6 +225,10 @@ Ruling: Reject unknown coordinate keys inside AccessTask.goal using a private st
 Ruling: Add seed:u64 as an explicit private run_world parameter instead of a World field — episode assembly needs original seed provenance, which the proposed host signature omitted; public wrappers already have it, and approved spec does not bind that private signature — cost if wrong: private interface differs from plan; exact Explore/full-width seed replay tests must demonstrate unchanged public behavior.
 
 Ruling: Reuse serde.workspace=true directly in sugarscape-cli for the specified typed AccessExportSummary serializer; add CLI Cargo.toml and consequent Cargo.lock edge to Task 3 file map — no new library/version is introduced, but the CLI needs an explicit existing serializer dependency — cost if wrong: one additional direct dependency edge; existing transitive crate versions and runtime scope stay unchanged.
+
+Ruling: Generated AccessEpisode records guarantee config.lab == episode.config; saved access-record ingestion/validation is outside this approved export increment, and the design must explicitly distinguish serde parsing from validation — the approved public interfaces and plan contain no AccessEpisode validator route, while generated equality is constructed and tested — cost if wrong: imported or tampered access records remain unvalidated until a dedicated ingestion increment.
+
+Ruling: Accept final-review declined items 2–4 as outside this engineering increment: (2) biological validity, treatment efficacy and a new ontology-source audit remain scientific work; (3) extraction, embodiment, communication, learning, culture, institutions and Minds/Hornvale integration remain future increments; (4) scientific registration, authorization, execution and inference retain their separate gate — approved scope is checked structural generation/export with evidence boundaries — cost if wrong: empirical adequacy remains unestablished, the future mechanisms remain unimplemented here, and no scientific results are available.
 
 
 ### Boundary RED/GREEN and accepted checks
@@ -301,7 +306,9 @@ web Burrow parity tests and WASM regression tests were left unchanged.
 
 ### Execution tracker and review gate
 
-All three stages passed their acceptance checks. Stage 3 was updated to Complete and the root
-execution tracker removed as required. Native CLI/WASM regressions remain unchanged and pass;
-full web acceptance passed in the isolated run. Task 3 and whole-branch independent review are
-next, followed by user branch review. No merge or push occurred.
+All three task reviews and the whole-branch review are approved: Tasks 1, 2 and 3 at their recorded
+commits, plus the full `f31c14f..eea12eb` review. The generated/saved-record validation wording is
+clarified in the design. Existing WASM packaging repository/license metadata INFO notices remain
+nonblocking. The accepted checks and counts, including the complete failed-run and isolated-rerun
+evidence above, are unchanged. No merge, push or scientific execution occurred; integration awaits
+the user's choice.

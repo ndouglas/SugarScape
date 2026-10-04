@@ -1,7 +1,7 @@
 # Burrow 2 resource access design
 
 **Date:** 2026-10-04
-**Status:** architectural design approved by the user on 2026-10-04; [implementation plan](../plans/2026-10-04-burrow-2-resource-access.md) approved 2026-10-04; implementation is complete pending branch review. The checked core and native/WASM exports are implemented; scientific execution remains unchanged and has not occurred.
+**Status:** architectural design approved by the user on 2026-10-04; [implementation plan](../plans/2026-10-04-burrow-2-resource-access.md) approved 2026-10-04; implementation and independent task/whole-branch reviews are complete; integration awaits the user's choice. The checked core and native/WASM exports are implemented; scientific execution remains unchanged and has not occurred.
 **Baseline:** [implemented Burrow 1](2026-10-03-burrow-1-excavation-design.md).
 **Programme:** [collective construction B3](../../studies/2026-10-03-cultures-construction-and-underworlds.md#b3-add-inhabitation-and-competing-functions).
 **Parallel study:** [Burrow 1 protocol draft](2026-10-04-burrow-1-measured-protocol.md).
@@ -119,7 +119,7 @@ pub struct AccessEpisode {
 }
 ```
 
-The outer access configuration is necessary to reproduce goal-guided runs; the nested lab config alone is insufficient. Validators require `config.lab == episode.config`. Whole-record native/WASM comparisons use the outer record. Labels state supplied coordinates, the local completion latch, the heuristic and structural rather than realized consumer access.
+The outer access configuration is necessary to reproduce goal-guided runs; the nested lab config alone is insufficient. Generated records guarantee `config.lab == episode.config`, and tests assert that equality. This increment provides no saved AccessEpisode ingestion or validation API. Deserialization alone does not validate a saved record's physical state, task history or provenance; any future saved-access validator must check outer/nested configuration equality. Whole-record native/WASM comparisons use the outer record. Labels state supplied coordinates, the local completion latch, the heuristic and structural rather than realized consumer access.
 
 Task diagnostics retain one first local completion observation per worker, with worker ID, tick and committed-opportunity count before the observation. Also count known-goal completion checks and frontier weight evaluations as separate deterministic computation proxies. These diagnostics consume no RNG and provide no information to another worker. Completion-observation records are bounded by worker count; account for their logical storage separately. Explore has no completion latch/check/evaluation work, so its nested base record remains unchanged.
 
@@ -155,6 +155,6 @@ Run relevant core/CLI/parity checks and existing regressions after an approved s
 
 ## Research sequence and remaining questions
 
-The design and implementation plan were approved and the engineering implementation is complete pending branch review. The Burrow 1 archive/analysis harness has engineering acceptance. Neither track depends on scientific treatment outcomes, and neither should tune against them.
+The design and implementation plan were approved and the engineering implementation and independent task/whole-branch reviews are complete; integration awaits the user's choice. The Burrow 1 archive/analysis harness has engineering acceptance. Neither track depends on scientific treatment outcomes, and neither should tune against them.
 
 After resource access works, Burrow 2B can add actual extraction and delivery, accounting for finite resources and shared hands, and then ask who benefits. Later distinguish supplied destination knowledge from locally discovered resources, add physical signals or practices with appropriate source support, vary body and substrate, and preserve/repair layouts across cohorts. That creates the route toward differentiated homes, storage, fortifications, neighborhoods and inherited underworlds without crediting supplied goals or labels as emergent culture.

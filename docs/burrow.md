@@ -6,7 +6,7 @@ learning, chamber counts, coordination or comparative success. A judged campaign
 separately reviewed protocol and manifest. See the [approved design](superpowers/specs/2026-10-03-burrow-1-excavation-design.md)
 and [research programme](studies/2026-10-03-cultures-construction-and-underworlds.md). The [measured protocol and candidate manifest](superpowers/specs/2026-10-04-burrow-1-measured-protocol.md)
 and [resource-access design](superpowers/specs/2026-10-04-burrow-2-resource-access-design.md) were approved on 2026-10-04.
-Their engineering implementations are complete; resource access awaits branch review. Scientific registration and execution remain separate.
+Their engineering implementations are complete; resource-access integration awaits the user's choice. Scientific registration and execution remain separate.
 
 Run an acceptance demonstration from the repository root, using an absent or empty directory:
 
@@ -147,7 +147,7 @@ The measured-study protocol and resource-access design were approved on 2026-10-
 1. [Measured archive and analysis harness](superpowers/plans/2026-10-04-burrow-1-measured-harness.md): physical transaction validation, complete manifest, immutable raw archives and saved-only descriptive analysis. Engineering acceptance uses construction seeds; scientific registration and execution remain separate.
 2. [Resource access](superpowers/plans/2026-10-04-burrow-2-resource-access.md): private local goal guidance, event-time structural access and checked CLI/WASM exports, preserving ordinary excavation replay bytes.
 
-The harness is merged and resource access is implemented in a separate branch pending review. Neither implementation depends on inspecting scientific treatment outcomes.
+The measured harness is merged and resource access is implemented in a separate branch. Neither implementation depends on inspecting scientific treatment outcomes.
 
 
 ## Measured archive and saved analysis
@@ -233,3 +233,6 @@ Malformed JSON errors use `burrow_access_config`; semantic errors retain their c
 fields. Native/WASM parity compares every outer field for both policies at seeds `7` and
 `18446744073709551615`, ticks 16 and sampling four. The 512-tick seed-seven scenes are acceptance
 examples and deterministic replays, without a preferred outcome or scientific treatment claim.
+
+
+Engineering review closure: Task and whole-branch reviews approved against `eea12eb`. Review checked generation/export only; saved-access validation remains outside this increment. Existing WASM packaging INFO notices are nonblocking. Resource-access integration awaits the user's choice.
