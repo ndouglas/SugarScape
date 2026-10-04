@@ -46,12 +46,12 @@ export function democraticPeaceParams(params: Param[]): Param[] {
 
 export function democraticPeaceLegend(config: DemocraticPeaceConfig, mode: ColorMode, periods: number): string {
   const meaning: Partial<Record<ColorMode, string>> = {
-    territory: 'Colors identify sovereign ownership; capitals are marked',
-    governing_regime: 'Regime of the current sovereign capital: democratic or predatory',
-    latent_regime: 'Cell regime tag used on independence; occupation can have a different governing regime',
-    resources: 'Current state resources; zero is a valid quantity',
-    alliances: 'Defensive alliance members share a named threat; pooled deterrence is distinct from combat commitments',
-    pariahs: 'Pariahs identified from democratic–predatory conflict under the selected observation reading',
+    territory: 'Ownership: varied hues = sovereign ownership (hues can repeat; Inspect identifies the state); white marks = capitals',
+    governing_regime: 'Regime of the current sovereign capital: teal = democratic; coral = predatory',
+    latent_regime: 'Cell regime tag used on independence: teal = democratic; coral = predatory; occupation can have a different governing regime',
+    resources: 'Current state resources: dark blue = 0; bright green = 100 or more; intermediate shades show values between 0 and 100',
+    alliances: 'Alliances: varied hues = defensive alliance membership by shared named threat (hues can repeat; Inspect identifies the alliance); gray = unaligned; pooled deterrence is distinct from combat commitments',
+    pariahs: 'Pariahs: red = pariah; muted gray-teal = unmarked; identified from democratic–predatory conflict under the selected observation reading',
   };
   return `${periods} of ${config.horizon_periods} source periods · ${config.periods_per_tick} periods/tick · Cederman 2001 · ${config.mechanism} · ${config.probability_direction} · ${meaning[mode] ?? meaning.territory}`;
 }
