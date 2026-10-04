@@ -2,6 +2,7 @@ mod agreement;
 mod ants;
 mod auctions;
 mod bali;
+pub(crate) mod burrow;
 mod ch2;
 mod ch3;
 mod ch4;
@@ -90,3 +91,7 @@ pub fn all() -> Vec<Claim> {
     .flatten()
     .collect()
 }
+
+#[cfg(test)]
+#[path = "burrow_tests.rs"]
+mod burrow_tests;

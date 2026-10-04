@@ -12,7 +12,7 @@ Plan: docs/superpowers/plans/2026-10-04-burrow-1-measured-harness.md
 **Goal**: Strict full candidate identity and default manifest-only survey route.
 **Success Criteria**: 1280 scientific keys and 36 construction keys, explicit parameters, no implicit execution.
 **Tests**: `cargo test --manifest-path survey/Cargo.toml burrow_manifest`
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 3: Archive immutable raw episodes
 **Goal**: Exclusive provenance/hash-bound writes and strict complete-archive loading.
