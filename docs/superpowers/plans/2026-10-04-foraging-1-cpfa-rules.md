@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Status: written spec approved by the user on 2026-10-04; implementation plan approved by the user on 2026-10-04. Standing execution method: subagent-driven development. Scientific registration/execution remain separate.
+- Status: written spec approved by the user on 2026-10-04; implementation plan approved by the user on 2026-10-04. Implementation and independent reviews complete; integration into `main` remains pending. Execution method: subagent-driven development. Scientific registration/execution remain separate.
 - Implement F1 only. F2 world reconstruction, F3 passages, F4 excavation and F5 termite comparisons retain their own design gates.
 - Seven parameters are explicit; no claimed evolved defaults. Probabilities are finite in `[0,1]`; `omega` is finite in `[0,4*pi]`; decay rates are finite and nonnegative.
 - Counts are integers from 0 through 256; fidelity/publication rates are finite in `[0,256]`. These are supplied reference-utility bounds, not biological limits.
@@ -248,9 +248,9 @@ git diff --check
 
 Commands shown together are separate verification actions, not a shell script to add to the repository. Run them sequentially to avoid contention. Check local Markdown targets and source-scope assertions: Cargo manifests/lockfile, existing Burrow runtime, CLI/WASM and browser files must have no changes. No web rebuild/survey/ARGoS run is needed for a core-only rule addition unless an observed change/failure gives a specific reason. Record test counts, revisions, commands and actual outcomes; do not reuse Burrow's earlier numbers as F1 evidence.
 
-- [ ] **Step 4: Finish tracker and commit.** Mark stages complete only when tests and task reviews pass, extract rulings/evidence into this durable plan, then remove `IMPLEMENTATION_PLAN.md`. Stage the listed acceptance/documentation files and commit `docs(foraging): document verified CPFA rule reference and next world gate`. Documentation-only changes after passing checks do not require repeating runtime tests; verify their diff/links.
+- [x] **Step 4: Finish tracker and commit.** Mark stages complete only when tests and task reviews pass, extract rulings/evidence into this durable plan, then remove `IMPLEMENTATION_PLAN.md`. Stage the listed acceptance/documentation files and commit `docs(foraging): document verified CPFA rule reference and next world gate`. Documentation-only changes after passing checks do not require repeating runtime tests; verify their diff/links.
 
-- [ ] **Step 5: Whole-branch review and handoff.** Request an independent whole-branch review against the spec, source audit and plan. Resolve findings with scoped fixes and appropriate reruns. Report the actual final revision, checks, source variants, material rulings and limits. Preserve the branch/worktree for user integration choice; neither merge/push nor scientific execution is part of this plan's implementation acceptance.
+- [x] **Step 5: Whole-branch review and handoff.** Request an independent whole-branch review against the spec, source audit and plan. Resolve findings with scoped fixes and appropriate reruns. Report the actual final revision, checks, source variants, material rulings and limits. Preserve the branch/worktree for user integration choice; neither merge/push nor scientific execution is part of this plan's implementation acceptance.
 
 ## Plan self-review and execution gate
 
@@ -265,4 +265,23 @@ Starting revision `72e851b` provides independently approved Tasks 1–2. Public 
 
 Final-source acceptance: `cargo test -p sugarscape-core --test foraging_reference` (3 passed), `cargo test -p sugarscape-core foraging::` (27 passed), `cargo test -p sugarscape-core burrow::` (102 passed), `cargo test --workspace` (2,236 passed, 103 ignored, 0 failed across 36 test-result groups, including doc tests), `cargo fmt --all -- --check`, `cargo clippy -p sugarscape-core --all-targets -- -D warnings`, and `git diff --check` all exited 0. Local Markdown targets resolved. Source-scope inspection found no Cargo manifest/lockfile, existing Burrow runtime, CLI/WASM or browser changes.
 
-Controller ruling: retain `IMPLEMENTATION_PLAN.md` through task and whole-branch review; Stage 3 remains In Progress. Controller owns final review closure and tracker removal. Steps 4–5 stay pending until those reviews pass. Implementation is awaiting final review, not yet integrated into `main`; no merge, push or scientific execution occurred. The lower-tail/prose discrepancy, supplied engineering bounds, paper/later-source threshold distinction and uniform/later-source selection distinction remain documented. F2 must reconcile historical simulator provenance and world conventions before implementation; F3–F5 and scientific gates remain separate.
+At Task 3 acceptance, the controller retained `IMPLEMENTATION_PLAN.md` through task and whole-branch review and kept Stage 3 In Progress pending those verdicts. The review closure below records their subsequent approval and tracker removal. Integration into `main` remains pending; no merge, push or scientific execution occurred. The lower-tail/prose discrepancy, supplied engineering bounds, paper/later-source threshold distinction and uniform/later-source selection distinction remain documented. F2 must reconcile historical simulator provenance and world conventions before implementation; F3–F5 and scientific gates remain separate.
+
+
+## Independent review and final acceptance closure (2026-10-04)
+
+The branch started from main at `2fbdffb`. Execution setup was committed as `54de455`; Task 1 as `0271a5b`, Task 2 as `72e851b`, and Task 3 as `0f286fe`. Fresh task reviewers approved both spec compliance and quality for all three tasks. All cannot-verify items were resolved against earlier review/source evidence, actual final-source logs and changed-path/link inspection.
+
+Whole-branch review at `0f286fe` returned Ready to merge: Yes, with no Critical/Important findings. Its one code-related minor was a monotonicity-test tolerance mismatch with the plan. Commit `ea3ae98` tightened only the three monotonicity comparisons from `1e-12` to `1e-14`; independent numerical fixture tolerances remain `1e-12`. Scoped re-review confirmed the finding ADDRESSED with no new breakage or out-of-scope observations. The Task 2 verification-scheduling minor was closed by final review: successful source-final checks and subsequent sequential acceptance establish no verification gap.
+
+Final acceptance on `ea3ae98`: `cargo test -p sugarscape-core foraging::tests::rules` passed 14 tests; `cargo test --workspace` passed 2236, failed 0, with 103 existing ignored across 36 result groups; `cargo fmt --all -- --check` and `cargo clippy -p sugarscape-core --all-targets -- -D warnings` exited 0. Task 3 additionally verified 3 public integration tests, 27 foraging tests, 102 Burrow tests and a compiled rustdoc example. Controller checked all 59 local Markdown targets and the branch's allowed changed paths. Final correction logs and review reports were retained locally in `/tmp/foraging-f1-evidence-20261004/`; Task 3 command logs remain `/tmp/f1-task3-*.log`. These local files are supplemental; this section is the durable acceptance record.
+
+After all reviews passed, the execution tracker was removed and statuses updated in a documentation-only closure. No production/runtime/test changes followed the accepted correction. The branch/worktree are preserved for the user's integration choice; no merge, push or scientific registration/run occurred.
+
+### Rulings made during execution
+
+Ruling: Implement the draw-validation helper in Task 2 at its first production use rather than leaving it unused in Task 1 — preserves clean clippy without temporary dead-code allowances — cost if wrong: small helper relocation during review.
+
+Ruling: Keep IMPLEMENTATION_PLAN.md until task and final reviews pass, then remove it in a documentation-only closure commit — completion must reflect actual acceptance rather than anticipate the reviewer — cost if wrong: an additional bookkeeping commit.
+
+Final review set aside historical/full-model reproduction, F2 world/server lifecycle, F3–F5 scientific outcomes and cross-platform bit identity because the approved F1 design explicitly excludes them. They remain future design/research questions, not unsupported F1 completion claims. The next design is F2 fixed-world reconstruction with reconciled movement, timing, sensing and scoring conventions.

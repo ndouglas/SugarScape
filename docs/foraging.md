@@ -1,6 +1,6 @@
 # CPFA rule reference (F1)
 
-The public `sugarscape_core::foraging` module verifies stateless rules from Hecker and Moses (2015). Engineering acceptance is awaiting task and whole-branch review; this work is not yet integrated into `main`. F1 neither simulates foraging nor reproduces evolved performance. It supplies no world, heading sampler, scheduler, food ledger or waypoint server.
+The public `sugarscape_core::foraging` module verifies stateless rules from Hecker and Moses (2015). Engineering implementation and independent task/whole-branch reviews are complete; this work is not yet integrated into `main`. F1 neither simulates foraging nor reproduces evolved performance. It supplies no world, heading sampler, scheduler, food ledger or waypoint server.
 
 See the [source audit](studies/2026-10-04-foraging-construction-reading.md), [approved design](superpowers/specs/2026-10-04-foraging-construction-design.md) and [approved implementation plan](superpowers/plans/2026-10-04-foraging-1-cpfa-rules.md) for provenance and acceptance evidence. The later ARGoS source was inspected, not copied, built or run. Its inspected revision is `18fc0d9813e37bcc01c54ec9896435f1038f4295`; it is not established as the simulator behind the 2015 results.
 
