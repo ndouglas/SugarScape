@@ -1,8 +1,8 @@
 //! Decisions use owned local observations, never world or material provenance.
 
 use super::{
-    observation::BfsStats, state::Worker, Action, Cue, ExitNeighbor, LabConfig, Observation,
-    ObservedCell, Pos, Transport,
+    access::GoalGuidance, observation::BfsStats, state::Worker, Action, Cue, ExitNeighbor,
+    LabConfig, Observation, ObservedCell, Pos, Transport,
 };
 use crate::rng::SimRng;
 use rand::Rng;
@@ -45,6 +45,18 @@ pub(crate) fn target_weight(c: &LabConfig, count: u32) -> u32 {
     }
 }
 
+pub(super) fn goal_factor(g: Option<GoalGuidance>, worker: Pos, target: Pos) -> u32 {
+    let Some(g) = g else {
+        return 1;
+    };
+    let distance = |p: Pos| u64::from(p.x.abs_diff(g.goal.x)) + u64::from(p.y.abs_diff(g.goal.y));
+    if !g.seen_open && distance(target) < distance(worker) {
+        g.weight
+    } else {
+        1
+    }
+}
+
 pub(crate) fn select_ticket(weights: &[u32], mut ticket: u64) -> usize {
     for (index, &weight) in weights.iter().enumerate() {
         if ticket < u64::from(weight) {
@@ -80,7 +92,21 @@ pub(crate) fn decide_measured(
     outward: &[ExitNeighbor],
     rng: &mut SimRng,
 ) -> (Decision, BfsStats) {
+    let (decision, stats, _) = decide_with_goal_measured(o, w, c, at_exit, outward, None, rng);
+    (decision, stats)
+}
+
+pub(super) fn decide_with_goal_measured(
+    o: &Observation,
+    w: &WorkerView,
+    c: &LabConfig,
+    at_exit: bool,
+    outward: &[ExitNeighbor],
+    goal: Option<GoalGuidance>,
+    rng: &mut SimRng,
+) -> (Decision, BfsStats, u64) {
     let mut stats = BfsStats::default();
+    let mut goal_weight_evaluations = 0;
     let finish = |action, target, selected| Decision {
         action,
         target,
@@ -99,14 +125,18 @@ pub(crate) fn decide_measured(
                 Action::Move(available[rng.gen_range(0..available.len() as u32) as usize].pos)
             }
         };
-        return (finish(action, None, None), stats);
+        return (finish(action, None, None), stats, goal_weight_evaluations);
     }
     if o.open
         .iter()
         .any(|cell| cell.pos == w.pos && cell.loose > 0)
         && rng.gen_bool(0.5)
     {
-        return (finish(Action::Pickup, w.target, None), stats);
+        return (
+            finish(Action::Pickup, w.target, None),
+            stats,
+            goal_weight_evaluations,
+        );
     }
     let (reachable, search) = routes(o, w.pos, false);
     stats.include(search);
@@ -140,7 +170,12 @@ pub(crate) fn decide_measured(
                         .filter(|cell| adjacent(cell.pos, target))
                         .map(|cell| u64::from(cell.recent))
                         .sum();
+                    if goal.is_some() {
+                        goal_weight_evaluations += 1;
+                    }
                     target_weight(c, count.min(u64::from(u32::MAX)) as u32)
+                        .checked_mul(goal_factor(goal, w.pos, target))
+                        .expect("validated cue times goal weight")
                 })
                 .collect();
             let total: u64 = weights.iter().map(|&weight| u64::from(weight)).sum();
@@ -150,7 +185,11 @@ pub(crate) fn decide_measured(
         });
     if let Some(target) = target {
         if adjacent(w.pos, target) {
-            return (finish(Action::Dig(target), None, selected), stats);
+            return (
+                finish(Action::Dig(target), None, selected),
+                stats,
+                goal_weight_evaluations,
+            );
         }
         let (legal, search) = routes(o, w.pos, true);
         stats.include(search);
@@ -166,6 +205,7 @@ pub(crate) fn decide_measured(
                 selected,
             ),
             stats,
+            goal_weight_evaluations,
         );
     }
     let neighbors: Vec<_> = o
@@ -178,7 +218,7 @@ pub(crate) fn decide_measured(
     } else {
         Action::Move(neighbors[rng.gen_range(0..neighbors.len() as u32) as usize].pos)
     };
-    (finish(action, None, None), stats)
+    (finish(action, None, None), stats, goal_weight_evaluations)
 }
 
 struct Route {

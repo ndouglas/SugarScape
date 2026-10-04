@@ -4,7 +4,7 @@
 **Goal**: Implement task configuration, checked weights and private completion memory.
 **Success Criteria**: Invalid tasks fail; no completion broadcast; legacy fingerprints and decisions preserved.
 **Tests**: Access validation/tickets/latches, retained targets and Burrow regression tests.
-**Status**: Not Started
+**Status**: Complete
 
 ## Stage 2: Shared runner and event-time access
 **Goal**: Record structural milestones and censoring through the existing action loop.

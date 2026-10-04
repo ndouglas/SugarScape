@@ -1,11 +1,12 @@
 //! Sequential seeded opportunities and deterministic replay diagnostics.
 
 use super::{
-    controller::decide_measured,
+    access::GoalGuidance,
+    controller::{decide_measured, decide_with_goal_measured},
     ledger::Ledger,
     observation::{exit_distances_measured, observe_measured, BfsStats},
-    view, Action, ActionEvent, Delivery, ExitNeighbor, Fixture, Inventory, LabConfig, Outcome, Pos,
-    Setup, WorkerView, World,
+    view, Action, ActionEvent, Delivery, ExitNeighbor, Fixture, GoalObservation, Inventory,
+    LabConfig, Outcome, Pos, Setup, WorkerView, World,
 };
 use crate::config::FieldError;
 use rand::seq::SliceRandom;
@@ -279,6 +280,31 @@ impl World {
     fn worker_opportunity(&mut self, id: u32, recording: &mut Recording) {
         recording.ensure_exit_field(self);
         let (observation, stats) = observe_measured(self, id);
+        let goal = self.goal_state.as_mut().map(|state| {
+            state.diagnostics.local_completion_checks += 1;
+            let seen_open = &mut state.seen_open[id as usize];
+            if !*seen_open
+                && observation
+                    .open
+                    .iter()
+                    .any(|cell| cell.pos == state.task.goal)
+            {
+                *seen_open = true;
+                state
+                    .diagnostics
+                    .completion_observations
+                    .push(GoalObservation {
+                        tick: self.tick,
+                        opportunities_before: recording.events.len() as u64,
+                        worker: id,
+                    });
+            }
+            GoalGuidance {
+                goal: state.task.goal,
+                weight: state.task.goal_weight,
+                seen_open: *seen_open,
+            }
+        });
         recording.observation_stats.include(stats);
         recording.peak_observation_cells = recording
             .peak_observation_cells
@@ -301,14 +327,32 @@ impl World {
                 })
             })
             .collect();
-        let (decision, stats) = decide_measured(
-            &observation,
-            &worker,
-            &self.config,
-            worker.pos == self.setup.exit,
-            &outward,
-            &mut self.rng,
-        );
+        let (decision, stats) = if let Some(goal) = goal {
+            let (decision, stats, evaluated) = decide_with_goal_measured(
+                &observation,
+                &worker,
+                &self.config,
+                worker.pos == self.setup.exit,
+                &outward,
+                Some(goal),
+                &mut self.rng,
+            );
+            self.goal_state
+                .as_mut()
+                .unwrap()
+                .diagnostics
+                .goal_weight_evaluations += evaluated;
+            (decision, stats)
+        } else {
+            decide_measured(
+                &observation,
+                &worker,
+                &self.config,
+                worker.pos == self.setup.exit,
+                &outward,
+                &mut self.rng,
+            )
+        };
         recording.controller_stats.include(stats);
         self.workers[id as usize].target = decision.target;
         if let Some(target) = decision.selected {

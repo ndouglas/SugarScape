@@ -101,6 +101,7 @@ pub(crate) struct Unit {
 
 #[derive(Clone, Debug)]
 pub struct World {
+    pub(super) goal_state: Option<super::access::GoalState>,
     pub(super) config: LabConfig,
     pub(super) setup: Setup,
     pub(super) tick: u64,
@@ -265,6 +266,7 @@ impl World {
             })
             .collect();
         let mut world = Self {
+            goal_state: None,
             config,
             tick: setup.start_tick,
             setup,

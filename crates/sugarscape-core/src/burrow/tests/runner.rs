@@ -391,3 +391,50 @@ fn public_step_and_replay_have_identical_state_without_sampling_side_effects() {
     assert_eq!(e.events, w.recording.events);
     assert_eq!(e.final_summary, w.snapshot());
 }
+
+#[test]
+fn legacy_seed_seven_fingerprints_remain_unchanged() {
+    let cases = [
+        (
+            LabConfig::default(),
+            vec![
+                "ffd1c042eeec3490",
+                "262dc74c70c7697b",
+                "1669e2a3d6d86c01",
+                "1c3417eab5b56e8c",
+                "29dae4f7d2f50b0d",
+            ],
+        ),
+        (
+            corridor(),
+            vec![
+                "2b5b1e03fe6f4044",
+                "da06e0422beace6e",
+                "26181f66e34f4a35",
+                "3c7a8ceeb44e6652",
+                "a2054777a5ebad24",
+            ],
+        ),
+        (
+            LabConfig {
+                fixture: Fixture::Choice {
+                    side: Side::Left,
+                    pile: Pile::OldAccumulation,
+                },
+                ..Default::default()
+            },
+            vec!["0617e012fdbb8e5d", "7e4551a4c30d9f93"],
+        ),
+    ];
+    for (config, expected) in cases {
+        let e = run_episode(config, 7, options(16, 4)).unwrap();
+        assert_eq!(
+            e.frames
+                .iter()
+                .map(|f| f.fingerprint.as_str())
+                .collect::<Vec<_>>(),
+            expected
+        );
+        validate_episode(&e, &options(16, 4)).unwrap();
+    }
+}

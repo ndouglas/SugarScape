@@ -124,6 +124,15 @@ impl World {
                 eat(u64::from(workers));
             }
         }
+        if let Some(state) = &self.goal_state {
+            eat(1); // Explicit KnownGoal discriminant; absent tasks add no bytes.
+            eat(pos(state.task.goal));
+            eat(u64::from(state.task.goal_weight));
+            eat(state.seen_open.len() as u64);
+            for &seen_open in &state.seen_open {
+                eat(u64::from(seen_open));
+            }
+        }
         eat(u64::from(self.setup.width));
         eat(u64::from(self.setup.height));
         eat(pos(self.setup.exit));
