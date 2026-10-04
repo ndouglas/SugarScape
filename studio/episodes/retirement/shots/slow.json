@@ -1,0 +1,37 @@
+{
+  "config": {
+    "counts": "eligible",
+    "eligibility": 65,
+    "extent": 5,
+    "groups": {
+      "coupling": 0.1,
+      "enabled": false
+    },
+    "initial_deaths": "literal",
+    "mandatory": 0,
+    "model": "retirement",
+    "norm": 0.95,
+    "order": "by_cohort",
+    "p": 0.5,
+    "per_cohort": 100,
+    "policy": {
+      "enabled": false,
+      "to": 62
+    },
+    "random": 0.05,
+    "rational": 0.05,
+    "renewal": "slot",
+    "size": {
+      "max": 25,
+      "min": 10
+    },
+    "spread": 0.0,
+    "stop_at": 0,
+    "stop_at_norm": false,
+    "threshold": 0.5
+  },
+  "every": 5,
+  "gifts": false,
+  "seed": 3020,
+  "ticks": 120
+}

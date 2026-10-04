@@ -4,6 +4,7 @@ the beat's timing, the agents' tracks, the board's corners and the close-up
 rigs. Screen-space things hang from `Screen` anchors, whose units are half
 the frame's width, so they keep their size on screen as the lens changes."""
 
+from .retirement import retirement_population, retirement_panel, retirement_closing
 from .farol import farol_stage, farol_panel
 from .ants import ants_stage, ants_panel
 from .caption import caption_scene
@@ -26,11 +27,14 @@ __all__ = ["BUILDERS", "SCREEN", "Screen", "caption_scene"]
 
 
 # The overlays drawn in screen space (on `Screen` anchors).
-SCREEN = {"farol-stage", "farol-panel", "ants-panel", "ants-stage", "thresholds-panel", "thresholds-comparison", "thresholds-neighborhood", "season-card", "counter", "hills", "alike", "survival", "bars", "dials", "histogram", "wealth",
+SCREEN = {"retirement-population", "retirement-panel", "farol-stage", "farol-panel", "ants-panel", "ants-stage", "thresholds-panel", "thresholds-comparison", "thresholds-neighborhood", "season-card", "counter", "hills", "alike", "survival", "bars", "dials", "histogram", "wealth",
           "census", "prices", "kills", "ladder", "sick", "popchart", "ledger", "helpers", "earnings", "tally", "kinds", "legend", "rate", "generation", "mean-traits", "payoff", "paper", "figure", "diagram", "agreement-diagram", "agreement-pair", "agreement-cutoff", "agreement-results", "agreement-markers", "agreement-comparison", "agreement-horizon"}
 
 
 BUILDERS = {
+    "retirement-population": retirement_population,
+    "retirement-panel": retirement_panel,
+    "retirement-closing": retirement_closing,
     "farol-stage": farol_stage,
     "farol-panel": farol_panel,
     "ants-stage": ants_stage,

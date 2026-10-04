@@ -18,5 +18,6 @@ pub use presets::presets;
 pub use stats::{RetirementSnapshot, AGES_WINDOW, SERIES};
 pub use view::{population, row, AGES_W, GAP, ROW, SHOWN, TALL, TIME_W};
 pub use world::{
-    AgentView, Kind, RetirementCell, RetirementInspection, RetirementMode, RetirementWorld,
+    AgentView, DecisionNeighbor, Kind, RetirementCell, RetirementDecision, RetirementInspection,
+    RetirementMode, RetirementPeriod, RetirementWorld,
 };

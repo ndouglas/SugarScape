@@ -77,6 +77,50 @@ impl std::str::FromStr for RetirementMode {
     }
 }
 
+/// One neighbor at the actual activation-local decision time.
+#[derive(Clone, Debug, Serialize)]
+pub struct DecisionNeighbor {
+    pub id: u32,
+    pub born: i64,
+    pub age: u32,
+    pub eligible: bool,
+    pub retired: bool,
+    pub counted: bool,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct RetirementDecision {
+    pub tick: u64,
+    pub id: u32,
+    pub born: i64,
+    pub age: u32,
+    pub eligibility: u32,
+    pub counts: Counts,
+    pub threshold_units: u64,
+    pub threshold_scale: u64,
+    pub neighbors: Vec<DecisionNeighbor>,
+    pub counted: u64,
+    pub retired_counted: u64,
+    pub retired_before: bool,
+    pub retired_after: bool,
+}
+
+/// Compact measurements; age-array index zero is age 20, last is age 100.
+#[derive(Clone, Debug, Serialize)]
+pub struct RetirementPeriod {
+    pub tick: u64,
+    pub eligibility: u32,
+    pub decision_eligibility: u32,
+    pub policy_switched: bool,
+    pub retirements_by_age: Vec<u32>,
+    pub working_exposure_by_age: Vec<u32>,
+    pub retired: f64,
+    pub retired_a: f64,
+    pub retired_b: f64,
+    pub imitator_retirements: u32,
+    pub decision: Option<RetirementDecision>,
+}
+
 /// What Inspect shows for a cell.
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct RetirementInspection {
@@ -387,6 +431,70 @@ impl RetirementWorld {
     }
 
     pub fn step(&mut self) {
+        self.advance(false);
+    }
+
+    pub fn step_recorded(&mut self, teaching: bool) -> RetirementPeriod {
+        self.advance(teaching)
+    }
+
+    pub fn initial_period(&self) -> RetirementPeriod {
+        let latest = self.stats.latest().expect("initial statistics");
+        RetirementPeriod {
+            tick: self.tick,
+            eligibility: self.eligibility,
+            decision_eligibility: self.eligibility,
+            policy_switched: false,
+            retirements_by_age: vec![0; COHORTS as usize],
+            working_exposure_by_age: vec![0; COHORTS as usize],
+            retired: latest.retired,
+            retired_a: latest.retired_a,
+            retired_b: latest.retired_b,
+            imitator_retirements: 0,
+            decision: None,
+        }
+    }
+
+    fn decision(&self, i: usize) -> RetirementDecision {
+        let a = &self.agents[i];
+        let neighbors: Vec<_> = a
+            .network
+            .iter()
+            .map(|&id| {
+                let m = &self.agents[id as usize];
+                let age = self.age(id as usize);
+                let eligible = age >= self.eligibility;
+                DecisionNeighbor {
+                    id,
+                    born: m.born,
+                    age,
+                    eligible,
+                    retired: m.retired,
+                    counted: self.config.counts == Counts::All || eligible,
+                }
+            })
+            .collect();
+        RetirementDecision {
+            tick: self.tick,
+            id: i as u32,
+            born: a.born,
+            age: self.age(i),
+            eligibility: self.eligibility,
+            counts: self.config.counts,
+            threshold_units: a.threshold,
+            threshold_scale: SCALE,
+            counted: neighbors.iter().filter(|m| m.counted).count() as u64,
+            retired_counted: neighbors.iter().filter(|m| m.counted && m.retired).count() as u64,
+            neighbors,
+            retired_before: a.retired,
+            retired_after: a.retired,
+        }
+    }
+
+    fn advance(&mut self, teaching: bool) -> RetirementPeriod {
+        let decision_eligibility = self.eligibility;
+        let mut decision: Option<RetirementDecision> = None;
+        let mut imitator_retirements = 0;
         self.tick += 1;
         let n = self.agents.len();
         let mut order: Vec<u32> = (0..n as u32).collect();
@@ -415,6 +523,9 @@ impl RetirementWorld {
             let c = &self.config;
             if c.mandatory > 0 && age >= c.mandatory {
                 exposed[(age - YOUNGEST) as usize] += 1;
+                if self.agents[i].kind == Kind::Imitator {
+                    imitator_retirements += 1;
+                }
                 self.retire(i, age, &mut retirements);
                 continue;
             }
@@ -422,19 +533,37 @@ impl RetirementWorld {
                 continue;
             }
             exposed[(age - YOUNGEST) as usize] += 1;
+            let capture = teaching
+                && self.agents[i].kind == Kind::Imitator
+                && decision.as_ref().is_none_or(|d| d.counted == 0);
+            if capture
+                && (decision.is_none()
+                    || self.agents[i].network.iter().any(|&m| {
+                        self.config.counts == Counts::All
+                            || self.age(m as usize) >= self.eligibility
+                    }))
+            {
+                decision = Some(self.decision(i));
+            }
             let go = match self.agents[i].kind {
                 Kind::Rational => true,
                 Kind::Random => self.rng.gen::<f64>() < self.config.p,
                 Kind::Imitator => self.imitates(i),
             };
             if go {
+                if self.agents[i].kind == Kind::Imitator {
+                    imitator_retirements += 1;
+                }
                 self.retire(i, age, &mut retirements);
+            }
+            if let Some(d) = decision.as_mut().filter(|d| d.id == i as u32) {
+                d.retired_after = self.agents[i].retired;
             }
         }
         if self.ages.len() == AGES_WINDOW {
             self.ages.pop_front();
         }
-        self.ages.push_back((retirements, exposed));
+        self.ages.push_back((retirements.clone(), exposed.clone()));
         let share = self.share(None);
         if self.config.groups.enabled && self.switched_at.is_none() {
             for g in 0..2u8 {
@@ -467,6 +596,20 @@ impl RetirementWorld {
         }
         self.remember(switched);
         self.record();
+        let latest = self.stats.latest().unwrap();
+        RetirementPeriod {
+            tick: self.tick,
+            eligibility: self.eligibility,
+            decision_eligibility,
+            policy_switched: switched,
+            retirements_by_age: retirements,
+            working_exposure_by_age: exposed,
+            retired: latest.retired,
+            retired_a: latest.retired_a,
+            retired_b: latest.retired_b,
+            imitator_retirements,
+            decision,
+        }
     }
 
     pub fn run(&mut self, ticks: u32) {
@@ -1372,5 +1515,99 @@ mod tests {
             let mut buf = Vec::new();
             w.render("status", "", &mut buf).unwrap();
         }
+    }
+    #[test]
+    fn recorded_decision_uses_activation_local_ages_and_exact_equality() {
+        let mut w = world(|c| {
+            c.per_cohort = 1;
+            c.rational = 0.0;
+            c.random = 0.0;
+        });
+        // Oldest surviving slot activates first; its younger neighbors have not aged.
+        for a in &mut w.agents {
+            a.death = 101.0;
+            a.network.clear();
+        }
+        w.known_by.iter_mut().for_each(Vec::clear);
+        w.agents[79].network = vec![45, 46];
+        w.agents[79].threshold = 500_000;
+        w.agents[45].retired = true;
+        let p = w.step_recorded(true);
+        assert_eq!(
+            (
+                p.retirements_by_age[80],
+                p.working_exposure_by_age[80],
+                p.imitator_retirements
+            ),
+            (1, 1, 1)
+        );
+        let d = p.decision.unwrap();
+        assert_eq!((d.id, d.age, d.counted, d.retired_counted), (79, 100, 2, 1));
+        assert_eq!(
+            d.neighbors.iter().map(|m| m.age).collect::<Vec<_>>(),
+            vec![65, 66]
+        );
+        assert!(!d.retired_before && d.retired_after);
+    }
+
+    #[test]
+    fn recorded_empty_denominator_never_retires_and_capture_does_not_change_rng() {
+        let mut w = world(|c| {
+            c.per_cohort = 1;
+            c.rational = 0.0;
+            c.random = 0.0;
+        });
+        for a in &mut w.agents {
+            a.network.clear();
+            a.threshold = 0;
+        }
+        let mut plain = w.clone();
+        let p = w.step_recorded(true);
+        plain.step();
+        let d = p.decision.unwrap();
+        assert_eq!(d.counted, 0);
+        assert!(!d.retired_after);
+        for _ in 0..20 {
+            w.step_recorded(true);
+            plain.step();
+        }
+        assert_eq!(w.fingerprint(), plain.fingerprint());
+        assert_eq!(
+            serde_json::to_value(w.stats.history()).unwrap(),
+            serde_json::to_value(plain.stats.history()).unwrap()
+        );
+    }
+    #[test]
+    fn policy_export_timing_matches_audit_live_toggle_without_resetting_dynamics() {
+        let c = config(|c| {
+            c.per_cohort = 1;
+            c.mandatory = 70;
+        });
+        let mut live = RetirementWorld::new(c.clone(), 1).unwrap();
+        let mut audit = live.clone();
+        for _ in 0..100 {
+            live.step();
+            audit.step();
+        }
+        let mut next = live.config.clone();
+        next.policy.enabled = true;
+        live.set_config(ModelConfig::Retirement(next)).unwrap();
+        audit.config.policy.enabled = true;
+        for _ in 0..101 {
+            live.step_recorded(true);
+            audit.step();
+        }
+        assert_eq!(live.fingerprint(), audit.fingerprint());
+        assert_eq!(live.latest_json(), audit.latest_json());
+    }
+
+    #[test]
+    fn teaching_without_any_eligible_imitator_is_null() {
+        let mut w = world(|c| {
+            c.per_cohort = 1;
+            c.rational = 1.0;
+            c.random = 0.0;
+        });
+        assert!(w.step_recorded(true).decision.is_none());
     }
 }

@@ -1,7 +1,7 @@
 # Following the Crowd: the third Flump series
 
 **Date:** 2026-09-29
-**Status:** in progress. Episodes 1–9 are built; episode 10, "When to retire," is next.
+**Status:** in progress. Episodes 1–10 are built with verified previews; episode 10, "When to retire," was accepted by the user on October 4. Episode 11, the finale, is next.
 **Follows:** the Sugarscape series (`2026-09-26-sugarscape-series-plan.md`) and the Cooperation series
 (`2026-09-27-cooperation-series-plan.md`), both complete, and keeps their rules.
 
@@ -42,7 +42,7 @@ which the user is doing separately.
 | 7 | The riot that needs one person ✅ | Granovetter 1978; Watts 2002 | `thresholds` | One threshold decides the riot; cascades on networks |
 | 8 | Ants at two food piles ✅ | Kirman 1993; Alfarano & Milaković 2007 | `ants` | Asymmetric crowds can flip; 80–20 is not a preferred split in the base chain |
 | 9 | Nobody goes, it's too crowded ✅ | Arthur 1994; Challet & Zhang 1997 | `farol` | Coordination without communication |
-| 10 | When to retire | Axtell & Epstein 1999 | `retirement` | Retirement spreads through networks; aggregate crossings and age norms differ, with source-specific policy thresholds and reconstruction-dependent denominator effects |
+| 10 | When to retire ✅ | Axtell & Epstein 1999 | `retirement` | Retirement spreads through networks; aggregate crossings and age norms differ, with source-specific policy thresholds and reconstruction-dependent denominator effects |
 | 11 | Finale | all | — | The ledger |
 
 Episodes 1–3 are Schelling's: his own rules first, as the default, then later researchers' versions as named variations (see `2026-09-29-schelling-reading-notes.md`).

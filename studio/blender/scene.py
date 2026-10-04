@@ -211,6 +211,12 @@ def build_beat(beat, d, preview, compare=None, measured=None):
         timing = beat.timing(d.ticks)
         updaters.append(lattice_board.build(beat, d, timing))
         materials.lights_and_world(scene, max(d.width, d.height))
+    elif d is not None and d.model == "retirement":
+        # Its felt-stage rigs and batched distant population own every real slot. No generic
+        # tracks or thousands of individual crowd instances are constructed.
+        timing = beat.timing(d.ticks)
+        RIGS.clear()
+        materials.lights_and_world(scene, 12)
     elif d is not None:
         timing = beat.timing(d.ticks)
         if d.model == "ethno":

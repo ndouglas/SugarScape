@@ -69,6 +69,9 @@ pub struct Shot {
     /// updates, filmable); frames keep their true model clock.
     #[serde(default = "every_generation")]
     pub every: u32,
+    /// Enable retirement policy after this completed warm-up period.
+    #[serde(default)]
+    pub retirement_policy_at: Option<u32>,
 }
 
 fn every_generation() -> u32 {
@@ -891,6 +894,7 @@ pub enum Dump {
     Thresholds(Box<ThresholdsDump>),
     Ants(Box<AntsDump>),
     Farol(Box<FarolDump>),
+    Retirement(Box<RetirementDump>),
 }
 
 /// Runs `shot`, whatever its model.
@@ -898,7 +902,11 @@ pub fn run(shot: &Shot) -> Result<Dump, Vec<FieldError>> {
     let only = |field: &str, model: &str| {
         vec![FieldError::new(field, format!("is for {model} shots only"))]
     };
+    if shot.retirement_policy_at.is_some() && !matches!(shot.base()?, ModelConfig::Retirement(_)) {
+        return Err(only("retirement_policy_at", "retirement"));
+    }
     match shot.base()? {
+        ModelConfig::Retirement(_) => run_retirement(shot).map(|d| Dump::Retirement(Box::new(d))),
         ModelConfig::Sugarscape(_) => {
             if shot.every != 1 {
                 return Err(only("every", "norms"));
@@ -1181,6 +1189,149 @@ fn stats_every(model: &dyn Model, ticks: u32, every: u32) -> BTreeMap<String, Ve
             })
         })
         .collect()
+}
+
+/// All actual slots, including renewed agents and arbitrarily large current cohorts.
+#[derive(Clone, Debug, Serialize)]
+pub struct RetirementAgent {
+    pub id: u32,
+    pub born: i64,
+    pub age: u32,
+    pub kind: crate::retirement::Kind,
+    pub retired: bool,
+    pub retired_at: Option<u32>,
+    pub group: u8,
+    pub threshold_units: u64,
+    pub network: Vec<u32>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct RetirementFrame {
+    #[serde(flatten)]
+    pub period: crate::retirement::RetirementPeriod,
+    pub agents: Vec<RetirementAgent>,
+    pub cohort_counts: BTreeMap<u32, u32>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct RetirementDump {
+    pub format: u32,
+    pub model: &'static str,
+    pub seed: u64,
+    pub ticks: u32,
+    pub every: u32,
+    pub agents: usize,
+    pub config: ModelConfig,
+    pub retirement_policy_at: Option<u32>,
+    pub policy_switched_at: Option<u64>,
+    pub age_min: u32,
+    pub age_max: u32,
+    pub frames: Vec<RetirementFrame>,
+    pub periods: Vec<crate::retirement::RetirementPeriod>,
+    pub stats: BTreeMap<String, Vec<f64>>,
+}
+
+pub fn run_retirement(shot: &Shot) -> Result<RetirementDump, Vec<FieldError>> {
+    for (bad, field) in [
+        (!shot.place.is_empty(), "place"),
+        (shot.empty, "empty"),
+        (shot.cells.is_some(), "cells"),
+        (shot.scores, "scores"),
+    ] {
+        if bad {
+            return Err(vec![FieldError::new(field, "is not for retirement shots")]);
+        }
+    }
+    if shot.every == 0 || !shot.ticks.is_multiple_of(shot.every) {
+        return Err(vec![FieldError::new(
+            "every",
+            "must be at least 1 and divide ticks",
+        )]);
+    }
+    let config = shot.model_config()?;
+    let ModelConfig::Retirement(c) = &config else {
+        return Err(vec![FieldError::new("model", "not a retirement shot")]);
+    };
+    if let Some(at) = shot.retirement_policy_at {
+        if at == 0
+            || at >= shot.ticks
+            || c.policy.enabled
+            || c.stop_at_norm
+            || (c.stop_at > 0 && c.stop_at <= at)
+        {
+            return Err(vec![FieldError::new("retirement_policy_at",
+                "requires a positive period before the horizon, initial policy disabled and no earlier stopping")]);
+        }
+    }
+    let mut world = crate::retirement::RetirementWorld::new(c.clone(), shot.seed)?;
+    let frame = |w: &crate::retirement::RetirementWorld, period| {
+        let mut cohort_counts = BTreeMap::new();
+        let agents = w
+            .agents()
+            .iter()
+            .enumerate()
+            .map(|(i, a)| {
+                let age = w.age(i);
+                *cohort_counts.entry(age).or_insert(0) += 1;
+                RetirementAgent {
+                    id: i as u32,
+                    born: a.born,
+                    age,
+                    kind: a.kind,
+                    retired: a.retired,
+                    retired_at: a.retired_at,
+                    group: a.group,
+                    threshold_units: a.threshold,
+                    network: a.network.clone(),
+                }
+            })
+            .collect();
+        RetirementFrame {
+            period,
+            agents,
+            cohort_counts,
+        }
+    };
+    let mut periods = vec![world.initial_period()];
+    let mut frames = vec![frame(&world, periods[0].clone())];
+    let mut policy_switched_at = None;
+    for _ in 0..shot.ticks {
+        if world.is_finished() {
+            break;
+        }
+        let period = world.step_recorded(shot.gifts);
+        if period.policy_switched {
+            policy_switched_at = Some(period.tick);
+        }
+        if world.tick.is_multiple_of(u64::from(shot.every)) {
+            frames.push(frame(&world, period.clone()));
+        }
+        periods.push(period);
+        if shot.retirement_policy_at == Some(world.tick as u32) {
+            let mut next = world.config.clone();
+            next.policy.enabled = true;
+            world.set_config(ModelConfig::Retirement(next))?;
+        }
+    }
+    if frames.last().unwrap().period.tick != world.tick {
+        frames.push(frame(&world, periods.last().unwrap().clone()));
+    }
+    Ok(RetirementDump {
+        format: FORMAT,
+        model: "retirement",
+        seed: shot.seed,
+        ticks: (frames.len() - 1) as u32,
+        every: shot.every,
+        agents: world.agents().len(),
+        config,
+        retirement_policy_at: shot.retirement_policy_at,
+        policy_switched_at,
+        age_min: 20,
+        age_max: 100,
+        frames,
+        periods,
+        stats: stats_every(&world, world.tick as u32, 1),
+    })
 }
 
 /// One recorded period of bounded confidence: every agent's opinion.
@@ -3373,5 +3524,96 @@ mod tests {
             .strategies
             .iter()
             .all(|s| s.attend.is_none()));
+    }
+    #[test]
+    fn retirement_dump_preserves_every_slot_and_large_newborn_cohort() {
+        let shot = Shot::from_json(r#"{"config":{"model":"retirement"},"ticks":1}"#).unwrap();
+        let dump = serde_json::to_value(super::run(&shot).unwrap()).unwrap();
+        let frames = dump["frames"].as_array().unwrap();
+        assert_eq!(frames[0]["agents"].as_array().unwrap().len(), 8100);
+        assert_eq!(frames[0]["agents"][0]["id"], 0);
+        for frame in frames {
+            let members = frame["agents"].as_array().unwrap();
+            assert_eq!(members.len(), 8100);
+            for (id, a) in members.iter().enumerate() {
+                assert_eq!(a["id"], id as u64);
+            }
+            assert_eq!(
+                frame["cohort_counts"]
+                    .as_object()
+                    .unwrap()
+                    .values()
+                    .map(|v| v.as_u64().unwrap())
+                    .sum::<u64>(),
+                8100
+            );
+        }
+        assert_eq!(
+            frames[0]["retirements_by_age"].as_array().unwrap().len(),
+            81
+        );
+        assert!(frames[0]["working_exposure_by_age"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|v| v == 0));
+        assert_eq!(frames[0]["cohort_counts"]["100"], 100);
+        assert!(frames[1]["cohort_counts"]["20"].as_u64().unwrap() > 100);
+        assert_eq!(dump["periods"].as_array().unwrap().len(), 2);
+        assert!(frames[1]["agents"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|a| a["born"] == 1 && a["age"] == 20));
+    }
+    #[test]
+    fn retirement_policy_enables_after_warmup_and_switches_after_next_decisions() {
+        let shot = Shot::from_json(r#"{"config":{"model":"retirement","per_cohort":1,"rational":1,"random":0,"mandatory":70},"ticks":201,"every":201,"retirement_policy_at":100}"#).unwrap();
+        let Dump::Retirement(d) = super::run(&shot).unwrap() else {
+            panic!("retirement");
+        };
+        assert_eq!(d.policy_switched_at, Some(101));
+        assert_eq!(d.periods[100].eligibility, 65);
+        assert_eq!(
+            (
+                d.periods[101].decision_eligibility,
+                d.periods[101].eligibility
+            ),
+            (65, 62)
+        );
+        assert_eq!(d.periods[102].decision_eligibility, 62);
+        assert_eq!(d.frames.len(), 2);
+        assert_eq!(d.stats["eligibility"].len(), 202);
+        assert!(d.periods.iter().all(|p| p.decision.is_none()));
+    }
+
+    #[test]
+    fn retirement_policy_rejects_invalid_timelines_and_other_models() {
+        for json in [
+            r#"{"config":{"model":"retirement"},"ticks":10,"retirement_policy_at":0}"#,
+            r#"{"config":{"model":"retirement"},"ticks":10,"retirement_policy_at":10}"#,
+            r#"{"config":{"model":"retirement","policy":{"enabled":true,"to":62}},"ticks":10,"retirement_policy_at":5}"#,
+            r#"{"config":{"model":"opinions"},"ticks":10,"retirement_policy_at":5}"#,
+        ] {
+            let shot = Shot::from_json(json).unwrap();
+            assert!(super::run(&shot).is_err());
+        }
+    }
+    #[test]
+    fn retirement_early_stop_preserves_final_actual_population_without_duplicates() {
+        for (stop, expected) in [(3, vec![0, 3]), (10, vec![0, 10])] {
+            let shot=Shot::from_json(&format!(r#"{{"config":{{"model":"retirement","per_cohort":1,"stop_at":{stop}}},"ticks":10,"every":10}}"#)).unwrap();
+            let Dump::Retirement(d) = super::run(&shot).unwrap() else {
+                panic!("retirement");
+            };
+            assert_eq!(
+                d.frames.iter().map(|f| f.period.tick).collect::<Vec<_>>(),
+                expected
+            );
+            assert_eq!(d.ticks, 1);
+            assert_eq!(d.periods.len(), stop as usize + 1);
+            assert_eq!(d.frames.last().unwrap().agents.len(), 81);
+            assert_eq!(d.frames.last().unwrap().period.tick, stop as u64);
+        }
     }
 }
