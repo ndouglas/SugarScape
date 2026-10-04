@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Status: written spec approved by the user on 2026-10-04; implementation plan approved by the user on 2026-10-04. Implementation and independent reviews complete; integration into `main` remains pending. Execution method: subagent-driven development. Scientific registration/execution remain separate.
+- Status: written spec approved by the user on 2026-10-04; implementation plan approved by the user on 2026-10-04. Implementation and independent reviews complete; integration into `main` completed at `5819a04`. Execution method: subagent-driven development. Scientific registration/execution remain separate.
 - Implement F1 only. F2 world reconstruction, F3 passages, F4 excavation and F5 termite comparisons retain their own design gates.
 - Seven parameters are explicit; no claimed evolved defaults. Probabilities are finite in `[0,1]`; `omega` is finite in `[0,4*pi]`; decay rates are finite and nonnegative.
 - Counts are integers from 0 through 256; fidelity/publication rates are finite in `[0,256]`. These are supplied reference-utility bounds, not biological limits.
@@ -265,7 +265,7 @@ Starting revision `72e851b` provides independently approved Tasks 1–2. Public 
 
 Final-source acceptance: `cargo test -p sugarscape-core --test foraging_reference` (3 passed), `cargo test -p sugarscape-core foraging::` (27 passed), `cargo test -p sugarscape-core burrow::` (102 passed), `cargo test --workspace` (2,236 passed, 103 ignored, 0 failed across 36 test-result groups, including doc tests), `cargo fmt --all -- --check`, `cargo clippy -p sugarscape-core --all-targets -- -D warnings`, and `git diff --check` all exited 0. Local Markdown targets resolved. Source-scope inspection found no Cargo manifest/lockfile, existing Burrow runtime, CLI/WASM or browser changes.
 
-At Task 3 acceptance, the controller retained `IMPLEMENTATION_PLAN.md` through task and whole-branch review and kept Stage 3 In Progress pending those verdicts. The review closure below records their subsequent approval and tracker removal. Integration into `main` remains pending; no merge, push or scientific execution occurred. The lower-tail/prose discrepancy, supplied engineering bounds, paper/later-source threshold distinction and uniform/later-source selection distinction remain documented. F2 must reconcile historical simulator provenance and world conventions before implementation; F3–F5 and scientific gates remain separate.
+At Task 3 acceptance, the controller retained `IMPLEMENTATION_PLAN.md` through task and whole-branch review and kept Stage 3 In Progress pending those verdicts. The review closure below records their subsequent approval and tracker removal. At implementation acceptance no merge, push or scientific execution had occurred; verified main integration is recorded below. The lower-tail/prose discrepancy, supplied engineering bounds, paper/later-source threshold distinction and uniform/later-source selection distinction remain documented. F2 must reconcile historical simulator provenance and world conventions before implementation; F3–F5 and scientific gates remain separate.
 
 
 ## Independent review and final acceptance closure (2026-10-04)
@@ -276,7 +276,7 @@ Whole-branch review at `0f286fe` returned Ready to merge: Yes, with no Critical/
 
 Final acceptance on `ea3ae98`: `cargo test -p sugarscape-core foraging::tests::rules` passed 14 tests; `cargo test --workspace` passed 2236, failed 0, with 103 existing ignored across 36 result groups; `cargo fmt --all -- --check` and `cargo clippy -p sugarscape-core --all-targets -- -D warnings` exited 0. Task 3 additionally verified 3 public integration tests, 27 foraging tests, 102 Burrow tests and a compiled rustdoc example. Controller checked all 59 local Markdown targets and the branch's allowed changed paths. Final correction logs and review reports were retained locally in `/tmp/foraging-f1-evidence-20261004/`; Task 3 command logs remain `/tmp/f1-task3-*.log`. These local files are supplemental; this section is the durable acceptance record.
 
-After all reviews passed, the execution tracker was removed and statuses updated in a documentation-only closure. No production/runtime/test changes followed the accepted correction. The branch/worktree are preserved for the user's integration choice; no merge, push or scientific registration/run occurred.
+After all reviews passed, the execution tracker was removed and statuses updated in a documentation-only closure. No production/runtime/test changes followed the accepted correction. At that handoff the branch/worktree were preserved for the user's integration choice; no merge, push or scientific registration/run had occurred. The subsequent main integration is recorded below.
 
 ### Rulings made during execution
 
@@ -285,3 +285,16 @@ Ruling: Implement the draw-validation helper in Task 2 at its first production u
 Ruling: Keep IMPLEMENTATION_PLAN.md until task and final reviews pass, then remove it in a documentation-only closure commit — completion must reflect actual acceptance rather than anticipate the reviewer — cost if wrong: an additional bookkeeping commit.
 
 Final review set aside historical/full-model reproduction, F2 world/server lifecycle, F3–F5 scientific outcomes and cross-platform bit identity because the approved F1 design explicitly excludes them. They remain future design/research questions, not unsupported F1 completion claims. The next design is F2 fixed-world reconstruction with reconciled movement, timing, sensing and scoring conventions.
+
+
+## Verified integration into main (2026-10-04)
+
+After the user's explicit merge instruction, main at `2fbdffb` was up to date with its remote and fast-forwarded to reviewed branch tip `5819a04`. There were no conflicts or additional runtime changes.
+
+Fresh checks on the merged main checkout ran sequentially and exited 0:
+
+- `cargo test --workspace`: 2236 passed, 0 failed, 103 existing ignored across 36 result groups; `/tmp/foraging-f1-merge-workspace.log`.
+- `cargo fmt --all -- --check`: clean; `/tmp/foraging-f1-merge-fmt.log`.
+- `cargo clippy -p sugarscape-core --all-targets -- -D warnings`: passed; `/tmp/foraging-f1-merge-clippy.log`.
+
+Post-merge bookkeeping changes only documentation and preserves the verified runtime. The resource-access/Burrow and F2–F5 scientific gates remain unchanged. No push or scientific run occurred. Only the merged `foraging-1-cpfa-rules` branch/worktree is eligible for removal after these checks; sibling worktrees remain outside cleanup scope.
