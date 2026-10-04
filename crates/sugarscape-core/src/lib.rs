@@ -23,6 +23,7 @@ pub mod ethno;
 pub mod export;
 pub mod farol;
 pub mod firms;
+pub mod foraging;
 pub mod frames;
 pub mod geometry;
 pub mod graph;
