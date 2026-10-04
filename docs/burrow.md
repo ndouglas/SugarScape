@@ -139,3 +139,12 @@ is conservatively capped at 64 MiB before stepping or reserving replay storage. 
 otherwise `2 + floor(ticks / sample_every)`. The checked product must fit the cap. This can reject
 a request that would stop early or retain fewer frames; reduce requested ticks or increase the
 sample interval. These are lab resource limits, not physical calibration.
+
+## Approved designs and implementation sequence
+
+The measured-study protocol and resource-access design were approved on 2026-10-04. Their separate implementation plans await review:
+
+1. [Measured archive and analysis harness](superpowers/plans/2026-10-04-burrow-1-measured-harness.md): physical transaction validation, complete manifest, immutable raw archives and saved-only descriptive analysis. Engineering acceptance uses construction seeds; scientific registration and execution remain separate.
+2. [Resource access](superpowers/plans/2026-10-04-burrow-2-resource-access.md): private local goal guidance, event-time structural access and checked CLI/WASM exports, preserving ordinary excavation replay bytes.
+
+Implement and review the harness first, then resource access in a separate branch. Neither implementation depends on inspecting scientific treatment outcomes.

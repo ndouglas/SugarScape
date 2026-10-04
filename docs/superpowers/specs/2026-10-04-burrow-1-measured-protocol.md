@@ -1,7 +1,7 @@
 # Burrow 1 measured excavation protocol
 
 **Date:** 2026-10-04
-**Status:** proposed protocol and candidate manifest for review. Neither is registered or approved for execution. No campaign has run.
+**Status:** protocol design approved by the user on 2026-10-04; [implementation plan](../plans/2026-10-04-burrow-1-measured-harness.md) awaiting review. Candidate manifest remains unregistered; scientific execution is not authorized. No campaign has run.
 **Engine baseline:** `4ef7e5794fc12138cf7f112947e34666095f6131`.
 **Design:** [implemented excavation lab](2026-10-03-burrow-1-excavation-design.md).
 **Candidate manifest:** [fully specified conditions and seeds](2026-10-04-burrow-1-draft-manifest.json).
