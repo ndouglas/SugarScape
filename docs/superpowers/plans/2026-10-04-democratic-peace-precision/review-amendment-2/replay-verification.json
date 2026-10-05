@@ -1,0 +1,68 @@
+{
+  "manifest_sha256": "9fbbc2cf450aab310d46f645fc954c5a65233b5f515e782230f5752a3ea39e2a",
+  "target": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-amendment2-replay",
+  "commands": [
+    {
+      "checkpoint": 0,
+      "exit": 0,
+      "stdout": "Verified checkpoint 0/11: 7 product files and 1691 protected files, bytes and Git modes."
+    },
+    {
+      "checkpoint": 1,
+      "exit": 0,
+      "stdout": "Verified checkpoint 1/11: 8 product files and 1691 protected files, bytes and Git modes."
+    },
+    {
+      "checkpoint": 2,
+      "exit": 0,
+      "stdout": "Verified checkpoint 2/11: 13 product files and 1691 protected files, bytes and Git modes."
+    },
+    {
+      "checkpoint": 3,
+      "exit": 0,
+      "stdout": "Verified checkpoint 3/11: 13 product files and 1691 protected files, bytes and Git modes."
+    },
+    {
+      "checkpoint": 4,
+      "exit": 0,
+      "stdout": "Verified checkpoint 4/11: 13 product files and 1691 protected files, bytes and Git modes."
+    },
+    {
+      "checkpoint": 5,
+      "exit": 0,
+      "stdout": "Verified checkpoint 5/11: 15 product files and 1691 protected files, bytes and Git modes."
+    },
+    {
+      "checkpoint": 6,
+      "exit": 0,
+      "stdout": "Verified checkpoint 6/11: 22 product files and 1691 protected files, bytes and Git modes."
+    },
+    {
+      "checkpoint": 7,
+      "exit": 0,
+      "stdout": "Verified checkpoint 7/11: 22 product files and 1691 protected files, bytes and Git modes."
+    },
+    {
+      "checkpoint": 8,
+      "exit": 0,
+      "stdout": "Verified checkpoint 8/11: 23 product files and 1691 protected files, bytes and Git modes."
+    },
+    {
+      "checkpoint": 9,
+      "exit": 0,
+      "stdout": "Verified checkpoint 9/11: 24 product files and 1691 protected files, bytes and Git modes."
+    },
+    {
+      "checkpoint": 10,
+      "exit": 0,
+      "stdout": "Verified checkpoint 10/11: 25 product files and 1691 protected files, bytes and Git modes."
+    },
+    {
+      "checkpoint": 11,
+      "exit": 0,
+      "stdout": "Verified checkpoint 11/11: 26 product files and 1691 protected files, bytes and Git modes."
+    }
+  ],
+  "registered_histories": 0,
+  "protected_files": 1691
+}

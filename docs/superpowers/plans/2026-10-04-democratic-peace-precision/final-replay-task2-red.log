@@ -1,0 +1,72 @@
+..............E..EEFFFF.........................................
+======================================================================
+ERROR: test_followup_evidence (unittest.loader._FailedTest.test_followup_evidence)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_followup_evidence
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/loader.py", line 339, in _get_module_from_name
+    __import__(name)
+    ~~~~~~~~~~^^^^^^
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay/survey/democratic_peace/test_followup_evidence.py", line 9, in <module>
+    from survey.democratic_peace import followup, records, source, followup_runtime as runtime
+ImportError: cannot import name 'followup_runtime' from 'survey.democratic_peace' (unknown location)
+
+
+======================================================================
+ERROR: test_between_history_chunk_preserves_all_keys_and_pending_count (test_followup_runtime.CheckpointAndOutputTests.test_between_history_chunk_preserves_all_keys_and_pending_count)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay/survey/democratic_peace/test_followup_runtime.py", line 78, in test_between_history_chunk_preserves_all_keys_and_pending_count
+    from survey.democratic_peace.followup_run import batch_keys
+ModuleNotFoundError: No module named 'survey.democratic_peace.followup_run'
+
+======================================================================
+ERROR: test_existing_normative_alias_cannot_be_written_by_new_tools (test_followup_runtime.CheckpointAndOutputTests.test_existing_normative_alias_cannot_be_written_by_new_tools)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay/survey/democratic_peace/test_followup_runtime.py", line 91, in test_existing_normative_alias_cannot_be_written_by_new_tools
+    from survey.democratic_peace.followup_registration import new_outputs
+ModuleNotFoundError: No module named 'survey.democratic_peace.followup_registration'
+
+======================================================================
+FAIL: test_activation_rejects_self_review_mixed_identity_and_overbudget (test_followup_runtime.FollowupRuntimeTests.test_activation_rejects_self_review_mixed_identity_and_overbudget)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay/survey/democratic_peace/test_followup_runtime.py", line 12, in setUp
+    self.assertIsNotNone(runtime, 'prospective runtime gates are not implemented')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : prospective runtime gates are not implemented
+
+======================================================================
+FAIL: test_combined_forecast_counts_native_analysis_writer_and_double_factor (test_followup_runtime.FollowupRuntimeTests.test_combined_forecast_counts_native_analysis_writer_and_double_factor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay/survey/democratic_peace/test_followup_runtime.py", line 12, in setUp
+    self.assertIsNotNone(runtime, 'prospective runtime gates are not implemented')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : prospective runtime gates are not implemented
+
+======================================================================
+FAIL: test_failed_missing_or_unbounded_timing_never_authorizes_subset (test_followup_runtime.FollowupRuntimeTests.test_failed_missing_or_unbounded_timing_never_authorizes_subset)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay/survey/democratic_peace/test_followup_runtime.py", line 12, in setUp
+    self.assertIsNotNone(runtime, 'prospective runtime gates are not implemented')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : prospective runtime gates are not implemented
+
+======================================================================
+FAIL: test_probe_roster_is_predeclared_and_cannot_enter_registered_phase (test_followup_runtime.FollowupRuntimeTests.test_probe_roster_is_predeclared_and_cannot_enter_registered_phase)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay/survey/democratic_peace/test_followup_runtime.py", line 12, in setUp
+    self.assertIsNotNone(runtime, 'prospective runtime gates are not implemented')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : prospective runtime gates are not implemented
+
+----------------------------------------------------------------------
+Ran 64 tests in 0.331s
+
+FAILED (failures=4, errors=3)

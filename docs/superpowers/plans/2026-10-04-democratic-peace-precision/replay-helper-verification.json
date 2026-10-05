@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "command": "python3.13 -m unittest discover -s docs/superpowers/plans/2026-10-04-democratic-peace-precision -p test_replay.py -q",
+  "tests": 18,
+  "result": "OK",
+  "elapsed_seconds_reported": 6.902,
+  "helper_origin": "unchanged copies from 2026-10-03-democratic-peace packet; old packet untouched",
+  "files": {
+    "replay.py": "41be413116708e2ab3aec4d3f14e96fd220c31223779cdb650e50539ac8fc06a",
+    "test_replay.py": "075d11adce8d15ec1d1cf1027d5a717c52ebc7b56c2b7642fa8fbd70ce52c9be"
+  },
+  "registered_histories_run": 0
+}

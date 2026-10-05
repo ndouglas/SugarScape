@@ -1,0 +1,41 @@
+FFFF
+======================================================================
+FAIL: test_footer_and_every_density_census_fit_original_and_two_phase_panels (test_plots.ScientificPlotTests.test_footer_and_every_density_census_fit_original_and_two_phase_panels)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-approved-replay/survey/democratic_peace/report_tests/test_plots.py", line 16, in setUp
+    self.assertIsNotNone(plots,'standalone scientific renderer is not implemented')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : standalone scientific renderer is not implemented
+
+======================================================================
+FAIL: test_original_points_sample_counts_zero_and_clustering_gaps_are_explicit (test_plots.ScientificPlotTests.test_original_points_sample_counts_zero_and_clustering_gaps_are_explicit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-approved-replay/survey/democratic_peace/report_tests/test_plots.py", line 16, in setUp
+    self.assertIsNotNone(plots,'standalone scientific renderer is not implemented')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : standalone scientific renderer is not implemented
+
+======================================================================
+FAIL: test_phase_predictive_intervals_have_replication_semantics_and_separate_bindings (test_plots.ScientificPlotTests.test_phase_predictive_intervals_have_replication_semantics_and_separate_bindings)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-approved-replay/survey/democratic_peace/report_tests/test_plots.py", line 16, in setUp
+    self.assertIsNotNone(plots,'standalone scientific renderer is not implemented')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : standalone scientific renderer is not implemented
+
+======================================================================
+FAIL: test_svg_png_and_chart_inputs_are_deterministic_standalone_exports (test_plots.ScientificPlotTests.test_svg_png_and_chart_inputs_are_deterministic_standalone_exports)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-approved-replay/survey/democratic_peace/report_tests/test_plots.py", line 16, in setUp
+    self.assertIsNotNone(plots,'standalone scientific renderer is not implemented')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : standalone scientific renderer is not implemented
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+FAILED (failures=4)

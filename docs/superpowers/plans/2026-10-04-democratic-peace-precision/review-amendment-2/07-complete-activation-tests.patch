@@ -1,0 +1,120 @@
+diff --git a/survey/democratic_peace/test_followup_runtime.py b/survey/democratic_peace/test_followup_runtime.py
+index b61aac2..0ae12bb 100644
+--- a/survey/democratic_peace/test_followup_runtime.py
++++ b/survey/democratic_peace/test_followup_runtime.py
+@@ -46,10 +46,111 @@ class FollowupRuntimeTests(unittest.TestCase):
+         bad=copy.deepcopy(probes);bad[0]['cpu_seconds']=100.
+         self.assertFalse(runtime.phase_forecast(bad,jobs,self.measurement())['within_budget'])
+ 
+-    def test_activation_rejects_self_review_mixed_identity_and_overbudget(self):
+-        self.assertTrue(callable(runtime.verify_activation))
+-        with self.assertRaises(ValueError): runtime.validate_review({'independent':False})
+-        with self.assertRaises(ValueError): runtime.validate_runtime_receipt({'status':'approved','forecast_multiplier':1})
++class ActivationChainTests(unittest.TestCase):
++    """Complete synthetic evidence and a committed fixture repo; no native execution."""
++
++    def setUp(self):
++        from pathlib import Path
++        import subprocess
++        import tempfile
++        from survey.democratic_peace import records
++        from survey.democratic_peace.followup_registration import declaration, source_inventory
++        from survey.democratic_peace.test_followup_evidence import RetainedWorkloadEvidenceTests, ROOT, write_json
++
++        fixture=RetainedWorkloadEvidenceTests()
++        fixture.setUp()
++        self.addCleanup(fixture.doCleanups)
++        self.write_json=write_json
++        self.temporary=tempfile.TemporaryDirectory()
++        self.addCleanup(self.temporary.cleanup)
++        self.root=Path(self.temporary.name)
++        inventory=source_inventory(ROOT)
++        for entry in inventory:
++            target=self.root/entry['path']
++            target.parent.mkdir(parents=True,exist_ok=True)
++            target.write_bytes((ROOT/entry['path']).read_bytes())
++        self.values={};bindings=[]
++        table=source.fixture_table();data=followup.canonical_bytes(table)
++        for phase in followup.PHASES:
++            value=followup.build_manifest(table,data,phase,followup.EXPECTED_HISTORICAL)
++            value.update(source_inventory=inventory,
++                source_inventory_sha256=fixture.evidence['source_inventory_sha256'],provenance_status='frozen')
++            self.values[phase]=value
++            bindings.append({'phase':phase,'reading':value['reading'],
++                **dict.fromkeys(records.BINDING_FIELDS,'a'*64),
++                'source_inventory_sha256':fixture.evidence['source_inventory_sha256'],
++                'binary_sha256':fixture.evidence['binary_sha256'],
++                'analysis_jobs_sha256':followup.sha(followup.canonical_bytes(value['analysis_jobs'])),
++                'native_keys_sha256':followup.sha(followup.canonical_bytes(followup.expected_keys(value)))})
++        benchmark=fixture.root/'fixture-summary.json'
++        write_json(benchmark,fixture.evidence)
++        self.declaration=declaration(bindings,followup.sha(benchmark.read_bytes()))
++        self.declaration_path=self.root/'fixture-declaration.json'
++        write_json(self.declaration_path,self.declaration)
++        self.receipt=runtime.runtime_attestation(self.declaration_path,benchmark)
++        self.runtime_path=fixture.root/'fixture-runtime.json'
++        write_json(self.runtime_path,self.receipt)
++        self.review={'schema_version':1,'study_protocol':followup.PROTOCOL,
++            'decision':'accepted_prospective_followup','independent':True,'reviewer':'synthetic external reviewer',
++            'registered_histories':0,'declaration_sha256':followup.sha(self.declaration_path.read_bytes()),
++            'runtime_receipt_sha256':followup.sha(self.runtime_path.read_bytes())}
++        self.review_path=fixture.root/'fixture-review.json'
++        write_json(self.review_path,self.review)
++        for args in (['init','--quiet'],['add','.'],
++            ['-c','user.name=Synthetic Fixture','-c','user.email=fixture@example.invalid',
++             '-c','commit.gpgsign=false','commit','--quiet','-m','commit synthetic activation authorities']):
++            subprocess.run(['git',*args],cwd=self.root,check=True,capture_output=True)
++
++    def activate(self,phase='literal_precision',binding=None):
++        selected=next(p for p in self.declaration['phases'] if p['phase']==phase)
++        return runtime.verify_activation(self.values[phase],selected if binding is None else binding,self.root,
++            declaration_path=self.declaration_path,review_path=self.review_path,runtime_path=self.runtime_path)
++
++    def test_complete_attested_and_independently_reviewed_chain_activates_both_phases(self):
++        for phase in followup.PHASES:
++            with self.subTest(phase=phase):
++                self.assertEqual(self.activate(phase),self.declaration)
++
++    def test_mixed_external_receipt_hashes_fail_at_chain_binding(self):
++        for authority,field in [('review','declaration_sha256'),('review','runtime_receipt_sha256'),
++            ('runtime','declaration_sha256'),('runtime','benchmark_evidence_sha256')]:
++            value=copy.deepcopy(self.review if authority=='review' else self.receipt)
++            value[field]='f'*64
++            path=self.review_path if authority=='review' else self.runtime_path
++            self.write_json(path,value)
++            with self.subTest(authority=authority,field=field), self.assertRaisesRegex(ValueError,'activation external receipt chain mismatch'):
++                self.activate()
++            self.write_json(path,self.review if authority=='review' else self.receipt)
++
++    def test_each_mixed_phase_binding_fails_at_phase_identity_check(self):
++        from survey.democratic_peace import records
++        for field in records.BINDING_FIELDS:
++            binding=copy.deepcopy(self.declaration['phases'][0]);binding[field]='f'*64
++            with self.subTest(field=field), self.assertRaisesRegex(ValueError,'activation phase/source/binary/config binding mismatch'):
++                self.activate(binding=binding)
++
++    def test_complete_nonindependent_review_is_rejected(self):
++        review=copy.deepcopy(self.review);review['independent']=False
++        self.write_json(self.review_path,review)
++        with self.assertRaisesRegex(ValueError,'independent premeasurement review required'):
++            self.activate()
++
++    def test_complete_overbudget_receipt_is_rejected_even_with_rebound_review(self):
++        receipt=copy.deepcopy(self.receipt)
++        forecast=receipt['phases']['literal_precision']
++        forecast['generation_cpu_seconds']=30000.
++        forecast['cpu_seconds']=2*sum(forecast[k] for k in (
++            'generation_cpu_seconds','analysis_cpu_seconds','analysis_writer_cpu_seconds'))
++        forecast['cpu_hours']=forecast['cpu_seconds']/3600
++        forecast['within_budget']=False
++        receipt['combined_cpu_seconds']=sum(f['cpu_seconds'] for f in receipt['phases'].values())
++        self.write_json(self.runtime_path,receipt)
++        review=copy.deepcopy(self.review)
++        review['runtime_receipt_sha256']=followup.sha(self.runtime_path.read_bytes())
++        self.write_json(self.review_path,review)
++        with self.assertRaisesRegex(ValueError,'complete phase forecast failed scheduling gate'):
++            self.activate()
++
+ 
+ class BindingDriftTests(unittest.TestCase):
+     def test_wellformed_wrong_archive_identity_is_rejected(self):

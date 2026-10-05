@@ -1,0 +1,14 @@
+[
+  {
+    "path": "01-task1-tests.patch",
+    "sha256": "e0959f0f9da58d314ad181993284494940c36e5d52d4dae49f93fe6c70f1d5ec",
+    "unchanged_from": "af07296",
+    "native_run": "final-replay-task1-native.log"
+  },
+  {
+    "path": "02-task1-implementation.patch",
+    "sha256": "6539721ea9d4e5e39f5454e43c3cb1e27e2a611261b19862f603cf40b344b023",
+    "unchanged_from": "af07296",
+    "native_run": "final-replay-task1-native.log"
+  }
+]

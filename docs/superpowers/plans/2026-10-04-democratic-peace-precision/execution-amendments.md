@@ -1,0 +1,14 @@
+# Reviewed execution amendments
+
+The approved eight-patch packet is unchanged. Two separately identified additions were reviewed before measurement:
+
+1. Product commit `a58eaa9` rejects external activation, historical, literal-session and checkpoint arguments in schema 2 validate-only mode before writes. The original packet allowed a resolved output to replace an explicitly supplied historical file. Temporary-sentinel regressions cover all nine arguments, exact paths, symlinks, hardlinks and outputs within a historical study root. The correction changes the CLI mode guard and tests only; model engines and estimators remain unchanged.
+2. Product commit `f225a3d` replaces incomplete activation fixtures with a complete valid declaration, runtime attestation, external review, and committed source inventory. Both phases activate through the actual verifier; four external hashes, five phase bindings, review independence and a coherently rebound overbudget receipt are rejected. Controlled in-memory guard removals demonstrate meaningful coverage. This is test-only characterization of existing correct production behavior.
+
+`review-amendment-2/manifest.json` composes both additions with the original code stages, preserving predecessor packets and every original patch hash. All twelve checkpoints were reproduced in a separate owned replay worktree; the final inventory has 26 product files and 1,691 protected files. The product branch has 85 numerical tests, four reporting tests, 17 native tests and 2,205 active workspace tests passing, with 103 existing ignores; clippy and formatting passed.
+
+## Separate scientific identity and pending gate
+
+The retained scientific worktree remains at reviewed source `b2a6b349015f69d5e93c09116e209d8409478948`, inventory SHA256 `f6590b36086ab1f4a55d3a64a53f129d97335492647ecee761d1c6c433b4ee53`, and executable SHA256 `e75211a7fc6d0b78df585ab835ac332a0aa5c4c2bbf5f1514a71af3a419cbcf2`. Its known validate-only external-input limitation is retained and disclosed; it is not relabeled as the corrected executable. Its completed resolution commands supplied only manifest, receipt, repository, resolved-output and validate-only arguments, without external activation or historical arguments. Registered execution already protects the external inputs through activation.
+
+Activation remains held until a fresh independent prospective reviewer explicitly assesses those actual invocations, committed source/declaration, all external receipt links, both complete schedules, unchanged production estimators and execution gates, archive integrity, runtime evidence, and zero registered histories. A file's presence or this controller note cannot supply approval. If scientific source, executable or environment changes, preparation reuse is invalid and a prospective preparation amendment is required. The finite probe schedule must not be silently repeated.

@@ -1,0 +1,1080 @@
+{
+  "classification": "historical_archive_seed_audit_only",
+  "archived_files": [
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/fixture-sessions.jsonl",
+      "bytes": 27934,
+      "sha256": "f82a674cff4d75fc745b0fe4f9ac3305cf32404f79c89fea650ba3bd7a1c853e"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/probe-0-sessions.jsonl",
+      "bytes": 4976,
+      "sha256": "7cc08877fbd5e8b671e3faed3cb437f5b4f9126696b7553abc7a176b85e92aee"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/probe-1-sessions.jsonl",
+      "bytes": 5057,
+      "sha256": "95efcd0cfedf8349853736f23dfa7757eea96848b76b7f9532ca7dbc7010550e"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/probe-2-sessions.jsonl",
+      "bytes": 5058,
+      "sha256": "d0959fa19e760979d4961de31ee51e0810fefe9d3524d0901072b9fe5e883f20"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/probe-3-sessions.jsonl",
+      "bytes": 4977,
+      "sha256": "b4b3603376690aafabcce4b99173e8316b2e15b3893fec33178edb02d291b36e"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/probe-4-sessions.jsonl",
+      "bytes": 4928,
+      "sha256": "8d1323a5fa5f55b4358bab8a81b7d81f20e69e983b629b37a0375fa324612fd3"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/probe-5-sessions.jsonl",
+      "bytes": 4981,
+      "sha256": "23387f71354f16c4659bded1f25552a0576476f1d0cb69894e14b29bc4240440"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/reject-clock.jsonl",
+      "bytes": 29918,
+      "sha256": "2a6dad9ecab1563cc02a4c43bda60ec7690ef2368487ff52d2789091a9c80385"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/reject-config.jsonl",
+      "bytes": 29918,
+      "sha256": "8facbf30c3bcbb7512e45348eff2c1ccafc13c947174eca0e9070d6ad12b432d"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/reject-duplicate.jsonl",
+      "bytes": 32793,
+      "sha256": "d978a42d219bfcfb7a1058cc543ef9ed84fdea154df04a7347b6702d444bccaa"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/reject-forged-lock.jsonl",
+      "bytes": 27934,
+      "sha256": "f82a674cff4d75fc745b0fe4f9ac3305cf32404f79c89fea650ba3bd7a1c853e"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/reject-panic-context.jsonl",
+      "bytes": 29929,
+      "sha256": "05ad64a3bbe0479f80b974a8db3374dab2c846f8b924875af0437f078afc630e"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/reject-provenance.jsonl",
+      "bytes": 29918,
+      "sha256": "6f8cf464775210f4e6164cf0e16f95c05f11ed5a72df14486baf741f0f79ecd5"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-final/reject-truncated.jsonl",
+      "bytes": 27933,
+      "sha256": "3035f3609b601d91473e53009735c772d3e8efefc42b23c774ee264a9c7aa962"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/fixture-sessions.jsonl",
+      "bytes": 27934,
+      "sha256": "b3949cb721d3a5afa0cb25fb1a3fd069aaecba124e4aebe0bfa7142395e0904c"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/probe-0-sessions.jsonl",
+      "bytes": 4976,
+      "sha256": "922d71b7c81159c840c486e535181994c33c8c6cd771e48b85b13038bde41b0b"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/probe-1-sessions.jsonl",
+      "bytes": 5057,
+      "sha256": "c91739373654e5da15c6fb3e35252fed5cef6d696589cb4d935eb26e4b35e23f"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/probe-2-sessions.jsonl",
+      "bytes": 5058,
+      "sha256": "961d5eaab2dfdd31c89d52fd7b49d151517c1e4a6e9f9f52931a307d0d2b0906"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/probe-3-sessions.jsonl",
+      "bytes": 4977,
+      "sha256": "7ba5bf0924564242b0047f88d73e3b546716fa9025d16ddded857eb40581dc0d"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/probe-4-sessions.jsonl",
+      "bytes": 4928,
+      "sha256": "c288ce8affc4a95d1e9012b22a482d55b6deecfd3fd7e91e88d08b6e7aea0157"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/probe-5-sessions.jsonl",
+      "bytes": 4981,
+      "sha256": "b82f89b236431a7b3343067de38075ff1b6fb946c89ec2585bf04697cae4c9a8"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/reject-clock.jsonl",
+      "bytes": 29918,
+      "sha256": "ed68288ec6886d5c4bf6bfb5614af7539766478b88af6aa81cee4e1580135347"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/reject-config.jsonl",
+      "bytes": 29918,
+      "sha256": "f87e7dd347a9df6414c8fc793692e30008e7e813a7f92bfa2b2381ba548c3f6b"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/reject-duplicate.jsonl",
+      "bytes": 32793,
+      "sha256": "ae12e6a08695dc35e04d86c991fffee18926223ed89bdd114e345ef702de38c8"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/reject-forged-lock.jsonl",
+      "bytes": 27934,
+      "sha256": "b3949cb721d3a5afa0cb25fb1a3fd069aaecba124e4aebe0bfa7142395e0904c"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/reject-panic-context.jsonl",
+      "bytes": 29929,
+      "sha256": "9db3410a74887d006efaa1da96de58cbdbde97b0b02f1bafa8969f91914ff0c0"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/reject-provenance.jsonl",
+      "bytes": 29918,
+      "sha256": "d0f0818ab322acd6069516edc05cc5e5c96c8d37d0d746e828cd126e53bc701d"
+    },
+    {
+      "path": "execution-preparation/democratic-peace-preparation-task3-fix1/reject-truncated.jsonl",
+      "bytes": 27933,
+      "sha256": "7ba751388658d774334f2d0c8b647db32021197a23ef40b8f9b4a92786ea3139"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/fixture-sessions.jsonl",
+      "bytes": 27934,
+      "sha256": "f82a674cff4d75fc745b0fe4f9ac3305cf32404f79c89fea650ba3bd7a1c853e"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/probe-0-sessions.jsonl",
+      "bytes": 4976,
+      "sha256": "7cc08877fbd5e8b671e3faed3cb437f5b4f9126696b7553abc7a176b85e92aee"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/probe-1-sessions.jsonl",
+      "bytes": 5057,
+      "sha256": "95efcd0cfedf8349853736f23dfa7757eea96848b76b7f9532ca7dbc7010550e"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/probe-2-sessions.jsonl",
+      "bytes": 5058,
+      "sha256": "d0959fa19e760979d4961de31ee51e0810fefe9d3524d0901072b9fe5e883f20"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/probe-3-sessions.jsonl",
+      "bytes": 4977,
+      "sha256": "b4b3603376690aafabcce4b99173e8316b2e15b3893fec33178edb02d291b36e"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/probe-4-sessions.jsonl",
+      "bytes": 4928,
+      "sha256": "8d1323a5fa5f55b4358bab8a81b7d81f20e69e983b629b37a0375fa324612fd3"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/probe-5-sessions.jsonl",
+      "bytes": 4981,
+      "sha256": "23387f71354f16c4659bded1f25552a0576476f1d0cb69894e14b29bc4240440"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/reject-clock.jsonl",
+      "bytes": 29918,
+      "sha256": "2a6dad9ecab1563cc02a4c43bda60ec7690ef2368487ff52d2789091a9c80385"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/reject-config.jsonl",
+      "bytes": 29918,
+      "sha256": "8facbf30c3bcbb7512e45348eff2c1ccafc13c947174eca0e9070d6ad12b432d"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/reject-duplicate.jsonl",
+      "bytes": 32793,
+      "sha256": "d978a42d219bfcfb7a1058cc543ef9ed84fdea154df04a7347b6702d444bccaa"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/reject-forged-lock.jsonl",
+      "bytes": 27934,
+      "sha256": "f82a674cff4d75fc745b0fe4f9ac3305cf32404f79c89fea650ba3bd7a1c853e"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/reject-panic-context.jsonl",
+      "bytes": 29929,
+      "sha256": "05ad64a3bbe0479f80b974a8db3374dab2c846f8b924875af0437f078afc630e"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/reject-provenance.jsonl",
+      "bytes": 29918,
+      "sha256": "6f8cf464775210f4e6164cf0e16f95c05f11ed5a72df14486baf741f0f79ecd5"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-final/reject-truncated.jsonl",
+      "bytes": 27933,
+      "sha256": "3035f3609b601d91473e53009735c772d3e8efefc42b23c774ee264a9c7aa962"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/fixture-sessions.jsonl",
+      "bytes": 27934,
+      "sha256": "b3949cb721d3a5afa0cb25fb1a3fd069aaecba124e4aebe0bfa7142395e0904c"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/probe-0-sessions.jsonl",
+      "bytes": 4976,
+      "sha256": "922d71b7c81159c840c486e535181994c33c8c6cd771e48b85b13038bde41b0b"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/probe-1-sessions.jsonl",
+      "bytes": 5057,
+      "sha256": "c91739373654e5da15c6fb3e35252fed5cef6d696589cb4d935eb26e4b35e23f"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/probe-2-sessions.jsonl",
+      "bytes": 5058,
+      "sha256": "961d5eaab2dfdd31c89d52fd7b49d151517c1e4a6e9f9f52931a307d0d2b0906"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/probe-3-sessions.jsonl",
+      "bytes": 4977,
+      "sha256": "7ba5bf0924564242b0047f88d73e3b546716fa9025d16ddded857eb40581dc0d"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/probe-4-sessions.jsonl",
+      "bytes": 4928,
+      "sha256": "c288ce8affc4a95d1e9012b22a482d55b6deecfd3fd7e91e88d08b6e7aea0157"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/probe-5-sessions.jsonl",
+      "bytes": 4981,
+      "sha256": "b82f89b236431a7b3343067de38075ff1b6fb946c89ec2585bf04697cae4c9a8"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/reject-clock.jsonl",
+      "bytes": 29918,
+      "sha256": "ed68288ec6886d5c4bf6bfb5614af7539766478b88af6aa81cee4e1580135347"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/reject-config.jsonl",
+      "bytes": 29918,
+      "sha256": "f87e7dd347a9df6414c8fc793692e30008e7e813a7f92bfa2b2381ba548c3f6b"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/reject-duplicate.jsonl",
+      "bytes": 32793,
+      "sha256": "ae12e6a08695dc35e04d86c991fffee18926223ed89bdd114e345ef702de38c8"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/reject-forged-lock.jsonl",
+      "bytes": 27934,
+      "sha256": "b3949cb721d3a5afa0cb25fb1a3fd069aaecba124e4aebe0bfa7142395e0904c"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/reject-panic-context.jsonl",
+      "bytes": 29929,
+      "sha256": "9db3410a74887d006efaa1da96de58cbdbde97b0b02f1bafa8969f91914ff0c0"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/reject-provenance.jsonl",
+      "bytes": 29918,
+      "sha256": "d0f0818ab322acd6069516edc05cc5e5c96c8d37d0d746e828cd126e53bc701d"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-preparation-task3-fix1/reject-truncated.jsonl",
+      "bytes": 27933,
+      "sha256": "7ba751388658d774334f2d0c8b647db32021197a23ef40b8f9b4a92786ea3139"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-study/sessions.jsonl",
+      "bytes": 16299010,
+      "sha256": "753a1d5ff6236ba4720e0c52e46ab061643a5d27ef5c5d00175e0ff3f6d6c492"
+    },
+    {
+      "path": "final-execution-evidence/democratic-peace-task4-evidence/progress.jsonl",
+      "bytes": 25128,
+      "sha256": "9376b50f7f90d06da5243286dcd637f742cabc6d9068d684f6f716b5903dabec"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/fixture-sessions.jsonl",
+      "bytes": 27934,
+      "sha256": "d3fa48c6712bfd83f11083ea5ac8dab38333dbea005cd42b6a79f30e87e2e9f4"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/probe-0-sessions.jsonl",
+      "bytes": 4976,
+      "sha256": "a7378a1ec173ace561ea559c82f1c28062205ec4746614a8f78efc3ccfa0baae"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/probe-1-sessions.jsonl",
+      "bytes": 5057,
+      "sha256": "c5726357fabddc77f026b5fc0c715c2ef73f7de90deacde3794fb5500d58ba28"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/probe-2-sessions.jsonl",
+      "bytes": 5058,
+      "sha256": "9948f6fa002150ac48c6424f673067fe796fe258905a9d2be416492aa55355a8"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/probe-3-sessions.jsonl",
+      "bytes": 4977,
+      "sha256": "c21ccc910a0b8752ba534b7c3c6ebe9b513976ae6527a98add2a51ad05b8ec5b"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/probe-4-sessions.jsonl",
+      "bytes": 4928,
+      "sha256": "3bcfbcdee4f20b25d5f896810507ad8ab0232cc423b7f0bd544605bc45bbd67b"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/probe-5-sessions.jsonl",
+      "bytes": 4981,
+      "sha256": "9eb0b42c16ec89397a39b2139b203ac62a85ab623bbd288fec074d05dfaf9212"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/reject-clock.jsonl",
+      "bytes": 29918,
+      "sha256": "46a8aa74ddeb7777347548ef01074f85520c43eb592bc1b09d6d8d5ae9e710ef"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/reject-config.jsonl",
+      "bytes": 29918,
+      "sha256": "569051300e85b043400a56c6f72a73fd324273bea290a866d2909886aad566b1"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/reject-duplicate.jsonl",
+      "bytes": 32793,
+      "sha256": "77c6bc811fac8cabdee361345fb2547810389d7d9b39e924ccaee463e5ea41d9"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/reject-forged-lock.jsonl",
+      "bytes": 27934,
+      "sha256": "d3fa48c6712bfd83f11083ea5ac8dab38333dbea005cd42b6a79f30e87e2e9f4"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/reject-panic-context.jsonl",
+      "bytes": 29929,
+      "sha256": "5af64e908a29f0868392a1b2804ab98ccd5bdf4b26fac91585d200d06ed93a6d"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/reject-provenance.jsonl",
+      "bytes": 29918,
+      "sha256": "e7ae98f41332c72f7ac879a100b07d79e62efca7b1be5cedc559168644119ef3"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v2/reject-truncated.jsonl",
+      "bytes": 27933,
+      "sha256": "7c6fe868d419b696d9380f174476fe7f71f2258d64d21ddc1bc2e457dac16041"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/fixture-sessions.jsonl",
+      "bytes": 27934,
+      "sha256": "d3fa48c6712bfd83f11083ea5ac8dab38333dbea005cd42b6a79f30e87e2e9f4"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-0-sessions.jsonl",
+      "bytes": 4976,
+      "sha256": "a7378a1ec173ace561ea559c82f1c28062205ec4746614a8f78efc3ccfa0baae"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-1-sessions.jsonl",
+      "bytes": 5057,
+      "sha256": "c5726357fabddc77f026b5fc0c715c2ef73f7de90deacde3794fb5500d58ba28"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-2-sessions.jsonl",
+      "bytes": 5058,
+      "sha256": "9948f6fa002150ac48c6424f673067fe796fe258905a9d2be416492aa55355a8"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-3-sessions.jsonl",
+      "bytes": 4977,
+      "sha256": "c21ccc910a0b8752ba534b7c3c6ebe9b513976ae6527a98add2a51ad05b8ec5b"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-4-sessions.jsonl",
+      "bytes": 4928,
+      "sha256": "3bcfbcdee4f20b25d5f896810507ad8ab0232cc423b7f0bd544605bc45bbd67b"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/probe-5-sessions.jsonl",
+      "bytes": 4981,
+      "sha256": "9eb0b42c16ec89397a39b2139b203ac62a85ab623bbd288fec074d05dfaf9212"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-clock.jsonl",
+      "bytes": 29918,
+      "sha256": "46a8aa74ddeb7777347548ef01074f85520c43eb592bc1b09d6d8d5ae9e710ef"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-config.jsonl",
+      "bytes": 29918,
+      "sha256": "569051300e85b043400a56c6f72a73fd324273bea290a866d2909886aad566b1"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-duplicate.jsonl",
+      "bytes": 32793,
+      "sha256": "77c6bc811fac8cabdee361345fb2547810389d7d9b39e924ccaee463e5ea41d9"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-forged-lock.jsonl",
+      "bytes": 27934,
+      "sha256": "d3fa48c6712bfd83f11083ea5ac8dab38333dbea005cd42b6a79f30e87e2e9f4"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-panic-context.jsonl",
+      "bytes": 29929,
+      "sha256": "5af64e908a29f0868392a1b2804ab98ccd5bdf4b26fac91585d200d06ed93a6d"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-provenance.jsonl",
+      "bytes": 29918,
+      "sha256": "e7ae98f41332c72f7ac879a100b07d79e62efca7b1be5cedc559168644119ef3"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-final-preparation-v3/reject-truncated.jsonl",
+      "bytes": 27933,
+      "sha256": "7c6fe868d419b696d9380f174476fe7f71f2258d64d21ddc1bc2e457dac16041"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-preparation/fixture-reject-duplicate.jsonl",
+      "bytes": 32793,
+      "sha256": "e479837a2e77438c12b949a5293c8b02b242c036020c6f9ce8f21f48fcafa2d1"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-preparation/fixture-reject-tampered_clock.jsonl",
+      "bytes": 28279,
+      "sha256": "3bfbe6e113d9e7080ba8e67d04c434807b1b8894b4668261fb0f9e4473557cad"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-preparation/fixture-reject-tampered_config.jsonl",
+      "bytes": 28279,
+      "sha256": "418427d5432277efb2f09bc8ee4d1895ea4eef7a474934930533059036337d6e"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-preparation/fixture-reject-tampered_provenance.jsonl",
+      "bytes": 28279,
+      "sha256": "9e06a7cf63b245d568310ec06fa4669659b5b42796f91ef27eba3193dd84a0d1"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-preparation/fixture-reject-truncated.jsonl",
+      "bytes": 27933,
+      "sha256": "3c05cc21ce6214628b8edc3f085565bebeb2cf71323e3cd82a8d5c1f59296d89"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-preparation/fixture-sessions.jsonl",
+      "bytes": 27934,
+      "sha256": "da33581a0b0d5985334b0ab48463653aff4c6d7dcaac9088f448bdf7e4217458"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-preparation/probe-0-sessions.jsonl",
+      "bytes": 4976,
+      "sha256": "d08edacd785434038a6a7a05c5ac5847610fabb037c660e187c5f723ffc9cd4f"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-preparation/probe-1-sessions.jsonl",
+      "bytes": 5057,
+      "sha256": "ad15f6a5f8190c2dd757107b733f6dd6c4bdf2724df492ee079fed6567e6eec5"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-preparation/probe-2-sessions.jsonl",
+      "bytes": 5058,
+      "sha256": "1d1ead5ef6b2bd67c61d2fcdb58ce0911944d3f3815411556cc8a7257a631381"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-preparation/probe-3-sessions.jsonl",
+      "bytes": 4977,
+      "sha256": "9c0ca576cc9c27dda02b91b36d75809437a4f8f3f61e891432eb72bee8a921a5"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-preparation/probe-4-sessions.jsonl",
+      "bytes": 4928,
+      "sha256": "725d179f155c9561edb9df13b2f55257e87cca9ec2ec305ecc05648303fa6420"
+    },
+    {
+      "path": "owned-ignored-evidence/democratic-peace-scratch/survey/out/democratic-peace-preparation/probe-5-sessions.jsonl",
+      "bytes": 4981,
+      "sha256": "94704f4cfa1156ac8d76165c3011818f05528432e1f6859026aff6f9888f523d"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/fixture-sessions.jsonl",
+      "bytes": 27934,
+      "sha256": "d3fa48c6712bfd83f11083ea5ac8dab38333dbea005cd42b6a79f30e87e2e9f4"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/probe-0-sessions.jsonl",
+      "bytes": 4976,
+      "sha256": "a7378a1ec173ace561ea559c82f1c28062205ec4746614a8f78efc3ccfa0baae"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/probe-1-sessions.jsonl",
+      "bytes": 5057,
+      "sha256": "c5726357fabddc77f026b5fc0c715c2ef73f7de90deacde3794fb5500d58ba28"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/probe-2-sessions.jsonl",
+      "bytes": 5058,
+      "sha256": "9948f6fa002150ac48c6424f673067fe796fe258905a9d2be416492aa55355a8"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/probe-3-sessions.jsonl",
+      "bytes": 4977,
+      "sha256": "c21ccc910a0b8752ba534b7c3c6ebe9b513976ae6527a98add2a51ad05b8ec5b"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/probe-4-sessions.jsonl",
+      "bytes": 4928,
+      "sha256": "3bcfbcdee4f20b25d5f896810507ad8ab0232cc423b7f0bd544605bc45bbd67b"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/probe-5-sessions.jsonl",
+      "bytes": 4981,
+      "sha256": "9eb0b42c16ec89397a39b2139b203ac62a85ab623bbd288fec074d05dfaf9212"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/reject-clock.jsonl",
+      "bytes": 29918,
+      "sha256": "46a8aa74ddeb7777347548ef01074f85520c43eb592bc1b09d6d8d5ae9e710ef"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/reject-config.jsonl",
+      "bytes": 29918,
+      "sha256": "569051300e85b043400a56c6f72a73fd324273bea290a866d2909886aad566b1"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/reject-duplicate.jsonl",
+      "bytes": 32793,
+      "sha256": "77c6bc811fac8cabdee361345fb2547810389d7d9b39e924ccaee463e5ea41d9"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/reject-forged-lock.jsonl",
+      "bytes": 27934,
+      "sha256": "d3fa48c6712bfd83f11083ea5ac8dab38333dbea005cd42b6a79f30e87e2e9f4"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/reject-panic-context.jsonl",
+      "bytes": 29929,
+      "sha256": "5af64e908a29f0868392a1b2804ab98ccd5bdf4b26fac91585d200d06ed93a6d"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/reject-provenance.jsonl",
+      "bytes": 29918,
+      "sha256": "e7ae98f41332c72f7ac879a100b07d79e62efca7b1be5cedc559168644119ef3"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v2/reject-truncated.jsonl",
+      "bytes": 27933,
+      "sha256": "7c6fe868d419b696d9380f174476fe7f71f2258d64d21ddc1bc2e457dac16041"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/fixture-sessions.jsonl",
+      "bytes": 27934,
+      "sha256": "d3fa48c6712bfd83f11083ea5ac8dab38333dbea005cd42b6a79f30e87e2e9f4"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/probe-0-sessions.jsonl",
+      "bytes": 4976,
+      "sha256": "a7378a1ec173ace561ea559c82f1c28062205ec4746614a8f78efc3ccfa0baae"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/probe-1-sessions.jsonl",
+      "bytes": 5057,
+      "sha256": "c5726357fabddc77f026b5fc0c715c2ef73f7de90deacde3794fb5500d58ba28"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/probe-2-sessions.jsonl",
+      "bytes": 5058,
+      "sha256": "9948f6fa002150ac48c6424f673067fe796fe258905a9d2be416492aa55355a8"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/probe-3-sessions.jsonl",
+      "bytes": 4977,
+      "sha256": "c21ccc910a0b8752ba534b7c3c6ebe9b513976ae6527a98add2a51ad05b8ec5b"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/probe-4-sessions.jsonl",
+      "bytes": 4928,
+      "sha256": "3bcfbcdee4f20b25d5f896810507ad8ab0232cc423b7f0bd544605bc45bbd67b"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/probe-5-sessions.jsonl",
+      "bytes": 4981,
+      "sha256": "9eb0b42c16ec89397a39b2139b203ac62a85ab623bbd288fec074d05dfaf9212"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/reject-clock.jsonl",
+      "bytes": 29918,
+      "sha256": "46a8aa74ddeb7777347548ef01074f85520c43eb592bc1b09d6d8d5ae9e710ef"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/reject-config.jsonl",
+      "bytes": 29918,
+      "sha256": "569051300e85b043400a56c6f72a73fd324273bea290a866d2909886aad566b1"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/reject-duplicate.jsonl",
+      "bytes": 32793,
+      "sha256": "77c6bc811fac8cabdee361345fb2547810389d7d9b39e924ccaee463e5ea41d9"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/reject-forged-lock.jsonl",
+      "bytes": 27934,
+      "sha256": "d3fa48c6712bfd83f11083ea5ac8dab38333dbea005cd42b6a79f30e87e2e9f4"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/reject-panic-context.jsonl",
+      "bytes": 29929,
+      "sha256": "5af64e908a29f0868392a1b2804ab98ccd5bdf4b26fac91585d200d06ed93a6d"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/reject-provenance.jsonl",
+      "bytes": 29918,
+      "sha256": "e7ae98f41332c72f7ac879a100b07d79e62efca7b1be5cedc559168644119ef3"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-final-preparation-v3/reject-truncated.jsonl",
+      "bytes": 27933,
+      "sha256": "7c6fe868d419b696d9380f174476fe7f71f2258d64d21ddc1bc2e457dac16041"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-preparation/fixture-reject-duplicate.jsonl",
+      "bytes": 32793,
+      "sha256": "e479837a2e77438c12b949a5293c8b02b242c036020c6f9ce8f21f48fcafa2d1"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-preparation/fixture-reject-tampered_clock.jsonl",
+      "bytes": 28279,
+      "sha256": "3bfbe6e113d9e7080ba8e67d04c434807b1b8894b4668261fb0f9e4473557cad"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-preparation/fixture-reject-tampered_config.jsonl",
+      "bytes": 28279,
+      "sha256": "418427d5432277efb2f09bc8ee4d1895ea4eef7a474934930533059036337d6e"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-preparation/fixture-reject-tampered_provenance.jsonl",
+      "bytes": 28279,
+      "sha256": "9e06a7cf63b245d568310ec06fa4669659b5b42796f91ef27eba3193dd84a0d1"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-preparation/fixture-reject-truncated.jsonl",
+      "bytes": 27933,
+      "sha256": "3c05cc21ce6214628b8edc3f085565bebeb2cf71323e3cd82a8d5c1f59296d89"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-preparation/fixture-sessions.jsonl",
+      "bytes": 27934,
+      "sha256": "da33581a0b0d5985334b0ab48463653aff4c6d7dcaac9088f448bdf7e4217458"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-preparation/probe-0-sessions.jsonl",
+      "bytes": 4976,
+      "sha256": "d08edacd785434038a6a7a05c5ac5847610fabb037c660e187c5f723ffc9cd4f"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-preparation/probe-1-sessions.jsonl",
+      "bytes": 5057,
+      "sha256": "ad15f6a5f8190c2dd757107b733f6dd6c4bdf2724df492ee079fed6567e6eec5"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-preparation/probe-2-sessions.jsonl",
+      "bytes": 5058,
+      "sha256": "1d1ead5ef6b2bd67c61d2fcdb58ce0911944d3f3815411556cc8a7257a631381"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-preparation/probe-3-sessions.jsonl",
+      "bytes": 4977,
+      "sha256": "9c0ca576cc9c27dda02b91b36d75809437a4f8f3f61e891432eb72bee8a921a5"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-preparation/probe-4-sessions.jsonl",
+      "bytes": 4928,
+      "sha256": "725d179f155c9561edb9df13b2f55257e87cca9ec2ec305ecc05648303fa6420"
+    },
+    {
+      "path": "scratch-preparation/democratic-peace-preparation/probe-5-sessions.jsonl",
+      "bytes": 4981,
+      "sha256": "94704f4cfa1156ac8d76165c3011818f05528432e1f6859026aff6f9888f523d"
+    },
+    {
+      "path": "study/sessions.jsonl",
+      "bytes": 16299010,
+      "sha256": "753a1d5ff6236ba4720e0c52e46ab061643a5d27ef5c5d00175e0ff3f6d6c492"
+    },
+    {
+      "path": "task4-execution-evidence/progress.jsonl",
+      "bytes": 25128,
+      "sha256": "9376b50f7f90d06da5243286dcd637f742cabc6d9068d684f6f716b5903dabec"
+    }
+  ],
+  "unique_payload_census": {
+    "f82a674cff4d75fc745b0fe4f9ac3305cf32404f79c89fea650ba3bd7a1c853e": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "7cc08877fbd5e8b671e3faed3cb437f5b4f9126696b7553abc7a176b85e92aee": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "95efcd0cfedf8349853736f23dfa7757eea96848b76b7f9532ca7dbc7010550e": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "d0959fa19e760979d4961de31ee51e0810fefe9d3524d0901072b9fe5e883f20": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "b4b3603376690aafabcce4b99173e8316b2e15b3893fec33178edb02d291b36e": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "8d1323a5fa5f55b4358bab8a81b7d81f20e69e983b629b37a0375fa324612fd3": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "23387f71354f16c4659bded1f25552a0576476f1d0cb69894e14b29bc4240440": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "2a6dad9ecab1563cc02a4c43bda60ec7690ef2368487ff52d2789091a9c80385": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "8facbf30c3bcbb7512e45348eff2c1ccafc13c947174eca0e9070d6ad12b432d": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "d978a42d219bfcfb7a1058cc543ef9ed84fdea154df04a7347b6702d444bccaa": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 7,
+      "other": 0,
+      "malformed": 0
+    },
+    "05ad64a3bbe0479f80b974a8db3374dab2c846f8b924875af0437f078afc630e": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "6f8cf464775210f4e6164cf0e16f95c05f11ed5a72df14486baf741f0f79ecd5": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "3035f3609b601d91473e53009735c772d3e8efefc42b23c774ee264a9c7aa962": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "b3949cb721d3a5afa0cb25fb1a3fd069aaecba124e4aebe0bfa7142395e0904c": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "922d71b7c81159c840c486e535181994c33c8c6cd771e48b85b13038bde41b0b": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "c91739373654e5da15c6fb3e35252fed5cef6d696589cb4d935eb26e4b35e23f": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "961d5eaab2dfdd31c89d52fd7b49d151517c1e4a6e9f9f52931a307d0d2b0906": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "7ba5bf0924564242b0047f88d73e3b546716fa9025d16ddded857eb40581dc0d": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "c288ce8affc4a95d1e9012b22a482d55b6deecfd3fd7e91e88d08b6e7aea0157": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "b82f89b236431a7b3343067de38075ff1b6fb946c89ec2585bf04697cae4c9a8": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "ed68288ec6886d5c4bf6bfb5614af7539766478b88af6aa81cee4e1580135347": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "f87e7dd347a9df6414c8fc793692e30008e7e813a7f92bfa2b2381ba548c3f6b": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "ae12e6a08695dc35e04d86c991fffee18926223ed89bdd114e345ef702de38c8": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 7,
+      "other": 0,
+      "malformed": 0
+    },
+    "9db3410a74887d006efaa1da96de58cbdbde97b0b02f1bafa8969f91914ff0c0": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "d0f0818ab322acd6069516edc05cc5e5c96c8d37d0d746e828cd126e53bc701d": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "7ba751388658d774334f2d0c8b647db32021197a23ef40b8f9b4a92786ea3139": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "753a1d5ff6236ba4720e0c52e46ab061643a5d27ef5c5d00175e0ff3f6d6c492": {
+      "registered": 3240,
+      "runtime_probe": 0,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "9376b50f7f90d06da5243286dcd637f742cabc6d9068d684f6f716b5903dabec": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 0,
+      "other": 80,
+      "malformed": 0
+    },
+    "d3fa48c6712bfd83f11083ea5ac8dab38333dbea005cd42b6a79f30e87e2e9f4": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "a7378a1ec173ace561ea559c82f1c28062205ec4746614a8f78efc3ccfa0baae": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "c5726357fabddc77f026b5fc0c715c2ef73f7de90deacde3794fb5500d58ba28": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "9948f6fa002150ac48c6424f673067fe796fe258905a9d2be416492aa55355a8": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "c21ccc910a0b8752ba534b7c3c6ebe9b513976ae6527a98add2a51ad05b8ec5b": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "3bcfbcdee4f20b25d5f896810507ad8ab0232cc423b7f0bd544605bc45bbd67b": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "9eb0b42c16ec89397a39b2139b203ac62a85ab623bbd288fec074d05dfaf9212": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "46a8aa74ddeb7777347548ef01074f85520c43eb592bc1b09d6d8d5ae9e710ef": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "569051300e85b043400a56c6f72a73fd324273bea290a866d2909886aad566b1": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "77c6bc811fac8cabdee361345fb2547810389d7d9b39e924ccaee463e5ea41d9": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 7,
+      "other": 0,
+      "malformed": 0
+    },
+    "5af64e908a29f0868392a1b2804ab98ccd5bdf4b26fac91585d200d06ed93a6d": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "e7ae98f41332c72f7ac879a100b07d79e62efca7b1be5cedc559168644119ef3": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "7c6fe868d419b696d9380f174476fe7f71f2258d64d21ddc1bc2e457dac16041": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "e479837a2e77438c12b949a5293c8b02b242c036020c6f9ce8f21f48fcafa2d1": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 7,
+      "other": 0,
+      "malformed": 0
+    },
+    "3bfbe6e113d9e7080ba8e67d04c434807b1b8894b4668261fb0f9e4473557cad": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "418427d5432277efb2f09bc8ee4d1895ea4eef7a474934930533059036337d6e": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "9e06a7cf63b245d568310ec06fa4669659b5b42796f91ef27eba3193dd84a0d1": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "3c05cc21ce6214628b8edc3f085565bebeb2cf71323e3cd82a8d5c1f59296d89": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "da33581a0b0d5985334b0ab48463653aff4c6d7dcaac9088f448bdf7e4217458": {
+      "registered": 0,
+      "runtime_probe": 0,
+      "fixture": 6,
+      "other": 0,
+      "malformed": 0
+    },
+    "d08edacd785434038a6a7a05c5ac5847610fabb037c660e187c5f723ffc9cd4f": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "ad15f6a5f8190c2dd757107b733f6dd6c4bdf2724df492ee079fed6567e6eec5": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "1d1ead5ef6b2bd67c61d2fcdb58ce0911944d3f3815411556cc8a7257a631381": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "9c0ca576cc9c27dda02b91b36d75809437a4f8f3f61e891432eb72bee8a921a5": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "725d179f155c9561edb9df13b2f55257e87cca9ec2ec305ecc05648303fa6420": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    },
+    "94704f4cfa1156ac8d76165c3011818f05528432e1f6859026aff6f9888f523d": {
+      "registered": 0,
+      "runtime_probe": 1,
+      "fixture": 0,
+      "other": 0,
+      "malformed": 0
+    }
+  },
+  "reserved_seed_count": 21600,
+  "overlaps": []
+}

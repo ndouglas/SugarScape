@@ -1,0 +1,643 @@
+{
+  "status": "preparation_only_zero_registered_histories",
+  "source_commit": "b2a6b349015f69d5e93c09116e209d8409478948",
+  "source_inventory_sha256": "f6590b36086ab1f4a55d3a64a53f129d97335492647ecee761d1c6c433b4ee53",
+  "binary_sha256": "e75211a7fc6d0b78df585ab835ac332a0aa5c4c2bbf5f1514a71af3a419cbcf2",
+  "benchmark_evidence_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/benchmark-evidence.json",
+  "benchmark_evidence_sha256": "710ee7abc4de74b87577e4fa0a616459597008b7d1ca16f01331b9525e35877e",
+  "within_budget": true,
+  "combined_cpu_hours": 22.457835169444444,
+  "phases": {
+    "literal_precision": {
+      "cpu_seconds": 40382.300336,
+      "cpu_hours": 11.217305648888889,
+      "generation_cpu_seconds": 20146.4388,
+      "analysis_cpu_seconds": 44.154315000000004,
+      "analysis_writer_cpu_seconds": 0.5570529999999999,
+      "forecast_multiplier": 2,
+      "native_attempts": 10800,
+      "analysis_jobs": 129,
+      "draws_per_job": 100000,
+      "native_workers": 1,
+      "peak_rss_bytes": 71286784,
+      "within_budget": true,
+      "assumptions": [
+        "maximum_eight_complete_probe_cpu_times_10800",
+        "maximum_synthetic_predictive_with_interval_optimization_times105",
+        "maximum_joint_permutation_bootstrap_cpu_times12_no_double_count",
+        "fullphase_synthetic_analysis_serialization_fsync_measured_once",
+        "native_probe_cpu_includes_native_row_writer",
+        "wall_time_not_guaranteed"
+      ]
+    },
+    "prose_precision": {
+      "cpu_seconds": 40465.90627399999,
+      "cpu_hours": 11.240529520555555,
+      "generation_cpu_seconds": 20188.3212,
+      "analysis_cpu_seconds": 44.073447,
+      "analysis_writer_cpu_seconds": 0.5584899999999999,
+      "forecast_multiplier": 2,
+      "native_attempts": 10800,
+      "analysis_jobs": 129,
+      "draws_per_job": 100000,
+      "native_workers": 1,
+      "peak_rss_bytes": 71532544,
+      "within_budget": true,
+      "assumptions": [
+        "maximum_eight_complete_probe_cpu_times_10800",
+        "maximum_synthetic_predictive_with_interval_optimization_times105",
+        "maximum_joint_permutation_bootstrap_cpu_times12_no_double_count",
+        "fullphase_synthetic_analysis_serialization_fsync_measured_once",
+        "native_probe_cpu_includes_native_row_writer",
+        "wall_time_not_guaranteed"
+      ]
+    }
+  },
+  "raw_artifacts": [
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/benchmark-evidence.json",
+      "bytes": 75011,
+      "sha256": "710ee7abc4de74b87577e4fa0a616459597008b7d1ca16f01331b9525e35877e"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/build-evidence.json",
+      "bytes": 992,
+      "sha256": "b4411714f9b04bfad32fc1b10e0f70d479c78b4c005fac0004ad36abe6c58c14"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/cargo-configuration.json",
+      "bytes": 403,
+      "sha256": "8484f59c66ac22d0c6620483ad8cfe86ec90cead4846db480923bf3c7eacd968"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.contrast_pair.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.contrast_pair.stdout.log",
+      "bytes": 343,
+      "sha256": "9bfd61c32f2fb8ea3c5f70b3519e85e98d217569eb14aa1bfd774f4a181b4e70"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.contrast_pair.synthetic.json",
+      "bytes": 707,
+      "sha256": "ba7e9162d5f23d4aa7f6fac2824a2ead55c8cc85daa4a5ed962bca25e06bd98b"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.predictive.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.predictive.stdout.log",
+      "bytes": 342,
+      "sha256": "a5838221905e6c2f80d97e4b8bf5056ec05c6cd18c126b593125f1119e423b03"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.predictive.synthetic.json",
+      "bytes": 2395,
+      "sha256": "3654266626e3d4ea78f49b8cdb4747f69fe77ec86fca2340b39fe2fe62e90b70"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe0.manifest.json",
+      "bytes": 108576,
+      "sha256": "765bba2cf7addd25f89fc43a092d5770d0fc647fcc72f757153f5fe3d6105db1"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe0.receipt.json",
+      "bytes": 1396,
+      "sha256": "abb64aab0a92d24caa669d7324d367a1c33b7a0c6673dd7879205e48a4b14801"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe0.resolved.json",
+      "bytes": 2734,
+      "sha256": "2aaaccc4d3285431722063f0efe18cd03ffb5ef879de4c674303b91f84e5b7fa"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe0.sessions.jsonl",
+      "bytes": 5005,
+      "sha256": "68f4552a8f65142ed94cce167767df7ec3be7be76443201d9a9223ebc8939b72"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe0.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe0.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe1.manifest.json",
+      "bytes": 108578,
+      "sha256": "7772c88f4cd04e5c3d73177bada8d0f979b847cae29229912b5b8b7045e8e3c0"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe1.receipt.json",
+      "bytes": 1396,
+      "sha256": "501f1179eb7ce790f0b6f3f97276f89495a23e87a83c8b23b04264bec54662d4"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe1.resolved.json",
+      "bytes": 2738,
+      "sha256": "de3b9fd6adfe144b3a63a6b3fb648974dc162eff2b53da70b6c8877d267d93f1"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe1.sessions.jsonl",
+      "bytes": 5042,
+      "sha256": "2e645eb20eac9de75b37be55e5decce28811ccc2492648216686a7776e01ff92"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe1.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe1.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe2.manifest.json",
+      "bytes": 108588,
+      "sha256": "308559b358851926b9c1bad15cc866c01127aa295ecd978297121a1044ae0bd0"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe2.receipt.json",
+      "bytes": 1396,
+      "sha256": "c9ad82a3a2f97dad9c9391458bacf8ac6fa7269d8c529d8f9a0e8da7bdaaa3d3"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe2.resolved.json",
+      "bytes": 2758,
+      "sha256": "2242d63efd57139df8f12a932f4fc5dad9abe6b140056ee864f2467e1559f549"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe2.sessions.jsonl",
+      "bytes": 5030,
+      "sha256": "948002d20186ac73ff6c2c7cd1618cf961c29c3c9854c08afbd3633192e35758"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe2.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe2.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe3.manifest.json",
+      "bytes": 108577,
+      "sha256": "f2fe9c9f0131793d15b7adf0cfb5e044f59fd07c7d34d2321455b9e783e98f3a"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe3.receipt.json",
+      "bytes": 1396,
+      "sha256": "7ba1fe7a6672f06bbcc08164e0e75ebe6829d7ba84e009d2b0d2471f1694bd3f"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe3.resolved.json",
+      "bytes": 2736,
+      "sha256": "f2e000df948f6583417912f47471cd66e05b3cc4e12bb5b8b5bf57d18086815c"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe3.sessions.jsonl",
+      "bytes": 5038,
+      "sha256": "ab7febde7e82c9d14208e70b2f37195ad939d6415e847a4c0fcd912fec8428c1"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe3.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe3.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe4.manifest.json",
+      "bytes": 108589,
+      "sha256": "a34598b0b6fca19614f37923a7a6746c2e42deb7be7898669b2423002cbb1558"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe4.receipt.json",
+      "bytes": 1396,
+      "sha256": "c49ffbcd7c58413061f301ad282fdde9ccce42e34ac27ac59ed4cd01e5ce15ac"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe4.resolved.json",
+      "bytes": 2760,
+      "sha256": "8c0f95351bc071a634252f8682580fbd9ecda03096aaedf803c8f37576e08e5e"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe4.sessions.jsonl",
+      "bytes": 4974,
+      "sha256": "336d899bcb0c2a375215f74195ea23562222c520e5dad737447d125367638f4d"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe4.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe4.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe5.manifest.json",
+      "bytes": 108588,
+      "sha256": "7f36758f0f4d90e930ca600db54acc452257d2cf91b9469d7cc73552cc6d4435"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe5.receipt.json",
+      "bytes": 1396,
+      "sha256": "5bd8b061d07e0e2539e65fae4d07a363a5c25a8728df4bc6705b1b311b971252"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe5.resolved.json",
+      "bytes": 2758,
+      "sha256": "c150ad65d1e0de29b1fe5b469a55d37ade7b687aa7e59746238273f1f0c16451"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe5.sessions.jsonl",
+      "bytes": 5020,
+      "sha256": "fe3a9d0ebe8b0af0fe827ffd954738e0a86122872f3c6a6a0cf8565da8560634"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe5.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe5.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe6.manifest.json",
+      "bytes": 108578,
+      "sha256": "ba42a834efa993e947402452a8078755830d23237be80212618486cf6c94ccb9"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe6.receipt.json",
+      "bytes": 1396,
+      "sha256": "7ea592bfcde04439ec933431375a8985c49457c447d3470a734a524ddce72769"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe6.resolved.json",
+      "bytes": 2738,
+      "sha256": "70941d2cc02291c9e148a19f6b109e8ee67bd977c961edd584bda56aee8fb674"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe6.sessions.jsonl",
+      "bytes": 4852,
+      "sha256": "e470a5df501c5663e11125769cf83cc3f69098eb62cb0ba6c2c6be3b891ffdb6"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe6.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe6.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe7.manifest.json",
+      "bytes": 108577,
+      "sha256": "6c199507f81250873298d5e403ec7b5a394ac4ee36ded1b2f493e3c37b4a4fb2"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe7.receipt.json",
+      "bytes": 1396,
+      "sha256": "ee02d2f697a0ba9fcc78db7e0513d5847956149250b4fe2a2da58097e2141ca9"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe7.resolved.json",
+      "bytes": 2736,
+      "sha256": "9368fb6b27baf089c2d212d68623bd55e6521862f2fbd766f4da5faaa9efa1c2"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe7.sessions.jsonl",
+      "bytes": 5008,
+      "sha256": "a4c1a59f92dcc848f77139ed5616f8071bd2b03a642bd86503c1a286868aa866"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe7.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.probe7.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.writer.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.writer.stdout.log",
+      "bytes": 338,
+      "sha256": "459b025e881e135b476403d99e642ad188c3ceb94728a6d2631ef30fc2381565"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/literal_precision.writer.synthetic.json",
+      "bytes": 10133847,
+      "sha256": "a6e3ac17e0f132c9de24995bcadaeb36bdb4883d5ff5cb8ddf1ade7973872104"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.contrast_pair.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.contrast_pair.stdout.log",
+      "bytes": 331,
+      "sha256": "e9a3b49e165b003b95df72800dd196c711df19a882d998832f59d7489563cbf8"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.contrast_pair.synthetic.json",
+      "bytes": 705,
+      "sha256": "c9074211e7c2f06e8545ad59fb2ef1b3ac8608d083e43f8d7f454d9a0f1085c3"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.predictive.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.predictive.stdout.log",
+      "bytes": 329,
+      "sha256": "4e587bcd8fc658f0180037dc854e067ab7862c8a651b795f7524ec0b29ac4624"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.predictive.synthetic.json",
+      "bytes": 2409,
+      "sha256": "2cb509a9b61f7b92451d93524844652831a9fa2c5652ce9361633433a685e648"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe0.manifest.json",
+      "bytes": 108574,
+      "sha256": "65181d133c9fa0e989ab8d8e145c76214969d786b50a8ebc88199b642ff17f4f"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe0.receipt.json",
+      "bytes": 1396,
+      "sha256": "cd76e10985a674f6d092afe3eb5410b17f1106921a730f39cf3c70be62377ade"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe0.resolved.json",
+      "bytes": 2730,
+      "sha256": "b35288fd4aaa1d374e3ad1fc56f17cccdfac65eb789b921d9f9e5337eb056dc3"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe0.sessions.jsonl",
+      "bytes": 4908,
+      "sha256": "a907eff317d84209ec8216b8a9e4aec6d42cd2a8131806ce12656268d3c70b2a"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe0.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe0.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe1.manifest.json",
+      "bytes": 108576,
+      "sha256": "2096362c5e3c9c972ff0f28a53f4c47c66e5e214ce1e019c7edd12b46be62c21"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe1.receipt.json",
+      "bytes": 1396,
+      "sha256": "85c5aba65b7a79a086040cb15fc1b35cb7a9f14b6c64aa80a3c86d5102bfe3c3"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe1.resolved.json",
+      "bytes": 2734,
+      "sha256": "eac01736d13d16d50ce685b7869c71223819145d4d4f28b29d5f10a235cd1b56"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe1.sessions.jsonl",
+      "bytes": 4987,
+      "sha256": "4d9b3e53088c44feafab69ab7fa999c6f5882d095f8593c63d247a62bfc09574"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe1.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe1.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe2.manifest.json",
+      "bytes": 108586,
+      "sha256": "46f2ddf1fa7603f349e5321496b75c1dce0dbb82592540251e21cbc0b10cc790"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe2.receipt.json",
+      "bytes": 1396,
+      "sha256": "f911005a212705ce5d2e14ced8e6911faa3e6a4dd6d762e59be408535c6b60b9"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe2.resolved.json",
+      "bytes": 2754,
+      "sha256": "1713b1e3bae10d07087a509e87c21a94381736addc6933c76c0734c366694d50"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe2.sessions.jsonl",
+      "bytes": 4974,
+      "sha256": "6b00236677a532fcc09d2ab606c0fb94ebadc978b28d9b2e807a9f4050557a53"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe2.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe2.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe3.manifest.json",
+      "bytes": 108575,
+      "sha256": "4729b47d27afe16fa01561d069d852702fb75a6d9e1dab9d4319cebf61c3fdf2"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe3.receipt.json",
+      "bytes": 1396,
+      "sha256": "dffe493b375a041ded6a1e9cc7e587eae2ce3e487e3b9455e94340c45a298799"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe3.resolved.json",
+      "bytes": 2732,
+      "sha256": "568b54f566e0fc50a367341221f5bad2e035746508b1ba47667b6653b8ad19e9"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe3.sessions.jsonl",
+      "bytes": 4930,
+      "sha256": "03118f354bb59d9fad5811748c1317ee2f9ffc0017dc123a5db7dedbf5d75e21"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe3.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe3.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe4.manifest.json",
+      "bytes": 108587,
+      "sha256": "432d7e9ac79eeee2228c1e99cc1ddf479cd9a6231d7be745f44caba8d76247de"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe4.receipt.json",
+      "bytes": 1396,
+      "sha256": "3ae0586f2ad39664893893b2f4936afcfe3c371b456c9d5d882df9419322011f"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe4.resolved.json",
+      "bytes": 2756,
+      "sha256": "313ac38a370d86a276e9d7c2ff617713aee8a70f4a759e0a53479fd62ed09ec5"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe4.sessions.jsonl",
+      "bytes": 4982,
+      "sha256": "3ff46177749e6d9c3e13d0337671c47004fb2d15e3ca2ebd96646254653563a0"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe4.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe4.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe5.manifest.json",
+      "bytes": 108586,
+      "sha256": "2a4218d0c8b919d027f2e51a2645bf65d91786d8a14c8b8fdeae71c0333020d5"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe5.receipt.json",
+      "bytes": 1396,
+      "sha256": "48846d8cf911c5e7bbe62ab1e5bb6833931347bf4d1023fd175d0a556b2af8f9"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe5.resolved.json",
+      "bytes": 2754,
+      "sha256": "517676f7ed6fda58c5e17b8adc8c137d0908c03f7c6f6a21f068fd09dde3e8b4"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe5.sessions.jsonl",
+      "bytes": 4939,
+      "sha256": "7797df9ea8e36c0252cc8ebfb67bd0c6b115950013cf8ccc6db5f2f9b84f37ef"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe5.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe5.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe6.manifest.json",
+      "bytes": 108576,
+      "sha256": "5d50da8042bd1b94b24ae47c3b4c9a7462a1b3645a6886b0d6350bdc36185aae"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe6.receipt.json",
+      "bytes": 1396,
+      "sha256": "633a165ee6c708675c50d918b820723302a2c862d5db4b1237431350d80a50d4"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe6.resolved.json",
+      "bytes": 2734,
+      "sha256": "06257f0ceb495006835224b709da54161f345591b69abaf98f5961a9f1e33549"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe6.sessions.jsonl",
+      "bytes": 4849,
+      "sha256": "4637195fef8febb8aa414c779fbce9eca74dd59a184ba6a8e38281fd1b7a4ae2"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe6.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe6.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe7.manifest.json",
+      "bytes": 108575,
+      "sha256": "f943954f0196a8d69164d81ce103a9624586776b3f3113434f9f591edba273da"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe7.receipt.json",
+      "bytes": 1396,
+      "sha256": "7a430693e849ed52e60204bd4851c971b083f6ec6d82bb0264f5269f486a02bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe7.resolved.json",
+      "bytes": 2732,
+      "sha256": "7878631862f6f4b1d07fe6f2d1eaaf154f89da14a1c48c37c2fc595fd3d8a27d"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe7.sessions.jsonl",
+      "bytes": 4913,
+      "sha256": "d114e8a9e753e0f62f2a4cb1e69022708d8cfd6fc2338ac747b6d6c46994b46e"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe7.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.probe7.stdout.log",
+      "bytes": 31,
+      "sha256": "c1c817be18a18959d6cea0e7ed3c2cb44ff7820fee8922e4457e3207fee9b3bd"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.writer.stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.writer.stdout.log",
+      "bytes": 335,
+      "sha256": "5ba3f5133dad33baa20353d0c291daade5e3637029d1ae6dd04fd385b996b88d"
+    },
+    {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-precision-approved-runtime/prose_precision.writer.synthetic.json",
+      "bytes": 10133845,
+      "sha256": "d8a45bd18034337a218b468d3e8015c96645a0ae9c4f8b85b9d5c8f96b27ef29"
+    }
+  ]
+}

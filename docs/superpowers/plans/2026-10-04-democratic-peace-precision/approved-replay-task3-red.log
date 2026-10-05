@@ -1,0 +1,50 @@
+..............FFFFF..............................................................
+======================================================================
+FAIL: test_literal_predictive_outputs_match_original_mathematics_exactly (test_followup_analysis.FollowupAnalysisTests.test_literal_predictive_outputs_match_original_mathematics_exactly)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-approved-replay/survey/democratic_peace/test_followup_analysis.py", line 19, in setUp
+    self.assertIsNotNone(analysis, 'composite follow-up analysis is not implemented')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : composite follow-up analysis is not implemented
+
+======================================================================
+FAIL: test_missing_invalid_extinct_undefined_counts_and_zero_are_preserved (test_followup_analysis.FollowupAnalysisTests.test_missing_invalid_extinct_undefined_counts_and_zero_are_preserved)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-approved-replay/survey/democratic_peace/test_followup_analysis.py", line 19, in setUp
+    self.assertIsNotNone(analysis, 'composite follow-up analysis is not implemented')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : composite follow-up analysis is not implemented
+
+======================================================================
+FAIL: test_prose_contrasts_use_disjoint_rng_with_same_definitions (test_followup_analysis.FollowupAnalysisTests.test_prose_contrasts_use_disjoint_rng_with_same_definitions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-approved-replay/survey/democratic_peace/test_followup_analysis.py", line 19, in setUp
+    self.assertIsNotNone(analysis, 'composite follow-up analysis is not implemented')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : composite follow-up analysis is not implemented
+
+======================================================================
+FAIL: test_prose_has_no_fictitious_original_and_literal_requires_original30 (test_followup_analysis.FollowupAnalysisTests.test_prose_has_no_fictitious_original_and_literal_requires_original30)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-approved-replay/survey/democratic_peace/test_followup_analysis.py", line 19, in setUp
+    self.assertIsNotNone(analysis, 'composite follow-up analysis is not implemented')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : composite follow-up analysis is not implemented
+
+======================================================================
+FAIL: test_sparse_survivor_and_endpoint_fixture_keeps_original_numerics (test_followup_analysis.FollowupAnalysisTests.test_sparse_survivor_and_endpoint_fixture_keeps_original_numerics)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-approved-replay/survey/democratic_peace/test_followup_analysis.py", line 19, in setUp
+    self.assertIsNotNone(analysis, 'composite follow-up analysis is not implemented')
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : composite follow-up analysis is not implemented
+
+----------------------------------------------------------------------
+Ran 81 tests in 18.180s
+
+FAILED (failures=5)
