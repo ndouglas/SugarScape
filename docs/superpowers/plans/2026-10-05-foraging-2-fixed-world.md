@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Status: implementation plan pending user review. Execution method already supplied: subagent-driven development. Implementation and scientific execution have not started.
+- Status: implementation plan approved by the user on 2026-10-05. Execution method already supplied: subagent-driven development. Engineering implementation is in progress; scientific execution has not started.
 - Grid width/height from 3 through 125, inclusive; agents 1–256; resources 0–256 with unique u64 IDs and distinct valid cells, none at the nest.
 - Seven CPFA parameters are explicit and pass existing F1 validation; all agents share them. No claimed evolved defaults.
 - Run horizon 1–7,200 ticks; `agents * horizon <= 1,000,000` opportunities. Single-step operation enforces the same cumulative limits.
@@ -500,4 +500,4 @@ Any workspace failures need triage and scoped correction; do not bypass existing
 
 Coverage maps: setup/budgets → Tasks 1/4/5; angular geometry/draw schedule → Tasks 1/4; identities/observations → Task 2; nest memory/server → Tasks 3/4; diagnostics/output/replay → Tasks 4/5; acceptance and documentation → Task 5. Review Focus items each have owning tests. File/interface names are shared explicitly; output views avoid extending F1 serde. The five stages each have an independently testable deliverable and are sequential dependencies, not parallel implementation work.
 
-The user has already selected subagent-driven development. Written implementation-plan review remains pending; no need to ask them to choose an execution method again. After approval, begin at Task 1 with the root tracker and clean-worktree verification. No runtime code has been changed by writing this plan.
+The user has already selected subagent-driven development. Written implementation-plan review was approved by the user on 2026-10-05; no need to ask them to choose an execution method again. After approval, begin at Task 1 with the root tracker and clean-worktree verification. No runtime code has been changed by writing this plan.

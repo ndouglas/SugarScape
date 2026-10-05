@@ -1,6 +1,6 @@
 # F2: fixed-world central-place foraging reconstruction
 
-**Date:** 2026-10-04. **Status:** written spec approved by the user on 2026-10-05. The [implementation plan](../plans/2026-10-05-foraging-2-fixed-world.md) is prepared for review; implementation is not started or approved.
+**Date:** 2026-10-04. **Status:** written spec approved by the user on 2026-10-05. The [implementation plan](../plans/2026-10-05-foraging-2-fixed-world.md) was approved by the user on 2026-10-05; engineering implementation is in progress.
 **Programme:** [F1–F5 foraging/construction sequence](2026-10-04-foraging-construction-design.md), construction B3.
 **Evidence:** [F2 historical audit](../../studies/2026-10-04-foraging-fixed-world-reading.md), extending the [F1 audit](../../studies/2026-10-04-foraging-construction-reading.md).
 **Starting point:** [merged F1 rule reference](../../foraging.md).
@@ -117,4 +117,4 @@ After written-spec approval, write a separate staged F2 implementation plan and 
 
 F3 replaces this angular/eight-neighbor geometry with explicit passage navigation and capacity rules. F4 adds paid excavation and separate spoil/food logistics. F5 audits termite shortcut methods and compares registered geometries. Experimental reproduction, error models, generated evaluation layouts and evolved settings each require further source reconciliation and their own protocol.
 
-Self-review checked scope, source provenance, timing units, pickup/deposit conservation, private/public information, failure atomicity, bounded storage and source differences. Written-spec review was approved by the user on 2026-10-05. Implementation-plan review remains pending.
+Self-review checked scope, source provenance, timing units, pickup/deposit conservation, private/public information, failure atomicity, bounded storage and source differences. Written-spec review was approved by the user on 2026-10-05. Implementation-plan review was approved by the user on 2026-10-05; execution uses subagent-driven development.
