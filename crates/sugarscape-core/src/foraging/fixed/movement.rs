@@ -1,5 +1,3 @@
-// Temporary staging allowance: controller consumes these helpers in Task 4.
-#![allow(dead_code)]
 use super::draws::{checked_uniform, draw_index, DrawSource};
 use super::{Pos, Setup};
 use crate::config::FieldError;

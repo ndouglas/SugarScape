@@ -8,8 +8,6 @@ pub enum Phase {
     Searching,
     Returning,
 }
-// Temporary staging allowance: world/controller consumers land in Task 4.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct Agent {
     pub(super) id: u32,
@@ -39,8 +37,6 @@ pub struct WorkCounts {
     pub recruited_departures: u64,
     pub uninformed_departures: u64,
 }
-// Temporary staging allowance: runner aggregation lands in Task 5.
-#[allow(dead_code)]
 impl WorkCounts {
     pub(super) fn checked_add_assign(&mut self, other: &Self) -> Result<(), Vec<FieldError>> {
         // Prepare all sums before mutation so overflow cannot leave a partial total.
@@ -85,4 +81,37 @@ impl WorkCounts {
 fn checked_sum(field: &str, left: u64, right: u64) -> Result<u64, Vec<FieldError>> {
     left.checked_add(right)
         .ok_or_else(|| vec![FieldError::new(format!("work.{field}"), "counter overflow")])
+}
+
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+pub struct FindView {
+    pub site: Pos,
+    pub count: u32,
+}
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+pub struct AgentView {
+    pub id: u32,
+    pub pos: Pos,
+    pub heading: f64,
+    pub target: Pos,
+    pub phase: Phase,
+    pub informed: bool,
+    pub informed_turns: u32,
+    pub delay: u32,
+    pub cargo: Option<u64>,
+    pub find: Option<FindView>,
+    pub work: WorkCounts,
+}
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+pub struct Snapshot {
+    pub completed_ticks: u32,
+    pub inventory: super::Inventory,
+    pub agents: Vec<AgentView>,
+    pub resources: Vec<super::ResourceView>,
+    pub waypoints: Vec<super::WaypointView>,
+    pub expired_records: u64,
+    pub work: WorkCounts,
+    pub first_pickup_tick: Option<u32>,
+    pub first_delivery_tick: Option<u32>,
+    pub all_delivered_tick: Option<u32>,
 }

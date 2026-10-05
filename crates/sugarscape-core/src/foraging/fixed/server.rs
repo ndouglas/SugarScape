@@ -11,8 +11,6 @@ struct Record {
     site: u64,
     created_tick: u32,
 }
-// Temporary staging allowance: world/controller consumers land in Task 4.
-#[allow(dead_code)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(super) struct Server {
     records: Vec<Record>,
@@ -27,8 +25,6 @@ pub struct WaypointView {
     pub created_tick: u32,
     pub strength: f64,
 }
-// Temporary staging allowance: arrival and snapshot consumers land in Tasks 4–5.
-#[allow(dead_code)]
 impl Server {
     pub(super) fn arrive(
         &mut self,

@@ -21,14 +21,10 @@ pub struct Inventory {
     pub assigned: u32,
     pub delivered: u32,
 }
-// Temporary staging allowance: world/controller consumers land in Task 4.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct Ledger {
     resources: Vec<ResourceView>,
 }
-// Temporary staging allowance: world/controller consumers land in Task 4.
-#[allow(dead_code)]
 impl Ledger {
     pub(super) fn new(setup: &Setup) -> Self {
         let mut resources: Vec<_> = setup

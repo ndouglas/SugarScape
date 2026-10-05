@@ -1,5 +1,3 @@
-// Temporary staging allowance: controller consumes these helpers in Task 4.
-#![allow(dead_code)]
 use crate::config::FieldError;
 use rand::Rng;
 
