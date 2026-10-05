@@ -296,7 +296,7 @@ pub struct WaypointView {
 
 Decay/expiration occurs lazily when processing nest arrival, matching server access. Read-only views show all retained records with strength at the requested tick, including a weak resident record pending its next access-time removal; views must never mutate or consume RNG. Expired count means actual removed records. Zero decay leaves records at one. Record count is at most setup resources, because each resource can complete only once; enforce the bound defensively. Never let server validation inspect availability to improve advice.
 
-- [ ] Write failing tests for publication before selection/self-recruitment, fidelity priority, independent decisions, duplicate site publications, monotonic IDs, decay/expiration, equality convention through F1's existing explicit-weight tests, empty-return recruitment with fidelity draw zero, and stale/depleted-site recruitment.
+- [x] Write failing tests for publication before selection/self-recruitment, fidelity priority, independent decisions, duplicate site publications, monotonic IDs, decay/expiration, equality convention through F1's existing explicit-weight tests, empty-return recruitment with fidelity draw zero, and stale/depleted-site recruitment.
 
 ```rust
 #[test]
@@ -316,8 +316,8 @@ fn an_empty_return_can_use_its_predecessors_message() {
 
 Use rate `ln(10)` and elapsed four ticks to prove below-threshold expiration without relying on equality rounding. For precise equality retain the existing supplied-weight F1 test; do not invent an exponential age that must round exactly to .001. For weighted-selection intervals use publications at separate creation ticks and independently calculated expected weights; test no published record remains when both counts are zero and decay has removed the last record.
 
-- [ ] Run `cargo test -p sugarscape-core foraging::fixed::tests::server`; verify red.
-- [ ] Implement the arrival composition with fresh F1 inputs. Validate all three draws even if find is None. Decode/validate sites; reject future record ages/ID overflow before mutation. Append strength-one publication, expire weak records, form ordered F1 snapshot and choose departure with the existing policies:
+- [x] Run `cargo test -p sugarscape-core foraging::fixed::tests::server`; verify red.
+- [x] Implement the arrival composition with fresh F1 inputs. Validate all three draws even if find is None. Decode/validate sites; reject future record ages/ID overflow before mutation. Append strength-one publication, expire weak records, form ordered F1 snapshot and choose departure with the existing policies:
 
 ```rust
 let choice = crate::foraging::departure(
@@ -330,7 +330,7 @@ let choice = crate::foraging::departure(
 
 World-level atomicity comes in Task 4. Make internal arrival validation happen before effects where practical, and test malformed inputs produce no publication; no external mutation API is exposed.
 
-- [ ] Run server and all foraging tests, formatting and core clippy. Review, update Stage 3 and commit `feat(foraging): compose nest waypoint decisions`.
+- [x] Run server and all foraging tests, formatting and core clippy. Review, update Stage 3 and commit `feat(foraging): compose nest waypoint decisions`.
 
 ### Task 4: Ordered controller and atomic ticks
 

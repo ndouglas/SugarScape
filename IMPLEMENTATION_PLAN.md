@@ -19,13 +19,13 @@ Approved: 2026-10-05. Execution: subagent-driven development.
 **Goal**: Publication, decay and private/recruited departures.
 **Success Criteria**: Publication precedes selection; stale advice permitted; independent draws and correct expiry.
 **Tests**: server unit tests and F1 regression tests.
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 4: Ordered atomic ticks
 **Goal**: Seeded state transitions with rollback of state and RNG on failure.
 **Success Criteria**: Exact delay/detection ordering; resource conservation; sequential visibility and bounded stepping.
 **Tests**: controller timing, contention, rollback and invariant tests.
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 5: Runner and acceptance
 **Goal**: Bounded runs, read-only snapshots, replay and public documentation.
