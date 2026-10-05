@@ -43,7 +43,10 @@ impl World {
                 delay: 0,
                 cargo: None,
                 find: None,
-                work: WorkCounts::default(),
+                work: WorkCounts {
+                    uninformed_departures: 1,
+                    ..WorkCounts::default()
+                },
             });
         }
         let ledger = Ledger::new(&setup);

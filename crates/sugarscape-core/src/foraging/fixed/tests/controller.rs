@@ -1,5 +1,5 @@
 use super::super::{
-    controller::advance, draws::DrawSource, world::State, Phase, Pos, Resource, World,
+    controller::advance, draws::DrawSource, world::State, Phase, Pos, Resource, WorkCounts, World,
 };
 use super::{setup, Scripted};
 use crate::config::FieldError;
@@ -66,6 +66,8 @@ fn departure_turns_without_detecting_and_draws_switch_on_target_equality() {
     assert_eq!(w.state.ledger.inventory().available, 1);
     assert_eq!(w.state.agents[0].delay, 1);
     assert_eq!(w.state.agents[0].work.search_switches, 1);
+    assert_eq!(w.snapshot().unwrap().work.search_switches, 1);
+    assert_eq!(w.summary().unwrap().work.search_switches, 1);
 }
 // Break caught: double ownership or nonstable processing would pick the later agent.
 #[test]
@@ -169,7 +171,7 @@ fn empty_return_clears_find_and_draws_arrival_and_edge() {
     assert_eq!(w.state.agents[0].find, None);
     assert_eq!(w.state.agents[0].work.empty_returns, 1);
     assert_eq!(w.state.agents[0].work.publications, 0);
-    assert_eq!(w.state.agents[0].work.uninformed_departures, 1);
+    assert_eq!(w.state.agents[0].work.uninformed_departures, 2);
     assert_eq!(w.state.agents[0].informed_turns, 0);
 }
 
@@ -356,4 +358,111 @@ fn last_legal_tick_is_accepted_at_both_limits() {
         );
         assert!(w.step().is_err());
     }
+}
+
+// Break caught: target arrival enters search but fails to count the entry when
+// no probabilistic switch succeeds, or counts an informed switch draw.
+fn assert_target_arrival_counts_search_entry(informed: bool) {
+    let mut s = setup();
+    s.agents = 2;
+    s.parameters.p_search = 0.0;
+    let mut w = World::new(s, 0).unwrap();
+    for a in &mut w.state.agents {
+        a.informed = informed;
+        a.target = a.pos;
+        a.heading = 0.0;
+    }
+    let values: &[f64] = if informed {
+        &[0.0; 4]
+    } else {
+        &[0.5, 0.0, 0.0, 0.5, 0.0, 0.0]
+    };
+    let mut draws = Scripted::new(values);
+    advance(&w.setup, &mut w.state, &mut draws).unwrap();
+    assert_eq!(draws.next, values.len());
+    let snapshot = w.snapshot().unwrap();
+    for a in &snapshot.agents {
+        assert_eq!(a.phase, Phase::Searching);
+        assert_eq!(a.pos, w.setup.nest);
+        assert_eq!(a.work.directed_moves, 0);
+        assert_eq!(a.work.search_moves, 0);
+        assert_eq!(a.work.search_switches, 1, "informed={informed}");
+    }
+    assert_eq!(snapshot.work.search_switches, 2);
+    let summary = w.summary().unwrap();
+    assert_eq!(summary.work.search_switches, 2);
+    for work in &summary.per_agent {
+        assert_eq!(work.search_switches, 1);
+    }
+    // The following turn wait is not another entry into Searching.
+    tick(&mut w, &[]);
+    assert_eq!(w.summary().unwrap().work.search_switches, 2);
+}
+#[test]
+fn informed_target_arrival_counts_search_entry() {
+    assert_target_arrival_counts_search_entry(true);
+}
+#[test]
+fn uninformed_target_arrival_counts_search_entry_without_switch_probability() {
+    assert_target_arrival_counts_search_entry(false);
+}
+// Break caught: initial trips are omitted from per-agent and aggregate lifetime
+// departure totals, or construction records work that has not yet occurred.
+#[test]
+fn initial_uninformed_departures_are_counted_for_every_agent() {
+    let mut s = setup();
+    s.agents = 3;
+    let w = World::new(s, 0).unwrap();
+    let initial_work = WorkCounts {
+        uninformed_departures: 1,
+        ..WorkCounts::default()
+    };
+    let total_work = WorkCounts {
+        uninformed_departures: 3,
+        ..WorkCounts::default()
+    };
+    let snapshot = w.snapshot().unwrap();
+    assert_eq!(snapshot.completed_ticks, 0);
+    assert_eq!(snapshot.work, total_work);
+    for a in &snapshot.agents {
+        assert_eq!(a.phase, Phase::Departing);
+        assert!(!a.informed);
+        assert_eq!(a.work, initial_work);
+    }
+    let summary = w.summary().unwrap();
+    assert_eq!(summary.work, total_work);
+    assert_eq!(summary.per_agent, vec![initial_work; 3]);
+}
+// Break caught: a later uninformed departure replaces the initial count or
+// increments other agents' totals; departure travel counts a second trip.
+#[test]
+fn later_uninformed_departure_adds_one_to_lifetime_views() {
+    let mut s = setup();
+    s.agents = 3;
+    s.parameters.p_search = 0.0;
+    let mut w = World::new(s, 0).unwrap();
+    w.state.agents[0].phase = Phase::Returning;
+    for a in &mut w.state.agents[1..] {
+        a.delay = 1;
+    }
+    let mut draws = Scripted::new(&[0.0; 5]);
+    advance(&w.setup, &mut w.state, &mut draws).unwrap();
+    assert_eq!(draws.next, 5);
+    let snapshot = w.snapshot().unwrap();
+    assert_eq!(snapshot.agents[0].phase, Phase::Departing);
+    assert_eq!(snapshot.agents[0].work.empty_returns, 1);
+    assert_eq!(snapshot.agents[0].work.uninformed_departures, 2);
+    assert_eq!(snapshot.agents[1].work.uninformed_departures, 1);
+    assert_eq!(snapshot.agents[2].work.uninformed_departures, 1);
+    assert_eq!(snapshot.work.uninformed_departures, 4);
+    let summary = w.summary().unwrap();
+    assert_eq!(summary.work.uninformed_departures, 4);
+    assert_eq!(summary.per_agent[0].uninformed_departures, 2);
+    assert_eq!(summary.per_agent[1].uninformed_departures, 1);
+    assert_eq!(summary.per_agent[2].uninformed_departures, 1);
+    for a in &mut w.state.agents {
+        a.target = Pos { x: 4, y: 2 };
+    }
+    tick(&mut w, &[0.5; 6]);
+    assert_eq!(w.summary().unwrap().work.uninformed_departures, 4);
 }

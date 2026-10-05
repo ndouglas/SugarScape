@@ -101,9 +101,7 @@ fn opportunity(
                 false
             };
             if switch || a.pos == a.target {
-                if switch {
-                    increment(&mut a.work.search_switches)?;
-                }
+                increment(&mut a.work.search_switches)?;
                 a.phase = Phase::Searching;
                 perform_turn(setup, a, draws)?;
             } else {

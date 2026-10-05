@@ -31,10 +31,12 @@ pub struct WorkCounts {
     pub pickups: u64,
     pub deliveries: u64,
     pub empty_returns: u64,
+    /// Entries into Searching, including target arrival; simultaneous triggers count once.
     pub search_switches: u64,
     pub publications: u64,
     pub fidelity_departures: u64,
     pub recruited_departures: u64,
+    /// Lifetime uninformed trips, including one initial departure per agent.
     pub uninformed_departures: u64,
 }
 impl WorkCounts {
