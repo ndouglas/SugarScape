@@ -244,7 +244,7 @@ pub struct WorkCounts {
 
 `search_switches` counts every entry into Searching, including informed target arrival. Initial uninformed departures are counted once per agent; later departures count the actual F1 choice. Server expiration is counted globally, not attributed to an arbitrary agent. All IDs accept their full declared range; site IDs encode cells separately from resource identities.
 
-- [ ] Write failing tests for a single claim/deposit, contention, frozen count, clipped neighborhood, duplicate deposit and wrong-agent rejection. Claim at the same resource twice returns one success then None. Density is one plus currently available Moore neighbors, never assigned/delivered resources. `check` must verify the bijection between assigned tokens and cargo owners, no worker holds multiple items, and counts sum to initial.
+- [x] Write failing tests for a single claim/deposit, contention, frozen count, clipped neighborhood, duplicate deposit and wrong-agent rejection. Claim at the same resource twice returns one success then None. Density is one plus currently available Moore neighbors, never assigned/delivered resources. `check` must verify the bijection between assigned tokens and cargo owners, no worker holds multiple items, and counts sum to initial.
 
 ```rust
 #[test]
@@ -261,8 +261,8 @@ fn maximum_resource_id_is_a_real_resource() {
 }
 ```
 
-- [ ] Run `cargo test -p sugarscape-core foraging::fixed::tests::ledger`; confirm the intended red failure.
-- [ ] Implement bounded lookup over at most 256 resources, without a redundant dense ownership grid. Freeze the count during claim before modifying availability (or compensate exactly once afterward). Use resource ID lookup for deposit, and verify ownership before mutation. Implement checked work aggregation; overflow returns an error.
+- [x] Run `cargo test -p sugarscape-core foraging::fixed::tests::ledger`; confirm the intended red failure.
+- [x] Implement bounded lookup over at most 256 resources, without a redundant dense ownership grid. Freeze the count during claim before modifying availability (or compensate exactly once afterward). Use resource ID lookup for deposit, and verify ownership before mutation. Implement checked work aggregation; overflow returns an error.
 
 ```rust
 // Successful claim return: resource identity is separate from encoded site.
@@ -271,7 +271,7 @@ let find = FindRecord { site: setup.site(cell), count: observed_count };
 // Deposit accepts only that resource's matching Assigned owner.
 ```
 
-- [ ] Verify targeted tests plus all `foraging` tests, formatting and core clippy. Self-review and obtain fresh task reviews; update Stage 2 and commit `feat(foraging): conserve claimed and returned resources`.
+- [x] Verify targeted tests plus all `foraging` tests, formatting and core clippy. Self-review and obtain fresh task reviews; update Stage 2 and commit `feat(foraging): conserve claimed and returned resources`.
 
 ### Task 3: Nest server and private departure decisions
 
