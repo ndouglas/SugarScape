@@ -1,4 +1,4 @@
-//! Stateless CPFA rule reference after Hecker and Moses (2015).
+//! CPFA stateless rules and fixed-world reconstruction after Hecker and Moses (2015).
 //!
 //! The top-level API calculates source rules from explicit inputs. The
 //! [`fixed`] submodule provides the separate fixed-world reconstruction.

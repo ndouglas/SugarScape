@@ -323,3 +323,37 @@ fn opportunity_budget_rejects_next_complete_tick() {
     assert!(w.step().is_err());
     assert_eq!(w.state, before);
 }
+
+// Break caught: drawing an extra variate on successful informed nest departure.
+#[test]
+fn successful_arrival_consumes_exactly_three_decision_draws() {
+    let mut w = searcher(1);
+    tick(&mut w, &[0.5, 0.0, 0.0]);
+    w.state.agents[0].delay = 0;
+    w.state.agents[0].pos = w.setup.nest;
+    let mut draws = Scripted::new(&[0.0, 0.0, 0.0]);
+    advance(&w.setup, &mut w.state, &mut draws).unwrap();
+    assert_eq!(draws.next, 3);
+    assert_eq!(w.state.agents[0].work.deliveries, 1);
+}
+// Break caught: rejecting the last legal tick at either cumulative limit.
+#[test]
+fn last_legal_tick_is_accepted_at_both_limits() {
+    for (agents, before, after) in [(1, 7199, 7200), (250, 3999, 4000)] {
+        let mut s = setup();
+        s.agents = agents;
+        let mut w = World::new(s, 0).unwrap();
+        w.state.tick = before;
+        for a in &mut w.state.agents {
+            a.work.opportunities = u64::from(before);
+            a.delay = 1;
+        }
+        w.step().unwrap();
+        assert_eq!(w.summary().unwrap().completed_ticks, after);
+        assert_eq!(
+            w.summary().unwrap().work.opportunities,
+            u64::from(agents) * u64::from(after)
+        );
+        assert!(w.step().is_err());
+    }
+}
