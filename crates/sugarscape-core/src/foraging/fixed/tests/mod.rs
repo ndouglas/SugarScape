@@ -4,7 +4,7 @@ use crate::config::FieldError;
 
 mod setup_movement;
 
-fn setup() -> Setup {
+pub(super) fn setup() -> Setup {
     Setup {
         width: 5,
         height: 5,
@@ -51,3 +51,5 @@ impl DrawSource for Scripted {
 }
 
 mod ledger;
+
+mod server;

@@ -16,3 +16,6 @@ mod state;
 
 pub use ledger::{Inventory, ResourceState, ResourceView};
 pub use state::{Phase, WorkCounts};
+
+mod server;
+pub use server::WaypointView;

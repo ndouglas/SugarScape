@@ -90,7 +90,6 @@ impl Setup {
     pub(super) fn site(&self, pos: Pos) -> u64 {
         u64::from(pos.y) * u64::from(self.width) + u64::from(pos.x)
     }
-    #[allow(dead_code)]
     pub(super) fn position(&self, site: u64) -> Result<Pos, Vec<FieldError>> {
         if !(3..=125).contains(&self.width) || !(3..=125).contains(&self.height) {
             return Err(vec![FieldError::new(
