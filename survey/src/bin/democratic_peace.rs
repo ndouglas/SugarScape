@@ -1446,6 +1446,25 @@ fn run() -> Result<(), String> {
     safe_path(&root)?;
     let root = fs::canonicalize(root).map_err(|e| e.to_string())?;
     let p = prepare(&manifest, &root, !validate)?;
+    if p.manifest["schema_version"] == json!(2) && validate {
+        require(
+            !opts.keys().any(|k| {
+                [
+                    "--declaration",
+                    "--declaration-review",
+                    "--runtime-receipt",
+                    "--historical-study-root",
+                    "--historical-inventory",
+                    "--historical-source-archive",
+                    "--historical-binary",
+                    "--literal-sessions",
+                    "--max-new-histories",
+                ]
+                .contains(&k.as_str())
+            }),
+            "follow-up gate options are unsupported in validate-only mode",
+        )?;
+    }
     let receipt_path = opts.get("--receipt").map(PathBuf::from);
     let receipt = receipt(receipt_path.as_deref(), &p, !validate, &root)?;
     let mut inputs = vec![
