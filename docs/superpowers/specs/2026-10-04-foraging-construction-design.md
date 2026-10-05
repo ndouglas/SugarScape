@@ -119,4 +119,4 @@ The written design was checked for scope, source provenance and separation of ve
 
 ## F2 follow-up
 
-The [F2 historical audit](../../studies/2026-10-04-foraging-fixed-world-reading.md) and [draft fixed-world design](2026-10-04-foraging-2-fixed-world-design.md) are prepared for written-spec review. No F2 implementation or scientific execution has started. The recovered historical source informs eight-neighbor angular movement, delays and completed-return scoring; release identity and quantitative reproduction remain unestablished.
+The [F2 historical audit](../../studies/2026-10-04-foraging-fixed-world-reading.md) and [fixed-world design](2026-10-04-foraging-2-fixed-world-design.md) are complete; the user approved the written spec on 2026-10-05. The [F2 implementation plan](../plans/2026-10-05-foraging-2-fixed-world.md) is prepared for review. No F2 implementation or scientific execution has started. The recovered historical source informs eight-neighbor angular movement, delays and completed-return scoring; release identity and quantitative reproduction remain unestablished.
