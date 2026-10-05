@@ -1,0 +1,206 @@
+"""Composite follow-up inference joins validated values, never dataset envelopes."""
+from collections import Counter
+from pathlib import Path
+import platform
+import numpy as np
+from . import followup, source, contrasts, numerics, records
+from .methods import canonical_bytes, method_contract
+from .analysis import validate_output_destinations
+
+
+def census(histories, expected):
+    return source.population_summary(histories, expected)
+
+
+def draw_contract(table, fixture_draws):
+    if fixture_draws is None:
+        source.validate_registered_table(table)
+        return 100000, 10000
+    if table['extraction'].get('classification') != 'synthetic_fixture' or type(fixture_draws) is not int or not 1 <= fixture_draws <= 1000:
+        raise ValueError('draw override requires bounded synthetic source fixture')
+    source.validate_table(table)
+    return fixture_draws, 2
+
+
+def source_findings(table, fresh, historical, jobs, phase, *, fixture_draws=None):
+    draws, minimum = draw_contract(table, fixture_draws)
+    targets = []
+    for slot in table['slots']:
+        suffix = source.arm_suffix(slot['mobile_share'], slot['mechanism'], slot['initial_democratic_share'])
+        old = census(historical.get('original.'+suffix, []),30)
+        new = census(fresh.get('precision.'+suffix, []),100)
+        metric = slot['metric']
+        target = {**slot, 'source_equivalence': 'Unresolved',
+            'historical_literal_original': old[metric+'_mean'], 'historical_literal_original_census': old,
+            'reference_population': 'literal_reference_100' if phase == 'literal_precision' else 'prose_reference_100',
+            'reference_mean': new[metric+'_mean'], 'reference_census': new,
+            'result': None, 'p': None, 'holm_p': None, 'unavailable_reason': None}
+        reason = None
+        if slot['read_status'] != 'readable': reason = slot['read_status']
+        elif phase == 'literal_precision' and not old['population_complete']: reason = 'incomplete_historical_literal_original'
+        elif not new['population_complete']: reason = 'incomplete_fresh_history_population'
+        else:
+            values = [h['metrics'][metric] for h in fresh['precision.'+suffix]]
+            prediction = numerics.predictive(values, followup.job_rng(jobs['predictive.source.'+slot['id']],phase), draws=draws,minimum_defined=minimum)
+            target['result'] = {k:v for k,v in prediction.items() if k != 'replicates'}
+            target['result']['conditional'] = metric == 'clustering_ratio'
+            if prediction['status'] != 'Available': reason = prediction['reason']
+            else:
+                target['result'].update(numerics.maximize_interval_p(prediction['replicates'],slot['interval']))
+                target['p'] = target['result']['p']
+        target['unavailable_reason'] = reason; targets.append(target)
+    for target, adjusted in zip(targets, numerics.fixed_holm([t['p'] for t in targets],105)):
+        target['holm_p'] = adjusted
+    scopes = {}
+    for name in ('all','fig9','fig10','fig11'):
+        subset = targets if name == 'all' else [t for t in targets if 'fig'+str(t['figure']) == name]
+        scopes[name] = {**source.scope_verdict(subset), 'source_equivalence': 'Unresolved',
+            'readable_count': sum(t['read_status']=='readable' for t in subset),'potential_count':len(subset)}
+    return {'family_size':105,'readable_count':sum(t['read_status']=='readable' for t in targets),
+        'targets':targets,'scopes':scopes,'structural_exclusions':table['structural_exclusions'],
+        'eligibility': 'fresh_100_and_original_30_complete' if phase=='literal_precision' else 'fresh_100_and_verified_historical_archive_no_prose_original',
+        'predictive_interval_semantics':'95_percent_simulated_30_history_replication_not_mean_confidence_interval',
+        'finite_support_limit':'outside_bootstrap_values_are_not_impossible_model_events'}
+
+
+def contrast_findings(histories, jobs, phase, *, fixture_draws=None):
+    if fixture_draws is not None and (type(fixture_draws) is not int or not 1 <= fixture_draws <= 1000):
+        raise ValueError('bounded synthetic contrast draws required')
+    draws = fixture_draws or 100000
+    families = {'primary':[], 'secondary':[]}
+    for definition in followup.baseline.contrast_definitions():
+        left,right = histories.get(definition['left'],[]),histories.get(definition['right'],[])
+        lc,rc = census(left,100),census(right,100)
+        reason = None if lc['population_complete'] and rc['population_complete'] else 'incomplete_precision_history_population'
+        result = None
+        if reason is None:
+            metric = definition['metric']
+            result = numerics.contrast([h['metrics'][metric] for h in left],[h['metrics'][metric] for h in right],
+                followup.job_rng(jobs['permutation.'+definition['id']],phase),
+                followup.job_rng(jobs['bootstrap.'+definition['id']],phase),draws=draws)
+        families[definition['family']].append({**definition,'left_census':lc,'right_census':rc,
+            'required_precision_sample_size':100,'estimate':None if result is None else result['estimate'],
+            'p':None if result is None else result['p'],'holm_p':None,
+            'interval':None if result is None else result['interval'],'result':result,'unavailable_reason':reason})
+    output = {}
+    for family, components in families.items():
+        for component, adjusted in zip(components,numerics.fixed_holm([c['p'] for c in components],6)):
+            component['holm_p']=adjusted;component['verdict']=contrasts.verdict(component['estimate'],adjusted)
+        output[family]={'family_size':6,'components':components,'aggregate_verdict':contrasts.aggregate(components),
+            'source_direction':'positive','interpretation':'conditional_model_mechanism_not_historical_causal_inference'}
+    return output
+
+
+def normalized_histories(value, rows, resolved, binding):
+    """Validate every row before removing the already accepted phase prefix."""
+    if value['schema_version']==2:followup.validate_resolved(value,resolved)
+    records.resolved_payload(resolved)
+    if any(resolved[k] != binding[k] for k in records.BINDING_FIELDS):
+        raise ValueError('resolved binding mismatch')
+    keys = followup.baseline.expected_keys(value)
+    if set(rows)-set(keys): raise ValueError('undeclared raw keys')
+    configs = {a['id']:a['config'] for a in resolved['arms']}
+    if len(configs) != len(resolved['arms']) or set(configs) != {a['id'] for a in value['arms']}:
+        raise ValueError('resolved roster mismatch')
+    histories={}; census_rows=[]
+    for arm in value['arms']:
+        indexed={**arm,'config':configs[arm['id']],'execution_mode':'registered','schema_version':value['schema_version']}
+        if value['schema_version']==2:
+            indexed.update(phase=value['phase'],study_protocol=value['study_protocol'])
+        name=arm['id'].removeprefix(value['phase']+'.') if value['schema_version']==2 else arm['id']
+        histories[name]=[]
+        for r in range(arm['sessions']):
+            key=(arm['id'],arm['first_seed']+r); row=rows.get(key)
+            if row is None:
+                census_rows.append({'arm':key[0],'seed':key[1],'status':'missing','complete':False,'metrics':None,'partial_metrics':None})
+                continue
+            if records.validate_record(row,indexed,binding)!=key: raise ValueError('dictionary/envelope key mismatch')
+            history={**records.history_metrics(row),'arm':key[0],'seed':key[1]};histories[name].append(history)
+            census_rows.append({'arm':key[0],'seed':key[1],**history})
+    return histories,census_rows
+
+
+def report(value, table, rows, resolved, binding, historical, *, data_sha256):
+    followup.expected_keys(value)
+    if value['provenance_status']!='frozen' or data_sha256 is None:
+        raise ValueError('follow-up analysis requires frozen bound dataset')
+    if value['historical_input'] != historical['historical_input']:
+        raise ValueError('wrong independent historical input')
+    old, old_rows=normalized_histories(historical['manifest'],historical['records'],historical['resolved'],historical['binding'])
+    fresh,fresh_rows=normalized_histories(value,rows,resolved,binding)
+    jobs={j['id']:j for j in value['analysis_jobs']}; phase=value['phase']
+    source_result=source_findings(table,fresh,old,jobs,phase)
+    comparisons=contrast_findings(fresh,jobs,phase)
+    return {'schema_version':2,'model':'democratic_peace','study_protocol':followup.PROTOCOL,
+        'phase':phase,'reading':value['reading'],'classification':'registered_offline_followup_findings',
+        'registered_histories':10800,'attempted_slots':10800,'received_histories':len(rows),
+        'history_status_counts':dict(Counter(h['status'] for h in fresh_rows)),
+        'histories':fresh_rows,'populations':{a:census(h,100) for a,h in fresh.items()},
+        'historical_literal_original':{'attempted_slots':3240,'received_histories':len(old_rows),
+            'history_status_counts':dict(Counter(h['status'] for h in old_rows)),
+            'populations':{a:census(h,30) for a,h in old.items()}},
+        'source':source_result,'primary_contrasts':comparisons['primary'],'secondary_contrasts':comparisons['secondary'],
+        'analysis_jobs':value['analysis_jobs'],'method_contract_sha256':value['method_contract_sha256'],
+        'draws':{'source':100000,'permutation':100000,'contrast':100000},
+        'provenance':{'fresh':{'binding':binding,'data_sha256':data_sha256},
+            'historical':{'binding':historical['binding'],'data_sha256':historical['data_sha256']},
+            'source_table_sha256':value['source_table_sha256']},'source_equivalence':'Unresolved',
+        'limits':['probability_reading_variant_not_historical_identity','reading_differences_descriptive_no_cross_reading_tests',
+            'clustering_conditioned_on_surviving_democracies','independent_populations_never_pooled',
+            'original_executable_rng_and_statistic_identity_unresolved']}
+
+
+def load_fresh(manifest_path, source_path, sessions, resolved_path, receipt_path, binary, root):
+    from .run import sha256_file
+    from .provenance import verify_source_review
+    manifest_bytes=Path(manifest_path).read_bytes();value=records.strict_json(manifest_bytes)
+    followup.expected_keys(value)
+    data=Path(source_path).read_bytes()
+    if followup.sha(data)!=value['source_table_sha256'] or followup.sha(data)!=followup.SOURCE_TABLE_SHA256:
+        raise ValueError('fixed audited source table identity mismatch')
+    table=records.strict_json(data);source.validate_registered_table(table);verify_source_review(root,table)
+    from .followup_registration import verify_inventory
+    inventory=verify_inventory(root,value)
+    if inventory!=value['source_inventory_sha256']: raise ValueError('fresh source inventory mismatch')
+    receipt_bytes=Path(receipt_path).read_bytes();resolved=records.strict_json(Path(resolved_path).read_bytes())
+    binding={'manifest_sha256':followup.sha(manifest_bytes),'binary_sha256':sha256_file(binary),
+        'source_inventory_sha256':inventory,'build_receipt_sha256':followup.sha(receipt_bytes),
+        'resolved_configs_sha256':resolved['resolved_configs_sha256']}
+    records.validate_build_receipt(records.strict_json(receipt_bytes),binding['manifest_sha256'],binding['binary_sha256'],inventory,root)
+    raw=sha256_file(sessions);rows=records.read_sessions(sessions,value,resolved,binding)
+    if raw!=sha256_file(sessions):raise ValueError('fresh data changed during validation')
+    return value,table,rows,resolved,binding,raw
+
+
+def main():
+    import argparse,json
+    from .historical import historical_dataset
+    parser=argparse.ArgumentParser(description=__doc__)
+    for name in ('manifest','source','sessions','resolved','build-receipt','binary','source-root',
+        'historical-study-root','historical-inventory','historical-source-archive','historical-binary','output'):
+        parser.add_argument('--'+name,required=True,type=Path)
+    args=parser.parse_args()
+    actual={'python':platform.python_version(),'numpy':np.__version__}
+    if actual!=method_contract()['runtime']:raise ValueError('numerical runtime differs from pinned contract')
+    inputs=[args.manifest,args.source,args.sessions,args.resolved,args.build_receipt,args.binary,
+        args.historical_inventory,args.historical_source_archive,args.historical_binary]
+    inputs.extend(args.historical_study_root.glob('*'))
+    value=records.strict_json(args.manifest.read_bytes())
+    inputs.extend(Path(args.source_root)/e['path'] for e in value.get('source_inventory') or [])
+    outputs=[args.output.with_suffix('.json'),args.output.with_suffix('.md')]
+    validate_output_destinations(inputs,outputs)
+    historical=historical_dataset(study_root=args.historical_study_root,inventory_path=args.historical_inventory,
+        source_archive=args.historical_source_archive,binary=args.historical_binary)
+    value,table,rows,resolved,binding,raw=load_fresh(args.manifest,args.source,args.sessions,args.resolved,args.build_receipt,args.binary,args.source_root)
+    result=report(value,table,rows,resolved,binding,historical,data_sha256=raw)
+    if records.verify_source_inventory(args.source_root,value['source_inventory'])!=value['source_inventory_sha256']:
+        raise ValueError('sources changed during analysis')
+    args.output.parent.mkdir(parents=True,exist_ok=True)
+    outputs[0].write_text(json.dumps(result,indent=2,allow_nan=False)+'\n')
+    outputs[1].write_text(f"# Democratic Peace follow-up: {value['phase']}\n\n"+
+        f"Fresh slots:10800; received:{len(rows)}. Historical literal originals:3240.\n\n"+
+        f"Source conditional verdict:{result['source']['scopes']['all']['conditional_verdict']}. " +
+        "Source identity remains Unresolved. Predictive intervals describe simulated30-history replications.\n")
+
+
+if __name__=='__main__':main()
