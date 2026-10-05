@@ -1,6 +1,6 @@
-# CPFA rule reference (F1)
+# CPFA rules (F1) and fixed-world foraging (F2)
 
-The public `sugarscape_core::foraging` module verifies stateless rules from Hecker and Moses (2015). Engineering implementation and independent task/whole-branch reviews are complete; this work merged into `main` at `5819a04`. F1 neither simulates foraging nor reproduces evolved performance. It supplies no world, heading sampler, scheduler, food ledger or waypoint server.
+The top-level public `sugarscape_core::foraging` API verifies stateless rules from Hecker and Moses (2015). Engineering implementation and independent task/whole-branch reviews are complete; this work merged into `main` at `5819a04`. F1 neither simulates foraging nor reproduces evolved performance. It supplies no world, heading sampler, scheduler, food ledger or waypoint server.
 
 See the [source audit](studies/2026-10-04-foraging-construction-reading.md), [approved design](superpowers/specs/2026-10-04-foraging-construction-design.md) and [approved implementation plan](superpowers/plans/2026-10-04-foraging-1-cpfa-rules.md) for provenance and acceptance evidence. The later ARGoS source was inspected, not copied, built or run. Its inspected revision is `18fc0d9813e37bcc01c54ec9896435f1038f4295`; it is not established as the simulator behind the 2015 results.
 
@@ -64,8 +64,85 @@ A site ID identifies a caller's previously observed location. A supplied waypoin
 
 `WaypointThreshold::PaperBelow` retains strength equal to `0.001`, following the paper's removal-below wording. `LaterArgosStrict` requires strength strictly greater than `0.001`, following the inspected later source. Both discard weaker records. The caller supplies current strength; F1 does not expire or maintain server records.
 
-## Next gate: F2 source reconciliation
+## F2 source reconciliation
 
-Before specifying a fixed world, reconcile historical simulator provenance; heading updates and angular bounding; displacement and boundaries; detection area and whether density includes the picked-up item; survey time; decision cadence and give-up events; empty-return memory; nest radius; resource removal and delivery scoring. Also decide publication/server access timing, self-visibility, duplicate sites, capacity and storage costs. Unresolved conventions must be labeled supplied reconstruction choices in an approved F2 design, rather than treated as runtime commitments here.
+The F2 audit reconciles historical simulator provenance; heading updates and angular bounding; displacement and boundaries; detection area and whether density includes the picked-up item; survey time; decision cadence and give-up events; empty-return memory; nest radius; resource removal and delivery scoring. The approved design fixes publication/server access timing, self-visibility, duplicate sites, capacity and storage costs, labeling supplied reconstruction choices separately from historical source behavior.
 
 F3 passage adaptation, F4 excavation coupling and F5 termite comparison retain separate design gates. Quantitative evolutionary reproduction also requires parameter provenance, evolutionary settings, independent evaluation layouts, outcome definitions and an approved scientific protocol. Passing F1 rule tests establishes none of those scientific outcomes.
+
+## F2 implementation status
+
+The [historical source audit](studies/2026-10-04-foraging-fixed-world-reading.md) recovered a prepublication iAnt-Sim implementation with eight-neighbor angular movement, explicit delays and nest-return scoring. The [approved fixed-world design](superpowers/specs/2026-10-04-foraging-2-fixed-world-design.md) records source conventions and deliberate reconstruction choices; the user approved the written spec on 2026-10-05; the [implementation plan](superpowers/plans/2026-10-05-foraging-2-fixed-world.md) was approved on 2026-10-05. Strength-weighted recruitment is now also verified in the historical simulator, while the existing `LaterArgosStrengthWeighted` API spelling remains unchanged.
+
+F2 engineering and independent task/whole-branch reviews are complete on `foraging-2-design`. The final counter correction passed scoped review; workspace verification reports 2,463 passed, 0 failed and 103 ignored, with formatting and core clippy clean. The implementation plan preserves commands, rulings and evidence. Integration and scientific execution remain separate; F3 passage adaptation is the next design increment.
+
+## Fixed-world public usage
+
+`foraging::fixed` adds validated `World::new`, atomic `step`, observational
+`snapshot` and `summary`, and bounded `run`. F1 exports remain compatible.
+The parameters below are supplied engineering values, not evolved defaults.
+
+```rust
+use sugarscape_core::foraging::{CpfaParameters, fixed::{run, Pos, Resource, Setup, RunOptions}};
+let setup = Setup {
+    width: 5, height: 5, nest: Pos { x: 2, y: 2 }, agents: 1,
+    resources: vec![Resource { id: u64::MAX, pos: Pos { x: 3, y: 2 } }],
+    parameters: CpfaParameters {
+        p_search: 1.0, p_return: 0.0, omega: 0.0,
+        lambda_informed: 0.0, lambda_fidelity: 0.0,
+        lambda_publish: 0.0, lambda_waypoint: 0.0,
+    },
+};
+let episode = run(setup, 12, RunOptions { ticks: 20, sample_every: 7, snapshots: true }).unwrap();
+assert_eq!(episode.summary.completed_ticks, 20);
+assert_eq!(episode.summary.work.opportunities, 20);
+assert_eq!(episode.snapshots.first().unwrap().completed_ticks, 0);
+assert_eq!(episode.snapshots.last().unwrap().completed_ticks, 20);
+```
+
+Grid dimensions are 3–125 cells, agents 1–256, resources 0–256. Resource IDs
+are arbitrary unique `u64` values; resource cells must be distinct, valid and
+away from the nest. All seven parameters are explicit and use F1 validation.
+Runs request 1–7,200 ticks and at most 1,000,000 agent opportunities. Individual
+steps enforce the same cumulative bounds. Snapshot intervals must be positive,
+even with recording disabled. Initial and final frames are included once;
+disabled recording yields no frames and zero bytes. The 64 MiB bound counts
+canonical compact JSON bytes for each Snapshot, excluding Episode fields and
+inter-frame delimiters. Serialization uses a bounded counting writer before
+committing each frame. Errors return no successful partial Episode.
+
+Ticks process stable agent IDs in ascending order, which can bias competitive
+access. Events use processing ticks starting at zero; snapshots count completed
+ticks. Every requested tick runs even after exhaustion or completed delivery.
+Each eligible agent gets one opportunity per tick; delay waits consume an
+opportunity without drawing, sensing or moving. Headings and standard deviations
+are radians. Informed age counts turns, waypoint age counts ticks. Cells reflect
+the historical 8 cm scale; the inferred half-second tick interpretation does not
+convert probability parameters into per-second hazards.
+
+Resources are conserved one-item tokens: `initial = available + assigned + delivered`.
+Pickup is assignment from the cell ahead after turning; only exact nest return
+scores delivery. `ResourceView.resource.pos` always records the original resource
+cell; its `state` describes assignment or delivery. Assigned tokens at cutoff are
+unfinished returns. Missing pickup/delivery times are censored, including empty
+worlds. Work totals are checked sums of per-agent counters; calculate rates with
+an explicit tick or opportunity denominator. Researcher views expose all resources,
+but controllers only sense the forward cell and a frozen successful Moore-neighborhood
+count. Waypoints can remain stale, and their strengths are evaluated observationally
+without expiring records or consulting current resource availability.
+
+Replays require identical setup, seed, implementation version and supported
+platform. Sampling and summaries consume no RNG; native-source and cross-platform
+floating-point trajectory identity are not claimed. Reconstruction deliberately
+uses two cosine Box–Muller draws per turn, floating absolute turn delays, bounded
+boundary proposals and atomic failed ticks. It follows paper/F1 empty-return
+recruitment rather than the historical suppression flag. Successful arrival draws
+publication, fidelity and recruitment independently; publication precedes departure,
+so the publisher sees its own record. Duplicate sites remain separate records;
+strength weighting retains the `0.001` threshold equality. The historical audit also
+supports strength weighting; `LaterArgosStrengthWeighted` retains its existing spelling.
+
+F3 separately replaces angular eight-neighbor movement with passage navigation
+and capacity. F4 adds paid excavation and separate spoil/food logistics. Error
+models, generated evaluation layouts, evolved settings and quantitative reproduction
+require further source reconciliation and a registered scientific protocol.

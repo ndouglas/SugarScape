@@ -27,7 +27,8 @@ pub struct Waypoint {
 pub enum WaypointSelection {
     /// Supplied comparison rule with equal intervals among active records.
     UniformComparison,
-    /// Strength-weighted selection from the inspected later ARGoS source.
+    /// Strength-weighted selection verified in both the historical iAnt simulator
+    /// and the inspected later ARGoS source; the public spelling is retained.
     LaterArgosStrengthWeighted,
 }
 

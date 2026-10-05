@@ -1,7 +1,7 @@
 # Research-anchored foraging and construction design
 
 **Date:** 2026-10-04.
-**Status:** written design approved by the user on 2026-10-04. The [F1 implementation plan](../plans/2026-10-04-foraging-1-cpfa-rules.md) was approved by the user on 2026-10-04; the [F1 reference](../../foraging.md) is implemented and independently reviewed, merged into `main` at `5819a04`; scientific registration/execution remain separate.
+**Status:** written design approved by the user on 2026-10-04. The [F1 implementation plan](../plans/2026-10-04-foraging-1-cpfa-rules.md) was approved by the user on 2026-10-04; the [F1 reference](../../foraging.md) is implemented and independently reviewed, merged into `main` at `5819a04`; F2 is also implemented and independently reviewed on `foraging-2-design`, with [execution evidence](../plans/2026-10-05-foraging-2-fixed-world.md#execution-and-review-evidence--2026-10-05); F2 integration and scientific registration/execution remain separate.
 **Programme:** construction B3, with later bridges to collective-agency communication and costly assistance.
 **Evidence:** [source audit](../../studies/2026-10-04-foraging-construction-reading.md).
 **Implemented starting point:** [Burrow resource access](2026-10-04-burrow-2-resource-access-design.md), integrated into main.
@@ -30,7 +30,7 @@ This spec covers the programme sequence and the first source-rule increment. Sub
 | F4: construction coupling | Excavation and spoil/food interaction with measured delivery | New composition of verified components |
 | F5: shortcut comparison | Straight/detour/twisting geometries and cost/route/delivery measurements | Defined computational comparison with a biological phenomenon |
 
-F1–F5 are local labels for this branch of B3, not replacements for Minds or C1–C10. The next implementation plan covers F1 only. Food extraction, physical carrying and excavation are later increments rather than hidden additions to F1.
+F1–F5 are local labels for this branch of B3, not replacements for Minds or C1–C10. F1 is merged and F2 engineering is complete; the next design increment is F3 passage adaptation. Food extraction, physical carrying and excavation are later increments rather than hidden additions to F1.
 
 ## F1 boundary and architecture
 
@@ -116,3 +116,7 @@ Quantitative reproduction of the paper's optimized performance requires its evol
 ## Review handoff
 
 The written design was checked for scope, source provenance and separation of verified rules from supplied choices, and approved by the user on 2026-10-04. Review of the [F1 implementation plan](../plans/2026-10-04-foraging-1-cpfa-rules.md) was approved by the user on 2026-10-04. Execution followed the user's standing subagent-driven preference; implementation, acceptance and independent reviews are complete. Integration into `main` completed at `5819a04`. Scientific registration/execution remain separate from engineering implementation.
+
+## F2 follow-up
+
+The [F2 historical audit](../../studies/2026-10-04-foraging-fixed-world-reading.md) and [fixed-world design](2026-10-04-foraging-2-fixed-world-design.md) are complete; the user approved the written spec on 2026-10-05. The [F2 implementation plan](../plans/2026-10-05-foraging-2-fixed-world.md) is prepared for review. No F2 implementation or scientific execution has started. The recovered historical source informs eight-neighbor angular movement, delays and completed-return scoring; release identity and quantitative reproduction remain unestablished.
