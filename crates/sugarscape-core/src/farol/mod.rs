@@ -21,5 +21,6 @@ pub use presets::presets;
 pub use stats::{random_fluctuation, FarolSnapshot, SERIES, WINDOW};
 pub use view::{grid, row, GRID_X, HIST_X, SHOWN, TALL, TIME_W};
 pub use world::{
-    payoff, Agent, FarolAgent, FarolCell, FarolInspection, FarolMode, FarolWorld, StrategyView,
+    payoff, Agent, FarolAgent, FarolCell, FarolDecision, FarolDecisionAgent, FarolInspection,
+    FarolMode, FarolWorld, StrategyView,
 };

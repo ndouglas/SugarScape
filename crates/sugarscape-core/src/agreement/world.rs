@@ -195,7 +195,13 @@ impl AgreementWorld {
                     *v = rng.gen_range(-1.0..1.0);
                 }
                 let mut order: Vec<usize> = (0..n).collect();
-                order.sort_by(|&a, &b| x[a].total_cmp(&x[b]).then(a.cmp(&b)));
+                if config.placement == Placement::Bounds && plus + minus > 0 {
+                    // AD draws moderates across the full opinion interval;
+                    // choosing extremist roles must not remove its tails.
+                    order.shuffle(&mut rng);
+                } else {
+                    order.sort_by(|&a, &b| x[a].total_cmp(&x[b]).then(a.cmp(&b)));
+                }
                 for &i in &order[..minus] {
                     role[i] = Role::Minus;
                 }
@@ -903,6 +909,47 @@ mod tests {
         let none = world(|c| c.extremists = 0.0);
         assert_eq!((none.plus_bound, none.minus_bound), (None, None));
         assert_eq!(none.stats.latest().unwrap().y, 0.0);
+    }
+
+    #[test]
+    fn bounds_moderates_cover_the_full_uniform_opinion_range() {
+        // Selecting extremists by opinion rank would remove both tails.
+        let w = world(|c| {
+            c.agents = 4000;
+            c.extremists = 0.5;
+            c.placement = Placement::Bounds;
+        });
+        let mut bins = [0; 10];
+        for i in 0..w.x.len() {
+            if w.role[i] == Role::Moderate {
+                bins[((w.x[i] + 1.0) * 5.0) as usize] += 1;
+            }
+        }
+        // 2000 independent uniform moderate draws: about 200 per tenth.
+        assert!(bins.iter().all(|&n| (150..=250).contains(&n)), "{bins:?}");
+    }
+
+    #[test]
+    fn bounds_without_extremists_keeps_the_drawn_population() {
+        let drawn = world(|c| c.extremists = 0.0);
+        let bounds = world(|c| {
+            c.extremists = 0.0;
+            c.placement = Placement::Bounds;
+        });
+        assert_eq!(bounds.x, drawn.x);
+        assert_eq!((bounds.plus_bound, bounds.minus_bound), (None, None));
+    }
+
+    #[test]
+    fn bounds_with_only_extremists_places_every_agent_at_a_bound() {
+        let w = world(|c| {
+            c.extremists = 1.0;
+            c.delta = 1.0;
+            c.placement = Placement::Bounds;
+        });
+        assert!(w.x.iter().all(|&x| x == 1.0));
+        assert!(w.role.iter().all(|&r| r == Role::Plus));
+        assert_eq!((w.plus_bound, w.minus_bound), (Some(1.0), None));
     }
 
     #[test]

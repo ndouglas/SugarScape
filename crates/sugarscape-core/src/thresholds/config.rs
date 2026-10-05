@@ -26,7 +26,7 @@ pub enum Distribution {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Crowd {
-    /// The normal's (i + ½)/N quantiles: Granovetter's population.
+    /// The normal's (i + ½)/N quantiles: a finite realization of its CDF.
     Quantiles,
     /// N independent draws.
     Sampled,

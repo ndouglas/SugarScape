@@ -248,6 +248,12 @@ def blink(agent_id, frame):
     return 1.0
 
 
+def closing_blink(frame, frames):
+    """One six-frame blink four-fifths through a closing card."""
+    distance = abs(frame - round(frames * .8))
+    return max(.1, distance / 3) if distance < 3 else 1.0
+
+
 def sight_cells(x, y, vision, w, h):
     """The cells an agent sees, as four rows (north, east, south, west), nearest first."""
     steps = [(0, -1), (1, 0), (0, 1), (-1, 0)]

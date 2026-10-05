@@ -1,0 +1,8 @@
+{
+  "preset": "gr-uniform",
+  "seed": 200001,
+  "ticks": 101,
+  "set": {
+    "repeat": false
+  }
+}

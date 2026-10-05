@@ -78,7 +78,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ants-2b",
             "Fig. IIb: ε 0.002, δ 0.01",
             KIRMAN,
-            "Figure IIb: ε 0.002, δ 0.01 — strong recruiting. Nearly all the ants crowd one source, then, with no outside cause, flip to the other. Kirman: 'the system spends little time around the value of one-half and a great deal of time in the extremes … Although the average value of the system over the period is about one-half.' Measured (20 seeds, 2 000 steps, the figure's 100 000 meetings): 8 % of steps between 40 % and 60 %; a source holds 80 % or more 77 % of the time; 0–4 flips. But the time average is between 0.4 and 0.6 in only 4 runs of 20 (0.15 to 0.95): 'about one-half' needs about a hundred times the figure's length. Kirman's 80–20 split never appears as a resting point: the long-run distribution piles up at 0 and 100 %.",
+            "Figure IIb: ε 0.002, δ 0.01 — strong recruiting. Nearly all the ants crowd one source, then, with no outside cause, flip to the other. Kirman: 'the system spends little time around the value of one-half and a great deal of time in the extremes … Although the average value of the system over the period is about one-half.' Measured (20 seeds, 2 000 steps, the figure's 100 000 meetings): 8 % of steps between 40 % and 60 %; a source holds 80 % or more 77 % of the time; 0–4 flips. Figure IIb illustrates one realization, not a claim about all records: time means in 0.4–0.6 occur in 4 of these 20 runs (means range from 0.15 to 0.95). Longer records average near half more reliably. The base chain's stationary modes are at 0 and 100 %, rather than at 20 and 80 %; this does not rule out transient 80–20 imbalances.",
             |_| {},
         ),
         preset(
@@ -95,7 +95,7 @@ pub fn presets() -> Vec<ModelPreset> {
             "ants-becker",
             "Becker's pull, Fig. Ic",
             KIRMAN,
-            "Kirman suggests, but does not run, Becker's externality: 'having the probability, 1 − δ, of conversion to the majority increase with the size of the majority. This would make the process more extreme.' Here recruiting is scaled by 1 + (the recruiter's share − the recruit's), at Figure Ic's weak recruiting. The exact long-run distribution now peaks at 18 % and 82 % — the 80–20 split the real ants showed, which Kirman's own chain cannot produce at any ε and δ. Measured (20 seeds, 20 000 steps): a source holds 80 % or more 52 % of the time; 17 flips per run.",
+            "Kirman suggests, but does not run, Becker's externality: 'having the probability, 1 − δ, of conversion to the majority increase with the size of the majority. This would make the process more extreme.' Our chosen formula scales recruiting by 1 + (the recruiter's share − the recruit's), with capped switching probabilities, at Figure Ic's weak recruiting. The exact long-run distribution now has modes at 18 % and 82 %. Kirman supplies neither this formula nor a numerical split. The base chain has no preferred stationary 80–20 split, although it can pass through that imbalance. Measured (20 seeds, 20 000 steps): a source holds 80 % or more 52 % of the time; 17 flips per run.",
             |c| {
                 kirman(c, 0.15, 0.3);
                 c.pull = 1.0;
@@ -105,22 +105,22 @@ pub fn presets() -> Vec<ModelPreset> {
             "ants-lock",
             "Becker's pull, Fig. IIb",
             KIRMAN,
-            "Becker's pull at Figure IIb's strong recruiting, pull 0.5: once most ants are at one source, ε cannot pull enough away to start a flip. Measured (20 seeds, 20 000 steps): no flips at all; the largest source holds 99.5 % on average. 'More extreme', all the way to lock-in.",
+            "Our Becker-style pull at Figure IIb's strong recruiting, pull 0.5: one source holds nearly the whole colony for long stretches. Measured (20 seeds, 20 000 steps, 10⁶ meetings each): no flips observed; the largest source holds 99.5 % on average. Positive ε permits a path between every split, so this is finite-horizon persistence, not permanent lock-in.",
             |c| {
                 c.pull = 0.5;
             },
         ),
-        preset("ants-three", "Three sources", KIRMAN, "Figure IIb with three sources: an ant that changes source on its own picks either of the others. Kirman: 'Generalizing to a larger number of sources would not change the analysis.' Measured (20 seeds, 20 000 steps): one source holds 80 % or more 77 % of the time (79 % with two); the colony moves from one holder to another 24 times per run (26 with two). It holds.", |c| {
+        preset("ants-three", "Three sources", KIRMAN, "Figure IIb with three sources: an ant that changes source on its own picks either of the others. Kirman: 'Generalizing to a larger number of sources would not change the analysis.' Measured (20 seeds, 20 000 steps): one source holds 80 % or more 77 % of the time (79 % with two); the colony moves from one holder to another 24 times per run (26 with two). The measured occupancy is similar under our uniform-other-source self-conversion rule; this does not imply every statistic is unchanged.", |c| {
             c.sources = 3;
         }),
-        preset("am-ring", "A ring, D = 10", AM, "Alfarano and Milaković's version of the ants: each ant in turn switches with probability (a + λ × its neighbors at the other source)/(a + λN) — here on a ring, each ant knowing its 10 nearest. Their mean-field theory gives a Beta distribution with α = aN/λD = 0.5, the histogram's dots, 'irrespective of the underlying network structure'. On a ring it is not: neighbors agree with each other, so fewer are elsewhere than the average suggests. Measured (10 seeds, 100 000 sweeps): Var of the share 0.088 against the theory's 0.126.", |c| {
+        preset("am-ring", "A ring, D = 10", AM, "Alfarano and Milaković's version of the ants: each ant in turn switches with probability (a + λ × its neighbors at the other source)/(a + λN) — here on a ring, each ant knowing its 10 nearest. Their mean-field theory gives a Beta distribution with α = aN/λD = 0.5, the histogram's dots, 'irrespective of the underlying network structure'. At our N 100 and fixed-index sequential updates, the ring's measured variance is narrower than the nominal Beta prediction; the paper's Figure 3 omits N, so this is a conditional reconstruction, not an exact published-figure verdict. Neighbor correlations can matter. Measured (10 seeds, 100 000 sweeps): Var of the share 0.088 against the theory's 0.126.", |c| {
             alfarano(c, 100, Network::Ring, 0.05)
         }),
         preset(
             "am-random",
             "A random network, p = 0.1",
             AM,
-            "Alfarano and Milaković's rule on a random network (each pair linked with probability 0.1), α = 0.5. Here their mean field works. Measured (10 seeds, 100 000 sweeps): Var of the share 0.116 against the theory's 0.123. The random network is also the one whose herding survives as N grows: the number of neighbors grows with N (see the ants-n sweep).",
+            "Alfarano and Milaković's rule on a random network (each pair linked with probability 0.1), α = 0.5. At our N 100 the measured variance is near their mean-field prediction; Figure 3 omits N. Measured (10 seeds, 100 000 sweeps): Var of the share 0.116 against the theory's 0.123. The random network is also the one whose herding survives as N grows: the number of neighbors grows with N (see the ants-n sweep).",
             |c| alfarano(c, 100, Network::Random, 0.05),
         ),
         preset(

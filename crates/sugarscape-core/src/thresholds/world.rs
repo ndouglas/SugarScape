@@ -551,7 +551,8 @@ impl ThresholdsWorld {
         below as f64 / n as f64
     }
 
-    fn view(&self, i: usize) -> ActorView {
+    /// Current state of the actor at the given zero-based index.
+    pub fn view(&self, i: usize) -> ActorView {
         let (a, g) = self.perceived(i);
         let t = self.th[i];
         ActorView {

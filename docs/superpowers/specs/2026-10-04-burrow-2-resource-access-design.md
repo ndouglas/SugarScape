@@ -1,7 +1,7 @@
 # Burrow 2 resource access design
 
 **Date:** 2026-10-04
-**Status:** architectural design approved by the user on 2026-10-04; [implementation plan](../plans/2026-10-04-burrow-2-resource-access.md) approved 2026-10-04; implementation and independent task/whole-branch reviews are complete; integration awaits the user's choice. The checked core and native/WASM exports are implemented; scientific execution remains unchanged and has not occurred.
+**Status:** architectural design approved by the user on 2026-10-04; [implementation plan](../plans/2026-10-04-burrow-2-resource-access.md) approved 2026-10-04; implementation and independent task/whole-branch reviews are complete; integration into `main` is complete at `6076aed`. The checked core and native/WASM exports are implemented; scientific execution remains unchanged and has not occurred.
 **Baseline:** [implemented Burrow 1](2026-10-03-burrow-1-excavation-design.md).
 **Programme:** [collective construction B3](../../studies/2026-10-03-cultures-construction-and-underworlds.md#b3-add-inhabitation-and-competing-functions).
 **Parallel study:** [Burrow 1 protocol draft](2026-10-04-burrow-1-measured-protocol.md).
@@ -155,6 +155,6 @@ Run relevant core/CLI/parity checks and existing regressions after an approved s
 
 ## Research sequence and remaining questions
 
-The design and implementation plan were approved and the engineering implementation and independent task/whole-branch reviews are complete; integration awaits the user's choice. The Burrow 1 archive/analysis harness has engineering acceptance. Neither track depends on scientific treatment outcomes, and neither should tune against them.
+The design and implementation plan were approved and the engineering implementation and independent task/whole-branch reviews are complete; integration into `main` is complete at `6076aed`. The Burrow 1 archive/analysis harness has engineering acceptance. Neither track depends on scientific treatment outcomes, and neither should tune against them.
 
 After resource access works, Burrow 2B can add actual extraction and delivery, accounting for finite resources and shared hands, and then ask who benefits. Later distinguish supplied destination knowledge from locally discovered resources, add physical signals or practices with appropriate source support, vary body and substrate, and preserve/repair layouts across cohorts. That creates the route toward differentiated homes, storage, fortifications, neighborhoods and inherited underworlds without crediting supplied goals or labels as emergent culture.

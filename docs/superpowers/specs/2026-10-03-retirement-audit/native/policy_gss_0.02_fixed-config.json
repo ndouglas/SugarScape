@@ -1,0 +1,30 @@
+{
+  "per_cohort": 100,
+  "rational": 0.02,
+  "random": 0.05,
+  "p": 0.5,
+  "threshold": 0.75,
+  "spread": 0.14433756729740646,
+  "size": {
+    "min": 10,
+    "max": 25
+  },
+  "extent": 5,
+  "counts": "eligible",
+  "renewal": "slot",
+  "order": "by_cohort",
+  "initial_deaths": "literal",
+  "eligibility": 65,
+  "mandatory": 70,
+  "policy": {
+    "enabled": false,
+    "to": 62
+  },
+  "groups": {
+    "enabled": false,
+    "coupling": 0.1
+  },
+  "norm": 0.95,
+  "stop_at_norm": false,
+  "stop_at": 0
+}

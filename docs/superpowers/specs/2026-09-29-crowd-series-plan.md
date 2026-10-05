@@ -1,9 +1,7 @@
 # Following the Crowd: the third Flump series
 
 **Date:** 2026-09-29
-**Status:** in progress. Episode 1 (Neighbors like me, `2026-09-29-schelling-spike.md`) is built on
-milestone 30 (Schelling's own models); episode 2 (The tipping point, `2026-09-30-tipping-spike.md`) on
-milestone 31 (his bounded neighborhood); episode 3 (the variations) needs engine work.
+**Status:** in progress. Episodes 1–10 are built with verified previews; episode 10, "When to retire," was accepted by the user on October 4. Episode 11, the finale, is next.
 **Follows:** the Sugarscape series (`2026-09-26-sugarscape-series-plan.md`) and the Cooperation series
 (`2026-09-27-cooperation-series-plan.md`), both complete, and keeps their rules.
 
@@ -40,11 +38,11 @@ which the user is doing separately.
 | 3 | Variations on Schelling ✅ | Epstein & Axtell 1996; Pancs & Vriend 2007; Zhang 2004; Gauvin, Vannimenus & Nadal 2009; Singh, Vainchtein & Weiss 2009 | `schelling` switches | Wanting a mixed street still sorts the town; a frozen, a segregated and a mixed phase; clusters shrink on a big board |
 | 4 | One culture or many ✅ | Axelrod 1997 | `culture` | Local convergence, global polarization; the docked mobility result reproduces on a broad or tall enough mountain |
 | 5 | Listening to the like-minded ✅ | Hegselmann & Krause 2002 | `opinions` | Fig. 2b's two camps come up in about a third of runs; most keep a middle camp |
-| 6 | How extremists win | Deffuant et al. 2000, 2002 | `agreement` | A few confident extremists and a moderate crowd |
-| 7 | The riot that needs one person | Granovetter 1978; Watts 2002 | `thresholds` | One threshold decides the riot; cascades on networks |
-| 8 | Ants at two food piles | Kirman 1993; Alfarano & Milaković | `ants` | The ants never rest at 80–20 |
-| 9 | Nobody goes, it's too crowded | Arthur 1994; Challet & Zhang 1997 | `farol` | Coordination without communication |
-| 10 | When to retire | Axtell & Epstein 1999 | `retirement` | A norm spreads through networks; footnote 5 is false |
+| 6 | How extremists win ✅ | Deffuant et al. 2000, 2002 | `agreement` | A few confident extremists and a moderate crowd |
+| 7 | The riot that needs one person ✅ | Granovetter 1978; Watts 2002 | `thresholds` | One threshold decides the riot; cascades on networks |
+| 8 | Ants at two food piles ✅ | Kirman 1993; Alfarano & Milaković 2007 | `ants` | Asymmetric crowds can flip; 80–20 is not a preferred split in the base chain |
+| 9 | Nobody goes, it's too crowded ✅ | Arthur 1994; Challet & Zhang 1997 | `farol` | Coordination without communication |
+| 10 | When to retire ✅ | Axtell & Epstein 1999 | `retirement` | Retirement spreads through networks; aggregate crossings and age norms differ, with source-specific policy thresholds and reconstruction-dependent denominator effects |
 | 11 | Finale | all | — | The ledger |
 
 Episodes 1–3 are Schelling's: his own rules first, as the default, then later researchers' versions as named variations (see `2026-09-29-schelling-reading-notes.md`).
@@ -52,6 +50,14 @@ Episodes 1–3 are Schelling's: his own rules first, as the default, then later 
 The order builds from space (1–4) through opinions (5–6) and joining (7–8) to coordination (9–10).
 
 ## Studio work
+
+For the finale and future series, apply the [studio's planning and presentation
+principles](../../../studio/README.md#planning-and-presentation), adopted after
+the October 4 retirement preview review. Plan around one idea, one complication,
+and a closing thought; treat 90–100 seconds as a starting point and allow fewer,
+longer scenes. Give recognizable individuals and the music room to carry the
+meaning. Review each beat for one main sentence and one visual question, retaining
+material qualifications on screen and detailed evidence in the linked records.
 
 Each episode adds its model to the frame dump (`frames.rs`), as the Cooperation series did. Boards
 the studio already has may serve: the lattice (Schelling, culture), the ring or street (opinions on

@@ -27,6 +27,7 @@ SOUNDFONT = pathlib.Path(
 SECTION_BARS = 8
 RING_OUT = 1.5  # seconds the last chord rings under the end card
 CUE_DELAY = 0.3  # a sting lands this long after its beat begins
+HANDOFF_RELEASE = 0.3  # meaningful note release before the backing returns
 DUCK_RAMP = 0.8  # seconds the track takes to sink under a ducking sting, and to come back
 
 
@@ -67,6 +68,8 @@ class Tune:
     # The meter line, when it isn't beats_per_bar quarter notes (a slip
     # jig's "9/8", with beats_per_bar 4.5: tempos stay in quarter notes).
     meter: str | None = None
+    # Opt-in solo cues: silence the tune before onset; recover after the score.
+    handoffs: tuple = ()
 
 
 def eighths(bar):
@@ -182,18 +185,44 @@ def duck_expression(ducks, ramp=DUCK_RAMP):
     ) or "1"
 
 
-def sting_mix_command(track, stings, out, ducks=()):
+def sting_envelopes(tune, cues, stings):
+    """Main ducks and per-input cue fades. Handoffs use the longest notated
+    voice (including rests), never the synthesized WAV's quiet release tail.
+    A cue at the cut's start simply begins with the main already silent.
+    """
+    ducks, fades = [], {}
+    for i, ((name, _), (path, at)) in enumerate(zip(cues, stings)):
+        if name in tune.handoffs:
+            parts, bpm = tune.stings[name]
+            duration = max(eighths(text) for text in parts.values()) * 30 / bpm
+            recovery = duration + HANDOFF_RELEASE
+            ducks.append((at - DUCK_RAMP, at + recovery + DUCK_RAMP, 0.0))
+            fades[i] = (recovery, DUCK_RAMP)
+        elif name in tune.ducks:
+            ducks.append((at, at + _seconds(path), tune.ducks[name]))
+    return ducks, fades
+
+
+def sting_mix_command(track, stings, out, ducks=(), fades=None):
     """ffmpeg argv laying each (wav, seconds) sting over `track`, sinking the
-    track under any ducks (start, end, gain)."""
+    track under any ducks (start, end, gain). Optional fades map input indices
+    to (seconds into cue, fade duration), applied before delaying the cue."""
     argv = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(track)]
     parts, labels = [], ["[0:a]"]
     if ducks:
-        parts.append(f"[0:a]volume='{duck_expression(ducks)}':eval=frame[main]")
+        # WAV frames can span 64 ms. Bound handoff gain updates to 1 ms so
+        # the backing is silent by the first cue note, independent of framing.
+        frames = "asetnsamples=n=48:p=0," if fades else ""
+        parts.append(f"[0:a]{frames}volume='{duck_expression(ducks)}':eval=frame[main]")
         labels = ["[main]"]
     for i, (wav, at) in enumerate(stings):
         argv += ["-i", str(wav)]
         ms = round(at * 1000)
-        parts.append(f"[{i + 1}:a]adelay={ms}|{ms}[s{i}]")
+        fade = ""
+        if fades and i in fades:
+            start, duration = fades[i]
+            fade = f"afade=t=out:st={start:g}:d={duration:g},"
+        parts.append(f"[{i + 1}:a]{fade}adelay={ms}|{ms}[s{i}]")
         labels.append(f"[s{i}]")
     parts.append(f"{''.join(labels)}amix=inputs={len(labels)}:duration=first:normalize=0[out]")
     return argv + ["-filter_complex", ";".join(parts), "-map", "[out]", str(out)]
@@ -221,9 +250,9 @@ def render(tune, seconds, out_dir, soundfont, cues=()):
     if not cues:
         return wav
     stings = [(_synth(sting_score(tune, s), out / f"{tune.slug}-sting-{s}", soundfont), at) for s, at in cues]
-    ducks = [(at, at + _seconds(path), tune.ducks[s]) for (s, _), (path, at) in zip(cues, stings) if s in tune.ducks]
+    ducks, fades = sting_envelopes(tune, cues, stings)
     mixed = out / f"{tune.slug}-with-stings.wav"
-    subprocess.run(sting_mix_command(wav, stings, mixed, ducks), check=True)
+    subprocess.run(sting_mix_command(wav, stings, mixed, ducks, fades), check=True)
     return mixed
 
 

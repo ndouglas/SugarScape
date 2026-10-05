@@ -1,0 +1,125 @@
+# Native selected results
+
+Fresh seeds1001–1050;50 per retained cell. Conditional mean ± sample SD among attained seeds; blanks mean no observed attainment. Remaining runs are right-censored at the declared horizon. Continuous diagnostics use finite observation counts, not norm-attainment counts.
+
+| Case | Metric | Attained / n | Censored | Conditional mean ± SD |
+|---|---|---:|---:|---:|
+|spread-source_0|first95|50/50|0|16.60 ± 3.76|
+|spread-source_0.05|first95|50/50|0|43.18 ± 12.87|
+|spread-source_0.1|first95|50/50|0|36.36 ± 12.63|
+|spread-source_0.2|first95|50/50|0|17.34 ± 4.37|
+|spread-source_0.3|first95|50/50|0|10.08 ± 1.89|
+|spread-source_0.4|first95|50/50|0|7.96 ± 0.97|
+|spread-source_0.5|first95|50/50|0|10.20 ± 2.05|
+|counts_Slot_Eligible|first95|50/50|0|16.60 ± 3.76|
+|counts_Slot_All|first95|0/50|50|—|
+|counts_Replace_Eligible|first95|37/50|13|65.89 ± 94.47|
+|counts_Replace_All|first95|3/50|47|200.00 ± 101.13|
+|trajectory_0.15|first95|50/50|0|7.78 ± 1.25|
+|trajectory_0.2|first95|50/50|0|4.96 ± 0.64|
+|trajectory_0.05|first95|50/50|0|61.54 ± 3.92|
+|policy_ae_0.01_auto|first95|50/50|0|5.18 ± 0.39|
+|policy_ae_0.01_auto|sustained62_post|50/50|0|12.40 ± 0.49|
+|policy_ae_0.01_auto|proxy_new|50/50|0|2.02 ± 0.14|
+|policy_ae_0.01_fixed|first95|50/50|0|3.16 ± 0.37|
+|policy_ae_0.01_fixed|sustained62_post|50/50|0|15.00 ± 0.00|
+|policy_ae_0.01_fixed|proxy_new|50/50|0|1.00 ± 0.00|
+|policy_ae_0.01_sustained|first95|50/50|0|3.16 ± 0.37|
+|policy_ae_0.01_sustained|sustained62_post|50/50|0|15.00 ± 0.00|
+|policy_ae_0.01_sustained|proxy_new|50/50|0|2.00 ± 0.00|
+|policy_ae_0.02_auto|first95|50/50|0|5.06 ± 0.24|
+|policy_ae_0.02_auto|sustained62_post|50/50|0|12.30 ± 0.46|
+|policy_ae_0.02_auto|proxy_new|50/50|0|2.02 ± 0.14|
+|policy_ae_0.02_fixed|first95|50/50|0|3.04 ± 0.20|
+|policy_ae_0.02_fixed|sustained62_post|50/50|0|14.98 ± 0.14|
+|policy_ae_0.02_fixed|proxy_new|50/50|0|1.00 ± 0.00|
+|policy_ae_0.02_sustained|first95|50/50|0|3.04 ± 0.20|
+|policy_ae_0.02_sustained|sustained62_post|50/50|0|15.00 ± 0.00|
+|policy_ae_0.02_sustained|proxy_new|50/50|0|2.00 ± 0.00|
+|policy_ae_0.04_auto|first95|50/50|0|4.94 ± 0.37|
+|policy_ae_0.04_auto|sustained62_post|50/50|0|12.48 ± 0.50|
+|policy_ae_0.04_auto|proxy_new|50/50|0|2.02 ± 0.14|
+|policy_ae_0.04_fixed|first95|50/50|0|2.92 ± 0.34|
+|policy_ae_0.04_fixed|sustained62_post|50/50|0|14.96 ± 0.20|
+|policy_ae_0.04_fixed|proxy_new|50/50|0|1.00 ± 0.00|
+|policy_ae_0.04_sustained|first95|50/50|0|2.92 ± 0.34|
+|policy_ae_0.04_sustained|sustained62_post|50/50|0|15.00 ± 0.00|
+|policy_ae_0.04_sustained|proxy_new|50/50|0|2.00 ± 0.00|
+|policy_ae_0.05_auto|first95|50/50|0|4.84 ± 0.42|
+|policy_ae_0.05_auto|sustained62_post|50/50|0|12.38 ± 0.49|
+|policy_ae_0.05_auto|proxy_new|50/50|0|2.02 ± 0.14|
+|policy_ae_0.05_fixed|first95|50/50|0|2.82 ± 0.39|
+|policy_ae_0.05_fixed|sustained62_post|50/50|0|15.00 ± 0.00|
+|policy_ae_0.05_fixed|proxy_new|50/50|0|1.00 ± 0.00|
+|policy_ae_0.05_sustained|first95|50/50|0|2.82 ± 0.39|
+|policy_ae_0.05_sustained|sustained62_post|50/50|0|15.00 ± 0.00|
+|policy_ae_0.05_sustained|proxy_new|50/50|0|1.96 ± 0.20|
+|policy_gss_0.01_auto|first95|3/50|47|98.67 ± 28.88|
+|policy_gss_0.01_auto|sustained62_post|5/50|45|54.60 ± 23.63|
+|policy_gss_0.01_auto|proxy_new|3/50|47|41.33 ± 27.47|
+|policy_gss_0.01_fixed|first95|50/50|0|53.80 ± 4.02|
+|policy_gss_0.01_fixed|sustained62_post|3/50|47|40.33 ± 34.44|
+|policy_gss_0.01_fixed|proxy_new|2/50|48|10.50 ± 4.95|
+|policy_gss_0.01_sustained|first95|50/50|0|53.80 ± 4.02|
+|policy_gss_0.01_sustained|sustained62_post|5/50|45|56.00 ± 22.96|
+|policy_gss_0.01_sustained|proxy_new|4/50|46|49.50 ± 29.56|
+|policy_gss_0.02_auto|first95|8/50|42|127.62 ± 23.98|
+|policy_gss_0.02_auto|sustained62_post|10/50|40|66.60 ± 26.95|
+|policy_gss_0.02_auto|proxy_new|8/50|42|75.38 ± 24.03|
+|policy_gss_0.02_fixed|first95|49/50|1|53.63 ± 5.14|
+|policy_gss_0.02_fixed|sustained62_post|6/50|44|70.50 ± 28.51|
+|policy_gss_0.02_fixed|proxy_new|7/50|43|78.86 ± 21.76|
+|policy_gss_0.02_sustained|first95|49/50|1|53.63 ± 5.14|
+|policy_gss_0.02_sustained|sustained62_post|10/50|40|48.70 ± 27.98|
+|policy_gss_0.02_sustained|proxy_new|5/50|45|46.80 ± 24.71|
+|policy_gss_0.04_auto|first95|14/50|36|106.29 ± 34.70|
+|policy_gss_0.04_auto|sustained62_post|24/50|26|63.21 ± 28.32|
+|policy_gss_0.04_auto|proxy_new|14/50|36|50.79 ± 31.51|
+|policy_gss_0.04_fixed|first95|50/50|0|52.86 ± 5.17|
+|policy_gss_0.04_fixed|sustained62_post|18/50|32|53.61 ± 26.95|
+|policy_gss_0.04_fixed|proxy_new|12/50|38|48.75 ± 32.78|
+|policy_gss_0.04_sustained|first95|50/50|0|54.48 ± 16.36|
+|policy_gss_0.04_sustained|sustained62_post|23/50|27|50.91 ± 27.45|
+|policy_gss_0.04_sustained|proxy_new|15/50|35|46.00 ± 26.06|
+|policy_gss_0.05_auto|first95|22/50|28|96.09 ± 33.13|
+|policy_gss_0.05_auto|sustained62_post|30/50|20|46.13 ± 22.53|
+|policy_gss_0.05_auto|proxy_new|22/50|28|43.73 ± 32.90|
+|policy_gss_0.05_fixed|first95|50/50|0|51.94 ± 1.48|
+|policy_gss_0.05_fixed|sustained62_post|32/50|18|46.78 ± 21.45|
+|policy_gss_0.05_fixed|proxy_new|19/50|31|41.05 ± 26.54|
+|policy_gss_0.05_sustained|first95|50/50|0|51.94 ± 1.48|
+|policy_gss_0.05_sustained|sustained62_post|29/50|21|50.69 ± 24.51|
+|policy_gss_0.05_sustained|proxy_new|18/50|32|48.72 ± 27.63|
+|extent_6|first95|50/50|0|57.80 ± 6.14|
+|extent_7|first95|50/50|0|56.16 ± 6.32|
+|extent_8|first95|50/50|0|54.94 ± 7.47|
+|extent_9|first95|50/50|0|53.80 ± 6.76|
+|extent_10|first95|50/50|0|52.78 ± 7.08|
+|cohort-source_200|first95|50/50|0|16.66 ± 2.80|
+|cohort-source_300|first95|50/50|0|15.82 ± 1.87|
+|groups-source_0.05|first95|50/50|0|63.88 ± 3.94|
+|groups-source_0.05|group_a|50/50|0|64.06 ± 3.97|
+|groups-source_0.05|group_b|50/50|0|24.72 ± 9.85|
+|groups-source_0.08|first95|50/50|0|51.92 ± 10.32|
+|groups-source_0.08|group_a|50/50|0|52.14 ± 10.20|
+|groups-source_0.08|group_b|50/50|0|31.54 ± 14.12|
+|groups-source_0.1|first95|50/50|0|45.90 ± 12.36|
+|groups-source_0.1|group_a|50/50|0|46.10 ± 12.25|
+|groups-source_0.1|group_b|50/50|0|35.58 ± 15.16|
+|groups-source_0.12|first95|50/50|0|49.82 ± 13.20|
+|groups-source_0.12|group_a|50/50|0|50.04 ± 13.11|
+|groups-source_0.12|group_b|50/50|0|45.84 ± 15.19|
+|groups-source_0.15|first95|50/50|0|52.48 ± 13.42|
+|groups-source_0.15|group_a|50/50|0|52.72 ± 13.51|
+|groups-source_0.15|group_b|50/50|0|51.30 ± 14.28|
+|groups-source_0.2|first95|50/50|0|58.12 ± 9.60|
+|groups-source_0.2|group_a|50/50|0|58.24 ± 9.57|
+|groups-source_0.2|group_b|50/50|0|57.90 ± 9.80|
+|critical_Slot_0|first95|50/50|0|73.14 ± 2.56|
+|critical_Slot_0.02|first95|50/50|0|69.84 ± 2.61|
+|critical_Slot_0.05|first95|50/50|0|61.54 ± 3.92|
+|critical_Slot_0.1|first95|50/50|0|16.60 ± 3.76|
+
+`first95`, group crossings and policy `proxy_new` are eligible-retired95% reconstruction proxies. `sustained62_post` is first ten-consecutive-period run of native rolling retirement-event mode62 after actual policy switch. Neither criterion is the author-defined age norm, whose stopping rule is unpublished. See package README for horizons, config JSONs and code.
+
+Native `previous_tick_mode_at_switch` is the rolling retirement-event mode from the tick immediately BEFORE the recorded switch tick. It excludes switching-tick events. Independent `mode_at_switch` includes events through the actual switch tick. These diagnostics have different observation windows and must not be compared directly. Native representative trace `modal_age` at the switch tick is a separate observation; no per-seed switch-tick values are inferred from the single retained trace.

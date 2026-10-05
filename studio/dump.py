@@ -44,6 +44,17 @@ class Frame:
     kinds: dict = field(default_factory=dict)
     # id → the site's traits, as a tuple: Axelrod's culture model.
     traits: dict = field(default_factory=dict)
+    opinions: dict = field(default_factory=dict)
+    uncertainties: dict = field(default_factory=dict)
+    period: int | None = None
+    members: dict = field(default_factory=dict)
+    ants_events: list = field(default_factory=list)
+    counts: list = field(default_factory=list)
+    step: int | None = None
+    episodes: int | None = None
+    # Actual Farol decision input/outcome, separate from illustrative placement.
+    farol: dict = field(default_factory=dict)
+    retirement: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -112,6 +123,10 @@ class Dump:
     culture_rank: dict = field(default_factory=dict)
     # Bounded confidence: each agent's rank by starting opinion (0 the lowest).
     start_rank: dict = field(default_factory=dict)
+    roles: dict = field(default_factory=dict)
+    links: list = field(default_factory=list)
+    periods: list = field(default_factory=list)
+    retirement: dict = field(default_factory=dict)
 
 
 def _culture_rank(last):
@@ -283,12 +298,22 @@ def parse(text):
     raw = json.loads(text)
     if raw.get("format") != FORMAT:
         raise ValueError(f"frame dump format {raw.get('format')!r}, expected {FORMAT}")
+    if raw.get("model") == "retirement":
+        return _retirement(raw)
+    if raw.get("model") == "farol":
+        return _farol(raw)
+    if raw.get("model") == "ants":
+        return _ants(raw)
     if raw.get("model") == "dpd":
         return _dpd(raw)
     if raw.get("model") in ("schelling", "line"):
         return _schelling(raw)
     if raw.get("model") == "culture":
         return _culture(raw)
+    if raw.get("model") == "agreement":
+        return _agreement(raw)
+    if raw.get("model") == "thresholds":
+        return _thresholds(raw)
     if raw.get("model") == "opinions":
         return _opinions(raw)
     if raw.get("model") == "tipping":
@@ -511,6 +536,102 @@ def _opinions(raw):
     )
 
 
+def _farol(raw):
+    """Stable home/bar (B/A) slots by real id; keep decision timing verbatim."""
+    import math
+    n = raw["agents"]
+    block = math.ceil(math.sqrt(n))
+    w, h = 2 * (block + 2), math.ceil(n / block)
+    frames = []
+    for k, original in enumerate(raw["frames"]):
+        members = {a["id"]: a for a in original["agents"]}
+        if len(original["agents"]) != n or set(members) != set(range(1, n + 1)):
+            raise ValueError("farol frame must contain each real agent exactly once")
+        attendance = sum(a["went"] is True for a in members.values())
+        if attendance != original["attendance"]:
+            raise ValueError("farol attendance must match actual choices")
+        groups = {i: int(a["went"] is True) for i, a in members.items()}
+        agents = {i: Agent(i, groups[i] * (block + 2) + (i - 1) % block,
+                           (i - 1) // block, 6.0, 0, 0, 0) for i in members}
+        frames.append(Frame(tick=k, agents=agents, sugar=[0.0] * (w*h), deaths={}, born=[],
+                            pollution=[0.0] * (w*h), births={}, members=members, groups=groups,
+                            period=original["tick"], counts=[n-attendance, attendance],
+                            farol={key: value for key, value in original.items() if key != "agents"}))
+    return Dump(seed=raw["seed"], ticks=len(frames)-1, width=w, height=h,
+                capacity=[0.0] * (w*h), placed=list(frames[0].agents), config=raw["config"],
+                frames=frames, stats=raw["stats"], model="farol")
+
+
+def _ants(raw):
+    """Keep real agents in deterministic source slots; retain true model time."""
+    import math
+    n, sources = raw["agents"], raw["config"]["sources"]
+    block = math.ceil(math.sqrt(n))
+    w, h = sources * (block + 2), math.ceil(n / block)
+    frames = []
+    for k, original in enumerate(raw["frames"]):
+        members = {a["id"]: a for a in original["agents"]}
+        if len(original["agents"]) != n or set(members) != set(range(1,n+1)):
+            raise ValueError("ants frame must contain each real agent exactly once")
+        counts = [0] * sources
+        agents = {}
+        for i, a in sorted(members.items()):
+            source = a["source"] - 1
+            if not 0 <= source < sources:
+                raise ValueError("ants source must be between 1 and sources")
+            slot = counts[source]
+            counts[source] += 1
+            agents[i] = Agent(i, source * (block+2) + slot % block, slot // block, 6.0, 0, 0, 0)
+        if counts != original["counts"]:
+            raise ValueError("ants counts must match actual source membership")
+        frames.append(Frame(tick=k, agents=agents, sugar=[0.0]*(w*h), deaths={}, born=[],
+                            pollution=[0.0]*(w*h), births={}, members=members,
+                            groups={i:a["source"] for i,a in members.items()}, period=original["tick"],
+                            counts=original["counts"], ants_events=original.get("ants_events",[])))
+    return Dump(seed=raw["seed"], ticks=len(frames)-1, width=w, height=h,
+                capacity=[0.0]*(w*h), placed=list(frames[0].agents), config=raw["config"],
+                frames=frames, stats=raw["stats"], model="ants", links=[tuple(e) for e in raw.get("links",[])])
+
+
+def _thresholds(raw):
+    """One fixed grid square per real actor; retain exact states and links."""
+    import math
+    n = raw['agents']
+    w = math.ceil(math.sqrt(n))
+    h = math.ceil(n / w)
+    frames = []
+    for k, original in enumerate(raw['frames']):
+        members = {a['id']: a for a in original['agents']}
+        if set(members) != set(range(1, n + 1)):
+            raise ValueError('thresholds frame must contain each real actor exactly once')
+        frames.append(Frame(tick=k, agents={i: Agent(i, (i-1)%w, (i-1)//w, 6.0, 0, 0, 0)
+                                          for i in members},
+                            sugar=[0.0]*(w*h), deaths={}, born=[], pollution=[0.0]*(w*h), births={},
+                            groups={i:int(a['acting']) for i,a in members.items()}, members=members,
+                            period=original['tick'], step=original['step'], episodes=original['episodes']))
+    return Dump(seed=raw['seed'], ticks=len(frames)-1, width=w, height=h,
+                capacity=[0.0]*(w*h), placed=list(frames[0].agents),
+                config=raw['config'], frames=frames, stats=raw['stats'], model='thresholds')
+
+
+def _agreement(raw):
+    """Use the opinion histogram with the agreement scale mapped from −1…1.
+
+    Keep the exact state and true period alongside the animation frame index.
+    """
+    from dataclasses import replace
+
+    normalized = {**raw, "starts": [(x + 1) / 2 for x in raw["starts"]],
+                  "frames": [{**f, "opinions": [(x + 1) / 2 for x in f["opinions"]]}
+                             for f in raw["frames"]]}
+    d = _opinions(normalized)
+    frames = [replace(f, period=original["tick"],
+                      opinions=dict(enumerate(original["opinions"])),
+                      uncertainties=dict(enumerate(original["uncertainties"])))
+              for f, original in zip(d.frames, raw["frames"])]
+    return replace(d, frames=frames, roles=dict(enumerate(raw["roles"])))
+
+
 def _tipping(raw):
     """A Schelling bounded-neighborhood shot as a `Dump` on `area.py`'s board:
     insiders in the area, outsiders in their queues, so the Flumps walk in and
@@ -600,3 +721,82 @@ def tracks(d):
             t = out[id_]
             out[id_] = Track(t.id, t.first, t.cells, t.sugar, frame.tick, cause)
     return out
+
+
+def _retirement_period(period, population):
+    """Validate counts and activation-local decision inputs without simulating them."""
+    events, exposure = period['retirements_by_age'], period['working_exposure_by_age']
+    if len(events) != 81 or len(exposure) != 81 or any(
+            type(e) is not int or type(x) is not int or not 0 <= e <= x <= population
+            for e, x in zip(events, exposure)):
+        raise ValueError('retirement age events must fit actual working exposure')
+    if not 0 <= period['imitator_retirements'] <= sum(events):
+        raise ValueError('imitator events must fit actual retirement events')
+    decision = period['decision']
+    if decision is None:
+        return
+    neighbors = decision['neighbors']
+    ids = [a['id'] for a in neighbors]
+    if len(set(ids)) != len(ids) or any(not 0 <= i < population for i in ids):
+        raise ValueError('decision contains invalid network ids')
+    counted = sum(a['counted'] for a in neighbors)
+    retired = sum(a['counted'] and a['retired'] for a in neighbors)
+    if (counted, retired) != (decision['counted'], decision['retired_counted']):
+        raise ValueError('decision numerator/denominator disagree with neighbors')
+    if any(a['eligible'] != (a['age'] >= decision['eligibility']) or
+           a['counted'] != (decision['counts'] == 'all' or a['eligible']) for a in neighbors):
+        raise ValueError('decision eligibility/counting disagree with activation-local ages')
+    if decision['tick'] != period['tick'] or decision['eligibility'] != period['decision_eligibility']:
+        raise ValueError('decision clock/eligibility disagree with actual period')
+    threshold_met = counted > 0 and retired * decision['threshold_scale'] >= decision['threshold_units'] * counted
+    if decision['retired_before'] or decision['retired_after'] != threshold_met:
+        raise ValueError('imitator outcome disagrees with recorded positive-denominator rule')
+
+
+def _retirement(raw):
+    """All native slots, including zero, with actual birth identity and sampled clocks."""
+    import math
+    from collections import Counter
+    n = raw['agents']
+    periods = raw['periods']
+    if not periods or [p['tick'] for p in periods] != list(range(len(periods))):
+        raise ValueError('retirement compact periods must contain every actual native tick')
+    for period in periods:
+        _retirement_period(period, n)
+    if any(len(values) != len(periods) for values in raw['stats'].values()):
+        raise ValueError('retirement stats must retain the full native period clock')
+    if raw['ticks'] != len(raw['frames']) - 1:
+        raise ValueError('retirement dump ticks must count sampled frames')
+    actual = [f['tick'] for f in raw['frames']]
+    if not actual or actual[0] != 0 or actual[-1] != periods[-1]['tick'] or actual != sorted(set(actual)):
+        raise ValueError('retirement sampled frames must retain actual initial/final clocks')
+    w = math.ceil(math.sqrt(n)); h = math.ceil(n / w)
+    blank = [0.] * (w*h)
+    frames = []
+    before = {}
+    for k, original in enumerate(raw['frames']):
+        members = {a['id']: a for a in original['agents']}
+        if len(original['agents']) != n or set(members) != set(range(n)):
+            raise ValueError('retirement frame must contain every native slot exactly once')
+        counts = Counter(a['age'] for a in members.values())
+        if counts != {int(age):count for age,count in original['cohort_counts'].items()}:
+            raise ValueError('retirement cohort totals must match actual population')
+        for a in members.values():
+            if any(i not in members for i in a['network']) or len(set(a['network'])) != len(a['network']):
+                raise ValueError('retirement network must contain distinct valid slots')
+        for key, value in periods[original['tick']].items():
+            if original[key] != value:
+                raise ValueError('sampled retirement event differs from native compact period')
+        born = [i for i,a in members.items() if i in before and a['born'] != before[i]]
+        metadata = {key:value for key,value in original.items() if key != 'agents'}
+        frames.append(Frame(tick=k,period=original['tick'],
+            agents={i:Agent(i,i%w,i//w,6.,a['age'],0,0) for i,a in members.items()},
+            sugar=blank,deaths={i:'mortality' for i in born},born=born,pollution=blank,
+            births={i:(None,None) for i in born},members=members,
+            groups={i:a['group'] for i,a in members.items()},
+            kinds={i:a['kind'] for i,a in members.items()},retirement=metadata))
+        before = {i:a['born'] for i,a in members.items()}
+    return Dump(seed=raw['seed'],ticks=raw['ticks'],width=w,height=h,capacity=blank,
+                placed=list(range(n)),config=raw['config'],frames=frames,stats=raw['stats'],
+                model='retirement',periods=periods,retirement={key:raw.get(key) for key in
+                ('retirement_policy_at','policy_switched_at','every','age_min','age_max')})

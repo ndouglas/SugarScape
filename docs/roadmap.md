@@ -212,13 +212,13 @@ decides the network results. See `docs/superpowers/specs/2026-09-26-relative-agr
 
 ## Milestone 23: El Farol and the Minority Game (done)
 
-Arthur's El Farol bar (1994) and Challet and Zhang's minority game (1997) as one model kind, with a
-stated predictor library, Challet, Marsili and Ottino's scoring, bias and random baseline (2004),
-Savit, Manuca and Riolo's memory transition (1999), and the minority game's payoff, mixed-memory and
-Darwinian variants as switches. Arthur's mean of 60 holds but is trivial — random agents get it too —
-and his agents swing far more than coin-flippers, with a high-low cycle he says never persists; the
-memory transition and most of Challet and Zhang's figures reproduce; their two-peaked payoff and the
-waste of pure cloning do not. See `docs/superpowers/specs/2026-09-27-el-farol-design.md`.
+Arthur's El Farol bar (1994) and Challet and Zhang's minority game (1997) as one model kind,
+with an explicit library, scoring and random ties, CMO-inspired payoff/binary variants, random
+baseline, memory transition, mixed memories and evolution. The Arthur-inspired variant averages
+near 60 with elevated variance and negative lag-1 correlation; this does not establish persistent
+cycles. The memory transition has qualitative support. Fig. 4 central mass and Fig. 10 evolution
+comparisons do not test histogram shape or population purity; a separate homogeneous-population
+probe confirms Fig. 10's extreme waste. See `docs/superpowers/specs/2026-09-27-el-farol-design.md`.
 
 ## Milestone 24: Ants and Recruitment (done)
 

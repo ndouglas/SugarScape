@@ -1387,55 +1387,67 @@ Lotem, Michael A. Fishman and Lewi Stone, "Evolution of cooperation between indi
 Random pairs meet, N meetings a period. In Deffuant, Neau, Amblard and Weisbuch's pairwise bounded
 confidence (2000), two agents whose opinions differ by less than d each move a fraction μ of the way
 toward the other. In Deffuant, Amblard, Weisbuch and Faure's **relative agreement** (2002) each agent
-also has an uncertainty — a segment around its opinion — and a partner moves it by μ times the overlap
-of their segments beyond half the influencer's width, divided by that width: confident agents sway
-uncertain ones, and uncertainties move too. A few **extremists** — the most extreme opinions, very
+also has an uncertainty u — the half-width of a segment around its opinion. When the overlap h
+exceeds the influencer's u, the partner moves its opinion and uncertainty toward the influencer's
+by the fraction μ(h/u − 1): confident agents can sway uncertain ones. A few **extremists** — the most extreme opinions, very
 confident — can then leave the majority in the center, split it between the two extremes, or pull it
 all to one extreme. The paper maps which happens with an indicator y (the squared shares of moderates
 that end up extremists at each end, summed: 0 central, 0.5 both extremes, 1 a single extreme) over
 the moderates' uncertainty U and the share of extremists pe (Fig. 9). Opinions run from −1 to 1;
 Deffuant 2000's d on [0, 1] is U = 2d here.
 
-Meadows and Cliff (2012) reimplemented the model twice and could not reproduce Fig. 9; the authors
-replied (2013) that Meadows and Cliff measured y before the model converged, and counted too few
-moderates as extremists — neither detail is in the 2002 paper. Both readings are presets, and the
-paper as stated is the default. Measured (planning and the survey):
+Meadows and Cliff (2012) reimplemented the model twice and could not reproduce Fig. 9. The
+2013 reply changes their Java program: wait longer, and count initially moderate agents beyond
+±0.7 instead of ±0.8. The authors acknowledge that these measurement details were not specified
+in 2002; the cutoff was adjusted after inspecting the trajectories. Their Java and Python
+programs use different updating conventions, so the reply comparison here follows Java.
 
-- **Both fixes are needed.** At Fig. 9's corner (pe 0.05, U 1.4, 200 agents) Meadows and Cliff's
-  reading gives y 0.00; their horizon fixed, 0.40; their cutoff fixed, 0.27; both fixed, 0.98. The
-  majority has drifted most of the way to one extreme by their stop and settles between 0.7 and 0.8.
-  The paper as stated — the extremists drawn, run until nothing moves — agrees with the reply.
-- **The single extreme is a finite-size effect when the extremists are balanced.** At pe 0.1, U 1.6
-  it comes in 79 % of runs with 100 agents, 16 % with 1000 and none with 4000; Fig. 9's single-extreme
-  zone at its stated 1000 agents covers 14 of the 35 cells it shows at pe ≤ 0.075, U ≥ 1.4, and all 35
-  with 200 agents. With a lean (δ 0.1) it holds and strengthens with N. Meadows and Cliff were right
-  that it shrinks with N; the reply's 'any large number of agents' holds only at the smallest pe.
-- **Figs. 5 and 7 do not reproduce at their stated parameters.** Fig. 5's 'only … 4%' of moderates
-  becoming extremists is 48 % (22 % with extremists at ±1). Fig. 7's single extreme — and Fig. 8's
-  central convergence 'for the same parameters' — never appear at the stated μ = 0.5: both extremes in
-  39 of 40 runs. At Fig. 9's μ = 0.2 the pair appears (single 24, central 16), as §4.8's own μ result
-  predicts.
-- **Eq. 11 as printed reproduces none of §6.** The bounded-confidence window 'If |x − x′| < u′', u′
-  being the influencer's uncertainty, lets uncertain moderates pull the confident extremists in: y is
-  0.00 everywhere. With the listener's own uncertainty (**BC window** switch) §6's claims hold: a single
-  extreme only around U = 1, a central band at U 0.8 with averaged uncertainties, none with the variance
-  rule.
-- **ue matters, and the cutoff misreads it.** §4.8 finds no influence of the extremists' uncertainty;
-  at N 1000 (pe 0.05, U 1.4) the population drifts to one extreme far less often at ue 0.05 than at 0.2
-  (median |mean opinion| 0.03 against 0.75) — and at 0.2 the
-  extreme cluster settles at ±0.75, inside the reply's 'innermost extremist less 0.1', so y reads 0.
-- **Networks.** On a Moore lattice there is never a single extreme (Amblard and Deffuant, 2004). On
-  small-world rings it needs a critical number of neighbors that falls as rewiring rises — as they say,
-  but at k 32 to 256 (most runs single from k 32 at p 0.8, 64 at p 1, 256 at p 0.2) rather than
-  'around 8' — and whether sparse rings end in both extremes or the center
-  depends, again, on the unstated cutoff. Weisbuch's scale-free networks (2004) reproduce: no steps in
-  the dispersion, close to the square lattice, closer to well mixed with twice the links; hubs end in
-  the big cluster; 16 % of agents never move. Deffuant 2000's lattice picture appears only when run to
-  stability (a median period of about 1 800), not after the caption's '100 000 iterations' (119
-  periods).
+The default uses the 2002 opinion initialization and relative agreement equations. Its stopping
+tolerance, outcome categories and new-extremist margin are explicit implementation choices;
+"became extremists" was not defined numerically in 2002. A moderate already inside a counting
+threshold contributes to y from the start: crossing a threshold and becoming more confident are
+separate measurements. Source recheck, independent numerical implementation, figure comparisons
+and survey verdicts: `docs/superpowers/specs/2026-10-01-agreement-spike.md`.
+
+- **The reply's two adjustments work together.** At pe 0.05, U 1.4, N 200, the Java reading gives
+  mean y 0.00; waiting 1,200 periods gives 0.40; using the 0.7 cutoff at 200 periods gives 0.27;
+  both give 0.98 (50 seeds). Either adjustment alone can produce single extremes; together they
+  recover the reply's frequent single-extreme regime. A separate implementation gives 188 of
+  200 runs single with both adjustments.
+- **Population size changes the frequency at measured settings.** With balanced extremists,
+  pe 0.1 and U 1.6, single extremes become rarer between N 200 and 2,000. In an independent
+  100-seed check there are 60, 16, 5 and 0 single outcomes at N 200, 1,000, 2,000 and 4,000;
+  at pe 0.05 there are still 52 of 100 at N 4,000. These finite samples do not establish
+  disappearance as N tends to infinity or refute the reply's claim of survival at low pe.
+- **Published examples need example tests.** Figs. 5 and 7–8 are individual runs, not claims
+  about typical frequencies. Fig. 5's caption gives both 4 % joining and y = 0.03, which cannot
+  both satisfy its stated indicator. In 1,000 runs at Fig. 7's printed μ = 0.5, neither a single
+  nor a central outcome was observed under the stated counting convention; both appear at
+  μ = 0.2. Zero observations bound frequency in this sample, not mathematical possibility;
+  the exact cutoff and the source's iteration normalization remain unspecified.
+- **The printed BC window misses Fig. 20's single-extreme band in the tested slice.** Eq. 11
+  uses the influencer's uncertainty. At pe 0.05, N 1,000, μ 0.2, six U values from 0.4 to 1.6,
+  δ 0 and 0.1, it gives y = 0 in all 600 runs (50 per cell). The alternate listener window
+  gives a single extreme in all 50 runs at U 1.0 for either δ. This is a discrepancy with
+  the printed equation, not a claim that every result in §6 fails.
+- **Uncertainty and counting deserve separate checks.** At pe 0.05, U 1.4 and N 1,000,
+  changing extremist uncertainty from 0.05 to 0.2 changes the measured population drift.
+  This is a local comparison near a regime boundary, not a parameter-wide refutation of the
+  paper. A cluster near ±0.75 can be counted differently by 0.7 and a threshold above 0.8.
+- **Networks.** Amblard and Deffuant (2004) place extremists at ±1 and draw moderates
+  independently across [−1, 1]. Balanced runs on the measured Moore lattice do not reach a
+  single extreme. Small-world comparisons name the pair-sampling assumption, counting cutoff,
+  cap and transition definition: an onset is different from a majority of runs being single.
+  The unspecified counting cutoff changes how sparse-ring clusters are classified, not their
+  trajectories. Weisbuch's scale-free model uses a different, one-way meeting rule; its mean
+  dispersion curve is smooth, and more links bring it closer to well mixed.
+- **The 2000 lattice picture is visually compatible at its horizon.** At about 100,000 meetings
+  a broad central majority and isolated extremes are already visible. Tight numerical clusters
+  continue settling later. The paper's picture supplies no exact tolerance for its central
+  symbol, so a strict 10⁻³ cluster gap alone cannot judge that picture.
 
 Switches for what the papers leave open: **Placement** (the most extreme draws; set to ±1; Meadows and
-Cliff's band), **New-extremist margin** (the reply's 0.1; 0 for Meadows and Cliff), **A meeting
+Cliff's band), **New-extremist margin** (0.1 gives the reply's ±0.7 on that band; 0 gives M&C's ±0.8), **A meeting
 updates** (both from their old values; one after the other; only the first, as Weisbuch), **Pairs** on
 a network (a random link; an agent then a neighbor), **BC window**, and the stop (**Stop when stable**,
 **Stop at period**). Networks: anyone, a lattice (four or eight neighbors), a small world grown from a
@@ -1460,7 +1472,7 @@ Agreement Interaction Model," *JASSS* 5(4) 1 (2002); Frédéric Amblard and Guil
 Role of Network Topology on Extremism Propagation with the Relative Agreement Opinion Dynamics,"
 *Physica A* 343 (2004); Gérard Weisbuch, "Bounded Confidence and Social Networks," *European Physical
 Journal B* 38 (2004); Michael Meadows and Dave Cliff, "Reexamining the Relative Agreement Model of
-Opinion Dynamics," *JASSS* 15(4) 4 (2012); Guillaume Deffuant, Frédéric Amblard and Gérard Weisbuch,
+Opinion Dynamics," *JASSS* 15(4) 4 (2012); Guillaume Deffuant, Gérard Weisbuch, Frédéric Amblard and Thierry Faure,
 "The Results of Meadows and Cliff Are Wrong Because They Compute Indicator y Before Model
 Convergence," *JASSS* 16(1) 11 (2013). See `docs/superpowers/specs/2026-09-26-relative-agreement-design.md`.
 
@@ -1476,33 +1488,41 @@ strategies — tables from the last M winning sides to a choice — and plays th
 most so far. With a capacity other than half, the minority game is also Challet, Marsili and Ottino's
 yes-or-no version of El Farol.
 
+The library of 48, absolute-error decay 0.9, integer forecasts, and random tie choices each
+round are implementation choices; Arthur does not specify these details. Random reties also differ
+from his description of deterministic dynamics. With a non-half capacity the binary game is a
+CMO-inspired step-win variant: CMO's Eq. 4 instead updates scores linearly with attendance mismatch.
+Predictor payoff scoring follows the configured go/stay advice; its equality convention differs
+from CMO's Θ(0) = 1 convention.
+
 Measured (the survey and the presets' descriptions):
 
-- **The mean at 60 is trivial; the swings are not.** Arthur's attendance does average 58–60 at every
-  k from 2 to 32, as he says — but agents going at random with probability 0.6 average 60 too
-  (Challet, Marsili and Ottino's point), and Arthur's agents swing 20 to 50 times as widely (σ²/N
-  5–11 against 0.24). Rated by the advice they give instead of their accuracy, the swings halve, but
-  stay well above chance.
-- **Arthur's robustness needs a large library.** The library here is fixed at 48, and his numbers
-  hold across k; but in planning, a library of 25 gave a mean of 52 at k 23, with attendance swinging
-  between near-empty and near-full (σ²/N 22). His "robust to changes in types of predictors created"
-  is not tested here, and on that evidence it would not hold for small libraries.
-- **Arthur's cycles do not go away.** Rated by accuracy, attendance alternates high and low (a lag-1
-  autocorrelation of −0.23 to −0.57) where he says "no persistent cycles"; rated by payoff the cycle
-  is gone. And 30–36 % of the forecasts in use are above 60, not his 40 %.
-- **The memory transition reproduces** (Savit, Manuca and Riolo): with 2 strategies, fluctuations are
-  worst with short memories, lowest where 2^M/N ≈ 0.63 and back to chance with long ones, and the
-  minimum moves one memory step per doubling of N. Players beat a coin just above the transition
-  (the best of 101 wins 54 % at M 6), not far above it (49 % at M 10), where the paper says they
-  still do.
-- **Challet and Zhang's figures mostly hold.** Fluctuations fall through memories 6, 8 and 10 at
-  1001 players (Fig. 1 — with 5 strategies each; with 2, M 10 is already past the minimum); mixed
-  memories win more up to about 6, then level off (Fig. 2); more strategies make players worse
-  (Fig. 5); frequent switchers do worse (Fig. 6); the Darwinian version cuts fluctuations (Fig. 9);
-  memory evolves upward and settles, higher for 1001 players than 101 (Fig. 11). Two do not: the
-  "win more, the smaller the minority" payoff gives one peak, not two (Fig. 4 — rounded as stated,
-  an even split pays nothing and nothing is learned; unrounded, still one peak), and cloning without
-  mutation gives no "tremendous waste" (Fig. 10).
+- **The mean at 60 is trivial; the variance is not.** This Arthur-inspired variant averages 58–60
+  across k from 2 to 32. Random attendance with probability 0.6 also averages 60, with σ²/N 0.24;
+  the adaptive variant has 20–50 times that variance (σ²/N 5–11). Payoff scoring reduces variance
+  but leaves it above the random baseline.
+- **Robustness is tested across k for this fixed library.** Predictor-type robustness and a
+  necessary minimum library size have not been established by reproducible tests.
+- **Attendance is antipersistent under accuracy scoring.** Lag-1 correlation is −0.23 to −0.57;
+  this does not establish persistent cycles. Under payoff scoring lag-1 correlation is small.
+  Strictly above-60 forecasts account for 30–36 %; forecasts exactly at 60 explain the gap from
+  the approximately 40 % stay-home share under the default equality rule.
+- **The memory transition has qualitative support** (Savit, Manuca and Riolo): with two strategies,
+  fluctuations are lowest near the sampled 2^M/N ≈ 0.63 and approach chance at long memories;
+  the minimum moves one memory step per doubling of N. The mean best-agent win rate over finite
+  runs is 54 % at M 6 and 49 % at M 10. This is not a formal test of the preprint's statistical
+  significance claim. CZ98's approximate S = 2 critical value is 0.5; 0.3374 belongs to later MG
+  theory discussed by CMO.
+- **Several CZ97 directions hold in the tested variants.** Fluctuations fall through memories
+  6, 8 and 10 with S = 5 (a project choice for Fig. 1); mixed-memory performance levels off near
+  6; more strategies reduce success; switching and wins correlate negatively; replacement with
+  mutation reduces fluctuations; final memory is higher in the larger tested population.
+  Rounded inverse payoff gives σ²/N near 0.25 under random reties: near-even minorities earn no
+  score updates. Central-mass measurements do not test Fig. 4's two-peak shape. Rolling-window
+  evolution without mutation gives similar late variance to mutation in these runs, but population
+  purity is unmeasured, so this does not test Fig. 10's illustrated monospecies population.
+  A separate homogeneous-population audit probe confirms extreme waste under both tie rules.
+  CZ98 subsequently reports substantial diversity even without mutation.
 
 Switches: **Game**; **Agents decide** (by their best strategy, or at random); **Predictors rated by**
 (accuracy, or the advice they give), **Accuracy memory**, **Forecast exactly L**, **Everyone holds
@@ -1538,30 +1558,49 @@ source — and asked what the network of who meets whom does to it.
 
 Measured (the survey and the presets' descriptions):
 
-- **The chain reproduces exactly — but not the ants' 80–20.** Its long-run distribution is the
+- **The recruitment chain reproduces asymmetry and switches.** Its long-run distribution is the
   beta-binomial with α = ε(N − 1)/(1 − δ): U-shaped below Kirman's threshold ε = (1 − δ)/(N − 1),
   flat at it (to 10⁻¹⁷), centered above; long runs match it within total variation 0.004–0.011.
-  But it never peaks near 80–20 at any ε and δ: it piles up at 0 and 100 %, is flat, or centers.
-  **Becker's majority pull**, which Kirman suggests but does not run, does it: with recruiting scaled
-  by the recruiter's lead, Figure Ic's settings peak at 18 % and 82 %.
-- **Figure IIb's "average … about one-half" needs a hundred times the figure.** Over its 100 000
-  meetings the colony flips 0–4 times, and the time average is between 0.4 and 0.6 in 4 runs of 20
-  (0.15 to 0.95); over 10⁷ meetings, in all 20. The rest of Figure II holds: little time near half,
-  77 % of it with one source at 80 % or more, switches taking 8 % of a regime, and the time to the
-  next switch not depending on how long the colony has held one source.
-- **A majority is less likely to shrink the larger it is — only while recruiting is strong.** At
-  Figure Ic's weak recruiting a slight majority is at first more likely to shrink as it grows.
-- **More sources change nothing, as Kirman says**: with 2 to 6 sources one holds 80 % or more 77–79 %
-  of the time.
-- **Herding fades as the colony grows** (Alfarano and Milaković's N-dependence): at Figure IIb's ε and
-  δ, one source holds 80 % 79 % of the time with 100 ants, 21 % with 1 000. Under their rule a random
-  network cures it — the variance stays flat from 50 to 1 050 ants (inverse-variance slope 0.004; theirs:
-  indistinguishable from 0) while it falls on rings, small worlds and networks with hubs (slopes 0.52,
-  0.43, 0.38; theirs 0.51, 0.51, 0.40). Under Kirman's pairwise meetings a random network does not
-  cure it: a meeting is one partner however many an ant knows.
-- **Their mean field fails on rings.** "Irrespective of the underlying network structure" holds for
-  random and scale-free networks (variance within 8 % of the Beta), not for the ring or the small
-  world, whose variance falls 19–34 % short: neighbors agree with each other.
+  The base chain has no preferred stationary 80–20 split (no interior mode between 65 % and 95 %
+  in 17 820 valid settings), which is a stronger diagnostic than the real ants' transient imbalance.
+  Our Becker-style multiplier, 1 + pull × (recruiter share − recruit share), with capped probabilities,
+  gives stationary modes at 18 % and 82 % at pull 1 and Figure Ic's settings. Kirman proposes
+  increasing majority attraction but supplies neither this formula nor a numerical prediction.
+- **Figure IIb's near-half time average is compatible with the model.** The figure illustrates one
+  100 000-meeting realization. Of 1 000 independent records, 229 have time means in 0.4–0.6
+  (22.9 %; Wilson 95 % interval 20.4–25.6 %). The compatibility rule was revised after the result
+  was known. Across the original 20 records, 4 match and means range from 0.15 to 0.95;
+  over 10⁷ meetings, all 20 match. Extremes and rapid switches also reproduce: 77 % of the
+  figure-length record with one source at 80 % or more, crossings taking 8 % of a regime.
+  Kirman's Markov argument conditions on the exact current split. Our pooled 80 %-regime residual
+  times are within 20 % of the mean at the tested ages; grouping different splits into a regime
+  need not preserve age invariance.
+- **Kirman's small-self-conversion majority argument holds.** In the U-shaped regime
+  ε < (1 − δ)/(N − 1), the probability that an established majority decreases falls as it grows
+  (Figure Ia and IIb). Figure Ic is outside that premise; its initial increase is our application
+  contrast, rather than a failed paper claim.
+- **Larger-source occupancy is similar under our stated rule**: with uniform self-conversion to
+  another source and 2, 3, or 6 sources, one holds 80 % or more 77–79 % of the time.
+  This tests occupancy, not whether every statistic is unchanged.
+- **Herding weakens as the colony grows** (Alfarano and Milaković's N-dependence): at Figure IIb's ε and
+  δ, one source holds 80 % 79 % of the time with 100 agents, 20 % with 1 000. Under AM's rule a random
+  network preserves the variance from 50 to 1 050 agents in our Figure 4 audit (3 seeds,
+  300 000 sweeps per setting), a three-size qualitative comparison rather than a reproduction
+  of their fit across sizes up to about 5 000: inverse-variance slope 0.003, versus 0.463, 0.482, and 0.387 for
+  rings, small worlds, and scale-free networks. Their raw slopes are 0.512 (ring), 0.507 (small world), 0.402 (scale-free),
+  and indistinguishable from zero (random). Footnote 18 divides plotted variance by 3 and multiplies plotted
+  inverse variance by 3. Under Kirman's pairwise
+  meetings a random network does not cure N-dependence: each meeting is one partner.
+- **At our stated N, the ring falls short of nominal mean-field variance.** Our Figure 3 reconstruction
+  at N 100 with fixed-index sequential updates and 5 runs of 100 000 sweeps measures ring variance
+  0.086, 0.055, 0.037 against nominal Beta predictions 0.125, 0.083, 0.050 (α 0.5, 1, 2).
+  Random and scale-free networks are within 8 %, while ring and small-world values fall 19–33 %
+  short. This is an application diagnostic revised after the result was known, not an exact
+  published-figure verdict: Figure 3 omits N. A retrospective N 50 ring check is within the existing 15 % tolerance
+  at all three α (20 seeds); other networks were not rerun at N 50.
+  The authors already report slight regular and small-world variance deviations in the Figure 4
+  discussion. Realized degree differs from nominal degree on some graphs; finite-size mean-field variance is
+  (N + 2α)/(4N(2α + 1)), slightly above the continuous-Beta limit.
 - **A few who never herd calm everyone** (their Fig. 6): 5 % of ants who never herd, on the network,
   leave a third of the variance the same ants off the network would.
 
@@ -2951,33 +2990,63 @@ Measured (the survey and the presets' descriptions):
 - **Granovetter's crowds reproduce.** Thresholds 0 to 99 give a riot of 100; move the person at 1
   up to 2 and only the instigator riots. His Figure 2's continuous calculation jumps between σ 12.2
   and 12.3 — "about six" rioters below (5.5), "nearly 100" above, 50 in the limit.
-- **A crowd of real people has no single tipping point.** A crowd of 100 whose thresholds are the
-  normal's quantiles tips at σ 12.23 when thresholds are rounded to whole people (his 12.2), 11.89
-  when rounded down, 12.55 when kept as fractions. And crowds drawn at random from the normal
-  distribution show no jump at all: they riot past half 15 % of the time at σ 12, 25 % at 12.5.
-- **The "equilibrium of 100" is rare.** Of crowds drawn from his uniform city, 36.9 % + 13.7 % =
-  50.5 % end with no rioters or one ("over half … .51"), as he says — but everyone riots in only
-  2.3 %, and the mean is 12 rioters.
+- **Finite crowds are separate realizations of the normal distribution.** A crowd of 100 whose
+  thresholds are the normal's quantiles tips at σ 12.23 when rounded to the nearest whole person,
+  11.89 when rounded down, and 12.55 when kept as fractions. Randomly drawn crowds riot past half
+  15 % of the time at σ 12 and 25 % at 12.5. These construction and sampling effects extend his
+  continuous Figure 2 calculation; the paper does not prescribe a rounding rule for that figure.
+- **Sampling from the city confirms Granovetter's instability argument.** Of crowds drawn from
+  his uniform city, 36.9 % end with no rioters and 13.7 % with one — together 50.5 %
+  before rounding (his approximation: .51).
+  Everyone riots in 2.3 %, and the mean is 12 rioters. His equilibrium of 100 belongs to the exact
+  uniform crowd; he explicitly explains why sampling changes that conclusion (p. 1431).
 - **The friends claims hold under our reading** (friends at random, counted w times, the actor
   dividing by the whole crowd with himself included, as in his 63/120 example): the uniform crowd's
   most common outcome becomes one rioter; the perturbed crowd spreads more often as friends weigh
   more (0, 0, 43 %, 52 % at weights 1, 2, 5, 10), most at an acquaintance of a quarter, rarely past
   seven rioters; one-way friendships change little.
 - **A middling movement between crowds is the most incendiary** (12 % rioting with no movement, 41 %
-  at 0.05, 29 % with everyone moving every step), as he suggests.
-- **Ceilings make riots pulse.** With some people leaving once more than 90 % riot (his Figure 3),
+  at 0.05, 29 % with everyone moving every step). This illustrates his conjecture under our
+  chosen movement rule.
+- **Ceilings make riots pulse.** In our illustration of the two-crossing extension discussed alongside Figure 3,
+  some people leave once more than 90 % riot:
   most crowds never settle — the riot climbs, the cautious leave, it climbs again — but whether a
   given crowd pulses depends on who holds the ceilings; decided one at a time, it hovers near 90 %.
 - **Watts's window reproduces**: cascades between z ≈ 1 and 6 at threshold 18 % (the analytic window
   1.02–5.76), global cascades filling the connected network (0.941 against S = 0.940), and a
   power law of slope ½ at the lower edge (−0.48).
-- **His upper edge depends on network size.** At his n 1 000 and z 6.14, 20 % of sparks go global,
-  not "a single cascade in 1,000 trials" (3 % at n 10 000).
-- **Varied thresholds widen only the dense side of the window**; at the sparse side they narrow it
-  (9 % against 28 % at z 1.2). **His Figure 4b cannot be built as stated**: with τ 2.5 and k ≥ 1 a
-  power law's mean degree cannot exceed 1.95, and at threshold 18 % no such network cascades.
-- **Hubs help in both regimes**: the best-connected spark goes global far more often at z 1.3 (95 %
-  against 39 %) and still twice as often at z 5.5 (89 % against 44 %), where he says it does not.
+- **Figure 3's upper-critical frequency remains unresolved.** Under the printed n 1 000 and
+  z 6.14, assuming Figure 2's threshold 18 %, the core audit gives 232/1 000 global cascades (23.2 %),
+  against its reported one global cascade in 1 000 trials; at n 10 000 the audit gives 20/1 000 (2 %). Its plot starts
+  at a positive cascade fraction of 0.0001, inconsistent with integer cascade sizes at n 1 000;
+  a different network size or normalization is a plausible missing detail. We use pair probability
+  z/(n − 1), while the paper gives z/n; that small finite-size difference also needs distinguishing.
+- **Figure 4a compares analytic cascade regions, rather than frequency at every interior point.**
+  Our n 2 000 clipped-normal audit, with 1 000 fresh worlds per configuration, gives
+  85.4 % global at z 8 against 0 % for fixed thresholds, and 8.8 % against 25.7 % at z 1.2; the latter does not refute a wider range of parameters. Watts defines thresholds
+  on [0, 1], normalized there, but does not specify how the normal's tails are handled. Our clipped
+  normal, with zero thresholds acting only after an active neighbor, is a sensitivity experiment;
+  it differs from a normal distribution truncated and normalized on that interval.
+- **Figure 4b's literal degree family cannot span its plotted means.** With τ 2.5, integer k ≥ 1,
+  and normalization, the stated power law's mean degree cannot exceed 1.95; at threshold 18 % its
+  cascade condition is never met. A different minimum degree or scaling could change this, but
+  the paper does not specify one.
+- **Watts's dense-regime hub claim remains unresolved.** His abstract says “the most connected nodes are far
+  more likely than average nodes to trigger cascades, but not in the second regime”; the body says sharply
+  peaked networks near the upper boundary “will not display this property” (p. 5771). In the core
+  audit (n 2 000, 1 000 fresh worlds each), hub/random success is 95.3 %/38.0 % at z 1.3 and
+  89.9 %/50.0 % at z 5.5: the relative advantage shrinks from about 2.5× to 1.8×, but persists.
+  At z 5.5 cascades are too frequent to demonstrate the rare-boundary regime. A paired audit at
+  n 2 000, z 6.6 does: random seeds succeed in 16/1 000 trials, hubs in 97/1 000; an independent
+  implementation gives 26/1 000 and 96/1 000. The advantage persists at this rare finite-network
+  point, but z 6.6 is outside the infinite-network cascade window, and selecting the realized
+  maximum differs from conditioning on a fixed degree. The historical claim remains unresolved:
+  his near-boundary formula permits residual advantage, while his conclusion separately credits
+  average-degree nodes' greater population frequency among triggers.
+
+The fresh-world core audit uses seeds 100001–101000 independently per configuration; the historical
+survey measurements above use repeated episodes within 10 seeded streams. These are distinct
+sample corpora, with the same engine rules.
 
 Switches: **Actors**, **Each crowd** (as drawn, or sampled from the city), **Started by**
 (instigators, one random actor, the hub), **Actors decide** (together, or one at a time), **Count
@@ -3009,34 +3078,38 @@ Credit: Mark Granovetter, "Threshold Models of Collective Behavior," *American J
 nearly three decades for the most common retirement age to follow. Axtell and Epstein's agents live
 in 81 one-year cohorts, die at random between 60 and 100, and are replaced by 20-year-olds. A few are
 rational and retire as soon as they may; a few retire at random; most imitate, retiring once half the
-eligible members of their own small network — people within a few years of their age — have.
+eligible members of their own small network have.
 
-Measured (the survey and the presets' descriptions):
+The native audit below uses seeds 1001–1050 (the current survey uses 1–50); ± gives sample SD.
+Measured with explicit reconstruction choices: Slot newborn-pointer renewal, oldest-cohort-first
+activation and random order within each cohort. The papers do not uniquely specify dead pointers
+or cohort traversal direction. Networks begin near the holder's birth cohort; newborn replacement
+can change friends' age proximity. First95 is the first period with 95 % of eligible agents retired,
+an operational proxy distinct from the authors' undefined age norm and from persistent absorption.
 
-- **The realizations reproduce in shape, a little slower.** With 15 % rational, 95 % of those eligible
-  have retired by period 8 on average, rising steadily (the text says "within the first 6 periods"; 4
-  runs of 20 make it by then); with 5 %, retirement
-  stalls, wavers and "percolates up" from the old, finishing near period 61. Larger networks slow the
-  transition, a spread of network sizes speeds it, the cohort size does not matter, and retirement
-  mandatory at 70 speeds it — all as stated. Wider networks speed it at 10 % rational, as stated, but
-  not at 5 % (Figure 6-9), where the narrowest are as fast as the widest.
-- **Footnote 5 is false.** Counting every friend instead of the eligible ones is said to leave the
-  results' "qualitative character" unchanged; counting every friend, no norm ever forms — the young
-  friends hold the share retired below one half.
-- **Figure 6-6 needs an unstated rule.** Under the pseudo-code's reading — a dead friend's place
-  passes to the newborn in its slot — no minimum of rationality is needed (72 periods with no
-  rationals at all) and nothing takes the paper's hundreds of periods. Only if friends who die are
-  replaced by someone of about the same age do the paper's "minimum proportions" and long, erratic
-  transitions appear (no norm at 0 or 5 % rational; at 10 %, 8 runs of 10 reach it after 22 to 279 periods and 2 never
-  do within 600).
-- **The policy switch does not reproduce.** Lowering eligibility to 62 once the norm is established,
-  the paper's new norm "emerges after twenty to thirty periods"; here it comes in 2, at every share of
-  rationals, under either rule: an imitator just turned 62 counts its retired 65-to-67-year-old friends
-  and retires at once. The decades the model was built to explain do not follow from its rules.
-- **Coupling pulls both ways.** A little coupling between a community without rationals and one with
-  them pulls the first into line (75 → 46 periods at 0.1), as the paper says, but slows the second just
-  as much (19 → 34), until both take about 58; the paper's figure keeps the rational group fast. A
-  little spread in the thresholds first doubles the transition time before more spread shortens it.
+- **Realization shape:** 15 % rational reaches first 95 % crossing near 7.8 periods; 20 % (AE's caption) near 5.
+  The source describes one six-period realization. At 5 %, retirement wavers then cascades near 61.5;
+  this does not reproduce the source's displayed plateau near 375 or its perfect absorbing state.
+- **Denominator and rationality:** counting all members reaches no first 95 % crossing in 50 Slot runs over 600,
+  while eligible counting reaches 50/50. Both counting rules allow imitator retirements; a rolling
+  mode 65 can be produced by a small minority. Slot first 95 % crossing also occurs with 0 or 2 % rational within 2000.
+  These observations do not categorically refute qualitative footnote 5 or establish infinite-time
+  criticality. Replace is another reconstruction, rather than a rule proved necessary by the source.
+- **Sensitivity:** network-size effects reproduce qualitative trends. The source positive threshold
+  spreads show an overall decline with a final uptick; zero spread is a separate extension. Extent 6→10
+  at 5 % rational shortens first 95 % crossing from 57.8 to 52.8 (50 runs each). C 200 and 300 support equivalence
+  within a declared 20 % margin for this proxy, matching the revised strict C > 100 comparison.
+- **Policy requires separate setups:** AE uses threshold .5; GSS uses uniform[.5,1] (mean .75,
+  SD .14433756729740646). At 5 % rational, automatic proxy initialization and mandatory 70,
+  AE post-switch first 95 % crossing occurs near 2 periods; GSS reaches 22/50 within 100 periods, conditional
+  mean 43.73±32.90. A separate implementation with matched continuous mortality reaches 28/50,
+  conditional 49.61±31.88. Censored runs remain excluded from conditional means. The native previous-tick event mode
+  before revised automatic switching is 70 in 50/50 runs; the independent actual switch-tick mode is
+  70 in 50/50. These observation windows differ and must not be compared directly. Subsequent modal crossings can reverse: these tests do not establish
+  the source's prerequisite age 65 norm or categorical failure of its new-age norm.
+- **Coupling pulls both ways in the paper too:** with 10 % rational in B and 0 % in A (expected 5 %
+  globally), source coupling .05→.20 slows B's first 95 % crossing from 24.7 to 57.9; A converges 64.1→58.2,
+  50 runs each. This supports source trend shape, not exact numerical reproduction.
 
 Switches: **Agents per cohort**, **The first agents' death ages**, **Each period, agents act** (cohort by
 cohort, oldest first, or in one random order), **Rational share**, **Random share**, **Random agents'

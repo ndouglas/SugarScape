@@ -941,7 +941,7 @@ pub const TITLES: [(&str, &str); 430] = [
     ),
     (
         "dnaw-lattice",
-        "Opinions on a lattice: one big cluster and scattered holdouts, eventually",
+        "Opinions on a lattice: broad central agreement with scattered holdouts",
     ),
     (
         "dnaw-lattice-clusters",
@@ -953,7 +953,7 @@ pub const TITLES: [(&str, &str); 430] = [
     ),
     (
         "ra-central",
-        "Confident extremists at both ends: most of the population stays central",
+        "Confident extremists with less uncertain moderates: several opinion groups remain",
     ),
     (
         "ra-both",
@@ -961,19 +961,19 @@ pub const TITLES: [(&str, &str); 430] = [
     ),
     (
         "ra-single",
-        "The paper's single-extreme run: at its stated speed, both extremes instead",
+        "The paper's single-extreme settings mostly split the population in our samples",
     ),
     (
         "ra-literal",
-        "A few extremists pull everyone to one extreme, as the paper states it",
+        "A few confident extremists often draw moderates to one side",
     ),
     (
         "ra-meadows-cliff",
-        "Measured too early, cut too strict: Meadows and Cliff see no extremists",
+        "Meadows and Cliff's horizon and cutoff give few extreme readings",
     ),
     (
         "ra-deffuant-2013",
-        "The authors' reply: run longer, count looser, and the single extreme appears",
+        "The authors' longer run and lower cutoff give frequent single-extreme readings",
     ),
     (
         "ra-bc-extremists",
@@ -989,7 +989,7 @@ pub const TITLES: [(&str, &str); 430] = [
     ),
     (
         "ad-small-world",
-        "Extremists in a small world: one extreme or the center, run by run",
+        "Extremists in a small world: outcomes depend on the run and the cutoff",
     ),
     (
         "w-scale-free",
@@ -1082,7 +1082,7 @@ pub const TITLES: [(&str, &str); 430] = [
     ),
     (
         "ef-payoff",
-        "Rate predictors by their advice, not their accuracy: the cycle goes",
+        "Rate predictors by their advice: smaller lag-1 correlation",
     ),
     (
         "ef-random",
@@ -1090,7 +1090,7 @@ pub const TITLES: [(&str, &str); 430] = [
     ),
     (
         "ef-shared",
-        "Everyone holds the same predictors, and nobody is ever right",
+        "Everyone holds the same predictors: larger attendance variance",
     ),
     ("mg-m6", "Two sides, the minority wins: short memories"),
     ("mg-m8", "Two sides, the minority wins: longer memories"),
@@ -1101,7 +1101,7 @@ pub const TITLES: [(&str, &str); 430] = [
     ),
     (
         "mg-inverse",
-        "Win more the smaller the minority: the paper's two peaks don't appear",
+        "Win more the smaller the minority: rounded payoff and random ties",
     ),
     (
         "mg-evolution",
@@ -1113,14 +1113,14 @@ pub const TITLES: [(&str, &str); 430] = [
     ),
     (
         "mg-arms-race",
-        "Memories that can grow: an arms race that levels off",
+        "Memories that can grow: higher final memory",
     ),
     ("mg-crowded", "Too little memory: worse than coin flips"),
     ("mg-critical", "Just enough memory: the best coordination"),
     ("mg-random-like", "Too much memory: no better than chance"),
     (
         "cmo-binary",
-        "El Farol as a yes-or-no game: 60 seats, two rounds of memory",
+        "CMO-inspired step-payoff game: 60 seats, two rounds of memory",
     ),
     (
         "ants-1a",
@@ -1138,15 +1138,15 @@ pub const TITLES: [(&str, &str); 430] = [
     ),
     (
         "ants-crowd",
-        "Ten times the ants, the same habits, and the herding is gone",
+        "Ten times the ants, the same habits, and the herding weakens",
     ),
     (
         "ants-becker",
-        "Following the crowd pays: the colony settles about 80–20, like the real ants",
+        "Following the crowd pays: preferred splits near 18–82",
     ),
     (
         "ants-lock",
-        "Following the crowd pays too well: one source, forever",
+        "Following the crowd pays too well: no switches in a million meetings",
     ),
     (
         "ants-three",
@@ -1186,11 +1186,11 @@ pub const TITLES: [(&str, &str); 430] = [
     ),
     (
         "gr-normal-sampled",
-        "The same crowd drawn from real people: no sharp tipping point",
+        "Random normal crowds: sampling smooths the transition",
     ),
     (
         "gr-city",
-        "Crowds drawn from a city that should riot: half end with no rioter or one",
+        "Crowds sampled from the uniform city: half end with no rioter or one",
     ),
     (
         "gr-friends",
@@ -1202,7 +1202,7 @@ pub const TITLES: [(&str, &str); 430] = [
     ),
     (
         "gr-ceilings",
-        "Join a crowd, leave a mob: the riot builds and collapses",
+        "Join a crowd, leave a mob: the riot pulses near the top",
     ),
     (
         "gr-clusters",
@@ -1230,19 +1230,19 @@ pub const TITLES: [(&str, &str); 430] = [
     ),
     (
         "ae-rapid",
-        "15 % decide rationally, and retiring at 65 sets in within a few years",
+        "15 % decide rationally, and retirement spreads quickly",
     ),
     (
         "ae-base",
-        "A tenth decide rationally, and retiring at 65 takes hold in about 16 years",
+        "A tenth decide rationally: aggregate retirement grows",
     ),
     (
         "ae-slow",
-        "5 % rational: retiring at 65 spreads slowly, up from the old",
+        "5 % rational: retirement wavers before spreading",
     ),
     (
         "ae-policy",
-        "Congress lowers the age to 62: here the new norm comes in a few years",
+        "Eligibility drops to 62 after the aggregate retirement crossing",
     ),
     (
         "ae-groups",
@@ -1250,11 +1250,11 @@ pub const TITLES: [(&str, &str); 430] = [
     ),
     (
         "ae-all-members",
-        "Count every friend, not just the eligible, and no norm ever forms",
+        "Count every network member: a denominator sensitivity",
     ),
     (
         "ae-replace",
-        "Replace friends who die, and 5 % rationality is no longer enough",
+        "Replace friends who die: a renewal sensitivity",
     ),
     (
         "bg-base",

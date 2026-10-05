@@ -1,0 +1,12 @@
+[package]
+name="farol-probe"
+version="0.1.0"
+edition="2021"
+[workspace]
+[dependencies]
+sugarscape-core={path="../../../../crates/sugarscape-core"}
+rand="0.8"
+
+[[bin]]
+name="farol-probe"
+path="native-and-independent-probe.rs"

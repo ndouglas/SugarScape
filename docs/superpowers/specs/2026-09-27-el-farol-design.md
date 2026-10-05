@@ -29,27 +29,39 @@ Arthur's bar and Challet and Zhang's minority game as one model kind, `farol` ("
 - **CMO:** "the average convergence to optimality at the collective level is trivial and does not even require any intelligence on the side of agents … even zero-intelligence agents … are able to self-organize to the comfort level. … The really non-trivial question is whether agents are able or not to reduce stochastic fluctuations of the attendance A around L." Predictors "should not be rewarded depending on their precision but rather on the payoff they give … if A(t) = 59, a prediction of 5 is better than a prediction of 61": Uᵢ,ₛ(t + 1) = Uᵢ,ₛ(t) + Θ{[Aᵢ,ₛ − L][A(t) − L]}. The binary El Farol: strategies read the last m bits Θ[L − A(t − k)], each entry "attend" with probability ā; with L = 60, ā = 1/2 and m = 2, 3, 6 as N varies: ⟨A⟩ ≈ L "in a whole interval around Nā = L" for small m, shrinking as m grows; "in the region āN ≈ L adaptive agents behave less efficiently than random agents … stronger for small values of m"; "a small bias in the strategies, of either sign, is beneficial as it decreases the fluctuations"; "there is an intermediate memory length which is optimal".
 - **CZ97, the game:** "N (odd) players … choose to be in side A or side B … those who are in the minority side win … all winners collect a point"; the signal is the last M winning sides; a strategy is a table from the M bits to a side, "We randomly draw S strategies for each player"; every strategy collects virtual points "as if it were used each time. The player uses the strategy having the highest accumulated points … he gets a real point only if the strategy used happens to win"; "currently a player switches immediately if another strategy has one virtual point more than that in use".
 - **CZ97, the claims:** Fig. 1 (N 1001, M 6, 8, 10): "the fluctuation are indeed in decreasing order for ever increasingly 'intelligent' players"; Fig. 2 (mixed M 1–10, N 1001, S 5): larger brains win more and "above a certain size (M ≈ 6) the average performance … appears to saturate"; Fig. 3: a symmetric histogram around N/2; Fig. 4 (payoff N/x − 2, "these many (nearest integer values) points awarded to every player choosing the minority side", N 1001, M 4, S 5): "a histograph … with two peaks"; Fig. 5 (N 1001, M 5, S 2–9): "with increasing number of alternatives the players tend to perform worse"; Fig. 6: "the oftener one switches, less successful one would end up"; Fig. 9: with "the worst player … replaced by … a clone of the best player … virtual capitals reset to zero" and one strategy replaced by a new one, "Fluctuations are reduced and saturated"; Fig. 10: perfect cloning without mutation, "tremendous waste"; Fig. 11 (from M = 2, N 101 and 1001, S 5; "a bit of memory can be added or substracted for the cloned new player, with a small probability"): an "arm race" whose "saturation values are not universal, having to do with the time intervals of reproduction … Larger population … needs more powerful brains". Neither the replacement interval nor the mutation probabilities are given.
-- **SMR, CZ98:** "σ²/N is a function only of 2^m/N"; its minimum is near 2^m/N ≈ 0.5 (SMR; CZ98's αc ≈ 0.34 for s = 2); below it σ ∝ N and no agent beats 50 %, above it σ ∝ N^½ and "some agents do win more than 50 % of the time".
+- **SMR, CZ98:** "σ²/N is a function only of 2^m/N"; its minimum is near 2^m/N ≈ 0.5 (SMR; CZ98's approximate critical value 0.5 for S = 2; 0.3374 is from later theory discussed by CMO); below it σ ∝ N and no agent beats 50 %, above it σ ∝ N^½ and "some agents do win more than 50 % of the time".
 
 ## Measured in planning
 
-A throwaway prototype of the rules below; seeds and horizons as stated; the survey reproduces each.
+Historical prototype measurements below retain their stated horizons. The production survey uses the last four fifths; its tests are operational checks, not exact replications of source figures.
 
 - **Arthur, with a 48-predictor library (four dozen) and accuracy scoring (decay λ 0.9), N 100, L 60, 20 seeds, 2 000 rounds after 200:**
   - mean attendance 59.1, 59.1, 59.4 at k 6, 12, 23 — the mean converges to 60;
   - σ²/N 5.2, 6.9, 11.4, against 0.24 for agents attending at random with probability 0.6 — adaptive agents fluctuate 20 to 50 times as much as coin-flippers (σ about 23–34 people against 5);
-  - lag-1 autocorrelation −0.58, −0.43, −0.23 — a persistent two-period cycle; "no persistent cycles" does not hold under accuracy scoring;
+  - lag-1 autocorrelation −0.58, −0.43, −0.23 — antipersistence; lag-1 correlation alone cannot establish persistent cycles;
   - forecasts above 60: 30 %, 31 %, 36 % of active predictors (Arthur: 40 %).
-- **CMO's payoff scoring**, the same setups: mean 60.1, 60.2, 59.6; σ²/N 0.80, 2.70, 5.78 (still worse than random); lag-1 autocorrelation −0.04 to −0.08 (no cycle); above 60: 36 %, 38 %, 39 %.
-- **The library matters:** with 25 predictors instead of 48, k 23 gives a mean of 52 and attendance swinging between near-empty and near-full (σ²/N 22); Arthur's "robust to changes in types of predictors created and in numbers assigned" holds for the mean only when the library is large enough. With every agent holding the whole library, σ²/N 26 and nobody is ever right.
+- **CMO-inspired advice-payoff scoring**, the same setups: mean 60.1, 60.2, 59.6; σ²/N 0.80, 2.70, 5.78 (still worse than random); lag-1 autocorrelation −0.04 to −0.08 (small lag-1 correlation); above 60: 36 %, 38 %, 39 %.
+- **The library matters:** with 25 predictors instead of 48, k 23 gives a mean of 52 and attendance swinging between near-empty and near-full (σ²/N 22); This planning-only library variant lacks a reproducible composition and cannot establish a necessary minimum size. Predictor-type robustness remains untested. With every agent holding the whole library, the historical prototype reported σ²/N 26. A unique best predictor gives everyone the same advice; random reties can select different forecasts, so zero success is not a universal property of sharing the library.
 - **SMR (N 101, S 2, 20 seeds, 10 000 rounds after 2 000):** σ²/N 2.06, 1.42, 0.76, 0.39, 0.10, 0.063, 0.10, 0.15, 0.22, 0.24 at m 1–8, 10, 12: the minimum at m 6 (2^m/N 0.63), random (0.25) again by m 12.
 - **CZ97 Fig. 1 (N 1001, 10 seeds):** with S 5, σ²/N 6.9, 2.2, 0.36 at M 6, 8, 10 (0.24 at M 12) — decreasing, as CZ97 say; with S 2, 1.5, 0.16, 0.12. More strategies move the minimum to longer memories.
 - **CZ97 Fig. 2 (mixed M 1–10, N 1001, S 5):** success 0.35, 0.40, 0.46, 0.48, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50 by memory — saturating at M ≈ 6, as stated.
-- **CZ97 Fig. 4 (N 1001, M 4, S 5):** with N/x − 2 rounded to the nearest integer, as stated, a near-even minority earns 0 points, strategies stay tied, and attendance keeps one random-width peak (σ²/N 0.25); unrounded, one central peak with small side lobes (σ²/N 22). Two peaks under neither reading.
+- **CZ97 Fig. 4 (N 1001, M 4, S 5):** with N/x − 2 rounded to the nearest integer, as stated, a near-even minority earns 0 points, strategies stay tied, and attendance keeps one random-width peak (σ²/N 0.25); unrounded, one central peak with small side lobes (σ²/N 22). These historical visual descriptions are not established by the survey central-mass proxy; random reties are a project choice, and no categorical failure of Fig. 4 follows.
 - **CZ97 Fig. 5 (N 1001, M 5):** success 0.458 at S 2 down to 0.396 at S 9 — more strategies, worse players, as stated.
 - **Random history (N 101, S 2):** σ²/N the same as with the true history at every m (1.34/1.37, 0.40/0.39, 0.062/0.062, 0.16/0.15 at m 2, 4, 6, 8).
 - **CZ97 Fig. 11 (from M 2, S 5, 10 % strategy and memory mutation, 100 000 rounds):** mean memory over the run 3.4 (N 101) and 4.1 (N 1001) when the worst is replaced every 50 rounds; 3.2 and 2.5 every 200 rounds — memory rises, more for the larger population when replacement is frequent enough, and the level depends on the interval, as CZ97 say.
-- **CMO's binary El Farol (L 60, ā 0.5, S 2, 10 seeds):** at m 2 the mean is within ±1.3 of 60 for N 90–150 while σ²/N is 1.3–1.7 near āN = L (random 0.25) and 0.12 at N 90 (a bias helps); at m 6, σ²/N 0.056–0.072 near āN = L (better than random) and the mean strays (−4.6 at N 90, +3.5 at N 150) — the interval where ⟨A⟩ ≈ L shrinks as m grows.
+- **CMO-inspired step-payoff binary El Farol (L 60, ā 0.5, S 2, 10 seeds):** at m 2 the mean is within ±1.3 of 60 for N 90–150 while σ²/N is 1.3–1.7 near āN = L (random 0.25) and 0.12 at N 90 (a bias helps); at m 6, σ²/N 0.056–0.072 near āN = L (better than random) and the mean strays (−4.6 at N 90, +3.5 at N 150) — the interval where ⟨A⟩ ≈ L shrinks as m grows.
+
+Source-review qualifications: the 48-predictor library, decay 0.9, distinct sampling, integer
+forecasts and random reties each round are stated project choices. Arthur's description is
+deterministic after initialization. With default stay-at-equality,
+`fraction(forecast > L) = 1 - attendance/N - fraction(forecast = L)`; equality mass explains
+the gap from the stay-home share. CMO predictor payoff uses Θ(0) = 1, whereas this variant scores
+the configured advice. CMO binary Eq. 4 uses a linear attendance-mismatch update; our binary
+checks use step wins. CZ97 Fig. 10 illustrates a monospecies population; the rolling-window
+no-mutation comparison does not measure purity. A separate homogeneous-population audit probe
+confirms extreme waste under both random and incumbent-preserving ties. CZ98 later reports
+substantial evolutionary diversity even without mutation. The local SMR source is a preprint;
+its significance claim is not tested by averaging per-run maxima.
 
 ## Architecture
 
@@ -59,12 +71,12 @@ Model kind `farol` ("El Farol and the Minority Game"): `ModelKind::Farol`, `Mode
 
 | Field | Default | Apply | Meaning |
 |---|---|---|---|
-| `game` | `el_farol` | reset | `el_farol` (Arthur) or `minority` (CZ97; with `capacity` ≠ (N − 1)/2, CMO's binary El Farol) |
+| `game` | `el_farol` | reset | `el_farol` (Arthur) or `minority` (CZ97; with `capacity` ≠ (N − 1)/2, CMO-inspired step-payoff binary variant) |
 | `agents` | 100 | reset | N (3–2 001) |
 | `strategies` | 12 | reset | Arthur's k or CZ97's S (1–48 under `el_farol`, 1–16 under `minority`) |
 | `behavior` | `inductive` | live | `inductive` or `random` (attend with probability `capacity`/N: CMO's zero-intelligence agents) |
 | `capacity` | null | reset | L. El Farol: attendance of L or more is crowded. Minority: attending (side A) wins when A ≤ L. Null (amended in review): the game's own, 60 % of N rounded or (N − 1)/2, so editing N keeps the plain game |
-| `scoring` | `error` | reset (amended in review: error scores and payoff points share one tally) | El Farol: `error` (Arthur's "most accurate": the predictor with the lowest decaying mean of \|prediction − A\|) or `payoff` (CMO: a point whenever the predictor's advice was right) |
+| `scoring` | `error` | reset (amended in review: error scores and payoff points share one tally) | El Farol: `error` (Arthur's "most accurate": the predictor with the lowest decaying mean of \|prediction − A\|) or `payoff` (CMO-inspired variant: a point whenever the configured go/stay advice was right; equality differs from Θ(0) = 1) |
 | `decay` | 0.9 | live | λ in the error score s ← λs + (1 − λ)\|prediction − A\| (Arthur gives none) |
 | `at_capacity` | `stay` | live | an agent whose predictor forecasts exactly L: `stay` (Arthur: go only if expecting "fewer than 60") or `go` |
 | `shared` | false | reset | every agent holds the whole library (Arthur's "ponder … if all agents shared the same set") |
@@ -85,7 +97,7 @@ The Rules panel shows the El Farol fields only under `el_farol` and the minority
 
 ## Step (one round)
 
-- **El Farol:** every predictor forecasts from the history; each inductive agent acts on its best predictor (lowest error score, or highest payoff score; ties broken uniformly at random), going when the forecast is below L (`at_capacity: go`: at or below). A = the number going. Crowded when A ≥ L. Every agent's predictors are rescored: `error` as above; `payoff`: a point when (forecast ≥ L) = (A ≥ L). A goer gains 1 when not crowded.
+- **El Farol:** every predictor forecasts from the history; each inductive agent acts on its best predictor (lowest error score, or highest payoff score; ties broken uniformly at random), going when the forecast is below L (`at_capacity: go`: at or below). A = the number going. Crowded when A ≥ L. Every agent's predictors are rescored: `error` as above; `payoff`: a point when the configured advice is right: predicted crowding is `forecast ≥ L` under `at_capacity: stay`, or `forecast > L` under `at_capacity: go`, and is compared with actual crowding `A ≥ L`. A goer gains 1 when not crowded.
 - **Minority:** the round's information μ is the last M outcomes (or a random draw), each agent's own M bits of it under mixed memories. Each inductive agent plays its strategy with the most virtual points (ties uniform) and chooses A or B from the table. A wins when A ≤ L. Winners gain the payoff (step: 1; inverse: N/x − 2, rounded or exact); every strategy that would have chosen the winning side gains the same virtual payoff. The outcome bit (A won) is appended to the history.
 - **Evolution** (minority): after every `every` rounds, the agent with the least gain over those rounds is replaced by a copy of the agent with the most (its strategies and memory; its virtual points and gain reset to 0). With probability `memory_mutation` the copy's memory moves one up or down (1–16) and all its strategies are redrawn at the new memory; with probability `strategy_mutation` one of its strategies is redrawn. Ties for worst or best go to the lower index.
 
@@ -109,12 +121,12 @@ Titles follow `titles.rs`'s style; these are drafts.
 | Preset | Title | Setup |
 |---|---|---|
 | `ef-arthur` | Who goes to the bar? Attendance averages 60 but swings far more than chance | N 100, L 60, k 12, error scoring (Arthur Fig. 1) |
-| `ef-payoff` | Score predictors by their advice, not their accuracy: the cycles go | the same, payoff scoring (CMO) |
+| `ef-payoff` | Score predictors by their advice: lag-1 correlation becomes small | the same, payoff scoring (CMO) |
 | `ef-random` | Coin-flippers also average 60, with far smaller swings | random attendance, p 0.6 (CMO) |
-| `ef-shared` | Everyone holds the same predictors, and nobody is ever right | `shared` |
+| `ef-shared` | Everyone holds the same predictors: a unique best forecast synchronizes advice | `shared` |
 | `mg-m6`, `mg-m8`, `mg-m10` | Two sides, the minority wins: short, longer and long memories | N 1001, S 5, M 6, 8, 10 (CZ97 Fig. 1) |
 | `mg-mixed` | Long and short memories play together: the longer win, up to about six | mixed M 1–10, N 1001, S 5 (Fig. 2) |
-| `mg-inverse` | Win more the smaller the minority: the paper's two peaks don't appear | inverse payoff, M 4, S 5, N 1001 (Fig. 4) |
+| `mg-inverse` | Rounded inverse payoff with random reties: narrow central attendance | inverse payoff, M 4, S 5, N 1001 (Fig. 4) |
 | `mg-evolution` | The worst player is replaced by a mutated copy of the best | N 1001, M 6, S 5, evolution (Fig. 9) |
 | `mg-inbred` | Perfect copies of the best player and no mutation | the same, no mutation (Fig. 10) |
 | `mg-arms-race` | Memories that can grow: an arms race that levels off | from M 2, N 101, S 5, memory mutation 0.1, every 50 (Fig. 11) |
@@ -132,17 +144,17 @@ Seeds and horizons measured to fit a browser run and recorded in each descriptio
 - `mg-fig-1`: `fluctuation` against M 4–12 at N 1001, series S 2, 5.
 - `mg-strategies`: `success` against S 2–9 (CZ97 Fig. 5).
 - `mg-information`: `fluctuation` against M, series true and random history.
-- `cmo-bias`: `fluctuation` against N at L 60, series M 2, 3, 6 (CMO Fig. 1).
+- `cmo-bias`: `fluctuation` against N at L 60, series M 2, 3, 6 (CMO-inspired step-payoff variant of Fig. 1).
 The CLI names the stop `(its last round)`.
 
 ## Survey
 
 A `farol` claims module:
-- Arthur: the mean converges to 60 at k 6, 12, 23; no persistent cycles (lag-1 autocorrelation small in magnitude); active predictors 40 % above 60; robust to the library.
+- Arthur: the mean converges to 60 at k 6, 12, 23; small lag-1 autocorrelation as an operational proxy, not a test for all persistent cycles; active predictors 40 % above 60; mean robustness across k for one fixed library.
 - CMO: random agents' mean is also 60; adaptive agents fluctuate more than random ones in El Farol (both scorings) and near āN = L in the binary version; a small bias lowers fluctuations; an intermediate memory coordinates best.
-- CZ97: Fig. 1's decreasing fluctuations; Fig. 2's saturation near M 6; Fig. 4's two peaks (both roundings); Fig. 5's worse players with more strategies; Fig. 6's switchers doing worse; Fig. 9's reduced fluctuations under evolution; Fig. 11's rising, saturating memory, higher for N 1001.
+- CZ97: Fig. 1's decreasing fluctuations; Fig. 2's saturation near M 6; Fig. 4 central-mass proxy (both roundings), not a histogram-shape test; Fig. 5's worse players with more strategies; Fig. 6's switchers doing worse; Fig. 9's reduced fluctuations under evolution; Fig. 11's rising final memory (stationarity untested), higher for N 1001.
 - SMR/CZ98: σ²/N depends only on 2^M/N (curves for N 51, 101, 201 overlap); the minimum near 0.3–0.7; σ ∝ N below and ∝ N^½ above; better-than-random agents only above.
-Claims that fail are reported, and the descriptions, titles and README say so.
+Operational checks that fail are reported with their scope. After source review, cycle, shape, purity and significance interpretations were revised; these proxies do not establish failures of the papers.
 
 ## Page
 
@@ -157,7 +169,7 @@ The presets menu gains an **El Farol and the Minority Game** group (titled prese
 
 ## Docs
 
-README: an El Farol and the Minority Game section (both games, the stated library and choices, switches, presets, sweeps, and the findings: the mean at 60 is trivial and adaptive agents fluctuate far more than coin-flippers; accuracy scoring keeps a two-period cycle; Arthur's robustness needs a large library; CZ97's Fig. 1 and 2 hold; the two peaks of Fig. 4 do not appear; the memory transition). `docs/papers.md`: the milestone's row with SMR, CZ98 and CMO; roadmap: Milestone 23 done.
+README: an El Farol and the Minority Game section (both games, the stated library and choices, switches, presets, sweeps, and the findings: the mean at 60 is trivial and adaptive agents fluctuate far more than coin-flippers; accuracy scoring yields negative lag-1 correlation; robustness across k is tested for one fixed library; CZ97's Fig. 1 and 2 hold; Fig. 4 shape remains unresolved by the central-mass proxy; the memory transition). `docs/papers.md`: the milestone's row with SMR, CZ98 and CMO; roadmap: Milestone 23 done.
 
 ## Amendments (implementation planning)
 
@@ -167,4 +179,4 @@ The model was implemented in full while planning (`docs/superpowers/plans/2026-0
 - **Scores are the library's, not each agent's** (El Farol): every agent that holds a predictor rates it against the same history, so its score is kept once. The dynamics are unchanged.
 - **The evolution presets replace the worst player every 10 rounds** (`every` still defaults to 100): at 100 the decline of Fig. 9 barely shows within a browser session.
 - **Inspect:** a grid cell's agent is `member`; `agent` stays null.
-- **Measured with the implementation** (the survey): Arthur's mean 59.1–59.5 at k 6, 12, 23 and 58.1–59.9 across k 2–32 and the rule at exactly 60; lag-1 autocorrelation −0.57, −0.43, −0.23 (−0.06 rated by payoff); forecasts above 60 in use 30 %, 32 %, 36 %; CMO's binary El Farol σ²/N 1.66 at N 120, m 2 against 0.25, a bias helping at N 90 (0.08) and less clearly at N 150 (1.41 against 1.74); CZ97 Fig. 1 7.17, 2.11, 0.40 (S 5) and 1.60, 0.19, 0.18 (S 2); Fig. 2 0.351 to 0.500 by M 6, level after; Fig. 4 all rounds within 5 % of N/2 when rounded, 72 % unrounded; Fig. 5 0.457 at S 2 against 0.397 at S 9; Fig. 6 correlations of switches with wins −0.73 to −0.86; Fig. 9 σ²/N 5.6 to 2.2 over 40 000 rounds; Fig. 10 without mutation 2.39 against 2.16 (N 1001) and 0.32 against 0.25 (N 101), not significant; Fig. 11 final mean memory 2.92 (N 101) and 4.95 (N 1001); SMR's minimum at M 5, 6, 7 for N 51, 101, 201 (2^M/N 0.63, 0.63, 0.64), σ²/N scaling 3.88 at m 2 and 0.98 at m 14 from N 51 to 201; the best of 101 agents wins 48.7 % at m 3, 54.2 % at m 6, 52.5 % at m 8 and 49.0 % at m 10 — above the transition only near it.
+- **Measured with the implementation** (the survey): Arthur's mean 59.1–59.5 at k 6, 12, 23 and 58.1–59.9 across k 2–32 and the rule at exactly 60; lag-1 autocorrelation −0.57, −0.43, −0.23 (−0.06 rated by payoff); forecasts above 60 in use 30 %, 32 %, 36 %; CMO-inspired step-payoff binary El Farol σ²/N 1.66 at N 120, m 2 against 0.25, a bias helping at N 90 (0.08) and less clearly at N 150 (1.41 against 1.74); CZ97 Fig. 1 7.17, 2.11, 0.40 (S 5) and 1.60, 0.19, 0.18 (S 2); Fig. 2 0.351 to 0.500 by M 6, level after; Fig. 4 all rounds within 5 % of N/2 when rounded, 72 % unrounded; Fig. 5 0.457 at S 2 against 0.397 at S 9; Fig. 6 correlations of switches with wins −0.73 to −0.86; Fig. 9 σ²/N 5.6 to 2.2 over 40 000 rounds; Fig. 10 without mutation 2.39 against 2.16 (N 1001) and 0.32 against 0.25 (N 101), not a purity test; Fig. 11 final mean memory 2.92 (N 101) and 4.95 (N 1001); SMR's minimum at M 5, 6, 7 for N 51, 101, 201 (2^M/N 0.63, 0.63, 0.64), σ²/N scaling 3.88 at m 2 and 0.98 at m 14 from N 51 to 201; the best of 101 agents wins 48.7 % at m 3, 54.2 % at m 6, 52.5 % at m 8 and 49.0 % at m 10 — this finite-run maximum-average comparison is not a formal test of the preprint's statistical statement.

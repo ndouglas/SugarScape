@@ -1,0 +1,10 @@
+[package]
+name="retirement-native-audit"
+version="0.1.0"
+edition="2021"
+[workspace]
+[dependencies]
+sugarscape-core={path="../../../../../crates/sugarscape-core"}
+serde_json="1"
+[profile.release]
+opt-level=3

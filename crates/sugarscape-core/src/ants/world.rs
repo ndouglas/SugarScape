@@ -90,12 +90,27 @@ pub struct AntView {
     pub elsewhere: u32,
 }
 
+/// One actual source change. IDs and sources start at 1; update starts at 1
+/// within the completed tick. Alfarano sweeps have no sampled partner.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct AntsEvent {
+    pub kind: &'static str,
+    pub agent: u64,
+    pub partner: Option<u64>,
+    pub from_source: u32,
+    pub to_source: u32,
+    pub tick: u64,
+    pub update: u32,
+}
+
 #[derive(Clone)]
 pub struct AntsWorld {
     pub config: AntsConfig,
     /// Completed steps.
     pub tick: u64,
     rng: SimRng,
+    recording: bool,
+    events: Vec<AntsEvent>,
     graph: Arc<Graph>,
     independent: Arc<Vec<bool>>,
     source: Vec<u8>,
@@ -190,6 +205,8 @@ impl AntsWorld {
             config,
             tick: 0,
             rng,
+            recording: false,
+            events: Vec::new(),
             recent: VecDeque::new(),
             theory,
             running: Running::default(),
@@ -222,6 +239,42 @@ impl AntsWorld {
     /// The long-run distribution of ants at the first source, if theory applies.
     pub fn theory(&self) -> Option<&[f64]> {
         self.theory.as_deref().map(Vec::as_slice)
+    }
+
+    /// Enable observation without drawing any additional random numbers.
+    pub fn record_events(&mut self, enabled: bool) {
+        self.recording = enabled;
+        self.events.clear();
+    }
+
+    pub fn events(&self) -> &[AntsEvent] {
+        &self.events
+    }
+
+    pub fn members(&self) -> Vec<AntView> {
+        (0..self.source.len()).map(|i| self.view(i)).collect()
+    }
+
+    fn changed(
+        &mut self,
+        i: usize,
+        s: u8,
+        kind: &'static str,
+        partner: Option<usize>,
+        update: u32,
+    ) {
+        if self.recording && self.source[i] != s {
+            self.events.push(AntsEvent {
+                kind,
+                agent: i as u64 + 1,
+                partner: partner.map(|j| j as u64 + 1),
+                from_source: u32::from(self.source[i]) + 1,
+                to_source: u32::from(s) + 1,
+                tick: self.tick + 1,
+                update,
+            });
+        }
+        self.move_to(i, s);
     }
 
     fn recount(&mut self) {
@@ -299,14 +352,14 @@ impl AntsWorld {
     }
 
     /// One of Kirman's meetings.
-    fn meet(&mut self) {
+    fn meet(&mut self, update: u32) {
         let n = self.config.ants;
         let i = self.rng.gen_range(0..n) as usize;
         let u: f64 = self.rng.gen();
         let eps = self.config.epsilon;
         if u < eps {
             let s = self.other(self.source[i]);
-            self.move_to(i, s);
+            self.changed(i, s, "spontaneous", None, update);
             return;
         }
         if self.independent[i] {
@@ -341,7 +394,7 @@ impl AntsWorld {
             }
         };
         if joins {
-            self.move_to(i, sj);
+            self.changed(i, sj, "recruit", Some(j), update);
         }
     }
 
@@ -354,16 +407,17 @@ impl AntsWorld {
             let l = if self.independent[i] { 0.0 } else { lambda };
             let p = (a + l * f64::from(self.away(i))) / denominator;
             if self.rng.gen::<f64>() < p {
-                self.move_to(i, 1 - self.source[i]);
+                self.changed(i, 1 - self.source[i], "switch", None, i as u32 + 1);
             }
         }
     }
 
     pub fn step(&mut self) {
+        self.events.clear();
         match self.config.rule {
             Rule::Kirman => {
-                for _ in 0..self.config.meetings {
-                    self.meet();
+                for update in 1..=self.config.meetings {
+                    self.meet(update);
                 }
             }
             Rule::Alfarano => self.sweep(),
@@ -1082,6 +1136,55 @@ mod tests {
             assert!(s.variance.is_finite() && s.residence.is_finite(), "{c:?}");
             let mut buf = Vec::new();
             w.render("degree", "", &mut buf).unwrap();
+        }
+    }
+    #[test]
+    fn recording_retains_real_changes_without_changing_rng() {
+        for seed in [1, 9, 201] {
+            for (rule, conversion) in [
+                (Rule::Kirman, Conversion::Kirman),
+                (Rule::Kirman, Conversion::Footnote),
+                (Rule::Alfarano, Conversion::Kirman),
+            ] {
+                let c = config(|c| {
+                    c.rule = rule;
+                    c.conversion = conversion;
+                    c.independent = 0.2;
+                    c.network = Network::Ring;
+                    c.degree = 2;
+                });
+                let mut plain = AntsWorld::new(c.clone(), seed).unwrap();
+                let mut filmed = AntsWorld::new(c, seed).unwrap();
+                filmed.record_events(true);
+                for _ in 0..100 {
+                    let mut replay = plain.sources().to_vec();
+                    plain.step();
+                    filmed.step();
+                    assert_eq!(plain.sources(), filmed.sources());
+                    assert_eq!(plain.counts(), filmed.counts());
+                    assert_eq!(plain.config, filmed.config);
+                    let mut previous = 0;
+                    for e in filmed.events() {
+                        assert!(e.update > previous);
+                        previous = e.update;
+                        assert_eq!(e.tick, filmed.tick);
+                        let i = (e.agent - 1) as usize;
+                        assert_eq!(u32::from(replay[i]) + 1, e.from_source);
+                        assert_ne!(e.from_source, e.to_source);
+                        replay[i] = (e.to_source - 1) as u8;
+                        if e.kind == "recruit" {
+                            assert!(!filmed.independent[i]);
+                            let j = (e.partner.unwrap() - 1) as usize;
+                            assert_eq!(u32::from(replay[j]) + 1, e.to_source);
+                            assert!(filmed.graph.of(i).contains(&(j as u32)));
+                        } else {
+                            assert!(e.partner.is_none());
+                        }
+                    }
+                    assert_eq!(replay, filmed.sources());
+                    assert!(plain.events().is_empty());
+                }
+            }
         }
     }
 }

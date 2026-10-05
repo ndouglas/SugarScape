@@ -1,0 +1,34 @@
+{
+  "config": {
+    "agents": 101,
+    "at_capacity": "stay",
+    "behavior": "inductive",
+    "bias": 0.5,
+    "capacity": 50,
+    "decay": 0.9,
+    "evolution": {
+      "enabled": false,
+      "every": 100,
+      "memory_mutation": 0.0,
+      "strategy_mutation": 0.1
+    },
+    "game": "minority",
+    "information": "true",
+    "memory": 6,
+    "mixed_memory": {
+      "enabled": false,
+      "max": 10,
+      "min": 1
+    },
+    "model": "farol",
+    "payoff": "step",
+    "rounding": "nearest",
+    "scoring": "error",
+    "shared": false,
+    "stop_at": 0,
+    "strategies": 2
+  },
+  "every": 1,
+  "seed": 2007,
+  "ticks": 2001
+}

@@ -40,7 +40,7 @@ pub enum Window {
 pub enum Placement {
     /// DAWF: N uniform draws; the most extreme take ue.
     Drawn,
-    /// AD: the same agents, set to ±1.
+    /// AD: extremists at ±1; moderates uniform on the full [−1, 1] interval.
     Bounds,
     /// M&C: extremists uniform in [b, 1] and [−1, −b], moderates on (−b, b).
     Band,
@@ -456,7 +456,8 @@ pub fn schema() -> Vec<Param> {
                 ("band", "A band at the ends (Meadows & Cliff)"),
             ],
             Reset,
-        ),
+        )
+        .with_help("At ±1, extremists are placed independently of moderates drawn uniformly across [−1, 1]."),
         Param::number("Extremists", "band", "Band edge (b)", (0.05, 0.95, 0.05), Reset)
             .shown_if("placement", "band"),
         Param::number(

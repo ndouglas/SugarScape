@@ -1,0 +1,9 @@
+{
+  "preset": "watts-upper",
+  "seed": 218015,
+  "ticks": 2,
+  "set": {
+    "actors": 1000,
+    "repeat": false
+  }
+}

@@ -4,6 +4,11 @@
 //! Amblard and Deffuant (2004) and Weisbuch (2004), and Meadows and Cliff's
 //! (2012) and the authors' (2013) readings as named switches. See
 //! docs/superpowers/specs/2026-09-26-relative-agreement-design.md.
+//!
+//! Placement follows each source: DAWF assigns confidence to the outer
+//! opinion draws; AD places extremists at ±1 independently of the moderates'
+//! uniform opinions across [−1, 1]; M&C separates extremists and moderates
+//! into opinion bands.
 
 mod config;
 mod network;

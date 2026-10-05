@@ -11,9 +11,9 @@ Short explainer videos rendered in Blender from real engine runs (see
     python3 studio/measure.py seasons           # re-measure an episode's captions over 20 seeds
 
 Episodes so far: the Sugarscape series, `sugarscape` (the pilot), `seasons`, `pollution`, `inheritance`, `tribes`,
-`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living`, `ethno`, `tags`, `image`, `norms`, `friends` and `stranger` (the finale); and Following the Crowd, `neighbors` and `tipping`.
+`markets`, `war`, `credit`, `contagion` and `finale`; and the Cooperation series, `spatial`, `living`, `ethno`, `tags`, `image`, `norms`, `friends` and `stranger` (the finale); and Following the Crowd, `neighbors`, `tipping`, `variations`, `culture`, `opinions`, `agreement` ("How extremists win"), `thresholds` ("The riot that needs one person"), `ants` ("Ants at two food piles"), and `farol` ("Nobody goes, it's too crowded").
 
-Shots run the Sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring or norms. A spatial shot's dump records each
+Shots run the Sugarscape, spatial games, the demographic PD, ethnocentrism, tags, image scoring, norms, El Farol or the minority game. A spatial shot's dump records each
 generation's strategies, and its scores with `"scores": true`; `cells` gives a close-up a hand-made
 board. A demographic-PD shot's dump records each cycle's agents, births (with the parent) and deaths,
 and loads as a Sugarscape dump without sugar, so its crowd walks, clones and dies as the Sugarscape's
@@ -35,6 +35,8 @@ q, payoff) and, with `"gifts": true`, each agent's partners; it loads as a `Grid
 each Flump in its friendliness's shade, on its own square under the torus and in index order
 otherwise, with yarn lines to a few followed Flumps' partners (`grid.py`).
 
+A `farol` shot records each agent's actual choice, selected strategy and score before updating, forecasts or memory advice, pre-decision public history, and the resulting attendance. The episode uses 100 agents for the bar and 101 for the ordinary minority game; ensemble histograms summarize 20 bar seeds and 32 minority seeds. Its measured captions and selection protocol are retained in `episodes/farol/measurements.md`. The verified preview is `~/Movies/Flump Studio/sugarscape-027-farol.mp4` (960 × 540, 30 fps, 95 seconds), with one continuous original G-major schottische, *The Empty Chair*, at 103 BPM.
+
 Needs Blender 5.2 at /Applications/Blender.app (or `BLENDER=/path/to/blender`), ffmpeg, and cargo.
 Finished videos go to `~/Movies/Flump Studio/<episode>.mp4` (and `<episode>-preview.mp4`; set
 `FLUMP_MOVIES` to change the folder). Working files go to `studio/out/<episode>/` (ignored by
@@ -47,6 +49,43 @@ Render times on an M1 Max (Blender 5.2, Eevee): the pilot's 19 beats (2,889 fram
 preview. The final encodes at CRF 21, so the pilot is 52 MB (Bluesky takes up to 100 MB).
 
 ## An episode
+
+### Planning and presentation
+
+These principles guide future storyboards and production, following the user's
+October 4 review of the retirement episode. They are creative defaults, not fixed
+duration or beat quotas. Apply them alongside each series' source and measurement rules.
+
+- Build around one central idea, one complication, and a closing thought. Roughly
+  90–100 seconds is a useful starting point; adjust the length to the subject.
+  Prefer fewer, longer scenes when viewers need time to recognize and care about
+  particular agents. Fourteen beats is not a target to fill.
+- Let a small human moment open into a larger pattern. Follow recognizable
+  individuals long enough for watching, hesitation, joining, companionship, or
+  absence to matter. The characters personify the recorded behavior; their
+  expressions must not imply motives, health effects, or outcomes the model cannot show.
+- Give each moment one main sentence and one visual question. Avoid asking the
+  viewer to read a caption, interpret a chart, follow characters, and absorb
+  methodological details simultaneously. Use brief charts when they answer the
+  current question, and protect both caption space and the characters.
+- Keep qualifications that materially change the film's meaning on screen.
+  Put detailed methods, sample sizes, selection protocols, and additional caveats
+  in the linked measurements and source documentation. Simpler presentation must
+  preserve scientific honesty and uncertainty.
+- Preserve the handmade felt stage and original music as the series' shared
+  identity. Let the tune carry emotional associations without captions naming
+  every feeling. Include moments with no explanatory text while music and action
+  continue; allow recognition to settle before the next explanation.
+- Maintain continuity of recognizable identities, gaze, movement, and supporting
+  graphics. Ease presentation changes while keeping recorded states and event
+  times exact. Verify the transition itself, not only its endpoints. A necessary
+  identity replacement should read as a departure and arrival.
+
+During storyboard review, ask what idea the viewer will understand and what small
+scene they will remember. During production review, check competing demands on
+attention, reading time, character continuity, and breathing room in actual
+composited frames and normal-speed playback. Geometry and decoded-frame checks
+support this review but cannot establish its emotional effect.
 
 `studio/episodes/<episode>/` holds:
 
@@ -125,3 +164,78 @@ that follow Flumps), `panels.py` (screen-space displays) and `caption.py`; a new
 `BUILDERS` in `__init__.py`.
 
 Baloo 2 is © The Baloo 2 Project Authors, under the SIL Open Font License (`fonts/OFL.txt`).
+
+### Relative agreement
+
+`agreement` records each agent's opinion and uncertainty, starting opinion, and initial
+role. Its felt histogram spans −1 to +1. Starting-opinion yarn colors preserve identity;
+cream marker lengths show current uncertainty. The opinion × time diagram retains true
+simulation periods when shots sample every several periods. The pair explanation uses
+actual initial opinions and uncertainty intervals, labeled as a rule example.
+
+The episode's *The Certain Few* is an original D-minor piece in 6/8 for bassoon,
+clarinet, marimba and cello. Its persistent outer figures spread into a flexible middle
+phrase as the crowd changes. Caption rules and samples are in
+`episodes/agreement/measurements.md`; source assumptions and reconstruction checks are
+in `docs/superpowers/specs/2026-10-01-agreement-spike.md`.
+
+`thresholds` records each agent's exact threshold, participation, forced-seed flag,
+crowd and actual neighbors, with the model's true step and completed-episode count.
+One grid cell represents one real agent. Coral indicates participation and blue
+indicates waiting; the neighborhood inset uses recorded edges. Outcome panels use
+the measured ensemble, while example traces retain their own seed and actual steps.
+The selected ceiling example shows steps 500–600 with a labeled 85–95% axis.
+
+Its original A-minor tune, *The Missing Rung*, uses flute, vibraphone, pizzicato
+strings and bassoon. Beat-aligned cues pass a rising phrase between voices or
+remove its answer. Each cue hands off from the backing: it fades to silence during
+0.8 seconds before the first cue note, stays silent through the full notated cue
+and 0.3 seconds of release, then returns over 0.8 seconds as the cue fades out.
+Deliberately missing entrances and sparse gaps remain in the score. Measurements and
+fixed rules are in `episodes/thresholds/measurements.md`, and the source audit is
+in `docs/superpowers/specs/2026-10-02-thresholds-spike.md`.
+
+Closing cards use `<title> - After <Names>, <Year>\nndouglas.github.io/SugarScape`
+above a single camera-facing agent. A no-shot beat named `end` with `caption_y=0.45`
+uses the established composition and one late blink.
+
+Individual threshold values appear in the two teaching close-ups; overview shots
+use their distribution ruler and measured panels. Check text visibility through
+every frame of the camera moves, plus the separate caption bounds, with:
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup --python-exit-code 1 -P studio/tests/blender_thresholds_layout.py
+```
+
+This regression uses the recorded dumps, actual font and projected scene bounds
+to check clipping, unrelated panel occlusion and text intersections.
+
+
+`ants` records each agent's actual source, independent status, counts, true model
+clock, and sparse network edges. Optional event recording preserves the model's
+random draws and records the actual recruitment partner or spontaneous switch.
+Two identical food piles represent source choices; movement between them is
+illustrative. Source colors and readouts use the same recorded frame. Yellow
+agents and rings mark the actual independent agents.
+
+The episode shows every agent in each filmed population. Panels distinguish
+short filmed examples from the complete measured ensembles and exact stationary
+predictions. The pairwise comparison holds total meetings fixed; the network
+comparison uses sequential sweeps. Graphs in the independent-agent comparison
+are separately generated. All outcomes, fixed rules, and horizons are retained
+in `episodes/ants/measurements.json` and summarized in `measurements.md`.
+
+Its original *The Turning Chain* is a Breton-inspired D-Dorian dance in 2/4
+for oboe, clarinet, and a quiet accordion drone/pulse. Its instrumental replies
+adapt the overlapping handoff of kan ha diskan: the answer enters before the
+caller finishes, then carries alone. One continuous score carries these exchanges
+at a single fitted tempo, with overlap limited to the caller’s final beat. The
+independent passage retains a small steady D line. The closing
+uses the established title, attribution, URL, and one late blink.
+
+After generating the ants dumps, check all frames, captions, plotted geometry,
+teaching markers, and the actual closing blink with:
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup --python-exit-code 1 -P studio/tests/blender_ants_layout.py
+```

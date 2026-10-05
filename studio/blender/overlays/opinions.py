@@ -49,3 +49,57 @@ def diagram(beat, d, ctx):
             spline.points.foreach_set("co", pts)
 
     return update
+
+
+def agreement_diagram(beat, d, ctx):
+    """Actual opinion × true period, each segment colored by its uncertainty."""
+    from agreement_visual import diagram_point, uncertainty_color, outcome_clock
+    anchor = ctx.screen.anchor('agreement-diagram', .68, .38)
+    k = .7
+    card('agreement-diagram-card', anchor, (0, 0, -.01), (.66 * k, .78 * k, .002))
+    ink = materials.fading('agreement-diagram-ink', CREAM, 1.6)
+    left, bottom, sx, sy = -.196, -.16, .392, .364
+    text('agreement-diagram-title', 'opinion × period', .031, ink, anchor, location=(0, .245, 0))
+    text('agreement-range', '+1', .025, ink, anchor, location=(left - .025, bottom + sy, 0))
+    text('agreement-range-low', '−1', .025, ink, anchor, location=(left - .025, bottom, 0))
+    clock = text('agreement-clock', '', .029, ink, anchor, location=(0, -.205, 0))
+    # Fixed 0–2 scale, independent of the run and its current frame.
+    palette = [materials.fading(f'agreement-u-{j}', uncertainty_color(j / 10), 2.5) for j in range(21)]
+    for j in range(21):
+        box(f'agreement-legend-{j}', palette[j], anchor, location=(-.19 + j * .019, -.255, .003), scale=(.02, .013, .002))
+    text('agreement-u-label', 'current uncertainty: 0      1      2', .025, ink, anchor, location=(0, -.28, .005))
+    chosen = sorted(d.placed, key=d.start_rank.get)[::max((len(d.placed) + 59) // 60, 1)]
+    text('agreement-sampling', f'{len(chosen)} agents · sampled periods', .022, ink, anchor, location=(0, -.31, .005))
+    lines = []
+    end_period = d.frames[-1].period
+    import bpy
+    samples = sorted(set(range(0, len(d.frames), max((d.ticks + 119) // 120, 1))) | {d.ticks})
+    for i in chosen:
+        curve = bpy.data.curves.new(f'agreement-path-{i}', 'CURVE')
+        curve.dimensions = '3D'
+        curve.bevel_depth = .0015
+        for material in palette:
+            curve.materials.append(material)
+        obj = bpy.data.objects.new(f'agreement-path-{i}', curve)
+        obj.parent = anchor
+        bpy.context.scene.collection.objects.link(obj)
+        for previous, j in zip(samples, samples[1:]):
+            f, prev = d.frames[j], d.frames[previous]
+            a, b = diagram_point(prev.period, prev.opinions[i], end_period), diagram_point(f.period, f.opinions[i], end_period)
+            spline = curve.splines.new('POLY')
+            spline.points.add(1)
+            spline.material_index = min(max(round(f.uncertainties[i] * 10), 0), 20)
+            coords = [(left + sx * a[0], bottom + sy * a[1]), (left + sx * b[0], bottom + sy * b[1])]
+            spline.points.foreach_set('co', [v for x, y in coords for v in (x, y, .002, 1)])
+            spline.points.foreach_set('radius', [0, 0])
+            lines.append((j, spline, False))
+    def update(frame):
+        now = min(max(round(ctx.timing.tick_at(frame)), 0), d.ticks)
+        for index, (j, spline, shown) in enumerate(lines):
+            visible = j <= now
+            if visible != shown:
+                spline.points.foreach_set('radius', [1 if visible else 0] * 2)
+                lines[index] = (j, spline, visible)
+        clock.data.body = (outcome_clock(d.stats, d.config.get('stop_at', end_period), d.config.get('stop_when_stable', True)) if now == d.ticks
+                           else f'period {d.frames[now].period:,} / {end_period:,}')
+    return update

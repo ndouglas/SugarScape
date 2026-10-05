@@ -16,4 +16,4 @@ pub use presets::presets;
 pub use stats::{AntsSnapshot, Regimes, Running, HOLD, SERIES};
 pub use theory::{alfarano, join, kirman, kirman_alpha, kirman_rates, stationary, variance};
 pub use view::{grid, row, row_of, GRID_X, HIST_X, SHOWN, TALL, TIME_W};
-pub use world::{AntView, AntsCell, AntsInspection, AntsMode, AntsWorld};
+pub use world::{AntView, AntsCell, AntsEvent, AntsInspection, AntsMode, AntsWorld};

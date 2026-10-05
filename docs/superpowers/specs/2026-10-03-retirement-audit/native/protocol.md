@@ -1,0 +1,5 @@
+# Native measurement schema
+
+Native `previous_tick_mode_at_switch` is the rolling retirement-event mode from the tick immediately BEFORE the recorded switch tick. It excludes switching-tick events. Independent `mode_at_switch` includes events through the actual switch tick. These diagnostics have different observation windows and must not be compared directly. Native representative trace `modal_age` at the switch tick is a separate observation; no per-seed switch-tick values are inferred from the single retained trace.
+
+The producer samples this diagnostic before `w.step()` and records it when an eligibility switch is observed after that step. Existing CSV values are retained unchanged. Missing values in nonpolicy cases are N/A. `summary.csv` aggregates this previous-tick diagnostic separately from first95, post-switch95 and rolling-mode timing criteria. These are reconstruction diagnostics, not the authors' unpublished norm stopping rule. Exact configurations, fixed seeds, horizons, censoring and ensemble rules are documented in the package README.

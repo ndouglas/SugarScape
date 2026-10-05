@@ -1152,7 +1152,7 @@ fn agreement_sims_match_the_native_golden_entries() {
         ("ra-literal", "0x2a130dc7026094f7"),
         ("ra-bc-extremists", "0xc304b87400a0bb46"),
         ("dnaw-lattice", "0x60f9414e1157482d"),
-        ("ad-small-world", "0xd29498f3ac055d5d"),
+        ("ad-small-world", "0x4f5519802c3bbb22"),
         ("w-scale-free", "0xed9e58b01a7987d8"),
     ] {
         let mut sim = Sim::new(&preset_json(id), 1, JsValue::NULL).unwrap();

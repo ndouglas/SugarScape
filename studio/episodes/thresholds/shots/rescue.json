@@ -1,0 +1,10 @@
+{
+  "preset": "gr-friends-perturbed",
+  "seed": 210003,
+  "ticks": 4,
+  "set": {
+    "friends.acquaintance": 0.25,
+    "friends.weight": 5,
+    "repeat": false
+  }
+}

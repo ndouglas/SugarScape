@@ -1,0 +1,17 @@
+{
+  "preset": "ra-single",
+  "seed": 22,
+  "ticks": 220,
+  "set": {
+    "agents": 1000,
+    "mu": 0.2,
+    "extremists": 0.1,
+    "uncertainty": 1.6,
+    "extremist_uncertainty": 0.1,
+    "delta": 0.1,
+    "placement": "drawn",
+    "extreme_margin": 0.1,
+    "stop_when_stable": true,
+    "stop_at": 20000
+  }
+}

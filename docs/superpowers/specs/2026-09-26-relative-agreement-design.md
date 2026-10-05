@@ -8,7 +8,7 @@
 - Frédéric Amblard and Guillaume Deffuant, "The Role of Network Topology on Extremism Propagation with the Relative Agreement Opinion Dynamics", *Physica A* 343 (2004), 725–738 (arXiv cond-mat/0404574; AD below).
 - Gérard Weisbuch, "Bounded Confidence and Social Networks", *European Physical Journal B* 38 (2004), 339–343 (arXiv cond-mat/0311279; W below).
 
-**Replication and reply:** Michael Meadows and Dave Cliff, "Reexamining the Relative Agreement Model of Opinion Dynamics", *JASSS* 15(4) 4 (2012) (M&C below); Guillaume Deffuant, Frédéric Amblard and Gérard Weisbuch, "The Results of Meadows and Cliff Are Wrong Because They Compute Indicator y Before Model Convergence", *JASSS* 16(1) 11 (2013) (DAW below).
+**Replication and reply:** Michael Meadows and Dave Cliff, "Reexamining the Relative Agreement Model of Opinion Dynamics", *JASSS* 15(4) 4 (2012) (M&C below); Guillaume Deffuant, Gérard Weisbuch, Frédéric Amblard and Thierry Faure, "The Results of Meadows and Cliff Are Wrong Because They Compute Indicator y Before Model Convergence", *JASSS* 16(1) 11 (2013) (DAW below).
 
 Image scoring holds Milestone 21 in its worktree, so this is Milestone 22.
 
@@ -34,27 +34,34 @@ The relative agreement model and the pairwise bounded-confidence models it exten
 - **BC variants (§6):** eq. 11 "If |x − x′| < u′ the influence of x′ on x is given by x = x + μ(x′ − x)", with "u′ the uncertainty of opinion x′"; eq. 12 adds u = u + μ(u′ − u); eqs. 13–14 (after Weisbuch et al. 2002) x = αx + (1 − α)x′, u² = αu² + α(1 − α)(x − x′)², condition not given. Claims: plain BC gives both extremes only near U 0.4–0.5, single extreme around U = 1 ("larger for delta = 0.1"), and only central above U 1.2 with the cluster fluctuating; averaging gives both extremes near 0.4, a central band near 0.8 and single or central above 1.1 (single when δ > 0); the variance rule gives no single extreme and very rare both extremes.
 - **AD:** extremists placed differently: "we first randomly draw opinions of (1 − pe)·N agents … Then we initialize Np₊ agents to +1 and Np₋ most negative opinions to −1". On a Moore torus (Fig. 3, ue 0.1, μ 0.2, δ 0) "y is always below 0.6 … the single extreme convergence never occurs". Small worlds (Figs. 4–5, U 1.8, ue 0.1, N 1000, μ 0.1, δ 0, pe 0.05, 50 runs, k = 2 … 256 by powers of 2, p 0 … 1): "a transition from double extreme convergence to single extreme convergence case when the connectivity (k) increases … the transition takes place for higher connectivity when p decreases"; at β = 0.8 "the phase transition … occurs for values of connectivity around 8". Fig. 6: the same on a grid substrate with a generalized Moore neighborhood. Fig. 7: (U, pe) = (1.0, 0.05), (1.2, 0.05), (1.4, 0.05).
 - **W:** DNAW's model on Barabási–Albert networks of 900 nodes grown from a triangle with two links per new node (mean degree 4; 8 for Fig. 3's second curve), "a random node is first chosen, and then one of its neighbours. But only the first node in the pair might update". The dispersion index Σsᵢ²/(Σsᵢ)² (Derrida and Flyvbjerg; W calls it y). Claims: well mixed, "two distinct steps at y = 0.5 and y = 0.33"; scale-free, "a continuous increase … with only a kink in the d = 0.25, y = 0.7 region"; the scale-free and lattice curves are similar; "Increasing the average connectivity by a factor 2 brings the scale free network results closer to those of the well-mixed case"; well-connected nodes end in the big cluster; many poorly connected nodes never move ("outlying").
-- **M&C:** Java and Python reimplementations: moderates uniform on (−0.8, 0.8), extremists uniform in [0.8, 1] and [−1, −0.8], the extremist count rounded up to even, N 200, μ 0.2, 40 000 pair meetings (200 per agent), both agents updated from their old values, a moderate counted as extremist when beyond ±0.8. Result: mean y peaks near 0.5; "There appear to be no conditions under which single extreme convergence will occur in the majority of the simulations"; the single-extreme zone shrinks as N grows (§5.3).
+- **M&C:** the Java reimplementation (the reply modifies Java; the published Python appendix uses one-way updates and 250 periods): moderates uniform on (−0.8, 0.8), extremists uniform in [0.8, 1] and [−1, −0.8], the extremist count rounded up to even, N 200, μ 0.2, 40 000 pair meetings (200 per agent), both agents updated from their old values, a moderate counted as extremist when beyond ±0.8. Result: mean y peaks near 0.5; "There appear to be no conditions under which single extreme convergence will occur in the majority of the simulations"; the single-extreme zone shrinks as N grows (§5.3).
 - **DAW:** M&C "compute indicator y before model convergence". With 240 000 meetings (1200 per agent) and new extremists counted beyond ±0.7 ("a threshold … lower of 0.1 than the threshold for initial extremists"), M&C's own program gives "single extreme convergence … very frequent (often more than 80% of the simulations) for low values of pe and large values of U"; with N 1000 at 4000 meetings per agent it "is still significantly present", and "takes place with any large number of agents".
 
-## Measured in planning
+## Source recheck and measurements
 
-A throwaway prototype of the rules below (it gave an odd extremist count's extra agent to the positive side, a lean of 1/nₑ at δ 0 that the coin flip below removes; the survey re-measures); 50 seeds unless stated, N 1000 for Fig. 9 points, μ 0.2 and ue 0.1 unless stated. The survey reproduces each.
+The binding source audit and current survey verdicts are in
+`2026-10-01-agreement-spike.md`. The model implements the stated relative agreement equations;
+measurement assumptions are kept separate from them. In particular:
 
-- **M&C against DAW** (N 200, pe 0.05, U 1.4, 100 seeds): M&C's reading (band placement, cutoff 0.8, 200 periods) y 0.01, single extreme 1; 1200 periods with cutoff 0.8, y 0.48; 200 periods with cutoff 0.7, y 0.16; DAW's reading (1200 periods, cutoff 0.7) y 0.94, single 94. Both fixes are needed: the drifted majority settles just inside 0.8. The literal reading (drawn placement, margin 0.1, run to stability) gives y 0.88 at N 200, stable by a median of period 280.
-- **Fig. 9, literal reading, δ 0:** the layout reproduces — y ≈ 0.02–0.18 at U ≤ 0.4; the both-extremes triangle (y 0.49–0.51 at U 0.8–1.2 for pe ≥ 0.1, widening upward); the central diagonal (y ≤ 0.1 at pe 0.025 U 0.8–1.0, pe 0.1 U 1.2–1.4, pe 0.15 U 1.4–2.0); single extreme bottom right (y 0.98–1.00 at pe 0.025, U ≥ 1.2; 0.78–0.80 at pe 0.05, U ≥ 1.4). It fades faster in pe than the figure: at pe 0.1 and 0.125, U ≥ 1.4, y 0.08–0.20 and single extreme in 4–11 of 50 runs, where Fig. 10 shows many runs near y = 1.
-- **δ 0.1:** single extreme y ≥ 0.93 for U ≥ 1.6 up to pe 0.125, 0.52–0.69 at pe 0.25 — Fig. 9's bottom panel.
-- **Fig. 10 (pe 0.125):** unimodal around 0.1–0.3 at U 0.4–0.6, all at 0.5 at U 0.8–1.0, bimodal from U 1.2 (at 1.2 central 12, both 14–25, single 0; from 1.4 central 45–46, single 4–5).
-- **Population size (δ 0, U 1.6, 100 seeds):** single extreme at pe 0.05: 99, 90, 88, 78, 75, 57 runs for N 100, 200, 400, 1000, 2000, 4000; at pe 0.1: 79, 62, 50, 16, 6, 0; at pe 0.15: 67, 50, 33, 9, 3, 0. With δ = 0, single extreme is a finite-size effect that vanishes with N except at the smallest pe — M&C's §5.3 holds, DAW's "any large number of agents" holds only at pe ≈ 0.05. N 200 in the crossover (pe 0.1, U 1.4) gives y 0.47, s.d. 0.49 — Fig. 9's dark-blue band — where the stated N 1000 gives 0.10.
-- **Placement and update order** (N 1000, pe 0.075–0.125, U 1.4–1.8, 100 seeds): band placement raises single extreme (pe 0.075: 81 against 31 drawn, 29 at ±1); sequential updating lowers it slightly. None changes the layout.
-- **Eq. 11's window:** as printed (|x − x′| < u′, the influencer's uncertainty) plain BC and BC with averaging give y = 0.00 everywhere (U 0.2–1.8, pe 0.05–0.3, δ 0 and 0.1): the uncertain moderates reach the confident extremists and pull them in. With the listener's uncertainty (|x − x′| < u, the analogue of RA's hᵢⱼ > uᵢ when uᵢ < uⱼ) plain BC gives single extreme in 50 of 50 at U 1.0 (δ 0) and U 1.0–1.2 (δ 0.1), both extremes only at U 0.4–0.6, and central from U 1.2 with runs that never go still (20 000 periods); BC with averaging gives a central band at U 0.8, both extremes near 0.5–0.6, and single extreme above U 1.1 (δ 0.1: 0.68–1.00; δ 0: 0.30–0.48). §6's text is reproduced by the listener's reading only.
-- **Variance rule** (α 0.8): y ≤ 0.14 everywhere under either window; single extreme in at most 5 of 50 runs — as §6 says.
-- **Clusters (pe 0):** RA gives 1.0, 2.0, 2.7, 3.4, 4.1, 5.3, 6.9, 10.6 major clusters at w/2u 1.25, 1.67–2, 2.5, 3.33, 4, 5, 6.67, 10 (N 1000, μ 0.5; clusters of at least 1 % of agents): about w/2u, rounded up. BC gives 1.0, 1.0, 2.0, 2.0, 2.9, 3.4, 4.4, 6.0, 8.8: the integer part up to w/2u ≈ 3, then below it. Counting every non-isolated cluster, BC gives about w/2u (2.98 at 2.5). "Integer part" depends on excluding small clusters.
-- **Moore torus** (30 × 30, pe 0.05–0.3, U 0.4–1.8): y ≤ 0.50 and no single extreme in any run; many runs not still within 20 000 periods. With extremists at ±1 and margin 0.1, y ≈ 0.
-- **Small worlds** (N 1000, U 1.8, pe 0.05, μ 0.1, extremists at ±1, 30 seeds): single extreme appears from k 32 at p 0.2 (11 of 30), k 16–32 at p 0.8 (16–24 of 30 drawn; 12 at k 32 with ±1) and p 1, reaching 28–30 of 30 at k 128–256 — a critical k that falls as p rises, as AD say, though above their "around 8". Below it the outcome depends on the cutoff: with margin 0.1 (cutoff 0.9) y ≈ 0 (central); with margin 0.3 (cutoff 0.7) y 0.48–0.49 at k 2–4 (both extremes, AD's reading). The local clusters settle between 0.7 and 0.9.
-- **Scale-free (W, d on [0, 1], μ 0.5, 100 seeds):** dispersion well mixed 0.24, 0.36, 0.50, 0.50, 0.53, 0.83, 0.99 at d 0.10, 0.15, 0.20, 0.22, 0.25, 0.28, 0.30 (steps at ⅓ and ½); scale-free (m 2, node pairing, one-way) 0.04, 0.19, 0.34, 0.42, 0.58, 0.77, 0.85 — no steps, a rise through 0.6–0.8 at d 0.25–0.28; 30 × 30 von Neumann lattice 0.01, 0.02, 0.26, 0.44, 0.68, 0.80, 0.86, close to it.
-- **DNAW lattice** (29 × 29, μ 0.3, 20 seeds): Fig. 5's "100 000 iterations" are 119 meetings per agent; there, at d 0.3, the largest cluster (gaps ≤ 10⁻³) holds 34 %; run to stability (median period 1 848) it holds 92 %, with 27 isolated agents — the figure's picture. At d 0.15 many clusters of similar opinions remain (largest group within gaps of 0.02: 35 % at 119 periods, 24 % at stability).
-- **Speed:** 50 runs of N 1000 to stability take under half a second natively on 10 cores; the survey's full Fig. 9 grid (437 points × 50 × 2) is minutes.
+- The 2013 reply modifies M&C's Java implementation. Together, its longer horizon and lower
+  cutoff recover frequent single-extreme outcomes (49/50) at the measured corner. Either adjustment
+  alone can still produce single outcomes.
+- Figs. 5, 7 and 8 are examples, not statements about majority outcomes. Example-occurrence
+  checks use 1,000 seeds and state when their rules were revised after observing the result.
+  Fig. 5's 4 % joining and y = 0.03 are internally incompatible with its indicator formula.
+- A finite population-size comparison reports frequencies and drift, not a proof of disappearance
+  as N tends to infinity. Low extremist shares continue producing single extremes at measured
+  large populations.
+- Eq. 11 unambiguously uses the influencer's uncertainty; compare the printed and alternate
+  listener windows on the measured Fig. 20 slice. The variance variant is a separate check.
+- AD's moderate opinions cover the full interval independently of extremists at ±1. Its
+  sampling convention and extremism cutoff are unstated. A transition onset is not the point
+  at which most runs are single; report both the definition and capped runs.
+- DNAW's lattice already shows a broad central majority at approximately 100,000 meetings.
+  Visual compatibility is separate from a tight numerical cluster gap; the broad tolerance
+  used to compare the picture was selected after inspecting the result.
+- Match sample sizes: 250 for DNAW's peak figure, 100 for Weisbuch's dispersion figure, and
+  50 for AD's small-world figure and DAWF's parameter maps.
 
 ## Architecture
 
@@ -73,9 +80,9 @@ Model kind `agreement` ("Relative Agreement"): `ModelKind::Agreement`, `ModelCon
 | `extremists` | 0.1 | reset | pe (0–1) |
 | `extremist_uncertainty` | 0.1 | reset | ue |
 | `delta` | 0 | reset | δ (0–1) |
-| `placement` | `drawn` | reset | `drawn` (DAWF: N uniform draws on [−1, 1], the most extreme take ue), `bounds` (AD: the same agents, set to ±1), `band` (M&C: extremists uniform in [b, 1] and [−1, −b], moderates uniform on (−b, b), at random positions) |
+| `placement` | `drawn` | reset | `drawn` (DAWF: N uniform draws on [−1, 1], the most extreme take ue), `bounds` (AD: independently placed extremists at ±1, with moderate opinions uniform across [−1, 1]), `band` (M&C: extremists uniform in [b, 1] and [−1, −b], moderates uniform on (−b, b), at random positions) |
 | `band` | 0.8 | reset | b under `band` |
-| `extreme_margin` | 0.1 | live | a moderate counts as a new extremist when beyond the side's boundary minus this; the boundary is the innermost initial extremist's opinion (`drawn`), 1 (`bounds`) or b (`band`). 0.1 is DAW; 0 with `band` is M&C |
+| `extreme_margin` | 0.1 | live | a moderate counts as a new extremist when beyond the side's boundary minus this; the boundary is the innermost initial extremist's opinion (`drawn`), 1 (`bounds`) or b (`band`). 0.1 with `band` is DAW; its use under `drawn` or `bounds` is an implementation assumption; 0 with `band` is M&C |
 | `pair_update` | `simultaneous` | live | `simultaneous` (both from the old values: `melsimp.c`, M&C), `sequential` (i acts on j, then the new j on i), `one_way` (only the first agent updates: W) |
 | `network` | `all` | reset | `all`, `lattice`, `small_world`, `scale_free` |
 | `lattice.width`, `lattice.height` | 29, 29 | reset | 3–64 each |
@@ -84,7 +91,7 @@ Model kind `agreement` ("Relative Agreement"): `ModelKind::Agreement`, `ModelCon
 | `small_world.degree` | 8 | reset | k (even, 2–256, below N) |
 | `small_world.rewire` | 0.1 | reset | p (0–1) |
 | `scale_free.links` | 2 | reset | m per new node (mean degree 2m) |
-| `pairing` | `edge` | live | on a network: `edge` (a uniform link, its order uniform: DNAW, AD) or `node` (a uniform agent, then a uniform neighbor: W) |
+| `pairing` | `edge` | live | on a network: `edge` (a uniform link, its order uniform: DNAW; a named assumption for AD, whose pair-sampling convention is unstated) or `node` (a uniform agent, then a uniform neighbor: W) |
 | `stop_when_stable` | true | live | `finished()` at the first stable period |
 | `stop_at` | 20 000 | live | `finished()` at this period (0: never) — the cap under stability, the horizon otherwise |
 
@@ -95,7 +102,7 @@ The Rules panel shows `window` only for the BC rules, `alpha` only under `bc_var
 ## Setup
 
 - **Extremist counts:** nₑ = round(N·pe); n₊ = round(nₑ·(1 + δ)/2), n₋ = nₑ − n₊; a tie (nₑ odd at δ 0) goes to a side chosen by a coin flip, so δ 0 has no built-in lean. (M&C round nₑ up to even; the odd extremist is a real asymmetry at small N, M&C Fig. 13.)
-- **`drawn`:** N opinions uniform on [−1, 1); sorted, the lowest n₋ and highest n₊ get ue, the rest U. **`bounds`:** as `drawn`, then those agents' opinions are set to −1 and +1. **`band`:** a random permutation assigns n₊, n₋ and the moderates; draws as above.
+- **`drawn`:** N opinions uniform on [−1, 1); sorted, the lowest n₋ and highest n₊ get ue, the rest U. **`bounds`:** roles are assigned independently of uniform opinion draws; extremists are set to −1 and +1, and moderate opinions retain the full [−1, 1] distribution. **`band`:** a random permutation assigns n₊, n₋ and the moderates; draws as above.
 - **Networks** are built from the seed before opinions. Watts–Strogatz: each substrate link (i, j) in index order is, with probability p, replaced by (i, c) for a uniform c that is not i and not already linked to i. Barabási–Albert: a triangle, then each new node links to m distinct existing nodes chosen with probability ∝ degree. A node with no neighbor is skipped when drawn under `node` pairing.
 
 ## Step (one meeting) and period
@@ -183,7 +190,7 @@ The presets menu gains a **Relative Agreement** group and the Compare entry; the
 
 ## Docs
 
-README: a Relative Agreement section (the rules, the stated choices and switches, the readings and what each reproduces, presets, sweeps, and the findings: both fixes are needed; single extreme is a finite-size effect at δ 0; eq. 11's printed window reproduces none of §6; the cutoff decides AD's low-k regime). `docs/papers.md`: the milestone's row, with M&C and DAW as the critique and reply; roadmap: Milestone 22 done.
+README: a Relative Agreement section (the rules, the stated choices and switches, the readings and what each reproduces, presets, sweeps, and the findings: both reply adjustments recover frequent single outcomes; frequencies change over measured population sizes without an asymptotic conclusion; eq. 11's printed window misses Fig. 20's tested single-extreme band; the unspecified cutoff changes AD's low-k classifications). `docs/papers.md`: the milestone's row, with M&C and DAW as the critique and reply; roadmap: Milestone 22 done.
 
 ## Amendments (implementation planning)
 
@@ -192,13 +199,6 @@ The model was implemented in full while planning (`docs/superpowers/plans/2026-0
 - **Inspect reads cells** (see Views): `agent` is always null and `locate` returns nothing.
 - **Weisbuch's lattice line** in `w-dispersion` uses his pairing and one-way updating, like the scale-free lines; the well-mixed line uses DNAW's symmetric meetings.
 - **The web golden list** holds the nine presets still running at period 200 on seed 1 (`dnaw-lattice`, `dnaw-lattice-clusters`, `ra-central`, `ra-literal`, `ra-deffuant-2013`, `ra-bc-extremists`, `ad-moore`, `ad-small-world`, `w-scale-free`); the rest settle sooner. An engine test runs `ra-single` to its stop at 71 and `ra-meadows-cliff` to 200.
-- **Measured with the implementation** (20–50 seeds; the survey's numbers):
-  - Fig. 5 (pe 0.2, U 0.4, μ 0.5): 48 % of moderates become extremists (22 % with extremists at ±1) against the caption's 4 %.
-  - Figs. 7–8 (pe 0.1, U 1.4, μ 0.5): both extremes in 39 of 40 runs, under every placement and update order; at Fig. 9's μ 0.2, single 24 and central 16 of 40. The figures' μ looks misstated (§4.8: larger μ widens both extremes).
-  - Fig. 9 at N 1000: the single-extreme zone (y ≥ 0.75, pe ≤ 0.075, U ≥ 1.4) holds in 14 of 35 cells; at N 200, 35 of 35. With δ 0.1 it holds in all 55 cells at U ≥ 1.6, pe ≤ 0.15.
-  - §4.8's ue: at N 1000, pe 0.05, U 1.4, the population drifts to one extreme in far fewer runs at ue 0.05 than at 0.2 (median |mean opinion| 0.03 against 0.75); and at ue 0.2 the extreme cluster settles at ±0.75, inside the reply's cutoff (y 0.00; 1.00 counted 0.3 inside the innermost extremist).
-  - The reply's "any large number of agents": single extreme in 37 of 50 runs at N 2000 for pe 0.05, 1 of 50 for pe 0.1 (δ 0). With δ 0.1 y rises with N (0.84 at N 100 to 0.99 at N 2000).
-  - Fig. 4 at N 1000: relative agreement 2.00, 2.70, 3.40, 5.36, 10.54 clusters at w/2u 2, 2.5, 3.33, 5, 10 (within a fifth of w/2u; 2.10, 3.04, 3.70, 5.90, 11.28 at N 200); bounded confidence 2.00, 2.98 at 2.5, 3.33, then 3.44, 4.32, 8.92 at 4, 5, 10 — the integer part only up to about 3.
-  - AD (N 1000, 20 runs): most runs single from k 32 at p 0.8, 64 at p 1, 256 at p 0.2; none single on the Moore torus (largest y 0.51 over 160 runs); at k 2–4 central with the 0.9 cutoff, both extremes in 40 of 40 with 0.7; the grid substrate's y rises from 0.01 at k 8 to 1.00 at k 120.
-  - Weisbuch (N 900, 50 runs): well-mixed dispersion 0.36, 0.50, 0.51 at d 0.15, 0.2, 0.25; scale-free 0.17, 0.34, 0.60, 0.84 and the lattice 0.02, 0.30, 0.70, 0.86 at d 0.15–0.3; 8 links 0.22 from well mixed against 0.57 for 4; 62 % of the ten best-connected agents in the largest cluster (which holds 49 %); 15.9 % never move (0.1 % well mixed).
-  - DNAW's lattice at d 0.3: at period 119 (the caption's 100 000 iterations) the largest cluster holds 39 % on average; at stability 92 %, with a median of 28 isolated agents.
+- **Current measured results:** see `2026-10-01-agreement-spike.md` and
+  `survey/out/results-agreement.json` generated by `cd survey && cargo run --release -q -- --only agreement`.
+  Source comparisons name their cutoff, horizon, sample size and operational decision rule.
