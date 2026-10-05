@@ -285,3 +285,76 @@ Each row below records the random champion in (b,u,d,k) order; every GA champion
 | 19 | (-5,3,0,0) | 0.2175 | 0.0440 | 0.0000 | 0.0000 | 0.0 |
 
 The first raw report and source/settings snapshot are retained in the ignored `.superpowers/sdd/2026-10-04-testimony-game/` evidence directory. Later additions of readable rates and additional integrity records change reporting only; the frozen experimental rules and first results remain intact. Existing `deduction diagnose`, `deduction testimony` and Wink run output are byte-compared against retained pre-change outputs. Full workspace verification is recorded separately before final delivery.
+
+## Strategic reporting against frozen listeners
+
+Run `sugarscape deduction strategic-reporting` for the separate fixed JSON diagnostic. It accepts no tuning arguments and adds no interactive host or provider mode. Exit 0 means independent exact references and report integrity passed; a false integrity report is printed before exit 2, while operational output failures use the existing error handling. Search success and GA superiority never determine this exit code.
+
+One strategic reporter, one fixed-profile reporter and one decider have distinct permissions. The reporters receive private signals, report and observe verification; the decider observes verification and decides. Utility is a separate validated table. Intervention pays the decider +1 when live T is true and -1 when false; abstention pays zero. The strategic reporter uses opposed utility, the negative of that payoff. A lie or a report that opposes a private signal earns no direct reward; a noisy private signal can already disagree with truth.
+
+The five responses are strategic/fixed calibration reports, strategic/fixed live reports, then the decider's irreversible action. Both reporting exchanges are buffered; neither reporter sees the other's current report. Only after both calibration reports does verified C become public. A strategic observation contains its own signal, and during live reporting its remembered calibration signal, public calibration reports and C. It has no assigned copy/invert profile. The fixed reporter additionally knows its persistent private profile. The decider sees calibration reports/C and live reports, q, fixed-profile prior, declared permissions and strategic utility. No request exposes T, other private signals/profiles, seeds, archives or evaluator state. Outcome reveals T and both utility scores only after the decision. Version-1 draws are C,T,fixed profile, strategic/fixed calibration signals, strategic/fixed live signals; rational endpoints still consume scheduled draws. Rejected responses preserve every later request and outcome. Archives replay all accepted prefixes and are privileged, unauthenticated records.
+
+The finite policy is an 18-bit truth table: calibration bits 0/1 use the private signal; live row `8*calibration_signal + 4*own_calibration_report + 2*C + live_signal` occupies bit `2+row`. The other calibration report is public but deliberately ignored by this policy family. Calibration choices make some live rows unreachable; search retains redundant bits, and canonical exact optimization zeroes them. The unsigned encoding tie break is arbitrary and does not establish psychological simplicity.
+
+The actual model has independent fair C/T, four conditionally independent signal draws at accuracy q, and one persistent fixed copy/invert profile with copy prior rho. Exact enumeration retains all 128 worlds and uses integer mass denominator `4*rho.denominator*q.denominator^4`. Actual-policy reference posteriors are true/total history masses; zero-mass histories have no posterior/action. The informed reference knows the candidate reporting policy and true generative rules, but no private realized truth or signal, and abstains on exact ties. Its decision regret is zero by construction and independently checked.
+
+Frozen legacy listeners have an explicitly serialized assumed copy prior, separate from the actual fixed-profile prior. The original Bayesian listener continues to model both reporters as persistent copy/invert channels despite the disclosed strategic objective. Credulous assumes both copy; Skeptical and the published Evolved genome (-3,0,2,0) remain their original algorithms. Their channel assumptions can be wrong here. An assumed-model belief is not an actual-policy posterior; an impossible assumed history returns an error instead of fabricated evidence. Training and holdout configurations support all assumed histories; unsupported endpoint panels are rejected before optimization.
+
+Training uses q=4/5, actual rho=3/4, opposed utility, and equally weighted frozen Bayesian-assumption/Credulous listeners. Assumed rho is 3/4. Independent Python Fraction world generation, history references and exhaustive enumeration of all 262,144 encodings agree with separate row decomposition: canonical optimum 81942 earns reporter utility 63/1000. There are 256 optimal encodings. Copy-calibration/invert-live (87382) is behaviorally equivalent at reachable rows; its redundant bits provide no extra utility. Receiver regret compares a listener to the policy-aware decision reference; reporter regret compares its utility to that panel's best response. These are different expected quantities, never guaranteed realized losses.
+
+| Reporting control | Encoding | Opposed training utility | Reporter regret |
+| --- | ---: | ---: | ---: |
+| Copy signals | 174762 | -477/2000 | 603/2000 |
+| Invert signals | 87381 | -81/2000 | 207/2000 |
+| Always positive | 262143 | -63/400 | 441/2000 |
+| Always negative | 0 | -9/200 | 27/250 |
+| Copy calibration, invert live | 87382 | 63/1000 | 0 |
+| Canonical optimum | 81942 | 63/1000 | 0 |
+
+At the optimum, the informed receiver earns 3/10; legacy Bayesian earns -51/1000 (receiver regret 351/1000), and Credulous earns -3/40 (regret 3/8). Calibration report/truth agreement and report/private-signal opposition are reported separately for both phases.
+
+Both search methods use seeds 0..19 and exactly 3,164 evaluated candidates per seed, counting repetitions. GA uses population 64, two elites, 50 replacement generations, tournaments of three with replacement, independent half-probability per-bit crossover and mutation probability 1/18 per bit. Random search samples the same uniform 18-bit representation and budget. Ranking maximizes exact training utility, then minimizes unsigned encoding, then preserves stable order. Streams use `strategic-reporting-search-seed-v1`, wrapping `seed*6364136223846793005 + identity*1442695040888963407` with identities 3/4 for GA/random, separate from the earlier testimony search. All 40 champions are frozen on training alone before evaluating the five holdouts: the training pair at q=3/5, and Skeptical/Evolved separately at q=4/5 and 3/5; actual and assumed rho remain 3/4. Passive is a separate zero-utility diagnostic control. Holdouts do not select or tune champions.
+
+First measured collection (`strategic-reporting-diagnostic-v1`) passed all 4,178 exact/integrity checks. All 20 GA and all 20 equal-budget random champions reached training utility 63/1000 with zero reporter regret. Every GA champion used canonical encoding 81942. Random champions have different unreachable bits but identical behavior on reachable rows. There is no measured GA utility advantage: all 120 paired GA-minus-random differences across the six evaluated panels are exactly zero. No settings, seeds, thresholds or objectives changed after measurement.
+
+| Target panel | Exact reporter optimum | Canonical optimum encoding | GA utility (all 20) | Random utility (all 20) | Reporter regret (both) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| training | 63/1000 | 81942 | 63/1000 | 63/1000 | 0 |
+| training_pair_q3_5 | 1/40 | 81942 | 1/40 | 1/40 | 0 |
+| skeptical_q4_5 | 3/40 | 5140 | 3/40 | 3/40 | 0 |
+| skeptical_q3_5 | 1/40 | 5140 | 1/40 | 1/40 | 0 |
+| evolved_q4_5 | 9/125 | 98342 | 51/1000 | 51/1000 | 21/1000 |
+| evolved_q3_5 | 31/1000 | 98342 | 13/1000 | 13/1000 | 9/500 |
+
+All champions transfer optimally to the weaker-signal training pair and both Skeptical panels. They remain suboptimal against the withheld Evolved listener: reporter regrets are 21/1000 at q=4/5 and 9/500 at q=3/5. This is transfer to these particular frozen listeners, not an unseen-policy population, equilibrium or general social reasoning. Receiver regret is still positive: the selected policies induce Evolved payoff -51/1000 with receiver regret 351/1000 at q=4/5, and payoff -13/1000 with regret 113/1000 at q=3/5.
+
+Selected reporters copy their calibration private signal and invert their live private signal. Calibration report/truth agreement is 4/5 at training accuracy and 3/5 at weaker accuracy; live agreement is respectively 1/5 and 2/5. Private-signal opposition is exactly zero in calibration and one in live reporting. These phase measurements describe this finite strategy; they do not establish inferred motives, long-term reputation, human deception or psychological simplicity.
+
+Each seed's selected unsigned encodings are shown below. Every row earns reporter utility 63/1000 on training, 1/40 on the weaker training pair, 3/40 and 1/40 against Skeptical at q=4/5 and 3/5, and 51/1000 and 13/1000 against Evolved at those accuracies. Both methods have the same utilities/regrets in every row; encoding differences occur only in unreachable policy rows.
+
+| Seed | GA encoding | Random encoding |
+| --- | ---: | ---: |
+| 0 | 81942 | 88214 |
+| 1 | 81942 | 86550 |
+| 2 | 81942 | 86358 |
+| 3 | 81942 | 85142 |
+| 4 | 81942 | 91158 |
+| 5 | 81942 | 82838 |
+| 6 | 81942 | 86486 |
+| 7 | 81942 | 84246 |
+| 8 | 81942 | 82198 |
+| 9 | 81942 | 82902 |
+| 10 | 81942 | 89494 |
+| 11 | 81942 | 83542 |
+| 12 | 81942 | 83542 |
+| 13 | 81942 | 85782 |
+| 14 | 81942 | 88342 |
+| 15 | 81942 | 94934 |
+| 16 | 81942 | 83862 |
+| 17 | 81942 | 82070 |
+| 18 | 81942 | 82198 |
+| 19 | 81942 | 83542 |
+
+The report retains all 40 complete search curves, named controls and exact optima, full rules and separate listener assumptions, all per-champion listener evaluations/history masses/actions/posteriors, phase agreement/opposition, action/error accounting, reporter and receiver regret, summaries and paired differences. The median is the mean of the two central sorted exact utilities. Neither learning success nor manufactured trust is a correctness gate.
+
+The first raw JSON, byte-identical repeat, premeasurement source/settings hashes, retained executable and independent reference evidence live under ignored `.superpowers/sdd/2026-10-05-strategic-reporting/`. Existing `deduction diagnose`, `deduction testimony`, `deduction testimony-game` and seed-7 Wink output are byte-compared with the retained pre-change executable outputs; the entire earlier guide remains an unchanged prefix. This separate finite experiment establishes no equilibrium, arbitrary utility language, repeated reputation mechanism or new interactive host mode.
