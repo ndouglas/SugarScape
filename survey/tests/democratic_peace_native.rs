@@ -523,3 +523,89 @@ fn valid_complete_invalid_construction_and_partial_outcomes_remain_resumable() {
         }
     }
 }
+
+#[test]
+fn followup_phases_resolve_exact_fresh_rosters_and_reject_drift_before_writes() {
+    let dir = directory();
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap();
+    let script = r#"
+import json, sys
+from pathlib import Path
+from survey.democratic_peace.followup import build_manifest
+from survey.democratic_peace.records import strict_json
+from survey.democratic_peace.test_followup import HISTORICAL
+root, out = map(Path, sys.argv[1:])
+data=(root/'docs/superpowers/specs/2026-10-03-democratic-peace-source-table.json').read_bytes()
+for phase in ('literal_precision','prose_precision'):
+    value=build_manifest(strict_json(data),data,phase,HISTORICAL)
+    (out/(phase+'.json')).write_text(json.dumps(value))
+"#;
+    let generate = Command::new("python3")
+        .args(["-c", script])
+        .arg(root)
+        .arg(&dir)
+        .current_dir(root)
+        .output()
+        .unwrap();
+    assert!(
+        generate.status.success(),
+        "{}",
+        String::from_utf8_lossy(&generate.stderr)
+    );
+    let mut configs = Vec::new();
+    for phase in ["literal_precision", "prose_precision"] {
+        let mp = dir.join(format!("{phase}.json"));
+        let rp = dir.join(format!("{phase}.resolved.json"));
+        let run = |mp: &std::path::Path, rp: &std::path::Path| {
+            Command::new(env!("CARGO_BIN_EXE_democratic_peace"))
+                .arg("--manifest")
+                .arg(mp)
+                .arg("--resolved")
+                .arg(rp)
+                .arg("--repo")
+                .arg(root)
+                .arg("--validate-only")
+                .output()
+                .unwrap()
+        };
+        let result = run(&mp, &rp);
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+        assert!(String::from_utf8_lossy(&result.stdout).contains("108 arms/10800 keys"));
+        let resolved: serde_json::Value = serde_json::from_slice(&fs::read(&rp).unwrap()).unwrap();
+        assert_eq!(resolved["schema_version"], 2);
+        configs.push(
+            resolved["arms"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|a| a["config"].clone())
+                .collect::<Vec<_>>(),
+        );
+        let original: serde_json::Value = serde_json::from_slice(&fs::read(&mp).unwrap()).unwrap();
+        for (key, wrong) in [
+            ("reading", serde_json::json!("unknown")),
+            ("phase", serde_json::json!("unknown")),
+            ("analysis_seed", serde_json::json!(0)),
+            ("study_protocol", serde_json::json!("unknown")),
+        ] {
+            let mut changed = original.clone();
+            changed[key] = wrong;
+            fs::write(&mp, serde_json::to_vec(&changed).unwrap()).unwrap();
+            let untouched = dir.join("untouched.json");
+            assert!(!run(&mp, &untouched).status.success());
+            assert!(!untouched.exists());
+        }
+    }
+    for (left, right) in configs[0].iter().zip(&configs[1]) {
+        let mut expected = left.clone();
+        expected["probability_direction"] = serde_json::json!("prose_increasing");
+        assert_eq!(&expected, right);
+    }
+    fs::remove_dir_all(dir).unwrap();
+}

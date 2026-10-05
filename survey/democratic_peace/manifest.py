@@ -108,6 +108,9 @@ def build_manifest(source, source_bytes=None, *, precision_registered=False):
 
 
 def expected_keys(manifest):
+    if type(manifest.get('schema_version')) is int and manifest['schema_version'] == 2:
+        from .followup import expected_keys as followup_keys
+        return followup_keys(manifest)
     if set(manifest) != MANIFEST_FIELDS or type(manifest['schema_version']) is not int or manifest['schema_version'] != 1:
         raise ValueError('unknown or missing manifest fields/version')
     for key, value in [('analysis_seed', ROOT_SEED), ('source_draws', 100000), ('permutation_draws', 100000), ('contrast_draws', 100000)]:
