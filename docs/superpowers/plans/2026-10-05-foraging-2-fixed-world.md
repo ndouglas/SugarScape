@@ -151,7 +151,7 @@ Tests use supplied variates for specific outcomes and tolerance `1e-12` for inde
 **Consumes:** F1 `CpfaParameters::validate`, existing `FieldError`, `rng::SimRng`.
 **Produces:** All shared interfaces above, independently usable movement helpers and common test fixtures.
 
-- [ ] Write failing setup tests for dimensions 2/126, agents 0/257, 257 resources, duplicate IDs/cells, out-of-bounds/nest resources and aggregate invalid CPFA inputs. Validate original values before allocating a dense grid; resource list is already caller-owned. Contextual errors name indexed resources. Include valid 3×3 and 125×125 setups and site round trips at the final cell.
+- [x] Write failing setup tests for dimensions 2/126, agents 0/257, 257 resources, duplicate IDs/cells, out-of-bounds/nest resources and aggregate invalid CPFA inputs. Validate original values before allocating a dense grid; resource list is already caller-owned. Contextual errors name indexed resources. Include valid 3×3 and 125×125 setups and site round trips at the final cell.
 
 ```rust
 #[test]
@@ -167,7 +167,7 @@ fn setup_rejects_multiple_original_inputs() {
 }
 ```
 
-- [ ] Write failing movement tests. With stddev zero, draws `[0.5,0.5]` give unchanged heading and delay one. With stddev 4*pi, `[0.5,0.0]` clips to pi and delay four. At (2,2), heading pi/4 targets (3,3). At a corner, an outward heading and 32 outward redraws fail; no fallback. Directed travel to an adjacent target consumes no draw; from (0,0) toward (2,0), draw zero selects (1,0) because scan order and positive reductions are explicit. Test the largest representable uniform below one, cumulative boundaries, same-position target and edge-target/nest equality.
+- [x] Write failing movement tests. With stddev zero, draws `[0.5,0.5]` give unchanged heading and delay one. With stddev 4*pi, `[0.5,0.0]` clips to pi and delay four. At (2,2), heading pi/4 targets (3,3). At a corner, an outward heading and 32 outward redraws fail; no fallback. Directed travel to an adjacent target consumes no draw; from (0,0) toward (2,0), draw zero selects (1,0) because scan order and positive reductions are explicit. Test the largest representable uniform below one, cumulative boundaries, same-position target and edge-target/nest equality.
 
 ```rust
 #[test]
@@ -185,8 +185,8 @@ fn diagonal_search_is_not_four_neighbor_navigation() {
 }
 ```
 
-- [ ] Run `cargo test -p sugarscape-core foraging::fixed::tests::setup_movement`; confirm intended missing API/test behavior failure.
-- [ ] Implement validation, geometry and draw/movement helpers. Prefix forwarded parameter fields with `parameters.`. Use signed intermediates for neighbor/rounding coordinates. Validate DrawSource values at the consumer boundary too, so malicious test implementations cannot sneak NaN into geometry. Use normalized cumulative intervals with final upper boundary exactly one.
+- [x] Run `cargo test -p sugarscape-core foraging::fixed::tests::setup_movement`; confirm intended missing API/test behavior failure.
+- [x] Implement validation, geometry and draw/movement helpers. Prefix forwarded parameter fields with `parameters.`. Use signed intermediates for neighbor/rounding coordinates. Validate DrawSource values at the consumer boundary too, so malicious test implementations cannot sneak NaN into geometry. Use normalized cumulative intervals with final upper boundary exactly one.
 
 ```rust
 let delta = normal_increment(stddev, draws)?.clamp(-PI, PI);
@@ -197,8 +197,8 @@ let delay = (delta.abs() / (PI / 4.0 + 0.001)).floor() as u32 + 1;
 
 Implement the initial search proposal without consuming a boundary draw. If illegal, allow 32 uniform replacement-heading proposals, then error. Normals always consume two draws, even at stddev zero. Invalid stddev/heading must error before sampling. Test tiny negative increments near heading zero; floating rem_euclid may round to 2*pi, which must normalize to zero to retain the half-open heading range. Directed neighbor weights use Euclidean distances, ordered dx then dy; same/adjacent target takes no selection draw.
 
-- [ ] Rerun targeted tests, `cargo fmt --all -- --check`, and `cargo clippy -p sugarscape-core --all-targets -- -D warnings`; inspect every exit/result.
-- [ ] Self-review, obtain fresh task reviews, update Stage 1 and commit only the Task 1 files plus tracker with `feat(foraging): add checked fixed-world movement`.
+- [x] Rerun targeted tests, `cargo fmt --all -- --check`, and `cargo clippy -p sugarscape-core --all-targets -- -D warnings`; inspect every exit/result.
+- [x] Self-review, obtain fresh task reviews, update Stage 1 and commit only the Task 1 files plus tracker with `feat(foraging): add checked fixed-world movement`.
 
 ### Task 2: Conserved resources and agent accounting
 

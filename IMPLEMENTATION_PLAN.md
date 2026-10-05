@@ -7,7 +7,7 @@ Approved: 2026-10-05. Execution: subagent-driven development.
 **Goal**: Validated geometry and explicit-draw movement helpers.
 **Success Criteria**: Setup errors aggregate; headings and movement remain bounded; sampling conventions are tested.
 **Tests**: setup_movement unit tests; core suite, fmt and clippy.
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 2: Conserved resources and accounting
 **Goal**: Identity-preserving claim/deposit ledger and agent work types.
