@@ -116,3 +116,7 @@ Quantitative reproduction of the paper's optimized performance requires its evol
 ## Review handoff
 
 The written design was checked for scope, source provenance and separation of verified rules from supplied choices, and approved by the user on 2026-10-04. Review of the [F1 implementation plan](../plans/2026-10-04-foraging-1-cpfa-rules.md) was approved by the user on 2026-10-04. Execution followed the user's standing subagent-driven preference; implementation, acceptance and independent reviews are complete. Integration into `main` completed at `5819a04`. Scientific registration/execution remain separate from engineering implementation.
+
+## F2 follow-up
+
+The [F2 historical audit](../../studies/2026-10-04-foraging-fixed-world-reading.md) and [draft fixed-world design](2026-10-04-foraging-2-fixed-world-design.md) are prepared for written-spec review. No F2 implementation or scientific execution has started. The recovered historical source informs eight-neighbor angular movement, delays and completed-return scoring; release identity and quantitative reproduction remain unestablished.
