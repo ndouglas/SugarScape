@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Status: implementation plan approved by the user on 2026-10-05. Execution method already supplied: subagent-driven development. Engineering implementation is in progress; scientific execution has not started.
+- Status: implementation plan approved by the user on 2026-10-05. Execution method already supplied: subagent-driven development. Engineering implementation and independent task/whole-branch review are complete; integration and scientific execution have not started.
 - Grid width/height from 3 through 125, inclusive; agents 1–256; resources 0–256 with unique u64 IDs and distinct valid cells, none at the nest.
 - Seven CPFA parameters are explicit and pass existing F1 validation; all agents share them. No claimed evolved defaults.
 - Run horizon 1–7,200 ticks; `agents * horizon <= 1,000,000` opportunities. Single-step operation enforces the same cumulative limits.
@@ -450,7 +450,7 @@ pub struct Episode {
 
 `summary` recomputes aggregate work from per-agent authoritative counts with checked addition and validates the ledger. No derived efficacy rates are required in this first runner; users can calculate them using the explicit denominator. Public rustdoc records tick semantics, scheduling bias, local knowledge, reconstruction identity and censoring. No automatic completion stop.
 
-- [ ] Write failing runner budget tests for ticks 0/7201, interval zero even when snapshots=false, agents*ticks >1,000,000 and whole-run requested limits before advancement. Initial/final frame counts: ticks=4, interval=2 yields completed ticks `[0,2,4]`; ticks=5, interval=2 yields `[0,2,4,5]`. With snapshots=false return an empty list and zero bytes; summary is unchanged. Empty fixtures run the full horizon with delivery times None.
+- [x] Write failing runner budget tests for ticks 0/7201, interval zero even when snapshots=false, agents*ticks >1,000,000 and whole-run requested limits before advancement. Initial/final frame counts: ticks=4, interval=2 yields completed ticks `[0,2,4]`; ticks=5, interval=2 yields `[0,2,4,5]`. With snapshots=false return an empty list and zero bytes; summary is unchanged. Empty fixtures run the full horizon with delivery times None.
 
 ```rust
 #[test]
@@ -465,8 +465,8 @@ fn snapshot_sampling_is_an_observer() {
 }
 ```
 
-- [ ] Test exact byte boundaries cheaply with `append_snapshot` and a custom small limit. Count the canonical compact serde_json encoding of each Snapshot (no surrounding Episode fields or inter-frame delimiters). Exact remaining bytes succeeds; one byte too few errors before committing bytes/frame. Production limit is 64*1024*1024. Use a counting writer with a hard limit, propagating serialization/write errors; do not retain unbounded temporary JSON or cast unchecked sizes.
-- [ ] Add public acceptance tests for repeated-seed Episode equality, run versus twenty manual steps, initial/final sampling, supplied resource identities and invariant inventory. Include nonempty hand-specified setups for replay and partial-return inventory; specific delivery timing stays in injected unit tests. Verify the public interface needs no private state access. Preserve F1 public tests.
+- [x] Test exact byte boundaries cheaply with `append_snapshot` and a custom small limit. Count the canonical compact serde_json encoding of each Snapshot (no surrounding Episode fields or inter-frame delimiters). Exact remaining bytes succeeds; one byte too few errors before committing bytes/frame. Production limit is 64*1024*1024. Use a counting writer with a hard limit, propagating serialization/write errors; do not retain unbounded temporary JSON or cast unchecked sizes.
+- [x] Add public acceptance tests for repeated-seed Episode equality, run versus twenty manual steps, initial/final sampling, supplied resource identities and invariant inventory. Include nonempty hand-specified setups for replay and partial-return inventory; specific delivery timing stays in injected unit tests. Verify the public interface needs no private state access. Preserve F1 public tests.
 
 ```rust
 #[test]
@@ -482,9 +482,9 @@ fn public_run_matches_manual_steps() {
 
 The integration test defines its own explicit `setup()` using exported types and the shared fixture values, rather than importing private unit-test helpers.
 
-- [ ] Run targeted runner and `cargo test -p sugarscape-core --test foraging_fixed`; verify red. Implement `run` after prevalidating setup and options together, using World::new then fixed-horizon stepping and deterministic observers. Output errors identify their budget/tick; returning Err yields no successful partial Episode. Per-snapshot appends commit only after serialization budget success. There is no RNG consumption in summary/serialization.
-- [ ] Extend `docs/foraging.md` with a complete compiling public example, public limits, exact units/ordering, conserved-token meaning, stale information, deliberate historical-code deviations and distinct F3/F4 next steps. Update parent module rustdoc to describe both the unchanged stateless F1 reference and new fixed-world submodule. Do not continue calling the entire foraging module stateless after this addition.
-- [ ] Run final acceptance once, saving exit codes and full logs outside the repo:
+- [x] Run targeted runner and `cargo test -p sugarscape-core --test foraging_fixed`; verify red. Implement `run` after prevalidating setup and options together, using World::new then fixed-horizon stepping and deterministic observers. Output errors identify their budget/tick; returning Err yields no successful partial Episode. Per-snapshot appends commit only after serialization budget success. There is no RNG consumption in summary/serialization.
+- [x] Extend `docs/foraging.md` with a complete compiling public example, public limits, exact units/ordering, conserved-token meaning, stale information, deliberate historical-code deviations and distinct F3/F4 next steps. Update parent module rustdoc to describe both the unchanged stateless F1 reference and new fixed-world submodule. Do not continue calling the entire foraging module stateless after this addition.
+- [x] Run final acceptance once, saving exit codes and full logs outside the repo:
 
 ```bash
 cargo fmt --all -- --check
@@ -494,10 +494,44 @@ cargo test --workspace
 
 Any workspace failures need triage and scoped correction; do not bypass existing tests. After corrective edits repeat affected verification and broaden only for new integration concerns. Cargo doctests must compile the public example. No shell script is added; if execution introduces one, shellcheck it before committing.
 
-- [ ] Self-review against every spec section, obtain task reviews, update Stage 5 and commit `feat(foraging): expose bounded fixed-world runs`. Request final whole-branch review against the approved spec/plan and recorded evidence. Resolve review findings with fresh scoped tests/review. Keep the tracker through final review, then remove it and record evidence/rulings in this plan and the spec/guide. Integration/merge remains a separate user action; no push or scientific protocol execution here.
+- [x] Self-review against every spec section, obtain task reviews, update Stage 5 and commit `feat(foraging): expose bounded fixed-world runs`. Request final whole-branch review against the approved spec/plan and recorded evidence. Resolve review findings with fresh scoped tests/review. Keep the tracker through final review, then remove it and record evidence/rulings in this plan and the spec/guide. Integration/merge remains a separate user action; no push or scientific protocol execution here.
 
 ## Plan self-review and handoff
 
 Coverage maps: setup/budgets → Tasks 1/4/5; angular geometry/draw schedule → Tasks 1/4; identities/observations → Task 2; nest memory/server → Tasks 3/4; diagnostics/output/replay → Tasks 4/5; acceptance and documentation → Task 5. Review Focus items each have owning tests. File/interface names are shared explicitly; output views avoid extending F1 serde. The five stages each have an independently testable deliverable and are sequential dependencies, not parallel implementation work.
 
-The user has already selected subagent-driven development. Written implementation-plan review was approved by the user on 2026-10-05; no need to ask them to choose an execution method again. After approval, begin at Task 1 with the root tracker and clean-worktree verification. No runtime code has been changed by writing this plan.
+The user has already selected subagent-driven development. Written implementation-plan review was approved by the user on 2026-10-05; no need to ask them to choose an execution method again. Execution completed on the isolated `foraging-2-design` branch. The five-stage root tracker was retained through final review and removed after all stages passed.
+
+## Execution and review evidence — 2026-10-05
+
+All five stages are complete on `foraging-2-design`; merge/push and scientific execution remain separate actions. Runtime commits: Task 1 `ff78b78`, Task 2 `2fc96d5`, Task 3 `4f845ef`, Task 4 `2b32864`, Task 5 `d0f9e98`, final correction `79961e5`. Each task received fresh spec-compliance and quality review. Whole-branch review covered `b74a22b..d0f9e98`, finding two Important diagnostic omissions. One consolidated correction counted every entry into Searching and each initial uninformed departure. Scoped review of `d0f9e98..79961e5` confirmed both addressed with no new breakage or residual findings.
+
+| Gate | Final evidence |
+|---|---|
+| Setup/movement | 22 focused tests; workspace 2409 passed, 0 failed, 103 ignored |
+| Resource ledger | 9 focused tests; workspace 2418 passed, 0 failed, 103 ignored |
+| Server | 11 focused tests plus two overflow cases; workspace 2431 passed, 0 failed, 103 ignored |
+| Controller | 18 focused tests; workspace 2449 passed, 0 failed, 103 ignored |
+| Runner/public API | 5 runner tests, 2 public acceptance tests, 2 core doctests; workspace 2459 passed, 0 failed, 103 ignored |
+| Final counter correction | Behavioral red: 5 intended failures; green: 24 controller tests; final workspace 2463 passed, 0 failed, 103 ignored across 44 result blocks |
+
+Final commands on corrected runtime tree `79961e5`, all exit 0:
+
+```bash
+cargo test -p sugarscape-core foraging::fixed::tests::controller
+cargo fmt --all --check
+cargo clippy -p sugarscape-core --all-targets -- -D warnings
+cargo test --workspace
+git diff --check
+```
+
+Full logs, exit files, task briefs/reports, review packages and recovery ledger are retained outside the repository at `/tmp/foraging-f2-evidence-20261005/`. Original final-correction evidence is at `/tmp/sugarscape-f2-final-fix/`. These temporary paths are local retention, not permanent shared storage; this plan preserves the outcomes and rulings. Initial Task 5 reds were missing-API compilation failures; supplementary Task 3/4 coverage was added after implementation. Those limits are disclosed rather than retroactively presented as behavioral red evidence. The final corrections have independent behavioral red/green evidence.
+
+No temporary dead-code allowances remain. Prior coverage suggestions for exactly three loaded-arrival draws and the final legal cumulative tick are covered and reviewed. These checks verify the reconstruction; no efficacy, evolved-default, historical-release or cross-platform trajectory claim follows.
+
+### Rulings made during execution
+
+- Permit narrowly scoped dead_code allowances for internal staged helpers until their planned consumers land; require removal in Task 4/5 — incremental independently reviewed commits must compile under -D warnings without exposing private helpers or inventing consumers — if wrong, unused APIs could be overlooked, so final review must check the allowances are gone.
+- Edge ordinals are top, left, bottom, right as in historical Utilities.h — the spec requires uniform edge choice but leaves ordinal mapping unspecified, and the historical ordering is available — if wrong, seeded trajectories change, without changing marginal uniform edge probabilities.
+- Server capacity checks retained records, rather than a lifetime publication counter — the spec's bound is storage, while one publication per resource is enforced by the successful-deposit controller lifecycle, and the server has no resource identity — if wrong, isolated server calls could exceed intended lifetime publications; Task4 must verify sole deposit/publication and cleared finds.
+- Accept each final-review declined-to-judge boundary: historical release identity; scientific efficacy/evolved settings/layouts; cross-platform/native trajectory identity; physical cargo/collisions/error models/passages/excavation/costs/global inference; CLI/WASM/browser/model registration/serialized restoration; final archival/tracker/integration bookkeeping — these are explicitly deferred or parent-owned, while bounded reconstruction remains the promised deliverable — if wrong, a desired downstream capability or scientific claim remains unverified and requires its own follow-up.
