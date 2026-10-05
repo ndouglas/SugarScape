@@ -3910,6 +3910,11 @@ study and every empirical value/verdict remain preserved. Corrected findings
 carry a distinct reporting-code identity; original measurement bindings certify
 the preserved original source/native, with no world or inferential rerun.
 
+The approved [precision and probability-reading follow-up](docs/superpowers/specs/2026-10-04-democratic-peace-precision-design.md)
+adds separately gated literal/prose populations and standalone scientific exports.
+[Preparation and reporting tooling](survey/democratic_peace/FOLLOWUP.md) is available;
+no new follow-up measurements or scientific declarations are reported here.
+
 Conditional reconstruction compatibility, independent mechanism contrasts and
 original executable/RNG/statistic identity are separate claims; exact source
 equivalence remains Unresolved. Inferred exposure and curve readings limit source

@@ -1,0 +1,97 @@
+import hashlib
+from pathlib import Path
+import tempfile
+import unittest
+from unittest import mock
+from survey.democratic_peace import source, followup
+from survey.democratic_peace.test_followup_analysis import histories
+try:
+    from survey.democratic_peace import followup_plots as plots
+except ImportError:
+    plots=None
+
+
+class ScientificPlotTests(unittest.TestCase):
+    def setUp(self):
+        self.assertIsNotNone(plots,'standalone scientific renderer is not implemented')
+
+    def charts(self):
+        table=source.fixture_table();old={}
+        for a in followup.baseline.canonical_arms(False):
+            old[a['id']]=histories(30,.25,extinct=a['density_index']==0)
+        return plots.chart_inputs(table,old,{'binding':{'manifest_sha256':'a'*64},'data_sha256':'b'*64}, {})
+
+    def test_original_points_sample_counts_zero_and_clustering_gaps_are_explicit(self):
+        chart=self.charts();row=chart['rows'][0]
+        self.assertEqual(len(row['original_values']),30)
+        self.assertEqual(row['original_census']['registered_count'],30)
+        self.assertEqual(chart['source_band_semantics'],'digitization_envelopes_not_paper_confidence_intervals')
+        clustering=[r for r in chart['rows'] if r['figure']==10 and r['initial_democratic_share']==0.]
+        self.assertEqual(len(clustering),3)
+        self.assertTrue(all(r['original_mean'] is None for r in clustering))
+        zero={a:histories(30,0.,True) for a in source_arm_ids()}
+        chart=plots.chart_inputs(source.fixture_table(),zero,{}, {})
+        self.assertEqual(chart['rows'][0]['original_mean'],0.)
+
+    def test_phase_predictive_intervals_have_replication_semantics_and_separate_bindings(self):
+        chart=self.charts();table=source.fixture_table()
+        fresh={'precision.'+a.removeprefix('original.'):histories(100,.5) for a in source_arm_ids()}
+        phases={'prose_precision':{'histories':fresh,'provenance':{'binding':{'manifest_sha256':'c'*64},'data_sha256':'d'*64},
+            'targets':{s['id']:{'result':{'predictive_interval':[.2,.8]},'unavailable_reason':None} for s in table['slots']}}}
+        chart=plots.chart_inputs(table,{}, {'data_sha256':'b'*64},phases)
+        self.assertEqual(chart['rows'][0]['phases']['prose_precision']['mean'],.5)
+        self.assertEqual(chart['rows'][0]['phases']['prose_precision']['predictive_interval'],[.2,.8])
+        self.assertEqual(chart['predictive_band_semantics'],'95_percent_simulated_30_history_replication_not_mean_confidence_interval')
+        self.assertNotEqual(chart['datasets']['historical_literal_original'],chart['datasets']['prose_precision'])
+
+    def test_svg_png_and_chart_inputs_are_deterministic_standalone_exports(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);chart=self.charts()
+            plots.render(chart,root/'first');plots.render(chart,root/'second')
+            first=root/'first';second=root/'second'
+            for name in ('fig9.svg','fig9.png','fig10.svg','fig10.png','fig11.svg','fig11.png','chart-inputs.json'):
+                self.assertEqual((first/name).read_bytes(),(second/name).read_bytes(),name)
+            svg=(first/'fig9.svg').read_text()
+            self.assertIn('Original literal',svg)
+            self.assertIn('Source digitization envelope',svg)
+            self.assertNotIn('<dc:date>',svg)
+
+    def test_footer_and_every_density_census_fit_original_and_two_phase_panels(self):
+        chart=self.charts();two_phase=self.charts()
+        for phase in followup.PHASES:
+            two_phase['datasets'][phase]={'synthetic_fixture':True}
+            for row in two_phase['rows']:
+                row['phases'][phase]={'mean':row['original_mean'],'predictive_interval':[.2,.8],
+                    'unavailable_reason':None,'census':{**row['original_census'],'complete_count':100,
+                        'clustering_defined_count':100,'extinction_count':0},'observations':[]}
+        closed=[];close=plots.plt.close
+        def retain_figure(fig):
+            if hasattr(fig,'axes'):closed.append(fig)
+            close(fig)
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(plots.plt,'close',side_effect=retain_figure):
+            plots.render(chart,Path(tmp)/'original');plots.render(two_phase,Path(tmp)/'phases')
+        self.assertEqual(len(closed),6)
+        for figure in closed:
+            figure.canvas.draw();renderer=figure.canvas.get_renderer();bounds=figure.bbox
+            footer=figure.texts[-1].get_window_extent(renderer)
+            self.assertGreaterEqual(footer.x0,bounds.x0);self.assertLessEqual(footer.x1,bounds.x1)
+            self.assertGreaterEqual(footer.y0,bounds.y0);self.assertLess(footer.y1,bounds.height*.10)
+            for ax in figure.axes:
+                self.assertEqual(len(ax.tables),1,'each mechanism needs a visible per-density census')
+                table=ax.tables[0];box=table.get_window_extent(renderer)
+                self.assertGreater(box.y0,footer.y1)
+                self.assertLess(box.y1,ax.xaxis.label.get_window_extent(renderer).y0)
+                text=[c.get_text().get_text() for c in table.get_celld().values()]
+                self.assertEqual(text.count('30/30'),12)
+                if len(figure.axes)==6:self.assertEqual(text.count('100/100'),12)
+                cells=list(table.get_celld().values())
+                for cell in cells:
+                    rect=cell.get_window_extent(renderer);label=cell.get_text().get_window_extent(renderer)
+                    self.assertGreaterEqual(label.x0,rect.x0);self.assertLessEqual(label.x1,rect.x1)
+                    self.assertGreaterEqual(label.y0,rect.y0);self.assertLessEqual(label.y1,rect.y1)
+                labels=[t.get_window_extent(renderer) for t in ax.get_xticklabels()]
+                self.assertTrue(all(a.x1<b.x0 for a,b in zip(labels,labels[1:])))
+
+
+def source_arm_ids():
+    return [a['id'] for a in followup.baseline.canonical_arms(False)]
