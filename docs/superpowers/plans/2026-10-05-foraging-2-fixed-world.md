@@ -379,7 +379,7 @@ pub struct Snapshot {
 
 Stage 4 includes all transitions. Final byte budgets/runner Summary are Stage 5. Snapshot conversion decodes find/server site IDs and reports invariant errors; it never samples draws or prunes server records. Initial all-delivered time is None for empty setups, because no delivery event occurred. For nonempty setups, set all-delivered time on the actual final deposit.
 
-- [ ] Write failing controller tests using private State/Agent fixtures plus Scripted draws. An east-facing uninformed searcher at (1,2), nest (2,2), and resource (3,2) with zero variation first moves to (2,2), detects (3,2), freezes count, installs delay nine and claims a token. After nine tick opportunities, returning at the nest deposits exactly once on tick ten. Give-up at p_return=1 suppresses that pickup. Departure never picks it up.
+- [x] Write failing controller tests using private State/Agent fixtures plus Scripted draws. An east-facing uninformed searcher at (1,2), nest (2,2), and resource (3,2) with zero variation first moves to (2,2), detects (3,2), freezes count, installs delay nine and claims a token. After nine tick opportunities, returning at the nest deposits exactly once on tick ten. Give-up at p_return=1 suppresses that pickup. Departure never picks it up.
 
 ```rust
 #[test]
@@ -404,9 +404,9 @@ fn survey_waits_do_not_deliver_a_token_early() {
 }
 ```
 
-- [ ] Add tests for informed age at entry/turn and no advance during waits/travel; target equality at an edge nest; empty-return memory clearing; F1 choice counters; weighted directed move at return; snapshot observational purity; sequential two-agent contention and same-tick publication visibility.
-- [ ] Add a failure-after-earlier-pickup test. Inject exhausted/malformed draws through a private transactional helper that clones State and a Clone DrawSource, calls `advance`, then commits both only on success. The helper is a test seam for the same commit pattern as World::step, not a separate controller. Compare full State and script cursor to their pre-call values. Also clone World before a deliberate limit failure, then compare snapshots and the next native RNG sample to prove production RNG rollback.
-- [ ] Run `cargo test -p sugarscape-core foraging::fixed::tests::controller`; verify red, then implement.
+- [x] Add tests for informed age at entry/turn and no advance during waits/travel; target equality at an edge nest; empty-return memory clearing; F1 choice counters; weighted directed move at return; snapshot observational purity; sequential two-agent contention and same-tick publication visibility.
+- [x] Add a failure-after-earlier-pickup test. Inject exhausted/malformed draws through a private transactional helper that clones State and a Clone DrawSource, calls `advance`, then commits both only on success. The helper is a test seam for the same commit pattern as World::step, not a separate controller. Compare full State and script cursor to their pre-call values. Also clone World before a deliberate limit failure, then compare snapshots and the next native RNG sample to prove production RNG rollback.
+- [x] Run `cargo test -p sugarscape-core foraging::fixed::tests::controller`; verify red, then implement.
 
 ```rust
 // Production World::step:
@@ -419,7 +419,7 @@ Ok(())
 
 `advance` validates cumulative tick/opportunity budgets before work, processes stable agent order and uses checked counters. Attach tick/agent context to helper errors. It checks ledger/agent invariants and finite in-bounds geometry before advancing completed ticks. A delayed agent counts one opportunity/wait and draws nothing. At departure draw the switch for every eligible uninformed agent, even when target equality also holds. On entering search turn once; add its delay and informed age. Search consumes give-up first; a successful give-up ends the opportunity. Otherwise move, turn, then detect. Pickup replaces the new turn delay with nine. Return processes arrival only after its possible directed move, draws all three arrival uniforms even when empty, deposits, publishes, chooses/installs target, clears find/cargo and resets informed age. Edge targeting consumes two further uniforms only for an uninformed choice. Record the event processing tick before increasing completed ticks.
 
-- [ ] Verify all foraging tests plus `cargo fmt --all -- --check` and core clippy; check invariants after each tick in the unit fixtures. Obtain fresh reviews, update Stage 4 and commit `feat(foraging): execute ordered atomic foraging ticks`.
+- [x] Verify all foraging tests plus `cargo fmt --all -- --check` and core clippy; check invariants after each tick in the unit fixtures. Obtain fresh reviews, update Stage 4 and commit `feat(foraging): execute ordered atomic foraging ticks`.
 
 ### Task 5: Bounded runner, acceptance and public documentation
 

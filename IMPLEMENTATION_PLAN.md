@@ -25,10 +25,10 @@ Approved: 2026-10-05. Execution: subagent-driven development.
 **Goal**: Seeded state transitions with rollback of state and RNG on failure.
 **Success Criteria**: Exact delay/detection ordering; resource conservation; sequential visibility and bounded stepping.
 **Tests**: controller timing, contention, rollback and invariant tests.
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 5: Runner and acceptance
 **Goal**: Bounded runs, read-only snapshots, replay and public documentation.
 **Success Criteria**: Fixed horizon; output byte cap; sample cadence cannot alter behavior; final review approved.
 **Tests**: runner and public acceptance tests; cargo fmt, core clippy and cargo test --workspace.
-**Status**: Not Started
+**Status**: In Progress
