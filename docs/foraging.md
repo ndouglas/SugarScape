@@ -74,7 +74,7 @@ F3 passage adaptation, F4 excavation coupling and F5 termite comparison retain s
 
 The [historical source audit](studies/2026-10-04-foraging-fixed-world-reading.md) recovered a prepublication iAnt-Sim implementation with eight-neighbor angular movement, explicit delays and nest-return scoring. The [approved fixed-world design](superpowers/specs/2026-10-04-foraging-2-fixed-world-design.md) records source conventions and deliberate reconstruction choices; the user approved the written spec on 2026-10-05; the [implementation plan](superpowers/plans/2026-10-05-foraging-2-fixed-world.md) was approved on 2026-10-05. Strength-weighted recruitment is now also verified in the historical simulator, while the existing `LaterArgosStrengthWeighted` API spelling remains unchanged.
 
-F2 engineering and independent task/whole-branch reviews are complete on `foraging-2-design`. The final counter correction passed scoped review; workspace verification reports 2,463 passed, 0 failed and 103 ignored, with formatting and core clippy clean. The implementation plan preserves commands, rulings and evidence. Integration and scientific execution remain separate; F3 passage adaptation is the next design increment.
+F2 engineering and independent task/whole-branch reviews are complete; local integration into `main` completed at `a194f8e` on 2026-10-05. The final counter correction passed scoped review. Fresh feature and merged-tree workspace verification each report 2,463 passed, 0 failed and 103 ignored, with formatting and core clippy clean. The implementation plan preserves commands, rulings and evidence. Scientific execution remains separate; F3 passage adaptation is the next design increment.
 
 ## Fixed-world public usage
 

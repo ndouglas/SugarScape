@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Status: implementation plan approved by the user on 2026-10-05. Execution method already supplied: subagent-driven development. Engineering implementation and independent task/whole-branch review are complete; integration and scientific execution have not started.
+- Status: implementation plan approved by the user on 2026-10-05. Execution method already supplied: subagent-driven development. Engineering implementation, independent task/whole-branch review and local integration are complete; scientific execution has not started.
 - Grid width/height from 3 through 125, inclusive; agents 1–256; resources 0–256 with unique u64 IDs and distinct valid cells, none at the nest.
 - Seven CPFA parameters are explicit and pass existing F1 validation; all agents share them. No claimed evolved defaults.
 - Run horizon 1–7,200 ticks; `agents * horizon <= 1,000,000` opportunities. Single-step operation enforces the same cumulative limits.
@@ -504,7 +504,7 @@ The user has already selected subagent-driven development. Written implementatio
 
 ## Execution and review evidence — 2026-10-05
 
-All five stages are complete on `foraging-2-design`; merge/push and scientific execution remain separate actions. Runtime commits: Task 1 `ff78b78`, Task 2 `2fc96d5`, Task 3 `4f845ef`, Task 4 `2b32864`, Task 5 `d0f9e98`, final correction `79961e5`. Each task received fresh spec-compliance and quality review. Whole-branch review covered `b74a22b..d0f9e98`, finding two Important diagnostic omissions. One consolidated correction counted every entry into Searching and each initial uninformed departure. Scoped review of `d0f9e98..79961e5` confirmed both addressed with no new breakage or residual findings.
+All five stages completed on `foraging-2-design`; local integration into `main` completed at `a194f8e` on 2026-10-05. Push and scientific execution remain separate actions. Runtime commits: Task 1 `ff78b78`, Task 2 `2fc96d5`, Task 3 `4f845ef`, Task 4 `2b32864`, Task 5 `d0f9e98`, final correction `79961e5`. Each task received fresh spec-compliance and quality review. Whole-branch review covered `b74a22b..d0f9e98`, finding two Important diagnostic omissions. One consolidated correction counted every entry into Searching and each initial uninformed departure. Scoped review of `d0f9e98..79961e5` confirmed both addressed with no new breakage or residual findings.
 
 | Gate | Final evidence |
 |---|---|
@@ -535,3 +535,31 @@ No temporary dead-code allowances remain. Prior coverage suggestions for exactly
 - Edge ordinals are top, left, bottom, right as in historical Utilities.h — the spec requires uniform edge choice but leaves ordinal mapping unspecified, and the historical ordering is available — if wrong, seeded trajectories change, without changing marginal uniform edge probabilities.
 - Server capacity checks retained records, rather than a lifetime publication counter — the spec's bound is storage, while one publication per resource is enforced by the successful-deposit controller lifecycle, and the server has no resource identity — if wrong, isolated server calls could exceed intended lifetime publications; Task4 must verify sole deposit/publication and cleared finds.
 - Accept each final-review declined-to-judge boundary: historical release identity; scientific efficacy/evolved settings/layouts; cross-platform/native trajectory identity; physical cargo/collisions/error models/passages/excavation/costs/global inference; CLI/WASM/browser/model registration/serialized restoration; final archival/tracker/integration bookkeeping — these are explicitly deferred or parent-owned, while bounded reconstruction remains the promised deliverable — if wrong, a desired downstream capability or scientific claim remains unverified and requires its own follow-up.
+
+## Local integration — 2026-10-05
+
+The user explicitly authorized the local merge. Main remained clean at `b74a22b`,
+and the clean feature branch matched expected HEAD `27b0305`. Archived independent
+review and scoped correction approval were inspected; no further implementation
+or review task was dispatched. Git writes succeeded under the current permissions.
+
+Fresh pre-merge `cargo test --workspace` passed: 2,463 passed, 0 failed and 103
+ignored across 44 result blocks. `git merge --no-ff foraging-2-design` produced
+`a194f8e` without conflicts. The merge tree exactly matches the reviewed feature
+tree. Fresh verification in the main checkout, all exit 0:
+
+```bash
+cargo test --workspace
+cargo fmt --all --check
+cargo clippy -p sugarscape-core --all-targets -- -D warnings
+```
+
+Merged-tree tests reported 2,463 passed, 0 failed and 103 ignored across 44 result
+blocks, including core doctests. Full logs and exit files are retained locally at
+`/tmp/sugarscape-f2-integration-20261005/`. Cleanup moved the feature worktree's ignored `.superpowers` scaffold and Cargo
+target directory to `preserved-worktree/` under that evidence directory, then
+removed only the F2 worktree and merged feature branch. Other campaigns remain
+in place.
+
+No push or scientific evaluation was performed. F3 passage adaptation is the next
+design increment; F4 adds excavation and separate spoil/food logistics.

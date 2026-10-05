@@ -1,6 +1,6 @@
 # F2: fixed-world central-place foraging reconstruction
 
-**Date:** 2026-10-04. **Status:** written spec approved by the user on 2026-10-05. The [implementation plan](../plans/2026-10-05-foraging-2-fixed-world.md) was approved by the user on 2026-10-05; engineering implementation and independent task/whole-branch reviews are complete on `foraging-2-design`; integration and scientific execution remain separate.
+**Date:** 2026-10-04. **Status:** written spec approved by the user on 2026-10-05. The [implementation plan](../plans/2026-10-05-foraging-2-fixed-world.md) was approved by the user on 2026-10-05; engineering implementation and independent task/whole-branch reviews are complete; local integration into `main` completed at `a194f8e` on 2026-10-05. Scientific execution remains separate.
 **Programme:** [F1–F5 foraging/construction sequence](2026-10-04-foraging-construction-design.md), construction B3.
 **Evidence:** [F2 historical audit](../../studies/2026-10-04-foraging-fixed-world-reading.md), extending the [F1 audit](../../studies/2026-10-04-foraging-construction-reading.md).
 **Starting point:** [merged F1 rule reference](../../foraging.md).
@@ -113,7 +113,7 @@ Use existing formatting, core lint and workspace checks before implementation re
 
 ## Road ahead and review handoff
 
-The approved staged F2 implementation plan is complete. Fresh task reviews and the whole-branch review plus scoped correction review passed; final workspace verification reports 2,463 passed, 0 failed and 103 ignored, with formatting and core clippy clean. The [implementation plan](../plans/2026-10-05-foraging-2-fixed-world.md#execution-and-review-evidence--2026-10-05) preserves commands, review outcomes and execution rulings. Integration and scientific execution remain separate actions.
+The approved staged F2 implementation plan is complete. Fresh task reviews and the whole-branch review plus scoped correction review passed; final workspace verification reports 2,463 passed, 0 failed and 103 ignored, with formatting and core clippy clean. The [implementation plan](../plans/2026-10-05-foraging-2-fixed-world.md#execution-and-review-evidence--2026-10-05) preserves commands, review outcomes and execution rulings. Local integration into `main` completed at `a194f8e` on 2026-10-05; fresh merged-tree workspace tests, formatting and core clippy passed with the same test totals. Scientific execution remains separate.
 
 F3 replaces this angular/eight-neighbor geometry with explicit passage navigation and capacity rules. F4 adds paid excavation and separate spoil/food logistics. F5 audits termite shortcut methods and compares registered geometries. Experimental reproduction, error models, generated evaluation layouts and evolved settings each require further source reconciliation and their own protocol.
 
