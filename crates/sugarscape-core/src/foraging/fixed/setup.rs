@@ -87,8 +87,6 @@ impl Setup {
     pub(super) fn contains(&self, pos: Pos) -> bool {
         pos.x < self.width && pos.y < self.height
     }
-    // Temporary staging allowance: ledger/controller consumers land in Tasks 2/4.
-    #[allow(dead_code)]
     pub(super) fn site(&self, pos: Pos) -> u64 {
         u64::from(pos.y) * u64::from(self.width) + u64::from(pos.x)
     }

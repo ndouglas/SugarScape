@@ -10,3 +10,9 @@ pub use setup::{Pos, Resource, Setup};
 
 #[cfg(test)]
 mod tests;
+
+mod ledger;
+mod state;
+
+pub use ledger::{Inventory, ResourceState, ResourceView};
+pub use state::{Phase, WorkCounts};

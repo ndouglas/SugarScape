@@ -13,7 +13,7 @@ Approved: 2026-10-05. Execution: subagent-driven development.
 **Goal**: Identity-preserving claim/deposit ledger and agent work types.
 **Success Criteria**: One claim/deposit per resource; frozen local counts; ownership invariants.
 **Tests**: ledger unit tests and foraging regression tests.
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 3: Nest server decisions
 **Goal**: Publication, decay and private/recruited departures.
