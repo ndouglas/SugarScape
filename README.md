@@ -3988,6 +3988,17 @@ adds separately gated literal/prose populations and standalone scientific export
 [Preparation and reporting tooling](survey/democratic_peace/FOLLOWUP.md) is available;
 no new follow-up measurements or scientific declarations are reported here.
 
+Separately, the [2026-10-05 measured follow-up](docs/superpowers/specs/2026-10-05-democratic-peace-precision-findings.md)
+now records all 10,800 literal and 10,800 prose histories, with complete separate
+censuses and [provenance](docs/superpowers/specs/2026-10-05-democratic-peace-precision-provenance.json).
+The preceding paragraph records the earlier prospective preparation status.
+Both combined source comparisons are conditionally Incompatible; prose Figure 10
+is Compatible only at its 15 readable source coordinates. Literal primary/secondary
+mechanisms are Inconclusive/Fails, while both prose families Hold. These descriptive
+reading differences do not select a reading or resolve historical source identity.
+[Standalone figures](docs/superpowers/specs/2026-10-05-democratic-peace-precision-figures/plot-inventory.json)
+retain distinct scientific dataset identities and explicit source/undefined gaps.
+
 Conditional reconstruction compatibility, independent mechanism contrasts and
 original executable/RNG/statistic identity are separate claims; exact source
 equivalence remains Unresolved. Inferred exposure and curve readings limit source
