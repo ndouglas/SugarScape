@@ -120,3 +120,13 @@ The written design was checked for scope, source provenance and separation of ve
 ## F2 follow-up
 
 The [F2 historical audit](../../studies/2026-10-04-foraging-fixed-world-reading.md) and [fixed-world design](2026-10-04-foraging-2-fixed-world-design.md) are complete; the user approved the written spec on 2026-10-05. The [F2 implementation plan](../plans/2026-10-05-foraging-2-fixed-world.md) was approved on 2026-10-05; implementation and independent reviews are complete. Local integration into `main` completed at `a194f8e` on 2026-10-05. Fresh merged-tree verification passed: `cargo test --workspace` reported 2,463 passed, 0 failed and 103 ignored; `cargo fmt --all --check` and core clippy with warnings denied passed. F3 passage adaptation is the next design increment; F4 adds excavation and separate spoil/food logistics. Scientific execution has not started. The recovered historical source informs eight-neighbor angular movement, delays and completed-return scoring; release identity and quantitative reproduction remain unestablished.
+
+## F3 follow-up
+
+The [F3 passage design](2026-10-05-foraging-3-passage-design.md) is prepared for
+written review. The user selected private learned maps and approved local
+observations, coordinate-only recruitment and a multi-cell nest chamber with
+two-worker capacity throughout. The spec makes proposed exploration, action
+cadence, information boundaries and bounded diagnostics explicit. Implementation
+planning/execution and scientific evaluation have not started. F4 remains the
+separate excavation and spoil/food integration increment.

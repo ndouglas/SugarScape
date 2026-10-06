@@ -146,3 +146,12 @@ F3 separately replaces angular eight-neighbor movement with passage navigation
 and capacity. F4 adds paid excavation and separate spoil/food logistics. Error
 models, generated evaluation layouts, evolved settings and quantitative reproduction
 require further source reconciliation and a registered scientific protocol.
+
+## F3 design in review
+
+The [passage-foraging spec](superpowers/specs/2026-10-05-foraging-3-passage-design.md)
+proposes fixed four-neighbor passages, private maps learned from local observations,
+coordinate-only recruitment and a multi-cell nest chamber with two-worker capacity
+throughout. Those conversational choices are approved; the written spec awaits
+review. Runtime implementation and scientific execution have not started. F4
+separately adds excavation and spoil/food coupling.
