@@ -8,6 +8,38 @@ fn find(s: &Setup) -> Option<FindRecord> {
         count: 1,
     })
 }
+
+#[test]
+fn server_rejects_capacity_above_food_limit_without_mutation() {
+    let s = setup();
+    let mut server = Server::default();
+    let before = server.clone();
+    assert!(server
+        .arrive(&s.parameters, 0, 257, None, [0.0; 3])
+        .is_err());
+    assert_eq!(server, before);
+}
+
+#[test]
+fn publication_replaces_expired_record_in_full_retained_store() {
+    let mut s = setup();
+    s.parameters.lambda_waypoint = 10.0_f64.ln();
+    let mut server = Server::default();
+    server
+        .arrive(&s.parameters, 0, 1, find(&s), [0.0; 3])
+        .unwrap();
+    let arrival = server
+        .arrive(&s.parameters, 4, 1, find(&s), [0.0; 3])
+        .unwrap();
+    assert!(arrival.published);
+    assert_eq!(server.expired(), 1);
+    let records = server.views(&s.parameters, 4).unwrap();
+    assert_eq!(records.len(), 1);
+    assert_eq!(
+        (records[0].id, records[0].created_tick, records[0].strength),
+        (1, 4, 1.0)
+    );
+}
 fn agent(id: u32, cargo: Option<u64>) -> Agent {
     Agent {
         id,

@@ -201,8 +201,6 @@ impl Setup {
     pub(super) fn contains(&self, p: Pos) -> bool {
         p.x < self.width && p.y < self.height
     }
-    // Tasks 3–4 encode/decode information sites with these checked conversions.
-    #[allow(dead_code)]
     pub(super) fn site(&self, p: Pos) -> Checked<u64> {
         dimensions(self.width, self.height)?;
         if !self.contains(p) {
@@ -210,7 +208,6 @@ impl Setup {
         }
         Ok(u64::from(p.y) * u64::from(self.width) + u64::from(p.x))
     }
-    #[allow(dead_code)]
     pub(super) fn position(&self, site: u64) -> Checked<Pos> {
         dimensions(self.width, self.height)?;
         if site >= u64::from(self.width) * u64::from(self.height) {

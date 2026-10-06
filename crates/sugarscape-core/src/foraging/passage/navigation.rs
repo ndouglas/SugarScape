@@ -209,6 +209,8 @@ pub(super) fn route_step(
     Ok((step, counts))
 }
 
+/// Requires a complete observation already validated against actual world dimensions.
+/// This helper checks only the local envelope; it cannot establish completeness.
 pub(super) fn wander(
     origin: Pos,
     observation: &Observation,

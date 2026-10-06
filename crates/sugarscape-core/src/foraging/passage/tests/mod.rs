@@ -51,3 +51,5 @@ impl DrawSource for Scripted {
 mod navigation;
 
 mod ledger_server;
+
+mod controller;
