@@ -6,7 +6,7 @@ mod setup_learning;
 fn pos(x: u32, y: u32) -> Pos {
     Pos { x, y }
 }
-fn setup() -> Setup {
+pub(super) fn setup() -> Setup {
     Setup {
         width: 5,
         height: 5,
@@ -49,3 +49,5 @@ impl DrawSource for Scripted {
 }
 
 mod navigation;
+
+mod ledger_server;

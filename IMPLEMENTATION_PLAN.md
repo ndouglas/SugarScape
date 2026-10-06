@@ -18,7 +18,7 @@ Approved spec and plan: 2026-10-06. Execution: subagent-driven. Detailed evidenc
 **Goal**: Conserved food identities, agent accounting and F1 nest decisions.
 **Success Criteria**: Cargo ownership and inventory agree; self-visible/stale advice and checked counters.
 **Tests**: `cargo test -p sugarscape-core foraging::passage::tests::ledger_server`
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 4: Atomic ticks
 **Goal**: Worker-only phase decisions and ordered physical transactions.
