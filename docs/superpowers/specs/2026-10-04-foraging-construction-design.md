@@ -128,7 +128,6 @@ user on 2026-10-06. The user selected private learned maps and approved local
 observations, coordinate-only recruitment and a multi-cell nest chamber with
 two-worker capacity throughout. The spec makes proposed exploration, action
 cadence, information boundaries and bounded diagnostics explicit. The [five-stage implementation plan](../plans/2026-10-06-foraging-3-passage.md) is
-prepared for written review; execution uses the standing subagent-driven
-preference after approval. Runtime implementation and scientific evaluation have
-not started. F4 remains the
+approved on 2026-10-06; engineering implementation is starting with the standing
+subagent-driven preference. Scientific evaluation has not started. F4 remains the
 separate excavation and spoil/food integration increment.

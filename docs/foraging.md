@@ -147,13 +147,13 @@ and capacity. F4 adds paid excavation and separate spoil/food logistics. Error
 models, generated evaluation layouts, evolved settings and quantitative reproduction
 require further source reconciliation and a registered scientific protocol.
 
-## F3 implementation plan in review
+## F3 implementation in progress
 
 The [passage-foraging spec](superpowers/specs/2026-10-05-foraging-3-passage-design.md)
 proposes fixed four-neighbor passages, private maps learned from local observations,
 coordinate-only recruitment and a multi-cell nest chamber with two-worker capacity
 throughout. The user approved the written spec on 2026-10-06. The
 [five-stage implementation plan](superpowers/plans/2026-10-06-foraging-3-passage.md)
-is prepared for written review; subagent-driven execution is already selected.
-Runtime implementation and scientific execution have not started. F4
+was approved on 2026-10-06; engineering implementation is starting with
+subagent-driven execution. Scientific execution has not started. F4
 separately adds excavation and spoil/food coupling.

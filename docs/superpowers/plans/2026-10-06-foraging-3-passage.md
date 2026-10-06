@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Written spec approved on 2026-10-06. This plan awaits written review; implementation has not started. Execution method is already supplied: subagent-driven development.
+- Written spec approved on 2026-10-06. This plan was approved by the user on 2026-10-06; execution is starting. Execution method is already supplied: subagent-driven development.
 - Dimensions 3–125; 1–256 explicit spawn positions in the nest; 0–256 uniquely identified food tokens on distinct open cells outside the nest.
 - Nest contains at least two distinct open cells in one four-neighbor-connected chamber. At most two workers occupy any cell, including nest cells. No off-world queue.
 - Disconnected food pockets are valid. Do not require all open cells/resources to connect to the nest. Workers start in the nest and learn their own return routes.
@@ -529,4 +529,4 @@ Spec coverage: intent/scope/architecture -> all stages; setup/limits/observation
 
 Type handoffs were checked across the five tasks. No authoritative Setup/food/worker list enters decide or routing. Constructor observations and zero initialization draws, transition order, stale advice, retained private maps, multi-source home routing and separate physical/computational costs have explicit owners. Queue peaks use max; all additive counters use checked sums. Per-worker phase/cargo invariants constrain the four move subcategories and four wait subcategories.
 
-The user approved the written spec on 2026-10-06 and has already chosen subagent-driven execution. This written plan requires review before execution; do not ask the user to choose the execution method again. At execution preserve current concurrent main/remote work, verify the isolated base, create the five-stage tracker and begin Task 1. Current planning/validation is documentation-only, not evidence that F3 behavior is implemented or verified.
+The user approved the written spec on 2026-10-06 and has already chosen subagent-driven execution. The user approved this written plan on 2026-10-06; do not ask for that approval or the execution method again. At execution preserve current concurrent main/remote work, verify the isolated base, create the five-stage tracker and begin Task 1. Current planning/validation is documentation-only, not evidence that F3 behavior is implemented or verified.

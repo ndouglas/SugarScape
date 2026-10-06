@@ -1,7 +1,7 @@
 # F3: passage foraging with private learned maps
 
 **Date:** 2026-10-05.
-**Status:** conversational choices approved: private learned maps, local observations, coordinate-only recruitment and a multi-cell nest chamber with two-worker capacity throughout. Written architectural spec approved by the user on 2026-10-06. The [implementation plan](../plans/2026-10-06-foraging-3-passage.md) is prepared for written review; execution has not started.
+**Status:** conversational choices approved: private learned maps, local observations, coordinate-only recruitment and a multi-cell nest chamber with two-worker capacity throughout. Written architectural spec approved by the user on 2026-10-06. The [implementation plan](../plans/2026-10-06-foraging-3-passage.md) was approved by the user on 2026-10-06; engineering execution is starting.
 **Programme:** [F1–F5 foraging/construction sequence](2026-10-04-foraging-construction-design.md), construction B3.
 **Baseline:** [F2 design](2026-10-04-foraging-2-fixed-world-design.md), merged at `a194f8e`, integration record `6c9a50a`; [public guide](../../foraging.md).
 **Related components:** [Burrow 1](2026-10-03-burrow-1-excavation-design.md) and [Burrow resource access](2026-10-04-burrow-2-resource-access-design.md).
@@ -144,6 +144,6 @@ Self-review completed against the F1 parameter/information API, F2 controller/le
 
 ## Handoff and next increment
 
-This spec was approved on 2026-10-06 on `foraging-3-design`, isolated from main and other campaigns. The [five-stage implementation plan](../plans/2026-10-06-foraging-3-passage.md) is prepared for written review. No runtime code, scientific evaluation or construction coupling has been added. Implementation follows plan approval with the user's standing subagent-driven preference.
+This spec was approved on 2026-10-06 on `foraging-3-design`, isolated from main and other campaigns. The [five-stage implementation plan](../plans/2026-10-06-foraging-3-passage.md) was approved by the user on 2026-10-06. Engineering execution uses the user's standing subagent-driven preference; scientific evaluation and construction coupling remain separate.
 
 F4 must extend the fixed-map assumptions deliberately: excavation can turn Unknown/KnownSolid into open cells, food and spoil must retain separate ledgers/destinations, and their competition for hands and paid actions needs explicit rules. F3's immutable topology knowledge must not be silently reused as a correct dynamic-map model.
