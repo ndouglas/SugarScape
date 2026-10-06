@@ -234,7 +234,7 @@ enum Navigation { AtGoal, Move(Pos), Blocked, Unreachable }
 // wander(origin: Pos, &Observation, &mut impl DrawSource) -> Checked<Navigation>
 ```
 
-- [ ] Write deterministic route/frontier tests. Fixture for a mandatory detour: KnownOpen path `(1,1),(1,2),(2,2),(3,2),(3,1)`; goal `(3,1)`; map `(2,1)` KnownSolid. The first move is south even though Manhattan distance increases. Informed-frontier ranking uses min distance from Unknown neighbors, then known origin route distance; all nonimproving candidates remain eligible. Tests may build knowledge from successive legal one-hop observations using `learn`, preserving the information boundary.
+- [x] Write deterministic route/frontier tests. Fixture for a mandatory detour: KnownOpen path `(1,1),(1,2),(2,2),(3,2),(3,1)`; goal `(3,1)`; map `(2,1)` KnownSolid. The first move is south even though Manhattan distance increases. Informed-frontier ranking uses min distance from Unknown neighbors, then known origin route distance; all nonimproving candidates remain eligible. Tests may build knowledge from successive legal one-hop observations using `learn`, preserving the information boundary.
 
 ```rust
 #[test]
@@ -255,7 +255,7 @@ fn known_route_accepts_a_step_away_from_the_destination() {
 }
 ```
 
-- [ ] Run `cargo test -p sugarscape-core foraging::passage::tests::navigation` for red. Implement BFS over KnownOpen only using N,S,E,W; frontier lists sort by Pos; an informed selection ranks `(min_unknown_neighbor_manhattan, distance)` before uniformly selecting among sorted ties. Uninformed selection is uniform across all reachable sorted frontiers.
+- [x] Run `cargo test -p sugarscape-core foraging::passage::tests::navigation` for red. Implement BFS over KnownOpen only using N,S,E,W; frontier lists sort by Pos; an informed selection ranks `(min_unknown_neighbor_manhattan, distance)` before uniformly selecting among sorted ties. Uninformed selection is uniform across all reachable sorted frontiers.
 
 ```rust
 let rank = |f: &Frontier| (
@@ -268,9 +268,9 @@ let rank = |f: &Frontier| (
 // Only nonempty eligible choices draw; geometry/BFS itself never draws.
 ```
 
-- [ ] Cover multiple home goals, goals already reached (no draw), unknown/solid/unreachable goals, zero frontiers, observed reachable nonvisited cells, ties at exact cumulative boundaries, and retained destination under full next-step capacity. Occupancy filter only affects the adjacent first step; changing unobserved remote occupancy cannot change a step. A full nearest nest route returns Blocked even if a longer route to another home cell is free. A blocked choice consumes no selection draw. route_step returns AtGoal for current goal, Unreachable for no privately known route, Blocked for an existing shortest route with no legal immediate step, and Move otherwise. wander maps an empty legal-neighbor set to Blocked, interpreted by decision as NoNeighbor rather than route congestion.
-- [ ] Assert BFS visits/peak queue on a literal corridor, frontier cell scans, scratch size <=grid size and malformed origin/observation rejection before drawing. Counts must reflect executed computation, not guessed costs; document whether each frontier scan counts examined known-open cells (use that convention throughout).
-- [ ] Verify focused tests/fmt/core clippy; fresh reviews; update Stage 2 and commit `feat(foraging): route through privately learned passages`.
+- [x] Cover multiple home goals, goals already reached (no draw), unknown/solid/unreachable goals, zero frontiers, observed reachable nonvisited cells, ties at exact cumulative boundaries, and retained destination under full next-step capacity. Occupancy filter only affects the adjacent first step; changing unobserved remote occupancy cannot change a step. A full nearest nest route returns Blocked even if a longer route to another home cell is free. A blocked choice consumes no selection draw. route_step returns AtGoal for current goal, Unreachable for no privately known route, Blocked for an existing shortest route with no legal immediate step, and Move otherwise. wander maps an empty legal-neighbor set to Blocked, interpreted by decision as NoNeighbor rather than route congestion.
+- [x] Assert BFS visits/peak queue on a literal corridor, frontier cell scans, scratch size <=grid size and malformed origin/observation rejection before drawing. Counts must reflect executed computation, not guessed costs; document whether each frontier scan counts examined known-open cells (use that convention throughout).
+- [x] Verify focused tests/fmt/core clippy; fresh reviews; update Stage 2 and commit `feat(foraging): route through privately learned passages`.
 
 ### Task 3: Conserved food, agent accounting and nest advice
 
@@ -546,3 +546,15 @@ Execution ruling: add an internal dimensions accessor to Knowledge in Task 2,
 because pure routing needs grid bounds while map fields remain private and
 authoritative Setup stays outside its inputs. If wrong, the internal interface
 needs rework; no additional worker knowledge is exposed.
+
+Task 2 runtime commit `79cca1a`: final focused 19 passed; workspace 2,497 passed,
+0 failed, 103 ignored; fmt/core clippy passed. Independent task review approved
+with no blocking findings. Its minor documentation suggestion for wander's
+actual-dimension/completeness precondition is carried into Task 4 consumer work.
+Task 2 RED produced 17 intentional stub failures; implementation edits began
+before that RED command completed, with the failure confirmed before GREEN.
+This timing deviation is disclosed, not presented as a strict ordered TDD cycle;
+two supplemental tests were added after the initial implementation. Later tasks
+must wait for and inspect completed RED before implementing. Computational
+convention: frontier scans count reachable known-open cells examined, route
+visits count dequeues and queue peaks combine by maximum.
