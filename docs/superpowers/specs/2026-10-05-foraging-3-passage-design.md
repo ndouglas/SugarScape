@@ -1,7 +1,7 @@
 # F3: passage foraging with private learned maps
 
 **Date:** 2026-10-05.
-**Status:** conversational choices approved: private learned maps, local observations, coordinate-only recruitment and a multi-cell nest chamber with two-worker capacity throughout. Written architectural spec prepared for user review; implementation planning and execution have not started.
+**Status:** conversational choices approved: private learned maps, local observations, coordinate-only recruitment and a multi-cell nest chamber with two-worker capacity throughout. Written architectural spec approved by the user on 2026-10-06. The [implementation plan](../plans/2026-10-06-foraging-3-passage.md) is prepared for written review; execution has not started.
 **Programme:** [F1–F5 foraging/construction sequence](2026-10-04-foraging-construction-design.md), construction B3.
 **Baseline:** [F2 design](2026-10-04-foraging-2-fixed-world-design.md), merged at `a194f8e`, integration record `6c9a50a`; [public guide](../../foraging.md).
 **Related components:** [Burrow 1](2026-10-03-burrow-1-excavation-design.md) and [Burrow resource access](2026-10-04-burrow-2-resource-access-design.md).
@@ -10,7 +10,7 @@
 
 Adapt central-place foraging to fixed four-neighbor passages before adding construction. Workers discover passage geometry through local observations, collect finite food into one-item hands, and deliver it to a supplied nest chamber. Recruitment can provide a destination without providing a route. The intended foundation is an inspectable delivery mechanism whose navigation knowledge and physical congestion can later interact with excavation.
 
-The user selected private learned maps over a supplied passage map, then approved the proposed local information boundary and multi-cell nest chamber. Those choices are binding. The precise exploration policy, handling cadence, parameter subset and diagnostics below are proposed engineering conventions for written review, not claims of previously approved detail or biological provenance.
+The user selected private learned maps over a supplied passage map, then approved the proposed local information boundary and multi-cell nest chamber. Those choices are binding. The user approved the complete written spec on 2026-10-06, including the precise exploration policy, handling cadence, parameter subset and diagnostics below. These remain supplied engineering conventions, not biological provenance.
 
 Success means tested information boundaries, legal routes through privately known geometry, occupancy and food conservation, separate collection/delivery measurements, atomic ticks and bounded replay. An unsuccessful or stalled run remains a valid bounded outcome. No scientific evaluation, tuned layout generator, quantitative reproduction or excavation is included.
 
@@ -144,6 +144,6 @@ Self-review completed against the F1 parameter/information API, F2 controller/le
 
 ## Handoff and next increment
 
-This spec is proposed for written review on `foraging-3-design`, isolated from main and other campaigns. No runtime code, implementation plan, scientific evaluation or construction coupling has been added. After written-spec approval, prepare the staged implementation plan; implementation follows its separate review with the user's standing subagent-driven preference.
+This spec was approved on 2026-10-06 on `foraging-3-design`, isolated from main and other campaigns. The [five-stage implementation plan](../plans/2026-10-06-foraging-3-passage.md) is prepared for written review. No runtime code, scientific evaluation or construction coupling has been added. Implementation follows plan approval with the user's standing subagent-driven preference.
 
 F4 must extend the fixed-map assumptions deliberately: excavation can turn Unknown/KnownSolid into open cells, food and spoil must retain separate ledgers/destinations, and their competition for hands and paid actions needs explicit rules. F3's immutable topology knowledge must not be silently reused as a correct dynamic-map model.
