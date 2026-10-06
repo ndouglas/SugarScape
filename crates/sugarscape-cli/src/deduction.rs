@@ -19,6 +19,7 @@ enum Mode {
     Testimony,
     TestimonyGame,
     StrategicReporting,
+    StrategyInference,
     Play(PlayArgs),
     Diagnose {
         #[arg(long)]
@@ -276,6 +277,10 @@ pub fn run(args: DeductionArgs) -> Result<(), Failure> {
             testimony_game::diagnose_testimony_game().map_err(|e| invalid(&e.to_string()))?,
             &mut output,
         ),
+        Mode::StrategyInference => emit_strategy_inference(
+            strategy_inference::diagnose().map_err(|e| invalid(&e.to_string()))?,
+            &mut output,
+        ),
         Mode::StrategicReporting => emit_strategic_reporting(
             strategic_reporting::diagnose().map_err(|e| invalid(&e.to_string()))?,
             &mut output,
@@ -511,6 +516,78 @@ fn emit_strategic_reporting(
     } else {
         Err(invalid(
             "strategic-reporting correctness/integrity checks failed",
+        ))
+    }
+}
+
+#[cfg(test)]
+mod strategy_inference_tests {
+    use super::*;
+    #[test]
+    fn stale_success_flag_and_corrupt_payload_are_emitted_as_failure() {
+        let mut report = strategy_inference::diagnose().unwrap();
+        report.fixed_evaluations.pop();
+        report.passed = true;
+        let mut output = Vec::new();
+        assert!(matches!(
+            emit_strategy_inference(report, &mut output),
+            Err(Failure::Invalid(_))
+        ));
+        let wire: Value = serde_json::from_slice(&output).unwrap();
+        assert_eq!(wire["passed"], false);
+    }
+    #[test]
+    fn stored_failed_flag_invalidates_output() {
+        let mut report = strategy_inference::diagnose().unwrap();
+        report.passed = false;
+        let mut output = Vec::new();
+        assert!(matches!(
+            emit_strategy_inference(report, &mut output),
+            Err(Failure::Invalid(_))
+        ));
+        let wire: Value = serde_json::from_slice(&output).unwrap();
+        assert_eq!(wire["passed"], false);
+    }
+    #[test]
+    fn report_write_and_flush_failures_propagate() {
+        struct Broken(bool);
+        impl Write for Broken {
+            fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+                if self.0 {
+                    Ok(bytes.len())
+                } else {
+                    Err(std::io::Error::other("deliberate write failure"))
+                }
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Err(std::io::Error::other("deliberate flush failure"))
+            }
+        }
+        for flush in [false, true] {
+            let report = strategy_inference::diagnose().unwrap();
+            assert!(matches!(
+                emit_strategy_inference(report, &mut Broken(flush)),
+                Err(Failure::Io(_))
+            ));
+        }
+    }
+}
+
+fn emit_strategy_inference(
+    mut report: strategy_inference::DiagnosticReport,
+    output: &mut impl Write,
+) -> Result<(), Failure> {
+    report.passed =
+        strategy_inference::report_integrity(&report).map_err(|e| invalid(&e.to_string()))?;
+    let passed = report.passed;
+    let value =
+        serde_json::to_value(report).map_err(|_| invalid("invalid strategy-inference report"))?;
+    emit(&value, output)?;
+    if passed {
+        Ok(())
+    } else {
+        Err(invalid(
+            "strategy-inference correctness/integrity checks failed",
         ))
     }
 }

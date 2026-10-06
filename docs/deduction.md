@@ -358,3 +358,73 @@ Each seed's selected unsigned encodings are shown below. Every row earns reporte
 The report retains all 40 complete search curves, named controls and exact optima, full rules and separate listener assumptions, all per-champion listener evaluations/history masses/actions/posteriors, phase agreement/opposition, action/error accounting, reporter and receiver regret, summaries and paired differences. The median is the mean of the two central sorted exact utilities. Neither learning success nor manufactured trust is a correctness gate.
 
 The first raw JSON, byte-identical repeat, premeasurement source/settings hashes, retained executable and independent reference evidence live under ignored `.superpowers/sdd/2026-10-05-strategic-reporting/`. Existing `deduction diagnose`, `deduction testimony`, `deduction testimony-game` and seed-7 Wink output are byte-compared with the retained pre-change executable outputs; the entire earlier guide remains an unchanged prefix. This separate finite experiment establishes no equilibrium, arbitrary utility language, repeated reputation mechanism or new interactive host mode.
+
+
+## Strategy-aware listener inference
+
+Run `sugarscape deduction strategy-inference` for the fixed, search-free JSON diagnostic. It accepts no seed, tuning, output-path or positional arguments. Exit 0 means exact independent reference comparisons and full report integrity passed; an inconsistent numerical report is emitted with `passed=false` before exit 2. Write and flush failures follow the existing operational error handling.
+
+The listener receives public rules, verified calibration truth C, both calibration reports, both live reports when available, and a declared policy catalog. It marginalizes over the reporting policy, truths, fixed copy/invert profile and signal noise. The reporting policy is selected once, independently of those latent variables, and retained across calibration and live phases. Actual policy identity, private realized truth, seeds and evaluation scores never enter listener inference. The four reported inference models (two priors at q=4/5 and 3/5) are separate from the actual-distribution scoring rows; each retains eight calibration views/beliefs and 32 complete public-history observations/decisions, including every conditional policy probability and live predictive mass.
+
+Both catalogs contain Copy, Invert, Always positive, Always negative, and Copy-calibration/invert-live. Uniform assigns named-order weights [1,1,1,1,1]; optimization-informed assigns [1,1,1,1,16]. These are supplied prior assumptions. The second prior reflects the former equally weighted frozen Bayesian/Credulous reporter-training panel at q=4/5, rho=3/4 and opposed utility; the diagnostic performs no new search, optimization, RNG sampling or reporter learning. Actual and legacy assumed fixed-copy priors remain 3/4. Listeners are frozen to the two Strategy priors, Bayesian, Credulous, Skeptical, Evolved(-3,0,2,0), and Passive.
+
+Copy and Copy-calibration/invert-live have the same calibration behavior, so all eight calibration observations preserve their odds: Copy:Copy-calibration/invert-live is 1:1 under Uniform and 1:16 under optimization-informed at either accuracy. Calibration updates other policy odds without consuming live evidence. Live reports then update policy probabilities and the T posterior. For example, with verified C=false and both calibration and live reports false at q=4/5, the complete-history Copy:Copy-calibration/invert-live odds become 212:113 under Uniform and 53:452 under optimization-informed; inferred T probabilities are respectively 8/31 and 2312/4909. Those live-conditioned changes are distinct from the supplied calibration odds.
+
+Intervention pays the receiver +1 for true T and -1 for false T; abstention pays zero. The opposed reporter utility is the negative of receiver payoff in every row below. The Strategy listener intervenes only when inferred P(T=true)>1/2 and abstains on exact ties. Its belief error is inferred T probability minus the actual-distribution T posterior; the reported maximum takes absolute error over supported positive-mass histories. Legacy listeners provide actions only, so their listener posterior and belief-error fields remain unavailable. The actual-distribution posterior and informed decision reference are privileged evaluation quantities, separate from inferred listener beliefs. A positive-mass history without assumed support is an explicit failure with no action or unconditional score; support failure is not abstention. Zero actual-mass histories have no action and do not count as unsupported. All 108 measured scoring rows have full support; that result applies to these frozen settings.
+
+### Separate self-mixture comparisons
+
+Each actual mixture uses one catalog and its matching Strategy listener plus all five legacy listeners. The following table contains all 24 mixture payoffs. Distinct actual priors define different opponent distributions and are evaluated separately. The matching Strategy payoff is also that mixture's informed benchmark; its decision regret and maximum belief error are exactly zero in all four cases. For any legacy column, mixture decision regret equals the matching Strategy benchmark minus that column's payoff.
+
+| q | Actual prior | Matching Strategy / mixture benchmark | Bayesian | Credulous | Skeptical | Evolved | Passive |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 4/5 | Uniform | 951/5000 | 153/1250 | 9/200 | 9/200 | 153/1250 | 0 |
+| 4/5 | Optimization-informed | 1011/4000 | -153/20000 | -9/200 | -9/200 | -153/20000 | 0 |
+| 3/5 | Uniform | 253/5000 | 21/1000 | 3/200 | 3/200 | 12/625 | 0 |
+| 3/5 | Optimization-informed | 2/25 | -27/2000 | -3/200 | -3/200 | -99/20000 | 0 |
+
+The higher optimization-informed self-mixture payoff reflects its different supplied opponent distribution. Common-opponent transfer below compares the two Strategy priors against the same actual fixed policies.
+
+### Common fixed-policy transfer
+
+All 40 retained GA/random champions from the previous experiment canonicalize to the single Copy-calibration/invert-live behavior 81942. Their method, seeds and original encodings remain in report provenance and in the preceding seed table; they are behavioral clones, not 40 independent challenges. No GA utility advantage is implied. Together with the other four named controls and withheld encoding 98342, this gives six distinct fixed behaviors. Encoding 98342 was the previous Evolved-target optimum and is absent from both current prior catalogs; no new best response is computed here. The report retains 46 provenance entries: five controls, the withheld policy, and all 40 champions.
+
+The next table contains all 84 common-opponent receiver payoffs: six canonical policies × two accuracies × seven listeners. U and O mean Strategy with Uniform and optimization-informed priors. Canonical encoding removes only unreachable live rows; it preserves each retained raw policy's behavior.
+
+| q | Actual policy | Canonical encoding | Strategy U | Strategy O | Bayesian | Credulous | Skeptical | Evolved | Passive |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 4/5 | Copy | 163882 | 39/250 | -3/25 | 63/250 | 9/40 | 9/40 | 63/250 | 0 |
+| 4/5 | Invert | 5441 | 63/250 | 57/200 | 39/250 | -3/40 | -3/40 | 39/250 | 0 |
+| 4/5 | Always positive | 246723 | 69/400 | 33/200 | 33/200 | 3/20 | 3/20 | 33/200 | 0 |
+| 4/5 | Always negative | 0 | 69/400 | 33/200 | 9/100 | 0 | 0 | 9/100 | 0 |
+| 4/5 | Copy calibration, invert live | 81942 | 99/500 | 57/200 | -51/1000 | -3/40 | -3/40 | -51/1000 | 0 |
+| 4/5 | Withheld Evolved-target policy | 98342 | 39/250 | 51/250 | -9/125 | -3/200 | -3/200 | -9/125 | 0 |
+| 3/5 | Copy | 163882 | 19/500 | -1/10 | 2/25 | 3/40 | 3/40 | 7/125 | 0 |
+| 3/5 | Invert | 5441 | 59/1000 | 1/10 | -1/100 | -1/40 | -1/40 | 1/125 | 0 |
+| 3/5 | Always positive | 246723 | 1/20 | 0 | 17/400 | 1/20 | 1/20 | 7/200 | 0 |
+| 3/5 | Always negative | 0 | 1/20 | 0 | 7/400 | 0 | 0 | 1/100 | 0 |
+| 3/5 | Copy calibration, invert live | 81942 | 7/125 | 1/10 | -1/40 | -1/40 | -1/40 | -13/1000 | 0 |
+| 3/5 | Withheld Evolved-target policy | 98342 | 19/500 | 1/50 | -7/1000 | 3/200 | 3/200 | -31/1000 | 0 |
+
+The informed benchmark in the next table uses the actual fixed policy and its history masses, without private realized signals or truth. It intervenes when the actual-distribution T posterior exceeds 1/2. For every listener in the payoff table, decision regret is exactly this benchmark minus that listener's payoff. The Strategy regrets are shown explicitly alongside maximum absolute belief errors; legacy belief errors remain unavailable. Mixture regret above uses the mixture benchmark, while these transfer regrets use the actual-policy benchmark.
+
+| q | Actual policy | Actual-policy benchmark | Strategy U regret | Strategy O regret | Strategy U max belief error | Strategy O max belief error |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 4/5 | Copy | 3/10 | 18/125 | 21/50 | 7600/15023 | 30400/53203 |
+| 4/5 | Invert | 3/10 | 6/125 | 3/200 | 1080/3503 | 70560/462961 |
+| 4/5 | Always positive | 9/50 | 3/400 | 3/200 | 1824/24185 | 27816/116165 |
+| 4/5 | Always negative | 9/50 | 3/400 | 3/200 | 1824/24185 | 27816/116165 |
+| 4/5 | Copy calibration, invert live | 3/10 | 51/500 | 3/200 | 1080/3503 | 70560/462961 |
+| 4/5 | Withheld Evolved-target policy | 3/10 | 18/125 | 12/125 | 7600/15023 | 30400/53203 |
+| 3/5 | Copy | 1/10 | 31/500 | 1/5 | 175/1221 | 2450/12987 |
+| 3/5 | Invert | 1/10 | 41/1000 | 0 | 3720/41339 | 13020/425249 |
+| 3/5 | Always positive | 1/20 | 0 | 1/20 | 14/795 | 2632/35085 |
+| 3/5 | Always negative | 1/20 | 0 | 1/20 | 14/795 | 2632/35085 |
+| 3/5 | Copy calibration, invert live | 1/10 | 11/250 | 0 | 3720/41339 | 13020/425249 |
+| 3/5 | Withheld Evolved-target policy | 1/10 | 31/500 | 2/25 | 175/1221 | 2450/12987 |
+
+The optimization-informed assumption benefits the behavior it emphasizes: against Copy-calibration/invert-live, payoff rises from 99/500 to 57/200 at q=4/5 (gain 87/1000) and from 7/125 to 1/10 at q=3/5 (gain 11/250). This is a prior-attributed benefit on those common opponents. Calibration cannot identify that behavior against Copy, because the two share their calibration rule. Against honest Copy, the same prior lowers payoff from 39/250 to -3/25 at q=4/5 and from 19/500 to -1/10 at q=3/5; the informed benchmarks are 3/10 and 1/10, and optimization-informed regrets are 21/50 and 1/5. Uniform also has positive transfer regret there. These negative honest-copy results are valid outcomes, and favorable self-mixture results do not establish general transfer reliability.
+
+Against withheld policy 98342, optimization-informed payoffs are 51/250 and 1/50 at q=4/5 and 3/5, with regrets 12/125 and 2/25. The finite comparisons establish no adversarial guarantee or equilibrium. Neither payoff superiority nor a successful optimization result determines diagnostic correctness.
+
+First measured collection (`strategy-inference-diagnostic-v1`) passed all 33,548 exact/reference checks and full payload integrity. A computationally separate Python Fraction full-joint oracle supplies posterior, prediction, action, mass, score and support references; the retained reference provenance report records incidental exposure to earlier diagnostic outputs. Comparisons use exact rational cross-products, and report integrity reconstructs the fixed protocol rather than trusting stored flags. The first 8,640,981-byte JSON and byte-identical repeat have SHA256 `5ee51e46dbd6b26f5fbab1e64d7a568afcae8a0e774ce4399d6f8d34cdbf0a0e` and are retained with source/settings/oracle/binary snapshots under ignored `.superpowers/sdd/2026-10-05-strategy-aware-listeners/`. No production source, priors, utility, listeners or settings changed after measurement; this appendix is a documentation-only addition. All five earlier diagnostic outputs were reproduced byte-for-byte with the rebuilt release CLI, and the complete earlier guide remains an unchanged prefix.
