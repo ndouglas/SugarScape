@@ -32,6 +32,7 @@
 //! ```
 
 pub mod fixed;
+pub mod passage;
 
 mod config;
 mod information;

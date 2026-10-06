@@ -1,4 +1,4 @@
-# CPFA rules (F1) and fixed-world foraging (F2)
+# CPFA rules (F1), fixed-world reference (F2) and passage foraging (F3)
 
 The top-level public `sugarscape_core::foraging` API verifies stateless rules from Hecker and Moses (2015). Engineering implementation and independent task/whole-branch reviews are complete; this work merged into `main` at `5819a04`. F1 neither simulates foraging nor reproduces evolved performance. It supplies no world, heading sampler, scheduler, food ledger or waypoint server.
 
@@ -74,7 +74,7 @@ F3 passage adaptation, F4 excavation coupling and F5 termite comparison retain s
 
 The [historical source audit](studies/2026-10-04-foraging-fixed-world-reading.md) recovered a prepublication iAnt-Sim implementation with eight-neighbor angular movement, explicit delays and nest-return scoring. The [approved fixed-world design](superpowers/specs/2026-10-04-foraging-2-fixed-world-design.md) records source conventions and deliberate reconstruction choices; the user approved the written spec on 2026-10-05; the [implementation plan](superpowers/plans/2026-10-05-foraging-2-fixed-world.md) was approved on 2026-10-05. Strength-weighted recruitment is now also verified in the historical simulator, while the existing `LaterArgosStrengthWeighted` API spelling remains unchanged.
 
-F2 engineering and independent task/whole-branch reviews are complete; local integration into `main` completed at `a194f8e` on 2026-10-05. The final counter correction passed scoped review. Fresh feature and merged-tree workspace verification each report 2,463 passed, 0 failed and 103 ignored, with formatting and core clippy clean. The implementation plan preserves commands, rulings and evidence. Scientific execution remains separate; F3 passage adaptation is the next design increment.
+F2 engineering and independent task/whole-branch reviews are complete; local integration into `main` completed at `a194f8e` on 2026-10-05. The final counter correction passed scoped review. Fresh feature and merged-tree workspace verification each report 2,463 passed, 0 failed and 103 ignored, with formatting and core clippy clean. The implementation plan preserves commands, rulings and evidence. Scientific execution remains separate; F3 passage adaptation is implemented below.
 
 ## Fixed-world public usage
 
@@ -146,3 +146,119 @@ F3 separately replaces angular eight-neighbor movement with passage navigation
 and capacity. F4 adds paid excavation and separate spoil/food logistics. Error
 models, generated evaluation layouts, evolved settings and quantitative reproduction
 require further source reconciliation and a registered scientific protocol.
+
+## F3 passage foraging
+
+The [approved passage spec](superpowers/specs/2026-10-05-foraging-3-passage-design.md)
+and [implementation plan](superpowers/plans/2026-10-06-foraging-3-passage.md)
+were approved on 2026-10-06. Engineering implementation, all five task reviews
+and the whole-branch review are complete
+on `foraging-3-design`. Final runtime `693c02b` passed workspace tests: 2,563
+passed, 0 failed and 103 ignored; formatting and core clippy passed. Integration
+and scientific execution remain separate; F4 construction coupling is next.
+
+`foraging::passage` exposes checked `World::new`, atomic `step`, observational
+`summary`, `snapshot`, single-worker `knowledge`, and bounded `run`. This public
+example uses explicit engineering values and asserts replay/accounting rather
+than assuming a winning trajectory or guaranteed delivery.
+
+```rust
+use sugarscape_core::foraging::passage::{run, Parameters, Pos, Resource, RunOptions, Setup, World};
+let pos = |x, y| Pos { x, y };
+let setup = Setup {
+    width: 5, height: 5,
+    open: vec![pos(0,0), pos(1,0), pos(2,0), pos(3,0), pos(3,1)],
+    nest: vec![pos(0,0), pos(1,0)], workers: vec![pos(0,0)],
+    resources: vec![Resource { id: u64::MAX, pos: pos(3,0) }],
+    parameters: Parameters {
+        p_search: 1.0, p_return: 0.0, lambda_fidelity: 0.0,
+        lambda_publish: 0.0, lambda_waypoint: 0.0,
+    },
+};
+let episode = run(setup.clone(), 12,
+    RunOptions { ticks: 40, sample_every: 7, snapshots: true }).unwrap();
+let mut world = World::new(setup, 12).unwrap();
+for _ in 0..40 { world.step().unwrap(); }
+assert_eq!(episode.summary, world.summary().unwrap());
+assert_eq!(episode.summary.work.opportunities, 40);
+let inventory = episode.summary.inventory;
+assert_eq!(inventory.initial, inventory.available + inventory.carried + inventory.delivered);
+assert_eq!(episode.snapshots.first().unwrap().summary.completed_ticks, 0);
+assert_eq!(episode.snapshots.last().unwrap().summary.completed_ticks, 40);
+let knowledge = world.knowledge(0).unwrap();
+assert_eq!(knowledge.agent, 0);
+```
+
+Supply dimensions 3–125, an explicit open-cell mask, at least two distinct open
+nest cells in one cardinal-connected chamber, 1–256 explicit nest spawns and
+0–256 uniquely identified food tokens at distinct open cells outside the nest.
+At most two workers occupy any cell, including nest cells; duplicate spawn cells
+are accepted within that capacity. Food pockets disconnected from the nest are
+valid and remain inaccessible. The five active parameters are `p_search` and
+`p_return` (finite `[0,1]`), `lambda_fidelity` and `lambda_publish` (finite `[0,256]`),
+and `lambda_waypoint` (finite, nonnegative). Unused F1 angular adapter fields
+are zero; F3 accepts no angular controls or evolved defaults.
+
+Private maps store only persistent Unknown/KnownOpen/KnownSolid classifications.
+Ordinary spawn observations and each opportunity reveal only the current cell
+and in-bounds cardinal neighbors. Current occupancy and food are ephemeral;
+private maps retain neither. Recruitment provides a site coordinate without
+marking it open, providing a route or sharing the publisher's map. Routes and
+frontiers use only the worker's learned graph. Unknown informed sites use the
+supplied Manhattan/frontier ranking, including frontiers that require moving
+away from the site. Frontier travel commitments persist through congestion.
+A nearest privately known nest route brings cargo home.
+
+Each tick processes workers by ascending spawn-list ID on one seeded RNG stream.
+One opportunity performs exactly one Move, Pickup, Deposit or Wait. Movement
+into food cannot also pick up; movement into the nest cannot also deposit.
+Departure/search/empty-return transitions consume waits. Searching tests give-up
+before pickup; pickup freezes the current/cardinal available-food count including
+the picked token once, excluding diagonals and solids. Only Deposit scores
+food delivery. Loaded arrival deposits, then publishes, then chooses departure,
+with independent publication/fidelity/recruitment draws. The publisher can see
+its own record. Weak records expire lazily on nest arrival; researcher views
+compute strengths without expiry or authoritative depletion filtering.
+
+Capacity can cause prolonged waits or deadlocks. There is no forced swap,
+displacement, hidden detour, priority override or promised progress. All requested
+ticks run, including after delivery or with inaccessible food. Events use
+processing ticks starting at zero; summaries count completed ticks. Missing
+milestones remain censored, including every milestone in an empty world.
+`initial = available + carried + delivered`; carried food at cutoff remains an
+unfinished return. Resource coordinates always describe their original cells.
+
+Request 1–7,200 ticks with at most 1,000,000 worker opportunities; individual
+steps enforce cumulative limits. At 256 workers, 3,906 ticks are legal and
+3,907 exceed the opportunity budget. Each private map and routing scratch
+structure is bounded by `width * height`; the maximum population uses at most
+4,000,000 classifications. Sampling intervals must be positive even with
+recording disabled. Initial/final frames occur once; disabled recording yields
+zero frames and bytes. A bounded counting writer caps the sum of compact
+snapshot JSON at 64 MiB, including repeated geometry and summaries, excluding
+Episode fields/setup and inter-frame delimiters. Serialization/storage failure
+returns no successful partial Episode.
+
+Summary exposes checked aggregate and per-worker physical/computational counters.
+Constructor observations contribute computation but zero physical opportunities.
+Additive computation counts sum; queue peaks use a maximum. Snapshots include
+geometry, physical/resource states, selected sites/frontiers, frozen finds,
+waypoint strengths, counters and per-worker known-open/solid counts, without
+full private maps. `knowledge(agent)` returns a separate grid-bounded sorted
+classification view and rejects invalid IDs. All researcher views and sampling
+preserve state, advice, counters and RNG. Ordinary output retains no full action
+or observation history.
+
+Episode stores normalized setup, all five parameters and seed. Open/nest cells
+sort by position and resources by identity; worker order and original food
+coordinates remain intact. Replays require identical implementation and supported
+platform. There is no saved-state restoration or cross-platform floating-point
+trajectory identity claim.
+
+F3 replaces F2's angular movement, informed angular age, turn delays, world-edge
+targets, Euclidean travel and survey waits with fixed graph exploration and local
+handling. Two-worker capacity, multi-cell nests, immutable private maps and
+cardinal density are supplied engineering adaptations. F2's historical grid/time
+calibration is not imported. F4 must explicitly handle excavation changing
+Unknown/KnownSolid cells and maintain separate spoil/food ledgers, destinations,
+hands and paid actions; immutable F3 knowledge is insufficient for dynamic maps.

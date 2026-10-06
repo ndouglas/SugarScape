@@ -30,7 +30,7 @@ This spec covers the programme sequence and the first source-rule increment. Sub
 | F4: construction coupling | Excavation and spoil/food interaction with measured delivery | New composition of verified components |
 | F5: shortcut comparison | Straight/detour/twisting geometries and cost/route/delivery measurements | Defined computational comparison with a biological phenomenon |
 
-F1–F5 are local labels for this branch of B3, not replacements for Minds or C1–C10. F1 and F2 are merged and verified; the next design increment is F3 passage adaptation. Food extraction, physical carrying and excavation are later increments rather than hidden additions to F1.
+F1–F5 are local labels for this branch of B3, not replacements for Minds or C1–C10. F1 and F2 are merged and verified; F3 engineering and independent reviews are complete on its isolated branch. The next design increment is F4 construction coupling. Food extraction, physical carrying and excavation are later increments rather than hidden additions to F1.
 
 ## F1 boundary and architecture
 
@@ -119,4 +119,17 @@ The written design was checked for scope, source provenance and separation of ve
 
 ## F2 follow-up
 
-The [F2 historical audit](../../studies/2026-10-04-foraging-fixed-world-reading.md) and [fixed-world design](2026-10-04-foraging-2-fixed-world-design.md) are complete; the user approved the written spec on 2026-10-05. The [F2 implementation plan](../plans/2026-10-05-foraging-2-fixed-world.md) was approved on 2026-10-05; implementation and independent reviews are complete. Local integration into `main` completed at `a194f8e` on 2026-10-05. Fresh merged-tree verification passed: `cargo test --workspace` reported 2,463 passed, 0 failed and 103 ignored; `cargo fmt --all --check` and core clippy with warnings denied passed. F3 passage adaptation is the next design increment; F4 adds excavation and separate spoil/food logistics. Scientific execution has not started. The recovered historical source informs eight-neighbor angular movement, delays and completed-return scoring; release identity and quantitative reproduction remain unestablished.
+The [F2 historical audit](../../studies/2026-10-04-foraging-fixed-world-reading.md) and [fixed-world design](2026-10-04-foraging-2-fixed-world-design.md) are complete; the user approved the written spec on 2026-10-05. The [F2 implementation plan](../plans/2026-10-05-foraging-2-fixed-world.md) was approved on 2026-10-05; implementation and independent reviews are complete. Local integration into `main` completed at `a194f8e` on 2026-10-05. Fresh merged-tree verification passed: `cargo test --workspace` reported 2,463 passed, 0 failed and 103 ignored; `cargo fmt --all --check` and core clippy with warnings denied passed. F3 passage adaptation is implemented and independently reviewed; F4 next adds excavation and separate spoil/food logistics. Scientific execution has not started. The recovered historical source informs eight-neighbor angular movement, delays and completed-return scoring; release identity and quantitative reproduction remain unestablished.
+
+## F3 follow-up
+
+The [F3 passage design](2026-10-05-foraging-3-passage-design.md) was approved by the
+user on 2026-10-06. The user selected private learned maps and approved local
+observations, coordinate-only recruitment and a multi-cell nest chamber with
+two-worker capacity throughout. The spec makes supplied exploration, action
+cadence, information boundaries and bounded diagnostics explicit. The [five-stage implementation plan](../plans/2026-10-06-foraging-3-passage.md) is
+approved on 2026-10-06; engineering implementation and independent
+task/whole-branch reviews are complete on `foraging-3-design`. Final runtime `693c02b` passed
+workspace verification (2,563 passed, 0 failed, 103 ignored), formatting and core
+clippy. Integration and scientific evaluation remain separate. F4 remains the
+separate excavation and spoil/food integration increment.
