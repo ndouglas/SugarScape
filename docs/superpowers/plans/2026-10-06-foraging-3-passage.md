@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Written spec approved on 2026-10-06. This plan was approved by the user on 2026-10-06; execution is starting. Execution method is already supplied: subagent-driven development.
+- Written spec approved on 2026-10-06. This plan was approved by the user on 2026-10-06; engineering implementation and independent task/whole-branch review are complete. Execution method is already supplied: subagent-driven development.
 - Dimensions 3–125; 1–256 explicit spawn positions in the nest; 0–256 uniquely identified food tokens on distinct open cells outside the nest.
 - Nest contains at least two distinct open cells in one four-neighbor-connected chamber. At most two workers occupy any cell, including nest cells. No off-world queue.
 - Disconnected food pockets are valid. Do not require all open cells/resources to connect to the nest. Workers start in the nest and learn their own return routes.
@@ -482,7 +482,7 @@ pub struct Episode {
 
 Make ComputeCounts fields public at this stage for researcher consumption; methods remain checked. Public Result signatures use Vec<FieldError>, not an inaccessible private alias. No full private maps occur in Snapshot; geometry duplicates are counted within the declared byte cap.
 
-- [ ] Write runner/public API tests before implementing these methods. Representative public acceptance fixture uses the Task 1 literal Setup and adds `Resource { id: u64::MAX, pos: Pos { x:3,y:0 } }`; use explicit Parameters, seed 12 and 40 ticks. Assert accounting/replay, not an assumed winning trajectory or guaranteed delivery.
+- [x] Write runner/public API tests before implementing these methods. Representative public acceptance fixture uses the Task 1 literal Setup and adds `Resource { id: u64::MAX, pos: Pos { x:3,y:0 } }`; use explicit Parameters, seed 12 and 40 ticks. Assert accounting/replay, not an assumed winning trajectory or guaranteed delivery.
 
 ```rust
 #[test]
@@ -498,8 +498,8 @@ fn run_and_repeated_step_share_summary_and_private_knowledge() {
 }
 ```
 
-- [ ] Run `cargo test -p sugarscape-core foraging::passage::tests::runner` and the new public integration-test target for red. Implement full-horizon run, normalized replay setup, checked totals and read-only views. Invalid worker ID returns contextual error. Summary includes constructor compute work but zero constructor physical opportunities; aggregates use max queue peaks. Server views remain observational/lazy.
-- [ ] Use a bounded counting Write adapter before appending each compact JSON Snapshot, matching F2's budget definition. Test exact successful byte limit and one-byte-short failure through an internal `append_snapshot` seam, leaving frame list/byte counter unchanged on failure. Include initial/final once; disabled snapshots produce zero frames/bytes but still reject zero sample interval. Serialization/storage failures return no successful Episode.
+- [x] Run `cargo test -p sugarscape-core foraging::passage::tests::runner` and the new public integration-test target for red. Implement full-horizon run, normalized replay setup, checked totals and read-only views. Invalid worker ID returns contextual error. Summary includes constructor compute work but zero constructor physical opportunities; aggregates use max queue peaks. Server views remain observational/lazy.
+- [x] Use a bounded counting Write adapter before appending each compact JSON Snapshot, matching F2's budget definition. Test exact successful byte limit and one-byte-short failure through an internal `append_snapshot` seam, leaving frame list/byte counter unchanged on failure. Include initial/final once; disabled snapshots produce zero frames/bytes but still reject zero sample interval. Serialization/storage failures return no successful Episode.
 
 ```rust
 let selected = completed % options.sample_every == 0 || completed == options.ticks;
@@ -508,10 +508,10 @@ if options.snapshots && selected {
 }
 ```
 
-- [ ] Cover ticks 0/7201, exact legal 7200, agent*ticks boundary with 256 workers in >=128 valid nest cells (3906 legal ticks/3907 illegal), single-step cumulative exhaustion, positive sample interval, zero/maximum seed, empty world absent milestones and disconnected food remaining available. Use budget validation/helper states for boundary tests rather than repeatedly running huge scenes solely to mirror arithmetic.
-- [ ] Compare same-seed runs at different sampling cadence and disabled recording; summaries and final single-worker knowledge must match, including computation counters. Call knowledge/snapshot/summary between steps on one clone and compare subsequent state/PCG outputs with the untouched clone. Validate knowledge view sorted classifications excludes Unknown and historical occupancy/food.
-- [ ] Document the complete public example in passage module rustdoc so cargo doctests compile it. Update docs/foraging.md with limits, five active parameters, private learning/recruitment distinction, occupancy/deadlocks, action cadence, local density, replay identity, map views, supplied adaptations and F4 boundary. Preserve the F2 example and historical wording.
-- [ ] Run final acceptance, save full logs/exits and inspect each result:
+- [x] Cover ticks 0/7201, exact legal 7200, agent*ticks boundary with 256 workers in >=128 valid nest cells (3906 legal ticks/3907 illegal), single-step cumulative exhaustion, positive sample interval, zero/maximum seed, empty world absent milestones and disconnected food remaining available. Use budget validation/helper states for boundary tests rather than repeatedly running huge scenes solely to mirror arithmetic.
+- [x] Compare same-seed runs at different sampling cadence and disabled recording; summaries and final single-worker knowledge must match, including computation counters. Call knowledge/snapshot/summary between steps on one clone and compare subsequent state/PCG outputs with the untouched clone. Validate knowledge view sorted classifications excludes Unknown and historical occupancy/food.
+- [x] Document the complete public example in passage module rustdoc so cargo doctests compile it. Update docs/foraging.md with limits, five active parameters, private learning/recruitment distinction, occupancy/deadlocks, action cadence, local density, replay identity, map views, supplied adaptations and F4 boundary. Preserve the F2 example and historical wording.
+- [x] Run final acceptance, save full logs/exits and inspect each result:
 
 ```bash
 cargo test -p sugarscape-core --test foraging_passage
@@ -521,7 +521,7 @@ cargo test --workspace
 git diff --check
 ```
 
-- [ ] Fresh Task 5 reviews, then whole-branch spec/quality review against the approved spec/plan and actual evidence. Resolve findings in consolidated scoped corrections with behavioral reds where applicable, green checks and fresh scoped re-review. Retain root tracker until this gate passes; archive outcomes/rulings here, mark spec/guide accurately and remove the completed tracker. Commit `feat(foraging): expose bounded passage runs and knowledge views`, followed by evidence-only archival commit when appropriate. No integration/push/scientific execution is part of this plan.
+- [x] Fresh Task 5 reviews, then whole-branch spec/quality review against the approved spec/plan and actual evidence. Resolve findings in consolidated scoped corrections with behavioral reds where applicable, green checks and fresh scoped re-review. Retain root tracker until this gate passes; archive outcomes/rulings here, mark spec/guide accurately and remove the completed tracker. Commit `feat(foraging): expose bounded passage runs and knowledge views`, followed by evidence-only archival commit when appropriate. No integration/push/scientific execution is part of this plan.
 
 ## Plan self-review and handoff
 
@@ -529,7 +529,7 @@ Spec coverage: intent/scope/architecture -> all stages; setup/limits/observation
 
 Type handoffs were checked across the five tasks. No authoritative Setup/food/worker list enters decide or routing. Constructor observations and zero initialization draws, transition order, stale advice, retained private maps, multi-source home routing and separate physical/computational costs have explicit owners. Queue peaks use max; all additive counters use checked sums. Per-worker phase/cargo invariants constrain the four move subcategories and four wait subcategories.
 
-The user approved the written spec on 2026-10-06 and has already chosen subagent-driven execution. The user approved this written plan on 2026-10-06; do not ask for that approval or the execution method again. At execution preserve current concurrent main/remote work, verify the isolated base, create the five-stage tracker and begin Task 1. Current planning/validation is documentation-only, not evidence that F3 behavior is implemented or verified.
+The user approved the written spec on 2026-10-06 and has already chosen subagent-driven execution. The user approved this written plan on 2026-10-06; do not ask for that approval or the execution method again. Execution completed in the isolated worktree without merging or changing concurrent campaigns. All five stages passed task reviews and the whole-branch gate; the completed root tracker is removed after this gate. Integration remains a separate user decision.
 
 ## Execution evidence — 2026-10-06
 
@@ -617,3 +617,55 @@ the passage doctest; `git diff --check` passes. Independent review remains pendi
 Complete logs/exits, source hashes, self-review and exact final check outcomes
 are in `.superpowers/sdd/2026-10-06-foraging-3-passage/task-5-report.md` and
 adjacent `task-5-*` evidence. No integration, push or scientific execution.
+
+## Final validation and review — 2026-10-06
+
+F3 engineering and all five independent task spec/quality reviews are complete.
+Runtime commits are `56afc7c`, `79cca1a`, `aef702c`, `7f9bb99` and `693c02b`.
+The whole-branch review of `6c9a50a..693c02b` approved the combined engineering
+implementation with no Critical, Important or new Minor code findings. The
+previous wander/capacity/indexing suggestions are addressed. No corrective
+implementation wave was required.
+
+Final commands on frozen runtime tree `693c02b`, all exit 0:
+
+```bash
+cargo test -p sugarscape-core --test foraging_passage
+cargo fmt --all --check
+cargo clippy -p sugarscape-core --all-targets -- -D warnings
+cargo test --workspace
+git diff --check
+```
+
+Final workspace: **2,563 passed, 0 failed, 103 ignored across 45 result blocks**,
+including the passage doctest. Final focused runner tests: 11 passed; public
+acceptance: one test passed. Eight source/test freeze hashes were rechecked
+unchanged by the parent. The following archival commit changes documentation
+and removes the completed root tracker only. No claim is made that ignored
+tests ran.
+
+All full logs, exits, task briefs/reports/reviews, diff packages, source manifest,
+recovery ledger and exhaustive rulings are archived locally at
+`/tmp/sugarscape-f3-evidence-20261006/sdd/`; the plan-specific ignored SDD workspace
+is removed after preservation. These temporary paths are local evidence, not
+permanent shared storage; this plan preserves results and decisions.
+
+Evidence limits remain explicit: new-interface initial reds were compilation
+failures; Task 2 began implementation before its red completed; later
+supplementary tests and Task 3 assertion refinements were not retroactively
+claimed as ordered behavioral red cycles. The Task 4 diagnostic correction has
+observed behavioral red/green. Final full workspace verification followed the
+final frozen Rust tree.
+
+Final boundary ruling: accept the review's excluded scientific efficacy,
+calibration, comparisons and reproduction; F4 dynamic topology/excavation and
+spoil-food interaction; CLI/WASM/browser/ModelKind; restoration/deserialization
+and cross-platform trajectory identity; maximum-scene throughput and allocator
+failure recovery; future merged-tree compatibility; and parent archival duties.
+These are deferred or parent-owned rather than omitted promised runtime. If
+wrong, a desired capability or guarantee needs its own design/validation; no
+scientific, performance or future-integration claim follows from these tests.
+Parent status/archival/tracker reconciliation is complete.
+
+The feature remains on `foraging-3-design`; no F3 merge, push or scientific
+evaluation was performed. F4 construction coupling is the next design increment.

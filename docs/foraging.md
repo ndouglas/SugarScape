@@ -1,4 +1,4 @@
-# CPFA rules (F1) and fixed-world foraging (F2)
+# CPFA rules (F1), fixed-world reference (F2) and passage foraging (F3)
 
 The top-level public `sugarscape_core::foraging` API verifies stateless rules from Hecker and Moses (2015). Engineering implementation and independent task/whole-branch reviews are complete; this work merged into `main` at `5819a04`. F1 neither simulates foraging nor reproduces evolved performance. It supplies no world, heading sampler, scheduler, food ledger or waypoint server.
 
@@ -74,7 +74,7 @@ F3 passage adaptation, F4 excavation coupling and F5 termite comparison retain s
 
 The [historical source audit](studies/2026-10-04-foraging-fixed-world-reading.md) recovered a prepublication iAnt-Sim implementation with eight-neighbor angular movement, explicit delays and nest-return scoring. The [approved fixed-world design](superpowers/specs/2026-10-04-foraging-2-fixed-world-design.md) records source conventions and deliberate reconstruction choices; the user approved the written spec on 2026-10-05; the [implementation plan](superpowers/plans/2026-10-05-foraging-2-fixed-world.md) was approved on 2026-10-05. Strength-weighted recruitment is now also verified in the historical simulator, while the existing `LaterArgosStrengthWeighted` API spelling remains unchanged.
 
-F2 engineering and independent task/whole-branch reviews are complete; local integration into `main` completed at `a194f8e` on 2026-10-05. The final counter correction passed scoped review. Fresh feature and merged-tree workspace verification each report 2,463 passed, 0 failed and 103 ignored, with formatting and core clippy clean. The implementation plan preserves commands, rulings and evidence. Scientific execution remains separate; F3 passage adaptation is the next design increment.
+F2 engineering and independent task/whole-branch reviews are complete; local integration into `main` completed at `a194f8e` on 2026-10-05. The final counter correction passed scoped review. Fresh feature and merged-tree workspace verification each report 2,463 passed, 0 failed and 103 ignored, with formatting and core clippy clean. The implementation plan preserves commands, rulings and evidence. Scientific execution remains separate; F3 passage adaptation is implemented below.
 
 ## Fixed-world public usage
 
@@ -151,9 +151,11 @@ require further source reconciliation and a registered scientific protocol.
 
 The [approved passage spec](superpowers/specs/2026-10-05-foraging-3-passage-design.md)
 and [implementation plan](superpowers/plans/2026-10-06-foraging-3-passage.md)
-were approved on 2026-10-06. Stages 1–4 passed independent reviews. Stage 5
-engineering implementation is complete with task and whole-branch reviews pending.
-Scientific execution has not started.
+were approved on 2026-10-06. Engineering implementation, all five task reviews
+and the whole-branch review are complete
+on `foraging-3-design`. Final runtime `693c02b` passed workspace tests: 2,563
+passed, 0 failed and 103 ignored; formatting and core clippy passed. Integration
+and scientific execution remain separate; F4 construction coupling is next.
 
 `foraging::passage` exposes checked `World::new`, atomic `step`, observational
 `summary`, `snapshot`, single-worker `knowledge`, and bounded `run`. This public
