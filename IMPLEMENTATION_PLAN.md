@@ -24,7 +24,7 @@ Approved spec and plan: 2026-10-06. Execution: subagent-driven. Detailed evidenc
 **Goal**: Worker-only phase decisions and ordered physical transactions.
 **Success Criteria**: Separate pickup/deposit, one action per opportunity and complete state/RNG rollback.
 **Tests**: `cargo test -p sugarscape-core foraging::passage::tests::controller`
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 5: Bounded runner and acceptance
 **Goal**: Replay inputs, summaries, snapshots, read-only knowledge and public documentation.

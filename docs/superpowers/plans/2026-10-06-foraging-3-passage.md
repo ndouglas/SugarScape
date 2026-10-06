@@ -389,7 +389,7 @@ pub struct World { setup: Setup, state: State, rng: crate::rng::SimRng }
 
 World representation is normalized `setup: Setup, state: State, rng: SimRng`. Policy copies dimensions/nest/active parameters only, never open/resource/spawn lists. Decision clones only the worker; learn its fresh observation before routing. The decision layer adds one observation, cells.len() inspected cells and the returned learned count to that worker's computation counters; constructor initialization performs the same accounting with zero physical opportunities. Navigation returns measured computation to checked_include on the decision's worker clone. Nest arrival is handled by apply after physical Deposit/empty-arrival action, with narrowly provided server advice; decide cannot access the global server. apply assigns the returned agent before applying physical transaction against candidate state; failures remain within the cloned tick.
 
-- [ ] Write behavior tests using Scripted draws and literal initial/controller states. Cover initial observations/learned counts and one uninformed trip per worker; two workers diverge in branch maps; two physical worlds differing only outside local view yield identical worker decisions/maps/draw consumption; recruitment sets only site and never marks unknown route cells. Create helper `advance_scripted(world: &mut World, draws: &mut Scripted) -> Checked<()>` that clones State and Scripted, calls advance and commits both only on success.
+- [x] Write behavior tests using Scripted draws and literal initial/controller states. Cover initial observations/learned counts and one uninformed trip per worker; two workers diverge in branch maps; two physical worlds differing only outside local view yield identical worker decisions/maps/draw consumption; recruitment sets only site and never marks unknown route cells. Create helper `advance_scripted(world: &mut World, draws: &mut Scripted) -> Checked<()>` that clones State and Scripted, calls advance and commits both only on success.
 
 ```rust
 #[test]
@@ -403,8 +403,8 @@ fn a_failed_tick_preserves_knowledge_physics_and_draw_position() {
 }
 ```
 
-- [ ] Run `cargo test -p sugarscape-core foraging::passage::tests::controller` and record red. Initialize all workers with empty private maps/cargo/find/site/frontier, Departing phase, one initial uninformed trip; build/count only normal spawn observations; consume zero initialization draws. Build occupancy and available-food indexes solely for observe, not routing inputs.
-- [ ] Implement ordered observation -> worker-only decision -> physical action -> optional nest advice. All actions count exactly once. Pickup computes fresh density from Observation before claim, captures `find.site = setup.site(agent.pos)`, increments pickups and first-pickup tick, sets Returning/cargo and clears site/frontier. Deposit increments delivery milestones only after owner-checked deposit, then processes three independent arrival draws, increments chosen departure/publication counters, clears find/cargo/frontier and sets Departing/site as appropriate.
+- [x] Run `cargo test -p sugarscape-core foraging::passage::tests::controller` and record red. Initialize all workers with empty private maps/cargo/find/site/frontier, Departing phase, one initial uninformed trip; build/count only normal spawn observations; consume zero initialization draws. Build occupancy and available-food indexes solely for observe, not routing inputs.
+- [x] Implement ordered observation -> worker-only decision -> physical action -> optional nest advice. All actions count exactly once. Pickup computes fresh density from Observation before claim, captures `find.site = setup.site(agent.pos)`, increments pickups and first-pickup tick, sets Returning/cargo and clears site/frontier. Deposit increments delivery milestones only after owner-checked deposit, then processes three independent arrival draws, increments chosen departure/publication counters, clears find/cargo/frontier and sets Departing/site as appropriate.
 
 ```rust
 // World::step, borrowing fields of a fully cloned candidate:
@@ -414,7 +414,7 @@ advance(&candidate.setup,&mut candidate.state,&mut PcgDraws(&mut candidate.rng))
 // Empty worlds keep all_delivered_tick None; only a real final Deposit sets it.
 ```
 
-- [ ] Pin the following complete draw order. Test endpoints p_search/p_return 0 and 1 with literal draw counts and transition waits. Invalid injected values always fail at the consumer.
+- [x] Pin the following complete draw order. Test endpoints p_search/p_return 0 and 1 with literal draw counts and transition waits. Invalid injected values always fail at the consumer.
 
 | Opportunity | Draw sequence |
 |---|---|
@@ -435,15 +435,15 @@ advance(&candidate.setup,&mut candidate.state,&mut PcgDraws(&mut candidate.rng))
 | Returning outside chamber | Immediate route-step selection if nonempty; blocked waits draw none |
 | Returning inside chamber, loaded or empty | publication, fidelity, recruitment in that order; no movement/frontier-selection draw |
 
-- [ ] Test move-into-food then distinct Pickup, move-into-nest then distinct Deposit, give-up-before-pickup, no pickup during Departing, no nine-tick survey delay, absent angular draws, local count center/cardinal only and sequential pickup contention. Maps persist across trips; successful-find counts clear after arrival and cannot republish on empty return. KnownSolid/exhausted-Unknown informed pursuit abandons without deleting server advice or consulting resource truth.
-- [ ] Test full-next-cell capacity inside/outside chamber, later-agent visibility, blocked destination retention, no forced swaps, and multi-source nearest known-home routing with no hidden longer detour. Initial chamber occupancy two per cell remains valid. Only current observed occupancy affects next-step choice.
-- [ ] Extend rollback beyond the representative test: two workers with the second draw failing after the first worker learns and moves/picks up; a loaded first worker deposits/publishes before the later failure; compare State/maps/ledger/server/all counters and Scripted position. For production World, use private unit fixtures to trigger checked counter failure, then compare subsequent PCG draws/replay against an unchanged cloned reference. No public failure-injection API.
-- [ ] check validates stable ID/index correspondence, map dimensions/topology truth for known cells, physical open positions and occupancy<=2, cargo/find/Returning coherence, find sites/counts, target geometry, ledger bijection, work equations and cumulative budgets. Researcher invariant checks may inspect authoritative truth; decision cannot. Error fields include processing tick/worker context. Check candidate after the complete tick; no successful partial commit.
-- [ ] Verify all passage tests, fmt and core clippy; inspect for remaining staged allowances. Fresh reviews; update Stage 4 and commit `feat(foraging): execute atomic private-map passage ticks`.
+- [x] Test move-into-food then distinct Pickup, move-into-nest then distinct Deposit, give-up-before-pickup, no pickup during Departing, no nine-tick survey delay, absent angular draws, local count center/cardinal only and sequential pickup contention. Maps persist across trips; successful-find counts clear after arrival and cannot republish on empty return. KnownSolid/exhausted-Unknown informed pursuit abandons without deleting server advice or consulting resource truth.
+- [x] Test full-next-cell capacity inside/outside chamber, later-agent visibility, blocked destination retention, no forced swaps, and multi-source nearest known-home routing with no hidden longer detour. Initial chamber occupancy two per cell remains valid. Only current observed occupancy affects next-step choice.
+- [x] Extend rollback beyond the representative test: two workers with the second draw failing after the first worker learns and moves/picks up; a loaded first worker deposits/publishes before the later failure; compare State/maps/ledger/server/all counters and Scripted position. For production World, use private unit fixtures to trigger checked counter failure, then compare subsequent PCG draws/replay against an unchanged cloned reference. No public failure-injection API.
+- [x] check validates stable ID/index correspondence, map dimensions/topology truth for known cells, physical open positions and occupancy<=2, cargo/find/Returning coherence, find sites/counts, target geometry, ledger bijection, work equations and cumulative budgets. Researcher invariant checks may inspect authoritative truth; decision cannot. Error fields include processing tick/worker context. Check candidate after the complete tick; no successful partial commit.
+- [x] Verify all passage tests, fmt and core clippy; inspect for remaining staged allowances. Fresh reviews; update Stage 4 and commit `feat(foraging): execute atomic private-map passage ticks`.
 
 ### Task 5: Bounded runner, researcher views and public acceptance
 
-**Files:** Create view.rs, runner.rs, tests/runner.rs and `crates/sugarscape-core/tests/foraging_passage.rs`; extend module rustdoc/exports and docs/foraging.md; update spec/plan/tracker evidence.
+**Files:** Create view.rs, runner.rs, tests/runner.rs and `crates/sugarscape-core/tests/foraging_passage.rs`; expose metrics.rs view fields; index authoritative membership in controller.rs as requested by Task 4 review; extend module rustdoc/exports and docs/foraging.md; update spec/plan/tracker evidence.
 **Consumes:** Normalized setup, World/State, Knowledge, counters, ledger/server and controller::check.
 **Produces:** Public view/output contracts below. All are Serialize/PartialEq; KnowledgeView contains no food/occupancy history.
 
@@ -579,3 +579,15 @@ Rulings preserved from Task 3:
   fixture produced 0.0010000000000000002 on this platform; the adjacent rate
   produced 0.0009999999999999994. No rounding/clamping was added. If wrong,
   direct equality coverage needs another injection seam; runtime policy stands.
+
+Task 4 runtime commit `7f9bb99`: 87 passage tests, including 34 controller cases;
+workspace 2,550 passed, 0 failed, 103 ignored; formatting/core clippy passed and
+all staged dead-code allowances removed. Independent spec/quality review approved
+without blocking findings. Task 2 observation/retention/documentation duties and
+Task 3 capacity/sole-publication duties are covered. A nonblocking performance
+suggestion to index authoritative open-cell membership is assigned to Task 5
+observer integration, retaining the private decision boundary and error behavior.
+Initial Task 4 red was missing-contract compilation; a later diagnostic regression
+has independent behavioral red/green evidence. Invalid occupancy/return-target
+fixtures and an equal-home fixture expectation were corrected with failed logs
+retained; no issue exceeded three attempts.
