@@ -30,4 +30,4 @@ Approved spec and plan: 2026-10-06. Execution: subagent-driven. Detailed evidenc
 **Goal**: Replay inputs, summaries, snapshots, read-only knowledge and public documentation.
 **Success Criteria**: Budget boundaries, observer purity, replay and independent whole-branch review pass.
 **Tests**: `cargo test --workspace; cargo fmt --all --check; cargo clippy -p sugarscape-core --all-targets -- -D warnings`
-**Status**: Not Started
+**Status**: In Progress

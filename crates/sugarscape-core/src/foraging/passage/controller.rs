@@ -9,7 +9,7 @@ use super::{
     Checked, Phase, Pos, Setup, WorkCounts,
 };
 use crate::config::FieldError;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 pub(super) fn occupancy(state: &State) -> BTreeMap<Pos, u32> {
     let mut cells = BTreeMap::new();
     for agent in &state.agents {
@@ -32,11 +32,13 @@ pub(super) fn check(setup: &Setup, state: &State) -> Checked<()> {
         return Err(invalid("occupancy", "each cell admits at most two workers"));
     }
     state.ledger.check(&state.agents)?;
+    // Researcher invariant index only; workers never receive authoritative topology.
+    let open_cells: BTreeSet<_> = setup.open.iter().copied().collect();
     let mut work = WorkCounts::default();
     for (index, agent) in state.agents.iter().enumerate() {
         let field = format!("agents[{index}]");
         if agent.id as usize != index
-            || !setup.open.contains(&agent.pos)
+            || !open_cells.contains(&agent.pos)
             || agent.map.dimensions() != (setup.width, setup.height)
         {
             return Err(invalid(
@@ -60,7 +62,7 @@ pub(super) fn check(setup: &Setup, state: &State) -> Checked<()> {
             return Err(invalid(&field, "private classifications exceed grid"));
         }
         for cell in agent.map.known() {
-            if (cell.kind == CellKnowledge::KnownOpen) != setup.open.contains(&cell.pos) {
+            if (cell.kind == CellKnowledge::KnownOpen) != open_cells.contains(&cell.pos) {
                 return Err(invalid(
                     &field,
                     "known classification conflicts with authoritative fixed topology",

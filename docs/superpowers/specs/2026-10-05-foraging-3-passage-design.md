@@ -1,7 +1,7 @@
 # F3: passage foraging with private learned maps
 
 **Date:** 2026-10-05.
-**Status:** conversational choices approved: private learned maps, local observations, coordinate-only recruitment and a multi-cell nest chamber with two-worker capacity throughout. Written architectural spec approved by the user on 2026-10-06. The [implementation plan](../plans/2026-10-06-foraging-3-passage.md) was approved by the user on 2026-10-06; engineering execution is starting.
+**Status:** conversational choices approved: private learned maps, local observations, coordinate-only recruitment and a multi-cell nest chamber with two-worker capacity throughout. Written architectural spec approved by the user on 2026-10-06. The [implementation plan](../plans/2026-10-06-foraging-3-passage.md) was approved by the user on 2026-10-06; Stages 1–4 passed independent reviews; Stage 5 engineering implementation is complete with task and whole-branch reviews pending.
 **Programme:** [F1–F5 foraging/construction sequence](2026-10-04-foraging-construction-design.md), construction B3.
 **Baseline:** [F2 design](2026-10-04-foraging-2-fixed-world-design.md), merged at `a194f8e`, integration record `6c9a50a`; [public guide](../../foraging.md).
 **Related components:** [Burrow 1](2026-10-03-burrow-1-excavation-design.md) and [Burrow resource access](2026-10-04-burrow-2-resource-access-design.md).

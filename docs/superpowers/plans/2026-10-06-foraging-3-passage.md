@@ -591,3 +591,29 @@ Initial Task 4 red was missing-contract compilation; a later diagnostic regressi
 has independent behavioral red/green evidence. Invalid occupancy/return-target
 fixtures and an equal-home fixture expectation were corrected with failed logs
 retained; no issue exceeded three attempts.
+
+### Task 5 engineering implementation (review pending, 2026-10-06)
+
+Bounded full-horizon runner, normalized Episode replay setup and read-only
+summary/snapshot/single-worker knowledge views are implemented. ComputeCounts
+fields are public; additive totals remain checked and queue peaks use maximum.
+The approved Task4 membership improvement is confined to controller invariant
+checking and leaves the decision/navigation information boundary intact.
+Stage5 remains In Progress until independent task and whole-branch reviews.
+
+Both prescribed RED commands completed with exit101 and missing API diagnostics,
+and were inspected before implementation (2026-10-06T14:03:12.901702+00:00 per
+saved timing record). The first GREEN attempt exposed E0282 in an optional view
+conversion; the single explicit Result error-type correction passed ten focused
+tests without changing assertions. A supplemental view characterization test
+was added after that GREEN, passed immediately, and is not claimed as a separate
+RED cycle. The final focused suite passes eleven tests. Rust source/test freeze
+hashes and timing are retained in the task report. Task2 timing deviations and
+Task3 boundary revisions remain as previously recorded.
+
+Final public acceptance passes 1; formatter and core clippy pass. The frozen
+revision full workspace gate passes 2,563 tests, 0 failed and 103 ignored, including
+the passage doctest; `git diff --check` passes. Independent review remains pending.
+Complete logs/exits, source hashes, self-review and exact final check outcomes
+are in `.superpowers/sdd/2026-10-06-foraging-3-passage/task-5-report.md` and
+adjacent `task-5-*` evidence. No integration, push or scientific execution.
