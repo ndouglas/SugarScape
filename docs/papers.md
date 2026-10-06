@@ -5,6 +5,10 @@ ambiguity or departure as a named switch, and reports where a paper's claims do 
 (see the survey, `docs/superpowers/specs/2026-09-24-model-survey-design.md`). This file tracks the
 source papers: which milestone used each, which critiques we have, and the queue.
 
+The [reproducibility register](reproducibility.md) maintains claim-level discrepancies, source
+identity and measurement gaps, corrected issues and concrete next actions across the completed
+catalog and Minds programme. It keeps conditional mismatches separate from unmeasured leads.
+
 **Where the files are.** Local copies live in `papers/<topic>/`, which is gitignored: they are
 personal copies, never committed or redistributed. File names are
 `<authors>-<year>[-<venue>]-<short-title>.<pdf|html>`. A paper marked *not in `papers/`* was
