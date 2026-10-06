@@ -26,6 +26,9 @@ impl Knowledge {
             cells: vec![CellKnowledge::Unknown; (width * height) as usize],
         })
     }
+    pub(super) fn dimensions(&self) -> (u32, u32) {
+        (self.width, self.height)
+    }
     fn index(&self, pos: Pos) -> Checked<usize> {
         if pos.x >= self.width || pos.y >= self.height {
             return Err(vec![FieldError::new(

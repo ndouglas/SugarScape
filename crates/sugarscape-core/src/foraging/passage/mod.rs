@@ -1,14 +1,17 @@
 //! Fixed passage foraging with immediate observations and private topology.
 mod setup;
+// Task 4 supplies navigation decision consumers.
+#[allow(dead_code)]
+mod navigation;
 // Task 4 supplies the production consumers of draws and observations.
 #[allow(dead_code)]
 mod draws;
 #[allow(dead_code)]
 mod observation;
-// Task 2 supplies routing consumers; Task 4 initializes and updates maps.
+// Task 4 initializes, updates and exposes the private maps.
 #[allow(dead_code)]
 mod knowledge;
-// Tasks 2 and 4 accumulate computational work.
+// Task 4 accumulates measured work from observations and navigation.
 #[allow(dead_code)]
 mod metrics;
 pub use knowledge::{CellKnowledge, KnownCell};

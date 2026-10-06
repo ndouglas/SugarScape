@@ -47,3 +47,5 @@ impl DrawSource for Scripted {
         Ok(value)
     }
 }
+
+mod navigation;

@@ -12,7 +12,7 @@ Approved spec and plan: 2026-10-06. Execution: subagent-driven. Detailed evidenc
 **Goal**: BFS/frontiers based only on each worker map.
 **Success Criteria**: Detours and unknown targets use private topology; congestion retains route commitments.
 **Tests**: `cargo test -p sugarscape-core foraging::passage::tests::navigation`
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 3: Food and nest advice
 **Goal**: Conserved food identities, agent accounting and F1 nest decisions.
