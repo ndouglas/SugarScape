@@ -1,7 +1,7 @@
-//! Stateless CPFA rule reference after Hecker and Moses (2015).
+//! CPFA stateless rules and fixed-world reconstruction after Hecker and Moses (2015).
 //!
-//! This module calculates source rules from explicit inputs; it does not
-//! simulate movement, resources, or the waypoint server.
+//! The top-level API calculates source rules from explicit inputs. The
+//! [`fixed`] submodule provides the separate fixed-world reconstruction.
 
 //! The caller owns observations, publication order, retained memory and random
 //! variates. Publication and fidelity use independent draws; recruitment uses
@@ -30,6 +30,8 @@
 //!     WaypointThreshold::LaterArgosStrict, 0.8, 0.0).unwrap(),
 //!     Departure::Recruitment { waypoint: 9, site: 88 });
 //! ```
+
+pub mod fixed;
 
 mod config;
 mod information;

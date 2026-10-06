@@ -21,3 +21,7 @@ mod testimony_diagnostics;
 pub use testimony_diagnostics::*;
 
 pub mod testimony_game;
+
+pub mod strategic_reporting;
+
+pub mod strategy_inference;
