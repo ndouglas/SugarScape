@@ -164,7 +164,7 @@ impl DrawSource for Scripted {
 **Consumes:** FieldError, F1 parameter validation and rng::SimRng.
 **Produces:** Every Task 1 signature above and independent bounded geometry/maps.
 
-- [ ] Write tests including these exact representative cases; add indexed rejection cases for dimensions 2/126, zero/257 workers, 257 resources, duplicate IDs/cells/open/nest, singleton/disconnected nest, spawn outside nest and three same-cell workers, food in solid/nest/out-of-bounds cells, NaN and invalid numeric domains. Include `u64::MAX` identity, zero food, valid 125x125 dimensions, disconnected open food and four workers distributed two per nest cell.
+- [x] Write tests including these exact representative cases; add indexed rejection cases for dimensions 2/126, zero/257 workers, 257 resources, duplicate IDs/cells/open/nest, singleton/disconnected nest, spawn outside nest and three same-cell workers, food in solid/nest/out-of-bounds cells, NaN and invalid numeric domains. Include `u64::MAX` identity, zero food, valid 125x125 dimensions, disconnected open food and four workers distributed two per nest cell.
 
 ```rust
 #[test]
@@ -193,7 +193,7 @@ fn one_candidate_still_draws() {
 }
 ```
 
-- [ ] Run `cargo test -p sugarscape-core foraging::passage::tests::setup_learning`; record intended red/missing-API failure. Then implement aggregate original-input validation, normalized setup, signed-safe neighbor/index conversions, checked injected variates and map learning.
+- [x] Run `cargo test -p sugarscape-core foraging::passage::tests::setup_learning`; record intended red/missing-API failure. Then implement aggregate original-input validation, normalized setup, signed-safe neighbor/index conversions, checked injected variates and map learning.
 
 ```rust
 // No allocation of a dense map precedes validation of dimensions/lists.
@@ -212,16 +212,16 @@ match (old, observed) {
 }
 ```
 
-- [ ] Validate the entire incoming Observation before mutating Knowledge: origin is KnownOpen in the observation, entries are distinct current/cardinal in-bounds cells, solid entries have zero occupants/no food, occupants <=2. A later conflicting classification leaves all map entries unchanged. Repeated observations learn zero new cells; changing local occupancy/food never changes stored classifications. KnownCell output excludes Unknown and sorts by Pos. Test boundary neighbor order, malformed observations, conflict rollback, uniform 0/largest-below-1, NaN/out-of-range variates, zero length and empty choose consuming no draw.
-- [ ] Implement ComputeCounts with checked preparation before mutation, additive totals and `peak_queue = max`. Test overflow atomicity and peak max versus sum. Initial observation counting is integrated in Task 4.
-- [ ] Verify focused tests, `cargo fmt --all --check`, `cargo clippy -p sugarscape-core --all-targets -- -D warnings`. Permit narrowly scoped documented `#[allow(dead_code)]` only for internal helpers whose consumer is named in Tasks 2–4; remove every such allowance by Task 4. Do not expose internal helpers merely to satisfy lint.
-- [ ] Self-review and fresh task spec/quality reviews; update Stage 1 and commit `feat(foraging): add checked passage setup and private learning`.
+- [x] Validate the entire incoming Observation before mutating Knowledge: origin is KnownOpen in the observation, entries are distinct current/cardinal in-bounds cells, solid entries have zero occupants/no food, occupants <=2. A later conflicting classification leaves all map entries unchanged. Repeated observations learn zero new cells; changing local occupancy/food never changes stored classifications. KnownCell output excludes Unknown and sorts by Pos. Test boundary neighbor order, malformed observations, conflict rollback, uniform 0/largest-below-1, NaN/out-of-range variates, zero length and empty choose consuming no draw.
+- [x] Implement ComputeCounts with checked preparation before mutation, additive totals and `peak_queue = max`. Test overflow atomicity and peak max versus sum. Initial observation counting is integrated in Task 4.
+- [x] Verify focused tests, `cargo fmt --all --check`, `cargo clippy -p sugarscape-core --all-targets -- -D warnings`. Permit narrowly scoped documented `#[allow(dead_code)]` only for internal helpers whose consumer is named in Tasks 2–4; remove every such allowance by Task 4. Do not expose internal helpers merely to satisfy lint.
+- [x] Self-review and fresh task spec/quality reviews; update Stage 1 and commit `feat(foraging): add checked passage setup and private learning`.
 
 ### Task 2: Routes and frontiers from private knowledge
 
-**Files:** Create navigation.rs and tests/navigation.rs; register them in mod.rs/tests/mod.rs; update Stage 2.
+**Files:** Create navigation.rs and tests/navigation.rs; modify knowledge.rs with its narrow dimensions accessor; register them in mod.rs/tests/mod.rs; update Stage 2.
 **Consumes:** Knowledge/Observation/Pos/choose/ComputeCounts from Task 1. Routing functions do not accept Setup, physical food or global worker lists.
-**Produces:** These exact internal signatures:
+**Produces:** These exact internal signatures, including `Knowledge::dimensions(&self) -> (u32,u32)` for bounded routing while fields stay private:
 
 ```rust
 struct Frontier { pos: Pos, unknown_neighbors: Vec<Pos>, distance: u32 }
@@ -530,3 +530,19 @@ Spec coverage: intent/scope/architecture -> all stages; setup/limits/observation
 Type handoffs were checked across the five tasks. No authoritative Setup/food/worker list enters decide or routing. Constructor observations and zero initialization draws, transition order, stale advice, retained private maps, multi-source home routing and separate physical/computational costs have explicit owners. Queue peaks use max; all additive counters use checked sums. Per-worker phase/cargo invariants constrain the four move subcategories and four wait subcategories.
 
 The user approved the written spec on 2026-10-06 and has already chosen subagent-driven execution. The user approved this written plan on 2026-10-06; do not ask for that approval or the execution method again. At execution preserve current concurrent main/remote work, verify the isolated base, create the five-stage tracker and begin Task 1. Current planning/validation is documentation-only, not evidence that F3 behavior is implemented or verified.
+
+## Execution evidence — 2026-10-06
+
+Baseline at approved tree: `cargo test --workspace` exit 0, 2,463 passed, 0 failed,
+103 ignored. Task 1 runtime commit `56afc7c`: 15 focused setup/learning tests;
+workspace 2,478 passed, 0 failed, 103 ignored; formatting and core all-target clippy
+with warnings denied passed. Independent task spec/quality review approved with
+no findings. Initial red was missing-API compilation failure, recorded as such.
+Construction accounting, controller isolation, complete tick rollback and public
+views remain assigned to their later stages. Full evidence is retained in the
+plan-specific ignored SDD workspace and `/tmp/sugarscape-f3-evidence-20261006/`.
+
+Execution ruling: add an internal dimensions accessor to Knowledge in Task 2,
+because pure routing needs grid bounds while map fields remain private and
+authoritative Setup stays outside its inputs. If wrong, the internal interface
+needs rework; no additional worker knowledge is exposed.

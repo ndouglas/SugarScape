@@ -6,7 +6,7 @@ Approved spec and plan: 2026-10-06. Execution: subagent-driven. Detailed evidenc
 **Goal**: Validated chambers, spawns, food and bounded one-hop private knowledge.
 **Success Criteria**: Aggregate validation, no second-hop leaks, immutable geometry and checked metrics.
 **Tests**: `cargo test -p sugarscape-core foraging::passage::tests::setup_learning`
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 2: Private navigation
 **Goal**: BFS/frontiers based only on each worker map.
