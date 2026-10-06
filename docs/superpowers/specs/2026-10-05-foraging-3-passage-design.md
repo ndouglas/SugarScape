@@ -1,7 +1,7 @@
 # F3: passage foraging with private learned maps
 
 **Date:** 2026-10-05.
-**Status:** conversational choices approved: private learned maps, local observations, coordinate-only recruitment and a multi-cell nest chamber with two-worker capacity throughout. Written architectural spec approved by the user on 2026-10-06. The [implementation plan](../plans/2026-10-06-foraging-3-passage.md) was approved by the user on 2026-10-06; all five stages and independent task/whole-branch reviews are complete on `foraging-3-design`. Final runtime `693c02b` passed workspace tests (2,563 passed, 0 failed, 103 ignored), formatting and core clippy. Integration and scientific execution remain separate.
+**Status:** conversational choices approved: private learned maps, local observations, coordinate-only recruitment and a multi-cell nest chamber with two-worker capacity throughout. Written architectural spec approved by the user on 2026-10-06. The [implementation plan](../plans/2026-10-06-foraging-3-passage.md) was approved by the user on 2026-10-06; all five stages and independent task/whole-branch reviews are complete; local integration into `main` completed at `c0e551a` on 2026-10-06. Final runtime `693c02b` passed workspace tests (2,563 passed, 0 failed, 103 ignored), formatting and core clippy. Fresh merged-tree verification passed (2,663 passed, 0 failed, 103 ignored), with formatting/core clippy clean. Scientific execution remains separate.
 **Programme:** [F1–F5 foraging/construction sequence](2026-10-04-foraging-construction-design.md), construction B3.
 **Baseline:** [F2 design](2026-10-04-foraging-2-fixed-world-design.md), merged at `a194f8e`, integration record `6c9a50a`; [public guide](../../foraging.md).
 **Related components:** [Burrow 1](2026-10-03-burrow-1-excavation-design.md) and [Burrow resource access](2026-10-04-burrow-2-resource-access-design.md).
@@ -144,6 +144,6 @@ Self-review completed against the F1 parameter/information API, F2 controller/le
 
 ## Handoff and next increment
 
-This spec was approved on 2026-10-06 on `foraging-3-design`, isolated from main and other campaigns. The [five-stage implementation plan](../plans/2026-10-06-foraging-3-passage.md) was approved by the user on 2026-10-06. Engineering execution and independent task/whole-branch reviews are complete at runtime `693c02b`; the plan preserves the final verification and decisions. Integration, scientific evaluation and construction coupling remain separate.
+This spec was approved on 2026-10-06 on `foraging-3-design`, isolated from main and other campaigns. The [five-stage implementation plan](../plans/2026-10-06-foraging-3-passage.md) was approved by the user on 2026-10-06. Engineering execution and independent task/whole-branch reviews are complete at runtime `693c02b`; the plan preserves the final verification and decisions. Local integration into `main` completed at `c0e551a` on 2026-10-06; fresh merged-tree tests, formatting and core clippy passed. Scientific evaluation and construction coupling remain separate.
 
 F4 must extend the fixed-map assumptions deliberately: excavation can turn Unknown/KnownSolid into open cells, food and spoil must retain separate ledgers/destinations, and their competition for hands and paid actions needs explicit rules. F3's immutable topology knowledge must not be silently reused as a correct dynamic-map model.

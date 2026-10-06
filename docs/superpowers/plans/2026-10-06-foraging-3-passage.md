@@ -529,7 +529,7 @@ Spec coverage: intent/scope/architecture -> all stages; setup/limits/observation
 
 Type handoffs were checked across the five tasks. No authoritative Setup/food/worker list enters decide or routing. Constructor observations and zero initialization draws, transition order, stale advice, retained private maps, multi-source home routing and separate physical/computational costs have explicit owners. Queue peaks use max; all additive counters use checked sums. Per-worker phase/cargo invariants constrain the four move subcategories and four wait subcategories.
 
-The user approved the written spec on 2026-10-06 and has already chosen subagent-driven execution. The user approved this written plan on 2026-10-06; do not ask for that approval or the execution method again. Execution completed in the isolated worktree without merging or changing concurrent campaigns. All five stages passed task reviews and the whole-branch gate; the completed root tracker is removed after this gate. Integration remains a separate user decision.
+The user approved the written spec on 2026-10-06 and has already chosen subagent-driven execution. The user approved this written plan on 2026-10-06; do not ask for that approval or the execution method again. Execution completed in the isolated worktree without merging or changing concurrent campaigns. All five stages passed task reviews and the whole-branch gate; the completed root tracker is removed after this gate. The user subsequently authorized local integration, completed at `c0e551a` on 2026-10-06.
 
 ## Execution evidence — 2026-10-06
 
@@ -613,7 +613,8 @@ Task3 boundary revisions remain as previously recorded.
 
 Final public acceptance passes 1; formatter and core clippy pass. The frozen
 revision full workspace gate passes 2,563 tests, 0 failed and 103 ignored, including
-the passage doctest; `git diff --check` passes. Independent review remains pending.
+the passage doctest; `git diff --check` passes. Independent review was pending at
+this stage and subsequently passed, as recorded in the final review section.
 Complete logs/exits, source hashes, self-review and exact final check outcomes
 are in `.superpowers/sdd/2026-10-06-foraging-3-passage/task-5-report.md` and
 adjacent `task-5-*` evidence. No integration, push or scientific execution.
@@ -667,5 +668,38 @@ wrong, a desired capability or guarantee needs its own design/validation; no
 scientific, performance or future-integration claim follows from these tests.
 Parent status/archival/tracker reconciliation is complete.
 
-The feature remains on `foraging-3-design`; no F3 merge, push or scientific
-evaluation was performed. F4 construction coupling is the next design increment.
+At the implementation handoff, the feature remained on `foraging-3-design`; no
+F3 merge, push or scientific evaluation had been performed. Subsequent authorized
+local integration is recorded below. F4 construction coupling is next.
+
+## Local integration — 2026-10-06
+
+The user explicitly authorized the local merge. The feature was clean at reviewed
+archival HEAD `0d41398`, runtime `693c02b`; local main was clean at `0346209`.
+Upstream had advanced through other campaigns. After fetching and confirming
+fast-forward ancestry, main advanced to `0df2a56`, preserving the latest precision
+and reproducibility-register work. No upstream foraging source overlapped F3.
+
+`git merge --no-ff foraging-3-design` produced `c0e551a` without conflicts. Its
+parents are `0df2a56` and `0d41398`. The foraging source matches the reviewed
+feature tree. No corrective implementation was needed. Fresh checks in the main
+checkout, all exit 0:
+
+```bash
+cargo test --workspace
+cargo fmt --all --check
+cargo clippy -p sugarscape-core --all-targets -- -D warnings
+git diff --check HEAD^ HEAD
+```
+
+Merged-tree workspace tests reported **2,663 passed, 0 failed and 103 ignored
+across 47 result blocks**. Complete integration logs and exit files are retained
+at `/tmp/sugarscape-f3-integration-20261006/`; earlier feature evidence remains at
+`/tmp/sugarscape-f3-evidence-20261006/sdd/`.
+
+After successful verification, cleanup moved the feature's remaining ignored
+`.superpowers` scaffold to `preserved-worktree/` under the integration evidence
+directory, then removed only the F3 worktree and merged feature branch. Other
+campaigns remain in place.
+No push or scientific evaluation was performed. F4 construction coupling is the
+next design increment.

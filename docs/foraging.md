@@ -152,10 +152,12 @@ require further source reconciliation and a registered scientific protocol.
 The [approved passage spec](superpowers/specs/2026-10-05-foraging-3-passage-design.md)
 and [implementation plan](superpowers/plans/2026-10-06-foraging-3-passage.md)
 were approved on 2026-10-06. Engineering implementation, all five task reviews
-and the whole-branch review are complete
-on `foraging-3-design`. Final runtime `693c02b` passed workspace tests: 2,563
-passed, 0 failed and 103 ignored; formatting and core clippy passed. Integration
-and scientific execution remain separate; F4 construction coupling is next.
+and the whole-branch review are complete; local integration into `main` completed at `c0e551a` on 2026-10-06.
+Final runtime `693c02b` passed feature workspace tests: 2,563
+passed, 0 failed and 103 ignored; formatting and core clippy passed.
+Scientific execution remains separate; F4 construction coupling is next.
+Fresh merged-tree verification passed: 2,663 tests, 0 failed and 103 ignored,
+with formatting and core clippy clean.
 
 `foraging::passage` exposes checked `World::new`, atomic `step`, observational
 `summary`, `snapshot`, single-worker `knowledge`, and bounded `run`. This public
