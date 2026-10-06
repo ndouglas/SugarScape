@@ -25,3 +25,5 @@ pub mod testimony_game;
 pub mod strategic_reporting;
 
 pub mod strategy_inference;
+
+pub mod adversarial_audit;

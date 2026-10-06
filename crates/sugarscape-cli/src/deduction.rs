@@ -20,6 +20,7 @@ enum Mode {
     TestimonyGame,
     StrategicReporting,
     StrategyInference,
+    AdversarialAudit,
     Play(PlayArgs),
     Diagnose {
         #[arg(long)]
@@ -275,6 +276,10 @@ pub fn run(args: DeductionArgs) -> Result<(), Failure> {
         Mode::Testimony => testimony(&mut output),
         Mode::TestimonyGame => emit_testimony_game(
             testimony_game::diagnose_testimony_game().map_err(|e| invalid(&e.to_string()))?,
+            &mut output,
+        ),
+        Mode::AdversarialAudit => emit_adversarial_audit(
+            adversarial_audit::diagnose().map_err(|e| invalid(&e.to_string()))?,
             &mut output,
         ),
         Mode::StrategyInference => emit_strategy_inference(
@@ -588,6 +593,77 @@ fn emit_strategy_inference(
     } else {
         Err(invalid(
             "strategy-inference correctness/integrity checks failed",
+        ))
+    }
+}
+
+#[cfg(test)]
+mod adversarial_audit_tests {
+    use super::*;
+    use std::sync::OnceLock;
+    fn report() -> adversarial_audit::DiagnosticReport {
+        static REPORT: OnceLock<adversarial_audit::DiagnosticReport> = OnceLock::new();
+        REPORT
+            .get_or_init(|| adversarial_audit::diagnose().unwrap())
+            .clone()
+    }
+    #[test]
+    fn stale_success_and_stored_failure_emit_false_before_invalid_result() {
+        for corrupt in [true, false] {
+            let mut report = report();
+            if corrupt {
+                report.fitness_tables[0].rows.pop();
+            } else {
+                report.passed = false;
+            }
+            let mut output = Vec::new();
+            assert!(matches!(
+                emit_adversarial_audit(report, &mut output),
+                Err(Failure::Invalid(_))
+            ));
+            let wire: Value = serde_json::from_slice(&output).unwrap();
+            assert_eq!(wire["passed"], false);
+        }
+    }
+    #[test]
+    fn audit_write_and_flush_errors_keep_io_classification() {
+        struct Broken(bool);
+        impl Write for Broken {
+            fn write(&mut self, b: &[u8]) -> std::io::Result<usize> {
+                if self.0 {
+                    Ok(b.len())
+                } else {
+                    Err(std::io::Error::other("deliberate write failure"))
+                }
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Err(std::io::Error::other("deliberate flush failure"))
+            }
+        }
+        for flush in [true, false] {
+            assert!(matches!(
+                emit_adversarial_audit(report(), &mut Broken(flush)),
+                Err(Failure::Io(_))
+            ));
+        }
+    }
+}
+
+fn emit_adversarial_audit(
+    mut report: adversarial_audit::DiagnosticReport,
+    output: &mut impl Write,
+) -> Result<(), Failure> {
+    report.passed =
+        adversarial_audit::report_integrity(&report).map_err(|e| invalid(&e.to_string()))?;
+    let passed = report.passed;
+    let value =
+        serde_json::to_value(report).map_err(|_| invalid("invalid adversarial-audit report"))?;
+    emit(&value, output)?;
+    if passed {
+        Ok(())
+    } else {
+        Err(invalid(
+            "adversarial-audit correctness/integrity checks failed",
         ))
     }
 }
