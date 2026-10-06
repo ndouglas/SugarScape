@@ -428,3 +428,110 @@ The optimization-informed assumption benefits the behavior it emphasizes: agains
 Against withheld policy 98342, optimization-informed payoffs are 51/250 and 1/50 at q=4/5 and 3/5, with regrets 12/125 and 2/25. The finite comparisons establish no adversarial guarantee or equilibrium. Neither payoff superiority nor a successful optimization result determines diagnostic correctness.
 
 First measured collection (`strategy-inference-diagnostic-v1`) passed all 33,548 exact/reference checks and full payload integrity. A computationally separate Python Fraction full-joint oracle supplies posterior, prediction, action, mass, score and support references; the retained reference provenance report records incidental exposure to earlier diagnostic outputs. Comparisons use exact rational cross-products, and report integrity reconstructs the fixed protocol rather than trusting stored flags. The first 8,640,981-byte JSON and byte-identical repeat have SHA256 `5ee51e46dbd6b26f5fbab1e64d7a568afcae8a0e774ce4399d6f8d34cdbf0a0e` and are retained with source/settings/oracle/binary snapshots under ignored `.superpowers/sdd/2026-10-05-strategy-aware-listeners/`. No production source, priors, utility, listeners or settings changed after measurement; this appendix is a documentation-only addition. All five earlier diagnostic outputs were reproduced byte-for-byte with the rebuilt release CLI, and the complete earlier guide remains an unchanged prefix.
+
+
+## Exact adversarial reporting audit
+
+Run `sugarscape deduction adversarial-audit` for the fixed JSON diagnostic. It accepts no seed, generation, prior, q, output-path or positional tuning. Exit 0 requires independent exact references and current-payload integrity. A numerically inconsistent report is emitted with `passed=false` before exit 2; write and flush errors retain the existing I/O handling.
+
+This audit freezes four controllers at each q=4/5 and 3/5 with rho=3/4 and opposed reporter utility: Strategy Uniform (U), Strategy Optimization-informed (O), Fixed-only and Passive. The named-control prior order remains Copy, Invert, Always positive, Always negative, and Copy-calibration/invert-live, with weights [1,1,1,1,1] and [1,1,1,1,16]. These are supplied assumptions; no prior is tuned from attack results. All eight 32-row public action snapshots are frozen before computing any attack. Fixed-only uses verified C and the fixed reporter's calibration/live reports; it discards both strategic reports and retains a separate eight-row posterior table at each q. Passive always abstains. Posterior ties abstain, and unsupported inference is an error.
+
+The reporter knows the public controller rule and chooses one policy before private state is realized. Its calibration report uses its own calibration signal; its live report may use that signal/report, verified C and its own live signal. The established representation continues to ignore the other reporter's calibration report. Controllers receive public rules and permitted observations; actual policy identity, private worlds, seeds/archives and current-game evaluator scores are evaluation-only information. There is no RNG, new GA/random search, repeated learning or active verification in this diagnostic.
+
+The full 18-bit family has 262,144 raw encodings and 1,024 distinct canonical behaviors, each with 256 aliases from unreachable live rows. Four calibration choices each have eight reachable live rows. Four all-false-live bases plus 32 single-row flips give the 36-query decomposition for each frozen controller/environment. Exact additive deltas choose true only when positive, and zero deltas choose false. The report retains eight complete basis/fitness tables containing all 8,192 canonical scores. Every score and optimum is checked against the independent full-world reference; optimum ties select the smallest unsigned canonical encoding. This is an exact best response for the stated finite reporting family, without experimental search or an assumption about reporter psychology.
+
+### Worst cases and the fixed-channel guarantee
+
+Let V be the receiver payoff against its targeted worst-case policy. F is the attainable worst-case guarantee: 9/50 at q=4/5 and 1/20 at q=3/5, both predicted before collection and confirmed by the report. F−V is guarantee shortfall. The actual-policy informed reference instead knows the selected policy and conditions on the same public history; controller decision regret is that reference's payoff minus V. These are distinct comparisons. The reference's own decision regret is zero in all eight targeted evaluations, as shown separately below.
+
+| q | Target controller | Canonical witness | Worst payoff V | F−V | Actual-policy informed payoff | Controller decision regret | Reference decision regret | Canonical optimal ties | Raw optimal ties |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 4/5 | Strategy U | 8321 | 21/250 | 12/125 | 69/250 | 24/125 | 0 | 16 | 4096 |
+| 4/5 | Strategy O | 10280 | -3/25 | 3/10 | 3/10 | 21/50 | 0 | 4 | 1024 |
+| 4/5 | Fixed-only | 0 | 9/50 | 0 | 9/50 | 0 | 0 | 1024 | 262144 |
+| 4/5 | Passive | 0 | 0 | 9/50 | 9/50 | 9/50 | 0 | 1024 | 262144 |
+| 3/5 | Strategy U | 8321 | 4/125 | 9/500 | 2/25 | 6/125 | 0 | 16 | 4096 |
+| 3/5 | Strategy O | 10280 | -1/10 | 3/20 | 1/10 | 1/5 | 0 | 4 | 1024 |
+| 3/5 | Fixed-only | 0 | 1/20 | 0 | 1/20 | 0 | 0 | 1024 | 262144 |
+| 3/5 | Passive | 0 | 0 | 1/20 | 1/20 | 1/20 | 0 | 1024 | 262144 |
+
+Uniform's worst payoffs, 21/250 and 4/125, remain positive but fall below F by 12/125 and 9/500. Optimization-informed's worst payoffs are negative, −3/25 and −1/10, with shortfalls 3/10 and 3/20. Its honest Copy-of-noisy-signals control already attains those same negative values; the new targeted witness need not outperform that control in reporter utility. Poor payoff is a valid measured outcome and does not invalidate an otherwise correct audit.
+
+The retained canonical row bits specify concrete behavior. Witness 8321 inverts its calibration signal. At the live phase it copies its live signal when its calibration signal equals verified C, and otherwise reports negative. Witness 10280 always reports negative in calibration and copies its live signal for every reachable live row. These descriptions use only permitted inputs. Encoding size or the number of set bits supplies no evidence of psychological complexity or intent.
+
+For Fixed-only, payoff equals F for every one of the 1,024 canonical behaviors, hence for all 262,144 aliases. Passive's payoff is zero throughout. Their selected witness 0 (Always negative) and large tie counts are consequences of the canonical tie convention: every allowed policy is optimal against each of those controllers. They are not uniquely damaging attacks.
+
+Both allowed constant reports remove all strategic information about live truth. The informed receiver using the remaining fixed-channel evidence obtains exactly F against either constant report; no decision rule, including a randomized rule, can exceed that conditional optimum. This supplies the upper bound on the receiver's best worst-case expected payoff. Fixed-only's policy-invariant payoff F supplies the matching lower bound, so `max_receiver min_allowed_policy E[receiver payoff] = F` in this game. The report checks both constant witnesses against all four frozen controllers and verifies fixed-only invariance and passive's zero payoff across the full canonical family.
+
+That equality assumes known q/rho, the trusted persistent fixed copy/invert channel, genuine C verification, independent noise, the stated information/representation restrictions and utility table. It protects expected payoff within this finite game. It is not a guarantee for each realized game, empirical robustness, an unknown channel/objective, corruption or collusion, richer reporting policies, repeated learning or strategic equilibrium.
+
+### Common-population nominal tradeoffs
+
+Every controller faces each of the two declared populations below; these are sixteen common-population evaluations, not a comparison of listeners on different self-selected populations. The informed nominal reference conditions pooled history masses before maximizing payoff. It does not average references that know each realized policy. The final column compares nominal payoff with F in that environment and is distinct from both guarantee shortfall and actual-policy regret.
+
+| q | Actual population | Controller | Nominal payoff | Nominal payoff − F |
+| --- | --- | --- | ---: | ---: |
+| 4/5 | Uniform | Strategy U | 951/5000 | 51/5000 |
+| 4/5 | Uniform | Strategy O | 39/250 | -3/125 |
+| 4/5 | Uniform | Fixed-only | 9/50 | 0 |
+| 4/5 | Uniform | Passive | 0 | -9/50 |
+| 4/5 | Optimization-informed | Strategy U | 3921/20000 | 321/20000 |
+| 4/5 | Optimization-informed | Strategy O | 1011/4000 | 291/4000 |
+| 4/5 | Optimization-informed | Fixed-only | 9/50 | 0 |
+| 4/5 | Optimization-informed | Passive | 0 | -9/50 |
+| 3/5 | Uniform | Strategy U | 253/5000 | 3/5000 |
+| 3/5 | Uniform | Strategy O | 1/50 | -3/100 |
+| 3/5 | Uniform | Fixed-only | 1/20 | 0 |
+| 3/5 | Uniform | Passive | 0 | -1/20 |
+| 3/5 | Optimization-informed | Strategy U | 1093/20000 | 93/20000 |
+| 3/5 | Optimization-informed | Strategy O | 2/25 | 3/100 |
+| 3/5 | Optimization-informed | Fixed-only | 1/20 | 0 |
+| 3/5 | Optimization-informed | Passive | 0 | -1/20 |
+
+Uniform exceeds F modestly on both populations at both accuracies, while losing part of F under its worst-case policy. Optimization-informed exceeds F on its own declared population by 291/4000 and 3/100, but falls below F on the Uniform population by 3/125 and 3/100. Fixed-only gives up the favorable nominal gains to preserve F across the whole reporting family. Passive is always zero. Favorable nominal averages do not establish the targeted worst-case guarantee.
+
+### Cross-target witness transfer
+
+The following table contains all 32 transfer payoffs: each of the four declared target-controller witnesses is evaluated against every receiver at both q. Target identities remain separate even when their witnesses coincide. U and O denote the frozen Strategy controllers and their priors.
+
+| q | Witness target | Canonical witness | Strategy U | Strategy O | Fixed-only | Passive |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 4/5 | Strategy U | 8321 | 21/250 | -159/2000 | 9/50 | 0 |
+| 4/5 | Strategy O | 10280 | 3/25 | -3/25 | 9/50 | 0 |
+| 4/5 | Fixed-only | 0 | 69/400 | 33/200 | 9/50 | 0 |
+| 4/5 | Passive | 0 | 69/400 | 33/200 | 9/50 | 0 |
+| 3/5 | Strategy U | 8321 | 4/125 | -3/50 | 1/20 | 0 |
+| 3/5 | Strategy O | 10280 | 7/200 | -1/10 | 1/20 | 0 |
+| 3/5 | Fixed-only | 0 | 1/20 | 0 | 1/20 | 0 |
+| 3/5 | Passive | 0 | 1/20 | 0 | 1/20 | 0 |
+
+Uniform's witness also produces negative optimization-informed payoff, −159/2000 at q=4/5 and −3/50 at q=3/5. Optimization-informed's witness gives Uniform 3/25 and 7/200, above Uniform's own worst payoff but still below F. The two conventional constant-negative witnesses preserve their distinct target labels while giving identical transfer values. Fixed-only remains at F and Passive at zero in every transfer row.
+
+### Six distinct control behaviors and retained provenance
+
+These are all 48 common-control payoffs: six distinct behaviors × four controllers × two accuracies. Raw encodings preserve the established named/withheld identities; canonical encodings remove only unreachable rows. The report retains 46 provenance entries: these six identities and all forty earlier champion method/seed/raw encodings shown in the preceding seed table. Every former champion canonicalizes to 81942, so those forty clones do not multiply the control challenges. Their former optimization target was the equally weighted frozen Bayesian/Credulous panel at q=4/5, rho=3/4 with opposed utility; no new performance claim about that earlier search follows from this audit.
+
+| q | Actual control | Retained raw encoding | Canonical encoding | Strategy U | Strategy O | Fixed-only | Passive |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 4/5 | Copy | 174762 | 163882 | 39/250 | -3/25 | 9/50 | 0 |
+| 4/5 | Invert | 87381 | 5441 | 63/250 | 57/200 | 9/50 | 0 |
+| 4/5 | Always positive | 262143 | 246723 | 69/400 | 33/200 | 9/50 | 0 |
+| 4/5 | Always negative | 0 | 0 | 69/400 | 33/200 | 9/50 | 0 |
+| 4/5 | Copy calibration, invert live | 87382 | 81942 | 99/500 | 57/200 | 9/50 | 0 |
+| 4/5 | Withheld Evolved-target policy | 98342 | 98342 | 39/250 | 51/250 | 9/50 | 0 |
+| 3/5 | Copy | 174762 | 163882 | 19/500 | -1/10 | 1/20 | 0 |
+| 3/5 | Invert | 87381 | 5441 | 59/1000 | 1/10 | 1/20 | 0 |
+| 3/5 | Always positive | 262143 | 246723 | 1/20 | 0 | 1/20 | 0 |
+| 3/5 | Always negative | 0 | 0 | 1/20 | 0 | 1/20 | 0 |
+| 3/5 | Copy calibration, invert live | 87382 | 81942 | 7/125 | 1/10 | 1/20 | 0 |
+| 3/5 | Withheld Evolved-target policy | 98342 | 98342 | 19/500 | 1/50 | 1/20 | 0 |
+
+Against honest Copy, Uniform gives 39/250 and 19/500 while optimization-informed gives −3/25 and −1/10. The weighted assumption benefits Copy-calibration/invert-live, with optimization-informed payoffs 57/200 and 1/10 compared with Uniform's 99/500 and 7/125, but it also produces the negative honest-Copy results. Withheld 98342 gives Uniform 39/250 and 19/500 and optimization-informed 51/250 and 1/50. Fixed-only and Passive remain policy invariant across all six controls. The exhaustive attack result is determined by the permitted family and frozen controller, not by a requirement that a new witness beat a familiar control.
+
+### Collection and reference provenance
+
+First collection on October 6, 2026 (`adversarial-audit-diagnostic-v1`) passed all nine exact/reference check groups and full current-payload integrity. It retains eight targeted, 48 control, sixteen nominal and 32 cross-target evaluations with 3,328 complete history rows, alongside all controller snapshots, fixed posterior tables, bases, fitnesses, bounds and provenance. Integrity rebuilds the fixed protocol and independent comparisons rather than trusting submitted settings, caches or stored success flags.
+
+The computationally separate Python `Fraction` full-world oracle preceded collection. It derives action/posterior tables, fixed marginals, basis deltas, complete canonical scores, optima/ties, evaluation histories and constant-report bounds from the approved mathematical definitions. Its author read policy coordinates, named-control/prior order and public Evaluation field definitions, and incidentally saw earlier published guide payoff tables while extracting champion identities. Thus computational independence is claimed; complete blindness to earlier published outcomes is not. No earlier numerical results were copied into the oracle computations, and the new targeted outcomes were not exposed before their independent computation. Oracle source/reference SHA256 values are `ab164ab7e6bc488d924578fb17e05dbf42535fde5f56fb5a7337b1524965443d` and `27f354773b7abbe576e2c83af890d47d54df3614b3c4134c1a7980a01d7c1343`; the report also retains portable fixture/extraction and former champion provenance hashes.
+
+The first 3,466,627-byte JSON and byte-identical repeat have SHA256 `213f9e1402839e3ca8f3c60a27951a78484bef6a8afc9af6c89bde2192266dcc`, retained as `first-adversarial-audit.json` and `repeat-adversarial-audit.json` with release executable, source/settings/oracle snapshots and preservation evidence under ignored `.superpowers/sdd/2026-10-06-adversarial-reporting-audit/`. All six earlier commands (Diagnose, Testimony, Testimony-game, Strategic-reporting, Strategy-inference and seed-7 Wink Run) reproduce their retained output bytes. The complete original guide remains an unchanged prefix. No production source, controller, prior, rule or setting changed after collection; this appendix adds only measured methods and results.
