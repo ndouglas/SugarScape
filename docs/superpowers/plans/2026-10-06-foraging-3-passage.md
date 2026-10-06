@@ -323,7 +323,7 @@ struct Server { records: Vec<Record>, next_id: u64, expired: u64 }
 
 Server representation is `records: Vec<Record>, next_id: u64, expired: u64`; Record has `id: u64, site: u64, created_tick: u32`. Derive Default for empty Server and zero counters. Expose physical and computational counters as public read-only view values, not mutable Agent/Knowledge/Ledger/Server. On initial Agent construction Task 4 sets `uninformed_departures=1`.
 
-- [ ] Write ledger and server reds: preserve arbitrary resource IDs; claim occupies supplied cell and capacity one; wrong-owner/double deposit leave state unchanged; inventory sums; frozen density will be owned by Task 4 observations, not recomputed in Ledger. Explicit representative assertions:
+- [x] Write ledger and server reds: preserve arbitrary resource IDs; claim occupies supplied cell and capacity one; wrong-owner/double deposit leave state unchanged; inventory sums; frozen density will be owned by Task 4 observations, not recomputed in Ledger. Explicit representative assertions:
 
 ```rust
 #[test]
@@ -346,8 +346,8 @@ fn publication_is_visible_to_the_same_arrival_departure() {
 }
 ```
 
-- [ ] Run `cargo test -p sugarscape-core foraging::passage::tests::ledger_server` and record red. Implement sorted identity ledger, checked staged mutation and owner invariants. Do not return densities from a global ledger lookup to the controller.
-- [ ] Implement server using `Parameters::information`, F1 publication/departure, PaperBelow and LaterArgosStrengthWeighted. Validate all independent supplied draws before committing; clone pending server and apply expiry/publication/departure atomically. Empty arrival publishes nothing but may recruit. Publication gets monotonically increasing ID and current processing tick; duplicate sites remain distinct. Views calculate strengths without expiry/mutation. Reject future creation ticks, capacity/ID/expired-count overflow contextually.
+- [x] Run `cargo test -p sugarscape-core foraging::passage::tests::ledger_server` and record red. Implement sorted identity ledger, checked staged mutation and owner invariants. Do not return densities from a global ledger lookup to the controller.
+- [x] Implement server using `Parameters::information`, F1 publication/departure, PaperBelow and LaterArgosStrengthWeighted. Validate all independent supplied draws before committing; clone pending server and apply expiry/publication/departure atomically. Empty arrival publishes nothing but may recruit. Publication gets monotonically increasing ID and current processing tick; duplicate sites remain distinct. Views calculate strengths without expiry/mutation. Reject future creation ticks, capacity/ID/expired-count overflow contextually.
 
 ```rust
 let p = parameters.information();
@@ -359,8 +359,8 @@ let choice = crate::foraging::departure(&p, find, &waypoints,
     draws[1], draws[2])?;
 ```
 
-- [ ] Add tests for exact 0.001 retention, weaker expiry, stale-site recruitment with no ledger input, private fidelity priority, duplicate publications at a site, views not expiring records, independent invalid unused draws, maximal ID overflow and checked-counter rollback. WorkCounts checks action and subcategory equations; adding counts prepares all sums before assignment.
-- [ ] Verify focused tests/fmt/core clippy; reviews; update Stage 3 and commit `feat(foraging): conserve passage food and compose nest advice`.
+- [x] Add tests for exact 0.001 retention, weaker expiry, stale-site recruitment with no ledger input, private fidelity priority, duplicate publications at a site, views not expiring records, independent invalid unused draws, maximal ID overflow and checked-counter rollback. WorkCounts checks action and subcategory equations; adding counts prepares all sums before assignment.
+- [x] Verify focused tests/fmt/core clippy; reviews; update Stage 3 and commit `feat(foraging): conserve passage food and compose nest advice`.
 
 ### Task 4: Worker-only decisions and complete atomic ticks
 
@@ -558,3 +558,24 @@ two supplemental tests were added after the initial implementation. Later tasks
 must wait for and inspect completed RED before implementing. Computational
 convention: frontier scans count reachable known-open cells examined, route
 visits count dequeues and queue peaks combine by maximum.
+
+Task 3 runtime commit `aef702c`: 51 passage tests (17 new); workspace 2,514
+passed, 0 failed, 103 ignored; fmt/core clippy passed. Two assertion-only counter
+fixtures were strengthened after the full suite began on final production; final
+focused 14 tests, formatter and clippy verified the final test tree. Independent
+task review approved with no blocking findings. Capacity>256 and expired-full-
+store replacement coverage suggestions are carried into Task 4.
+
+Rulings preserved from Task 3:
+- Keep ComputeCounts internal until Task 5, whose specific visibility instruction
+  resolves Task 3's broad eventual-view wording. If wrong, API exposure timing
+  needs rework; the final public metrics contract is unchanged.
+- Bound server retained storage after lazy expiry, with sole Deposit/publication
+  enforced by Task 4 rather than a separate lifetime server counter. If wrong,
+  isolated server calls could publish more over time; physical lifecycle tests
+  must verify the derivation and cleared finds.
+- Test literal 0.001 retention through the production expiry predicate, plus
+  attainable end-to-end strengths around the boundary. The inverse-exponential
+  fixture produced 0.0010000000000000002 on this platform; the adjacent rate
+  produced 0.0009999999999999994. No rounding/clamping was added. If wrong,
+  direct equality coverage needs another injection seam; runtime policy stands.
