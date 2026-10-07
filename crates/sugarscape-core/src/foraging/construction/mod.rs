@@ -2,6 +2,7 @@
 mod draws;
 mod knowledge;
 mod metrics;
+mod navigation;
 mod observation;
 mod setup;
 mod terrain;

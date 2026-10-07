@@ -1,6 +1,7 @@
 use super::{draws::*, knowledge::*, observation::*, terrain::*, *};
 use crate::config::FieldError;
 use std::collections::{BTreeMap, BTreeSet};
+mod navigation;
 mod setup_learning;
 fn pos(x: u32, y: u32) -> Pos {
     Pos { x, y }

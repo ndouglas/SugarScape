@@ -13,7 +13,8 @@ Spec/plan approved 2026-10-06. Subagent-driven execution. Detailed evidence: doc
 **Goal**: Known-open routes, dig faces and unknown-outlet exploration.
 **Success Criteria**: No global route inputs; stable ranks/draws and capacity waits.
 **Tests**: `cargo test -p sugarscape-core foraging::construction::tests::navigation`
-**Status**: Not Started
+**Status**: In Progress
+**Evidence**: Task 2 implementer: focused 30 passed; workspace 2757 passed/0 failed/103 ignored; fmt/core all-target Clippy clean on frozen final revision. Full logs/report: `.superpowers/sdd/2026-10-06-foraging-4-construction/task-2-report.md`. Parent independent reviews pending.
 
 ## Stage 3: Materials and access
 **Goal**: Typed hands, conserved ledgers/advice and researcher access records.
