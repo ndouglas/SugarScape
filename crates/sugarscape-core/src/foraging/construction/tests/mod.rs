@@ -1,12 +1,13 @@
-use super::{draws::*, knowledge::*, observation::*, terrain::*, *};
+use super::{draws::*, knowledge::*, metrics::*, observation::*, terrain::*, *};
 use crate::config::FieldError;
 use std::collections::{BTreeMap, BTreeSet};
+pub(super) mod material_access;
 mod navigation;
 mod setup_learning;
-fn pos(x: u32, y: u32) -> Pos {
+pub(super) fn pos(x: u32, y: u32) -> Pos {
     Pos { x, y }
 }
-fn setup() -> Setup {
+pub(super) fn setup() -> Setup {
     Setup {
         width: 5,
         height: 3,

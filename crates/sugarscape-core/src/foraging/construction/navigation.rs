@@ -3,9 +3,10 @@
 use super::{
     draws::{choose, DrawSource},
     knowledge::{CellKnowledge, Knowledge},
+    metrics::ComputeCounts,
     observation::Observation,
     setup::neighbors,
-    Checked, ComputeCounts, Pos,
+    Checked, Pos,
 };
 use crate::config::FieldError;
 use std::collections::{BTreeSet, VecDeque};
