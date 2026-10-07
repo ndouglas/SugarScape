@@ -24,7 +24,6 @@
     "numpy": "2.4.6",
     "scipy": "1.17.1"
   },
-  "script_sha256": "2ea37495a323a1c0b0b41398e07c0a85421b584cba637ace4671fb99460ab922",
   "data_changes": false,
   "presentation_changes": [
     "03 row labels retain redeposit r",
@@ -32,5 +31,10 @@
     "explicit diagnostic margins"
   ],
   "historical_figures": ".superpowers/sdd/2026-10-06-minds-protection-execution/reporting-staging/review-history/initial-figures",
-  "post_render_normalization": "SVG trailing whitespace removed, preserving all non-whitespace bytes; source renderer now performs same normalization. No rerender or numeric/geometry/text change."
+  "post_render_normalization": "SVG trailing whitespace removed, preserving all non-whitespace bytes; source renderer now performs same normalization. No rerender or numeric/geometry/text change.",
+  "current_reproducible_script_sha256": "2ea37495a323a1c0b0b41398e07c0a85421b584cba637ace4671fb99460ab922",
+  "current_script_role": "Current reproducible rendering script, including post-render SVG whitespace normalization. This hash does not identify the historical script used for the recorded rendering executions.",
+  "recorded_render_script_sha256": null,
+  "recorded_render_script_identity_limit": "The exact script bytes/hash used for the presentation-revision render were not separately preserved or hashed at execution. No historical render-script hash is reconstructed. Preserved earlier scripts/plots and the explicit post-render whitespace-normalization record retain the available lineage.",
+  "provenance_clarified_utc": "2026-10-07T01:53:48.070964+00:00"
 }

@@ -2,8 +2,8 @@
   "members": [
     {
       "path": "README.md",
-      "bytes": 4941,
-      "sha256": "bc452a3434fe65fe886ade399a760616a701ec873e838291d476bafef322983e"
+      "bytes": 5373,
+      "sha256": "b392e21a731304517355434cf53976f0b61803648f5c54737203ce4038a85deb"
     },
     {
       "path": "analysis.json",
@@ -112,8 +112,8 @@
     },
     {
       "path": "plotting-command.json",
-      "bytes": 1629,
-      "sha256": "6fa7149a6f8e6b3ccbcc1f0002407c79002d2459a370a7aaa1b7d1f9dfca8c04"
+      "bytes": 2314,
+      "sha256": "db4db3de8a9e278345b63d44fb868d7df3e3997b19ba1bc1c810620c09711b8e"
     },
     {
       "path": "prepare_figures.py",
@@ -277,8 +277,8 @@
     },
     {
       "path": "provenance.json",
-      "bytes": 1455,
-      "sha256": "b687ff911cd9d974ecdacf29d46d3d3ff86db3110c35fea6181478c19fb9acaf"
+      "bytes": 1733,
+      "sha256": "0391442411f99ab0360c2da057635c844073cbe56d9a54732365877b79f67d7d"
     },
     {
       "path": "reporting-validation.json",

@@ -13,5 +13,6 @@
   "source_archive": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/complete-tracked-source-e733b989.tar.gz",
   "external_baseline_archive": "/Users/nathan/.local/share/sugarscape/evidence/minds-protection-2026-10-06-staging-20261007T014345375561Z",
   "external_archive_status": "Science baseline externally staged and verified; final reports/reviews/publication archival incomplete. Final archive receipt added by controller.",
-  "historical_wasm_limit": "Original Vitest/WASM log and old review ledger unavailable; source parity/checkpoint equivalence plus fresh native checks accepted by actual prospective native-only review; no fresh WASM execution claimed."
+  "historical_wasm_limit": "Original Vitest/WASM log and old review ledger unavailable; source parity/checkpoint equivalence plus fresh native checks accepted by actual prospective native-only review; no fresh WASM execution claimed.",
+  "plotting_script_identity_limit": "plotting-command.json identifies the current reproducible script separately from the unrecorded historical presentation-render script hash. SVG whitespace normalization occurred after rendering; it preserved non-whitespace bytes and PNGs."
 }
