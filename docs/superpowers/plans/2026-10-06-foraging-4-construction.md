@@ -507,7 +507,7 @@ pub struct Episode { pub setup:Setup,pub seed:u64,pub options:RunOptions,
 
 At this stage make ComputeCounts/AccessCompute public with public fields. Return cloned fixed/bounded records. Knowledge views show remembered classifications/diggability, including stale walls; label their private-belief meaning. No JSON restoration API.
 
-- [ ] Write public/runner tests first using shared setup, explicit parameters, seed12/horizon40. Assert replay/accounting/conservation, not guaranteed delivery. Representative test:
+- [x] Write public/runner tests first using shared setup, explicit parameters, seed12/horizon40. Assert replay/accounting/conservation, not guaranteed delivery. Representative test:
 
 ```rust
 #[test]
@@ -520,8 +520,8 @@ fn run_matches_repeated_steps_without_observer_side_effects() {
 }
 ```
 
-- [ ] Await internal `cargo test -p sugarscape-core foraging::construction::tests::runner` and public `cargo test -p sugarscape-core --test foraging_construction` RED before implementing. Add complete normalized replay episode, aggregated option/setup validation, full horizon and observational views. Invalid knowledge ID is contextual. Summary performs checked worker sums/max peaks and cloned researcher totals without BFS/revision/advice expiry/RNG.
-- [ ] Implement bounded counting Write before appending compact Snapshot JSON. Test exact serialized-byte cap, one-byte-short error and transactional unchanged frames/bytes; include repeated inventories/access/spoil geometry in count, exclude Episode/setup/options wrapper. Positive sample interval even disabled; disabled returns zero frames/bytes; include initial/final once. Errors produce no successful partial Episode.
+- [x] Await internal `cargo test -p sugarscape-core foraging::construction::tests::runner` and public `cargo test -p sugarscape-core --test foraging_construction` RED before implementing. Add complete normalized replay episode, aggregated option/setup validation, full horizon and observational views. Invalid knowledge ID is contextual. Summary performs checked worker sums/max peaks and cloned researcher totals without BFS/revision/advice expiry/RNG.
+- [x] Implement bounded counting Write before appending compact Snapshot JSON. Test exact serialized-byte cap, one-byte-short error and transactional unchanged frames/bytes; include repeated inventories/access/spoil geometry in count, exclude Episode/setup/options wrapper. Positive sample interval even disabled; disabled returns zero frames/bytes; include initial/final once. Errors produce no successful partial Episode.
 
 ```rust
 if options.snapshots && (completed % options.sample_every==0 || completed==options.ticks) {
@@ -529,11 +529,11 @@ if options.snapshots && (completed % options.sample_every==0 || completed==optio
 }
 ```
 
-- [ ] Cover legal 7200 ticks, 0/7201 rejection, population256 in >=128 connected nest cells with valid unused outlet, 3906/3907 opportunity boundary and single-step cumulative limit. Use validation/helper states rather than repeatedly executing million-opportunity scenes. Check spoil cap calculation including initially open mask entries, map/scratch cap, empty food no fake milestones and unfinished food/spoil at cutoff.
-- [ ] Compare cadence1/cadence7/disabled summaries and final knowledge; insert readonly methods between steps and compare full State/PCG continuation, including cached access computation and stale weak waypoints. Initial physical opportunities remain zero; constructor worker observations and one researcher BFS count separately. Access distances/first milestones stay frozen where specified.
-- [ ] Implement no-dig reduction using compatible literal setup: shared open/nest/workers, waste(0,1), food idMAX at initially open(2,0), diggable empty. Convert public F3 value types directly; compare each step's food-state/position/food-phase/cargo projection and food-trip physical counters for seeds0/12/MAX. Compare private-unit PCG continuation after identical steps; extra F4 scans/observer/schema bytes are excluded from equivalence. Repeat with an initially open mask entry to prove it cannot be dug. No global `diggable.is_empty()` flag reaches worker decisions.
-- [ ] Document complete compiling construction-module rustdoc and public guide: hidden/exposed/access/delivery distinction; one-slot tags, direct waste routing and paused intent; old walls as valid private beliefs; active parameters, costs, limits, output bytes, censoring and deferred roles/relay/science. Preserve F3/Burrow baseline docs/APIs.
-- [ ] Freeze final source/tests, then save/inspect required final gates once:
+- [x] Cover legal 7200 ticks, 0/7201 rejection, population256 in >=128 connected nest cells with valid unused outlet, 3906/3907 opportunity boundary and single-step cumulative limit. Use validation/helper states rather than repeatedly executing million-opportunity scenes. Check spoil cap calculation including initially open mask entries, map/scratch cap, empty food no fake milestones and unfinished food/spoil at cutoff.
+- [x] Compare cadence1/cadence7/disabled summaries and final knowledge; insert readonly methods between steps and compare full State/PCG continuation, including cached access computation and stale weak waypoints. Initial physical opportunities remain zero; constructor worker observations and one researcher BFS count separately. Access distances/first milestones stay frozen where specified.
+- [x] Implement no-dig reduction using compatible literal setup: shared open/nest/workers, waste(0,1), food idMAX at initially open(2,0), diggable empty. Convert public F3 value types directly; compare each step's food-state/position/food-phase/cargo projection and food-trip physical counters for seeds0/12/MAX. Compare private-unit PCG continuation after identical steps; extra F4 scans/observer/schema bytes are excluded from equivalence. Repeat with an initially open mask entry to prove it cannot be dug. No global `diggable.is_empty()` flag reaches worker decisions.
+- [x] Document complete compiling construction-module rustdoc and public guide: hidden/exposed/access/delivery distinction; one-slot tags, direct waste routing and paused intent; old walls as valid private beliefs; active parameters, costs, limits, output bytes, censoring and deferred roles/relay/science. Preserve F3/Burrow baseline docs/APIs.
+- [x] Freeze final source/tests, then save/inspect required final gates once:
 
 ```bash
 cargo test -p sugarscape-core --test foraging_construction
@@ -589,3 +589,5 @@ Task3 further rulings: reject newly opened cells lacking physical nest distance 
 Task4 runtime `d75c2d9`:117 construction tests including38 controller/workspace2,831 passed,0 failed,103 ignored; fmt/core clippy clean. Independent task review approved with no findings, parent matched all467 frozen Rust hashes. Primitive internals rely on prior task reviews; bounded output and full no-dig acceptance remain Task5-owned. All staged allowances removed. Real reconciliation reds, supplemental fixture timing, lint correction and interrupted superseded suite retained in evidence.
 
 Task4 ruling: KnownOpen informed-site travel clears obsolete face only while retaining F3 frontier cadence. Parent checked F3 branch and required direct retained-frontier/cleared-face/action/draw regression. If wrong, small private policy/test rework; no F3 production change.
+
+Task5 runtime `25375c3`: runner14/public6/workspace2,852 passed,0 failed,103 ignored; construction rustdoc/fmt/core clippy/diffcheck clean. Independent task review approved with no findings, including a focused unchanged-helper view-purity check; parent matched all474 frozen files (471Rust plus guide/tracker/spec). Final whole-branch review and archival remain pending. All five implementation task reviews are complete.

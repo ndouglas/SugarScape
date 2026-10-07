@@ -29,10 +29,10 @@ Spec/plan approved 2026-10-06. Subagent-driven execution. Detailed evidence: doc
 **Status**: Complete
 **Evidence**: Task 4 frozen revision: 117 construction tests (38 controller) passed; workspace 2831 passed/0 failed/103 existing ignored; fmt/core all-target Clippy clean; hashes unchanged. Full logs/report: `.superpowers/sdd/2026-10-06-foraging-4-construction/task-4-report.md`. Parent independent review approved with no findings.
 
-**Evidence**: Runtime d75c2d9: construction117/workspace2831 passed,0 failed,103 ignored; fmt/core Clippy clean; independent review approved with no findings.
-
 ## Stage 5: Output and acceptance
 **Goal**: Bounded public views/run and compatible no-dig F3 reduction.
 **Success Criteria**: Replay/purity/storage/budget checks and task/whole-branch reviews pass.
 **Tests**: `cargo test --workspace; cargo fmt --all --check; cargo clippy -p sugarscape-core --all-targets -- -D warnings`
 **Status**: In Progress
+
+**Evidence**: Runtime25375c3: runner14/public6/workspace2852 passed,0 failed,103 ignored; rustdoc/fmt/core Clippy clean. Task review approved; parent whole-branch review pending.
