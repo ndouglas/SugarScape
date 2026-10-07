@@ -2,7 +2,7 @@
 
 ## Intent and approval status
 
-The user approved the first conversational scope on October 6, 2026. This written specification is pending user review. It authorizes no implementation plan, product code, or scientific collection yet.
+The user approved the conversational scope and this written specification on October 6, 2026. Implementation planning is authorized; the written implementation plan requires separate review before product code or collection.
 
 Build the first small integration of environmental affordances, finite-model learning, and useful communication. Two Agents have separate task assignments and private observations. A generic status surface can sometimes retain information across time and make it observable to another Agent. Agents learn its behavior through paid observations and a supplied probe/acknowledgment protocol. We measure channel identification, transmission, and recipient benefit separately.
 
@@ -131,7 +131,7 @@ Before collection, independently derive the four-model calibration likelihoods, 
 
 Preserve existing deduction outputs byte-for-byte and existing product guide prefixes. New documentation must distinguish supplied protocol, learned mechanics, and measured outcomes. Retain first report, exact repeat, source/settings snapshots, independent oracle, reviews, and source verification in the ignored `.superpowers/sdd/2026-10-06-shared-surface/` directory. Disclose and preserve any post-result revision. Never stage ignored evidence, `.claude/`, `papers/`, or `survey/out/`.
 
-Execution follows written-spec approval, a separately reviewed implementation plan, subagent-driven test-first implementation, independent task/final reviews, and repository quality gates. Commit working increments frequently; merge completed tasks into main, push, and check CI for the exact commit under the user's current standing workflow. Preserve the existing crowd worktree and unrelated work. This specification itself remains pending user review.
+Execution follows written-spec approval, a separately reviewed implementation plan, subagent-driven test-first implementation, independent task/final reviews, and repository quality gates. Commit working increments frequently; merge completed tasks into main, push, and check CI for the exact commit under the user's current standing workflow. Preserve the existing crowd worktree and unrelated work. Written-spec approval is complete; implementation-plan review is next.
 
 ## Handoff and limits
 
