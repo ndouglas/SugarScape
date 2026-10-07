@@ -31,6 +31,7 @@
 //!     Departure::Recruitment { waypoint: 9, site: 88 });
 //! ```
 
+pub mod construction;
 pub mod fixed;
 pub mod passage;
 
