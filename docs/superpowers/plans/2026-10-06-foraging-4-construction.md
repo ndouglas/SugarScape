@@ -239,7 +239,7 @@ struct Face { pos:Pos,approaches:Vec<Pos>,distance:u32 }
 // wander(origin:Pos,&Observation,&mut impl DrawSource) -> Checked<Navigation>
 ```
 
-- [ ] Write private route/dig/outlet tests: U-shaped known-open path `(1,1),(1,2),(2,2),(3,2),(3,1)` around protected `(2,1)` moves south first; multiple nearest home goals; full immediate steps wait rather than taking longer escape. Build each map using legal one-hop observations. Face tests include unreachable approaches, protected faces, stale walls and newly observed openings. Representative face assertion:
+- [x] Write private route/dig/outlet tests: U-shaped known-open path `(1,1),(1,2),(2,2),(3,2),(3,1)` around protected `(2,1)` moves south first; multiple nearest home goals; full immediate steps wait rather than taking longer escape. Build each map using legal one-hop observations. Face tests include unreachable approaches, protected faces, stale walls and newly observed openings. Representative face assertion:
 
 ```rust
 #[test]
@@ -251,8 +251,8 @@ fn only_locally_known_diggable_faces_are_candidates() {
 }
 ```
 
-- [ ] Await `cargo test -p sugarscape-core foraging::construction::tests::navigation` RED; implement deterministic bounded BFS on KnownOpen. Enumerate steps N,S,E,W; frontier/face candidate order Pos. Frontiers rank `(min_unknown_neighbor_manhattan,known_distance)` for informed goal/outlet; faces rank `(face_manhattan,nearest_approach_distance)`; uninformed selections uniform. Keep nonimproving candidates. Every nonempty uniform selection draws once, including singleton; blocked/empty/AtGoal draw none.
-- [ ] Use a reverse multi-source known distance field for nearest home/face approaches, filtering occupancy only at next step. Preserve destination outside these pure functions; Task 4 owns retention. Unknown outlet chooses private open frontier, not dig face; any retained outlet frontier uses the same validity rule as food exploration.
+- [x] Await `cargo test -p sugarscape-core foraging::construction::tests::navigation` RED; implement deterministic bounded BFS on KnownOpen. Enumerate steps N,S,E,W; frontier/face candidate order Pos. Frontiers rank `(min_unknown_neighbor_manhattan,known_distance)` for informed goal/outlet; faces rank `(face_manhattan,nearest_approach_distance)`; uninformed selections uniform. Keep nonimproving candidates. Every nonempty uniform selection draws once, including singleton; blocked/empty/AtGoal draw none.
+- [x] Use a reverse multi-source known distance field for nearest home/face approaches, filtering occupancy only at next step. Preserve destination outside these pure functions; Task 4 owns retention. Unknown outlet chooses private open frontier, not dig face; any retained outlet frontier uses the same validity rule as food exploration.
 
 ```rust
 let (width,height)=knowledge.dimensions();
@@ -264,8 +264,8 @@ let eligible:Vec<Pos>=neighbors(origin,width,height).into_iter()
 // Empty eligible on a known route is Blocked; no global occupancy query.
 ```
 
-- [ ] Pin frontier scans to reachable KnownOpen cells examined; face scans to known solid entries examined; route visits to dequeues and peak queue to max unique queue length. Scratch <=grid; complete actual-dimension observations validated before route draw. wander documents its complete validated-view precondition and checks locally enforceable payloads; decision must validate actual dimensions first.
-- [ ] Test equality/cumulative boundary draws, empty/unknown/protected goals, malformed observations, remote occupancy irrelevance, one-step approach already reached, and stale-face eligibility lost only after local revision. Verify focused GREEN/fmt/core clippy/workspace; fresh reviews/Stage 2; commit `feat(foraging): navigate private construction frontiers and outlets`.
+- [x] Pin frontier scans to reachable KnownOpen cells examined; face scans to known solid entries examined; route visits to dequeues and peak queue to max unique queue length. Scratch <=grid; complete actual-dimension observations validated before route draw. wander documents its complete validated-view precondition and checks locally enforceable payloads; decision must validate actual dimensions first.
+- [x] Test equality/cumulative boundary draws, empty/unknown/protected goals, malformed observations, remote occupancy irrelevance, one-step approach already reached, and stale-face eligibility lost only after local revision. Verify focused GREEN/fmt/core clippy/workspace; fresh reviews/Stage 2; commit `feat(foraging): navigate private construction frontiers and outlets`.
 
 ### Task 3: Tagged cargo, conserved materials, food advice and access
 
@@ -468,8 +468,10 @@ advance(&candidate.setup,&mut candidate.state,&mut PcgDraws(&mut candidate.rng))
 
 ### Task 5: Bounded output, baseline reduction and public acceptance
 
-**Files:** Create view.rs, runner.rs, tests/runner.rs and `crates/sugarscape-core/tests/foraging_construction.rs`; expose metrics view fields, public exports/rustdoc; docs/foraging.md/spec/plan/tracker evidence.
+**Files:** Create view.rs, runner.rs, tests/runner.rs and `crates/sugarscape-core/tests/foraging_construction.rs`; expose metrics view fields, public exports/rustdoc; add the test-only PCG probe in `foraging/passage/mod.rs` described below; docs/foraging.md/spec/plan/tracker evidence.
 **Consumes:** World/State/check, both ledger/terrain inventories, observer cache/milestones and per-worker counts.
+
+For the no-dig RNG continuation comparison, add one `#[cfg(test)] pub(crate)` free helper in `foraging/passage/mod.rs` returning `[u64;4]` via `RngCore::next_u64` from a cloned F3 World RNG. Keep existing field visibility and production behavior/API unchanged. Call this probe only from construction library unit tests; compare with a cloned construction RNG. This is a verification seam, not a restoration/input API.
 **Produces:** Public output below; all Serialize/PartialEq, mutable containers remain private:
 
 ```rust
@@ -573,3 +575,7 @@ internal interfaces need rework. Neither ruling adds worker/public knowledge.
 
 Detailed evidence is in the plan-specific ignored SDD workspace and
 `/tmp/sugarscape-f4-evidence-20261006/`. Other campaigns remain untouched.
+
+Task2 runtime `d25ee0c`: focused30/workspace2,757 passed,0 failed,103 ignored; fmt/core clippy clean. Independent task review approved with no findings. Observation/learning ordering, retained targets and open-frontier priority remain Task4-owned integration checks.
+
+Additional ruling: permit one cfg(test), crate-visible F3 PCG continuation probe returning four raw draws from a cloned RNG for the Task5 no-dig equivalence test. Sibling-private F3 RNG is otherwise inaccessible. No production API/behavior or field visibility changes; if wrong, remove/rework the test seam.
