@@ -20,7 +20,7 @@ Spec/plan approved 2026-10-06. Subagent-driven execution. Detailed evidence: doc
 **Goal**: Typed hands, conserved ledgers/advice and researcher access records.
 **Success Criteria**: No namespace collision; exposure/access/delivery separate; provenance and cache checked.
 **Tests**: `cargo test -p sugarscape-core foraging::construction::tests::material_access`
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 4: Atomic coupled ticks
 **Goal**: Cargo-first worker policy and ordered physical transactions.
