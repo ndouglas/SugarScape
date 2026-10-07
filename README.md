@@ -2977,6 +2977,23 @@ D. L. Kramer and C. A. Chapman, "Producers, scroungers, and group foraging", *Am
 *Animal Behaviour* 52, 833–839. See `docs/superpowers/specs/2026-10-01-minds-8-watching-design.md`
 and `docs/superpowers/specs/2026-10-01-minds-8-second-round-design.md`.
 
+### Minds P3: costly re-caching
+
+Our own bounded mechanism experiment extends watching with local memory of whether a conspecific
+was visible at burial, followed by paid physical relocation. The fixed campaign completed all
+192 conditions × 40 seeds (7,680 episodes), with [208 descriptive estimates and full evidence](survey/out/minds-protection-2026-10-06/README.md);
+the [dated findings and figures](docs/superpowers/specs/2026-10-06-minds-protection-findings.md)
+are independently reviewed; publication and final archival remain pending.
+
+After initially observed burial, private re-caching changes Selective minus Off by −12 original
+food units transferred and +12 owner ticks free/+9 paid. Renewed observation changes those effects
+to −8 units and 0 ticks free/−3 paid, separately in both orientations. Initially private Selective
+matches Off; unnecessary indiscriminate moves can expose food or charge costs. Mixed histories
+verify the programmed selection rule while showing different recovery/lifetime in reflection.
+Cue-error and supplied contact controls retain failures, costs and uncertainty. No pooled effect,
+overall Holds/Fails, animal cognition or source-paper numerical replication is claimed. This
+campaign preserves Minds 9's separate paid-defense findings; P4 deception remains a future design.
+
 ### Threshold Models (Granovetter 1978; Watts 2002)
 
 **The crowd.** Each person has a threshold: the share of the crowd he must see join before he joins
@@ -3982,6 +3999,22 @@ the required sample size of 100 is stated separately. The complete original
 study and every empirical value/verdict remain preserved. Corrected findings
 carry a distinct reporting-code identity; original measurement bindings certify
 the preserved original source/native, with no world or inferential rerun.
+
+The approved [precision and probability-reading follow-up](docs/superpowers/specs/2026-10-04-democratic-peace-precision-design.md)
+adds separately gated literal/prose populations and standalone scientific exports.
+[Preparation and reporting tooling](survey/democratic_peace/FOLLOWUP.md) is available;
+no new follow-up measurements or scientific declarations are reported here.
+
+Separately, the [2026-10-05 measured follow-up](docs/superpowers/specs/2026-10-05-democratic-peace-precision-findings.md)
+now records all 10,800 literal and 10,800 prose histories, with complete separate
+censuses and [provenance](docs/superpowers/specs/2026-10-05-democratic-peace-precision-provenance.json).
+The preceding paragraph records the earlier prospective preparation status.
+Both combined source comparisons are conditionally Incompatible; prose Figure 10
+is Compatible only at its 15 readable source coordinates. Literal primary/secondary
+mechanisms are Inconclusive/Fails, while both prose families Hold. These descriptive
+reading differences do not select a reading or resolve historical source identity.
+[Standalone figures](docs/superpowers/specs/2026-10-05-democratic-peace-precision-figures/plot-inventory.json)
+retain distinct scientific dataset identities and explicit source/undefined gaps.
 
 Conditional reconstruction compatibility, independent mechanism contrasts and
 original executable/RNG/statistic identity are separate claims; exact source

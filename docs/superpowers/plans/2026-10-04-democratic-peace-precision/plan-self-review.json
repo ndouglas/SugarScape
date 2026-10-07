@@ -1,0 +1,11 @@
+{
+  "plan_sha256": "18b822f51ea077123cbf24c7cb350ac0b409be33e08859931c7da42791e0cbb9",
+  "python_blocks_parsed": 6,
+  "stages": 5,
+  "patches_verified": 8,
+  "retained_artifacts_verified": 117,
+  "source_inventory_sha256": "f6590b36086ab1f4a55d3a64a53f129d97335492647ecee761d1c6c433b4ee53",
+  "spec_coverage": "all sections mapped to Tasks1-5",
+  "review_focus": "five failure classes pinned by named tests",
+  "registered_histories": 0
+}

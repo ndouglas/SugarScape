@@ -1,0 +1,27 @@
+{
+  "source_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+  "runtime_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006",
+  "target_dir": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+  "head": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+  "tracked_status": "",
+  "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: aarch64-apple-darwin\nrelease: 1.98.1\nLLVM version: 22.1.8\n",
+  "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)\nrelease: 1.98.1\ncommit-hash: 797e8a9bca276c1c9f9f738d2a20f484fa4eea9d\ncommit-date: 2026-08-05\nhost: aarch64-apple-darwin\nlibgit2: 1.9.4 (sys:0.21.0 vendored)\nlibcurl: 8.7.1 (sys:0.4.90+curl-8.21.0 system ssl:(SecureTransport) LibreSSL/3.3.6)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Mac OS 15.6.1 [64-bit]\n",
+  "uname": "Darwin MacBookPro.local 24.6.0 Darwin Kernel Version 24.6.0: Mon Jul 14 11:30:29 PDT 2025; root:xnu-11417.140.69~1/RELEASE_ARM64_T6000 arm64\n",
+  "environment": {
+    "PATH": "/Users/nathan/.elan/bin:/Users/nathan/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/nathan/.nvm/versions/node/v18.20.1/bin:/Users/nathan/.gem/ruby/3.1.3/bin:/Users/nathan/.rubies/ruby-3.1.3/lib/ruby/gems/3.1.0/bin:/Users/nathan/.rubies/ruby-3.1.3/bin:/Users/nathan/.venv/bin:/Users/nathan/Projects/flutterSDK/flutter:/opt/homebrew/anaconda3/bin:/opt/homebrew/opt/gnu-getopt/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/TeX/texbin:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/Users/nathan/.codex/packages/app-server-daemon/releases/0.160.1-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0MljiKz:/Users/nathan/.codex/tmp/arg0/codex-arg0nQ2cjt:/Users/nathan/.codex/packages/app-server-daemon/releases/0.160.0-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0cnpEgC:/Users/nathan/.codex/packages/app-server-daemon/releases/0.159.3-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg029xf8O:/Users/nathan/.codex/packages/app-server-daemon/releases/0.159.2-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0Wjw9MB:/Users/nathan/.codex/packages/app-server-daemon/releases/0.159.1-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0UEIdTF:/Users/nathan/.codex/packages/app-server-daemon/releases/0.159.0-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0sU1COl:/Users/nathan/.codex/packages/app-server-daemon/releases/0.158.0-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0P5WDiI:/opt/homebrew/lib/node_modules/@openai/codex/node_modules/@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/codex-path:/Users/nathan/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand:/Users/nathan/Library/Application Support/Code/User/globalStorage/github.copilot-chat/copilotCli:/Users/nathan/.elan/bin:/Users/nathan/.cabal/bin:/Users/nathan/.ghcup/bin:/Users/nathan/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/nathan/.nvm/versions/node/v18.20.1/bin:/Users/nathan/.venv/bin:/Users/nathan/Projects/flutterSDK/flutter:/opt/homebrew/anaconda3/bin:/opt/homebrew/opt/gnu-getopt/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/bin:/usr/local/sbin:/Users/nathan/.cargo/bin:/Users/nathan/.vscode/extensions/ms-python.debugpy-2026.6.0-darwin-arm64/bundled/scripts/noConfigScripts:/Users/nathan/go/bin:/Users/nathan/.pub-cache/bin:/Users/nathan/go/bin:/Users/nathan/.pub-cache/bin"
+  },
+  "inherited_cargo_config": [
+    {
+      "path": "/Users/nathan/.cargo/config.toml",
+      "sha256": "d1c0ec173c0342c0fd0cba7ad16b1901325c64220eb6abd8082b99f76811d24c",
+      "text": "[build]\nrustflags = [\"--cfg\", \"tokio_unstable\"]\n[net]\ngit-fetch-with-cli = true\n"
+    }
+  ],
+  "protocol_revision": "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+  "effective_rustflags": [
+    "--cfg",
+    "tokio_unstable"
+  ],
+  "RUSTFLAGS": "unset",
+  "CARGO_ENCODED_RUSTFLAGS": "unset"
+}

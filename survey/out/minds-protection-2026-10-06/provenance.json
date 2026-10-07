@@ -1,0 +1,78 @@
+{
+  "status": "COMPLETE MEASURED / REVIEWED; empirical/reporting and PNG/SVG review Approved; whole-branch integration, publication and final archival pending",
+  "generated_utc": "2026-10-07T01:50:08.901072+00:00",
+  "campaign_label_local": "2026-10-06",
+  "local_timezone": "America/New_York",
+  "execution_utc_date": "2026-10-07",
+  "scientific_code_revision": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+  "protocol_revision": "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+  "campaign_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989",
+  "raw_paths": "Original index paths are relative to the external full campaign directory; raw is not embedded in public packet.",
+  "raw_bytes": 571055314,
+  "raw_members": 7680,
+  "source_archive": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/complete-tracked-source-e733b989.tar.gz",
+  "external_baseline_archive": "/Users/nathan/.local/share/sugarscape/evidence/minds-protection-2026-10-06-staging-20261007T014345375561Z",
+  "external_archive_status": "Science baseline externally staged and verified; final reports/reviews/publication archival incomplete. Final archive receipt added by controller.",
+  "historical_wasm_limit": "Original Vitest/WASM log and old review ledger unavailable; source parity/checkpoint equivalence plus fresh native checks accepted by actual prospective native-only review; no fresh WASM execution claimed.",
+  "plotting_script_identity_limit": "plotting-command.json identifies the current reproducible script separately from the unrecorded historical presentation-render script hash. SVG whitespace normalization occurred after rendering; it preserved non-whitespace bytes and PNGs.",
+  "empirical_review": {
+    "verdict": "Approved",
+    "reporting_head": "68614dbd4d47f8437ff194e8d8900b6be63db346",
+    "json_path": "provenance/task-p3-empirical-review.json",
+    "json_sha256": "16a144917d8df8656926f124442102f440cb52e5b41ef40d1b33da06feb27ff2",
+    "md_path": "provenance/task-p3-empirical-review.md",
+    "md_sha256": "397fe57eadf584cb7fed3d5d39fc36b1d9e4527a23e1bef29fb43d0947014218",
+    "prior_reviewed_members": 58,
+    "prior_reviewed_inventory_path": "provenance/empirical-reviewed-public-members.json",
+    "prior_reviewed_inventory_sha256": "515f0fea9fc01dfac877d11ce93f5d568d22af6c3036d8709df9160307752dde",
+    "open_findings": 0,
+    "binding_limit": "Original review binds the prior reviewed packet; subsequent receipt/status packaging is additive and separately inventoried. It does not review its own later addition.",
+    "visual_evidence": [
+      {
+        "path": ".superpowers/sdd/2026-10-06-minds-protection-execution/empirical-review-render/01-primary-chrome.png",
+        "bytes": 105404,
+        "sha256": "10c8ee26500767264d8bfa65babdd7986f5c80783bddb4813ebc29dda28b73e9"
+      },
+      {
+        "path": ".superpowers/sdd/2026-10-06-minds-protection-execution/empirical-review-render/02-opportunity-chrome.png",
+        "bytes": 71480,
+        "sha256": "600f5d02c99f3b4874942ab140df3a71a611b2a642bebebf860f4cc89519dd18"
+      },
+      {
+        "path": ".superpowers/sdd/2026-10-06-minds-protection-execution/empirical-review-render/03-memory-erased-chrome.png",
+        "bytes": 97852,
+        "sha256": "f0719cdd3a9327b6e40eec4bec67b2395b930e6a841c1d2a4565862fae2fb27d"
+      },
+      {
+        "path": ".superpowers/sdd/2026-10-06-minds-protection-execution/empirical-review-render/04-stumble-contrasts-chrome.png",
+        "bytes": 212981,
+        "sha256": "c67e8b4fa324f53b692375e2d25770e9ab75a7b68337e792c2856d258c4ee4e4"
+      },
+      {
+        "path": ".superpowers/sdd/2026-10-06-minds-protection-execution/empirical-review-render/05-single-cells-chrome.png",
+        "bytes": 203697,
+        "sha256": "8b89da24d7e87184f0be89530fbc68a8eb7f960acb3ca4e8c13e3c7ada9e24bf"
+      },
+      {
+        "path": ".superpowers/sdd/2026-10-06-minds-protection-execution/empirical-review-render/06-mixed-cells-chrome.png",
+        "bytes": 117363,
+        "sha256": "352f23d0072b17293135f16d5cffe5509ae2766bfec821309fff6954cca40e90"
+      },
+      {
+        "path": ".superpowers/sdd/2026-10-06-minds-protection-execution/empirical-review-render/07-cue-cells-chrome.png",
+        "bytes": 119766,
+        "sha256": "399cd681465e54b0bd8cb6213f5a11827a51d4359e29d17938128b1c0f636eb2"
+      },
+      {
+        "path": ".superpowers/sdd/2026-10-06-minds-protection-execution/empirical-review-render/08-stumble-cells-chrome.png",
+        "bytes": 202780,
+        "sha256": "dbd041ce5416517bb096240d9fd478b63233ff7179f7676ce631646c5456f0b0"
+      }
+    ],
+    "browser_text_bounds": {
+      "path": ".superpowers/sdd/2026-10-06-minds-protection-execution/empirical-review-render/svg-browser-audit.json",
+      "bytes": 1445,
+      "sha256": "98ba20eda7434cff745f88e41e4d74560b8f17b37246d2e0f9ecfb2f692cf22e"
+    }
+  }
+}

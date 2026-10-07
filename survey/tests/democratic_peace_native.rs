@@ -523,3 +523,210 @@ fn valid_complete_invalid_construction_and_partial_outcomes_remain_resumable() {
         }
     }
 }
+
+#[test]
+fn followup_phases_resolve_exact_fresh_rosters_and_reject_drift_before_writes() {
+    let dir = directory();
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap();
+    let script = r#"
+import json, sys
+from pathlib import Path
+from survey.democratic_peace.followup import build_manifest
+from survey.democratic_peace.records import strict_json
+from survey.democratic_peace.test_followup import HISTORICAL
+root, out = map(Path, sys.argv[1:])
+data=(root/'docs/superpowers/specs/2026-10-03-democratic-peace-source-table.json').read_bytes()
+for phase in ('literal_precision','prose_precision'):
+    value=build_manifest(strict_json(data),data,phase,HISTORICAL)
+    (out/(phase+'.json')).write_text(json.dumps(value))
+"#;
+    let generate = Command::new("python3")
+        .args(["-c", script])
+        .arg(root)
+        .arg(&dir)
+        .current_dir(root)
+        .output()
+        .unwrap();
+    assert!(
+        generate.status.success(),
+        "{}",
+        String::from_utf8_lossy(&generate.stderr)
+    );
+    let mut configs = Vec::new();
+    for phase in ["literal_precision", "prose_precision"] {
+        let mp = dir.join(format!("{phase}.json"));
+        let rp = dir.join(format!("{phase}.resolved.json"));
+        let run = |mp: &std::path::Path, rp: &std::path::Path| {
+            Command::new(env!("CARGO_BIN_EXE_democratic_peace"))
+                .arg("--manifest")
+                .arg(mp)
+                .arg("--resolved")
+                .arg(rp)
+                .arg("--repo")
+                .arg(root)
+                .arg("--validate-only")
+                .output()
+                .unwrap()
+        };
+        let result = run(&mp, &rp);
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+        assert!(String::from_utf8_lossy(&result.stdout).contains("108 arms/10800 keys"));
+        let resolved: serde_json::Value = serde_json::from_slice(&fs::read(&rp).unwrap()).unwrap();
+        assert_eq!(resolved["schema_version"], 2);
+        configs.push(
+            resolved["arms"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|a| a["config"].clone())
+                .collect::<Vec<_>>(),
+        );
+        let original: serde_json::Value = serde_json::from_slice(&fs::read(&mp).unwrap()).unwrap();
+        for (key, wrong) in [
+            ("reading", serde_json::json!("unknown")),
+            ("phase", serde_json::json!("unknown")),
+            ("analysis_seed", serde_json::json!(0)),
+            ("study_protocol", serde_json::json!("unknown")),
+        ] {
+            let mut changed = original.clone();
+            changed[key] = wrong;
+            fs::write(&mp, serde_json::to_vec(&changed).unwrap()).unwrap();
+            let untouched = dir.join("untouched.json");
+            assert!(!run(&mp, &untouched).status.success());
+            assert!(!untouched.exists());
+        }
+    }
+    for (left, right) in configs[0].iter().zip(&configs[1]) {
+        let mut expected = left.clone();
+        expected["probability_direction"] = serde_json::json!("prose_increasing");
+        assert_eq!(&expected, right);
+    }
+    fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn schema2_validate_only_rejects_followup_gates_before_any_output_write() {
+    use std::os::unix::fs::{symlink, MetadataExt};
+
+    let dir = directory();
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap();
+    let generate = r#"
+import json, sys
+from pathlib import Path
+from survey.democratic_peace.followup import build_manifest
+from survey.democratic_peace.records import strict_json
+from survey.democratic_peace.test_followup import HISTORICAL
+root, out = map(Path, sys.argv[1:])
+data=(root/'docs/superpowers/specs/2026-10-03-democratic-peace-source-table.json').read_bytes()
+value=build_manifest(strict_json(data),data,'literal_precision',HISTORICAL)
+(out/'manifest.json').write_text(json.dumps(value))
+"#;
+    let generated = Command::new("python3")
+        .args(["-c", generate])
+        .arg(root)
+        .arg(&dir)
+        .current_dir(root)
+        .output()
+        .unwrap();
+    assert!(
+        generated.status.success(),
+        "{}",
+        String::from_utf8_lossy(&generated.stderr)
+    );
+
+    let run = |resolved: &std::path::Path, gate: &str, value: &std::path::Path| {
+        Command::new(env!("CARGO_BIN_EXE_democratic_peace"))
+            .arg("--manifest")
+            .arg(dir.join("manifest.json"))
+            .arg("--resolved")
+            .arg(resolved)
+            .arg("--repo")
+            .arg(root)
+            .arg(gate)
+            .arg(value)
+            .arg("--validate-only")
+            .output()
+            .unwrap()
+    };
+    let assert_rejected = |result: &std::process::Output| {
+        assert!(!result.status.success());
+        assert!(
+            String::from_utf8_lossy(&result.stderr)
+                .contains("follow-up gate options are unsupported in validate-only mode"),
+            "unexpected stderr: {}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+    };
+
+    let sentinel = dir.join("historical-binary");
+    let sentinel_bytes = b"historical sentinel\n";
+    fs::write(&sentinel, sentinel_bytes).unwrap();
+    let exact = run(&sentinel, "--historical-binary", &sentinel);
+    assert_rejected(&exact);
+    assert_eq!(fs::read(&sentinel).unwrap(), sentinel_bytes);
+
+    let symlink_target = dir.join("symlink-target");
+    let symlink_alias = dir.join("symlink-alias");
+    fs::write(&symlink_target, sentinel_bytes).unwrap();
+    symlink(&symlink_target, &symlink_alias).unwrap();
+    let symlink_result = run(&symlink_alias, "--historical-binary", &symlink_target);
+    assert_rejected(&symlink_result);
+    assert!(fs::symlink_metadata(&symlink_alias)
+        .unwrap()
+        .file_type()
+        .is_symlink());
+    assert_eq!(fs::read(&symlink_target).unwrap(), sentinel_bytes);
+
+    let hardlink_target = dir.join("hardlink-target");
+    let hardlink_alias = dir.join("hardlink-alias");
+    fs::write(&hardlink_target, sentinel_bytes).unwrap();
+    fs::hard_link(&hardlink_target, &hardlink_alias).unwrap();
+    let hardlink_result = run(&hardlink_alias, "--historical-binary", &hardlink_target);
+    assert_rejected(&hardlink_result);
+    assert_eq!(fs::read(&hardlink_target).unwrap(), sentinel_bytes);
+    assert_eq!(fs::read(&hardlink_alias).unwrap(), sentinel_bytes);
+    let target_metadata = fs::metadata(&hardlink_target).unwrap();
+    let alias_metadata = fs::metadata(&hardlink_alias).unwrap();
+    assert_eq!(target_metadata.dev(), alias_metadata.dev());
+    assert_eq!(target_metadata.ino(), alias_metadata.ino());
+
+    let gate_options = [
+        ("--declaration", "declaration.json"),
+        ("--declaration-review", "review.json"),
+        ("--runtime-receipt", "runtime.json"),
+        ("--historical-study-root", "historical-study"),
+        ("--historical-inventory", "inventory.json"),
+        ("--historical-source-archive", "archive.tar"),
+        ("--historical-binary", "binary"),
+        ("--literal-sessions", "100"),
+        ("--max-new-histories", "1"),
+    ];
+    for (index, (gate, value)) in gate_options.iter().enumerate() {
+        let output = dir.join(format!("gate-output-{index}.json"));
+        let value = if *gate == "--historical-study-root" {
+            let study_root = dir.join(value);
+            fs::create_dir_all(&study_root).unwrap();
+            let inside = study_root.join("resolved.json");
+            fs::write(&inside, sentinel_bytes).unwrap();
+            let result = run(&inside, gate, &study_root);
+            assert_rejected(&result);
+            assert_eq!(fs::read(inside).unwrap(), sentinel_bytes);
+            continue;
+        } else {
+            dir.join(value)
+        };
+        let result = run(&output, gate, &value);
+        assert_rejected(&result);
+        assert!(!output.exists(), "output created for {gate}");
+    }
+
+    fs::remove_dir_all(dir).unwrap();
+}

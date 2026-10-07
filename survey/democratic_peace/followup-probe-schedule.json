@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "status": "prospective_unregistered_preparation_only",
+  "study_protocol": "democratic-peace-followup-v1",
+  "native_workers": 1,
+  "coordinates": [
+    {
+      "mobile": 0.5,
+      "mechanism": "tagging",
+      "density": 0.1
+    },
+    {
+      "mobile": 0.5,
+      "mechanism": "alliances",
+      "density": 0.3
+    },
+    {
+      "mobile": 0.5,
+      "mechanism": "collective_security",
+      "density": 0.3
+    },
+    {
+      "mobile": 0.15,
+      "mechanism": "tagging",
+      "density": 0.3
+    },
+    {
+      "mobile": 0.85,
+      "mechanism": "collective_security",
+      "density": 0.3
+    },
+    {
+      "mobile": 0.5,
+      "mechanism": "collective_security",
+      "density": 0.0
+    },
+    {
+      "mobile": 0.5,
+      "mechanism": "alliances",
+      "density": 1.0
+    },
+    {
+      "mobile": 0.85,
+      "mechanism": "tagging",
+      "density": 0.6
+    }
+  ],
+  "seed_bases": {
+    "printed_decreasing": 420000001,
+    "prose_increasing": 430000001
+  },
+  "seed_rule": "phase_seed_base + probe_index (0..7)",
+  "periods": 1000,
+  "width": 15,
+  "height": 15,
+  "periods_per_tick": 100,
+  "forecast_multiplier": 2,
+  "phase_limit_cpu_hours": 12,
+  "combined_limit_cpu_hours": 24,
+  "max_peak_rss_bytes": 2147483648,
+  "registered_histories_per_phase": 10800,
+  "draws_per_analysis_job": 100000,
+  "analysis_jobs_per_phase": 129
+}

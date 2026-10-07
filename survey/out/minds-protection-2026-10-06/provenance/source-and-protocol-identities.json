@@ -1,0 +1,2369 @@
+{
+  "head": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+  "protocol_revision": "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+  "protocol_sha256": "e9ab9622a53c29920d01292ffbc713376315bd6f8d3f89c2c2b16ff8304ec42f",
+  "protocol_blob": "f92fa20e3d7aee77d8a5011e38b7fb0514c0d581",
+  "protocol_exact_byte_match": true,
+  "source_archive": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/p3-source-e733b989.tar",
+  "source_archive_sha256": "f2fe00b318475cc908ff598aeae4c8984ad0eaf43642d49ec49bfb94bd8e0ca6",
+  "source_archive_git_command": [
+    "git",
+    "archive",
+    "--format=tar",
+    "e733b989f253daf038f9f90a7030e2cf71ad8435",
+    "Cargo.toml",
+    "Cargo.lock",
+    "crates/sugarscape-core",
+    "survey/Cargo.toml",
+    "survey/Cargo.lock",
+    "survey/src",
+    "docs/superpowers/specs/2026-10-02-minds-protection-design.md",
+    "docs/superpowers/specs/2026-10-02-minds-protection-protocol.md",
+    "docs/superpowers/plans/2026-10-02-minds-protection.md"
+  ],
+  "build_input_inventory": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "7217929fea10793e589d820bcdf4555ad6aa3f57fb9af9d5cfce5473310bde5f",
+      "git_blob": "edce575fd53a5a4513ef5d56623aa5f1f95743d2"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "7fb254110e779b6c45d4bf96fbae5f382529ea0493dc82a587e6717c71baa6cd",
+      "git_blob": "57565bf85d980f9ca1c11493d69aae5a01da078c"
+    },
+    {
+      "path": "crates/sugarscape-core/Cargo.toml",
+      "sha256": "9f36b17597f0a97f8ca9bbb14d13961c9f9c11ff9ad644965a16692c803ddc04",
+      "git_blob": "48e6aa21fe44a0911ea96c0028f81db273aac37d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agent.rs",
+      "sha256": "85258d658454a1c822dab919be1a9d0b9bae8ce736b24386df3a036a1019fb9b",
+      "git_blob": "ebc31cb0810354fea53d836c55862cecf66a70f5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/config.rs",
+      "sha256": "ceade59cc3977a0880cebee08ab30ece497d72946f5eb090981dd86879379632",
+      "git_blob": "7817812d04c2a1e3115fd11041de2d6403b41f22"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/mod.rs",
+      "sha256": "bba15448558bb36d7953168125e5a92be38d50d80aac524f61a7c5723eb4b749",
+      "git_blob": "8a7ad0a999d73671878a863126b03ea21fdaef1e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/network.rs",
+      "sha256": "e959cf60491b60ebbc2e48f48acffe43952a68f3e486d6b800708b8715ca0956",
+      "git_blob": "dfd06724e68865ef55ea31994f684cdd8d58b275"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/presets.rs",
+      "sha256": "6ae3b7a787e1f14ecbeb73893427b413755f8865fecbff1646ba921228868d34",
+      "git_blob": "322c15c17c90c216b6f065ffbbf3034af0291dde"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/stats.rs",
+      "sha256": "553995ece39e55b8f8e066bbb32a172eccc67e9e6140ddc9aae61bc068caffb2",
+      "git_blob": "f211c3d2efaf194b9b22bf4172b6cb3156f9c8ba"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/view.rs",
+      "sha256": "f0a369da1cd1dfe7c803cbb930e7dd3fc2fd397ba8320c2c1c416c4b099225c7",
+      "git_blob": "1326f492ad577eb41f4822af80927e4e22071049"
+    },
+    {
+      "path": "crates/sugarscape-core/src/agreement/world.rs",
+      "sha256": "9509d974248603fa1750456a1b47751423501e7d17f1709bf2ae6adc65b4ddf0",
+      "git_blob": "34bc68f2d5dddc1cadb7d5486345ea7ed4c14371"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/config.rs",
+      "sha256": "34fba071eeff23cbe0308611d20723a1142c46161baf503de79af690dfce27d1",
+      "git_blob": "87a7b92fab05f0fb2020524f88b60458bdbcb9bb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/household.rs",
+      "sha256": "e322e778f1a68e48a65ce875156fd497f988190cdd65a465926fc0b19b3fbda8",
+      "git_blob": "bf26e5834edf85fc265eee9c513404afae46044f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/mod.rs",
+      "sha256": "7857324ab1f77ca7ae71882859f95ab8035762f48e784b47a732f52834af65a6",
+      "git_blob": "d69cd1ae5f79e671abc10c7456c9dfb804ba6daf"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/random.rs",
+      "sha256": "7c8033829d3d8cebeac011028eb47b1ac5e4ef583fba677f34818e45b44f963d",
+      "git_blob": "05458cd67e519a3bd56202085228a6bd0168eaff"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/valley.rs",
+      "sha256": "7c73ef1402fdf4b509b3a94402346e2b973ddba6e53ddfee6409ada8b933b1cc",
+      "git_blob": "8c0648b2dab8ffa3618cedc71ecaee59db1b62b2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/anasazi/world.rs",
+      "sha256": "0f06dce79600533367372dbd975679dfcf2edb399698433e1fb086c33b39081a",
+      "git_blob": "f688adf13bb77b7d8cf85d97c9d6b3f0538e1883"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/config.rs",
+      "sha256": "2bd2c3e1c2d4ca538114fcc989155870eb2679509b91480136d7ab4b652d4eef",
+      "git_blob": "dc698f7a17ccae9e9c7b2c4246150b521bc4ccee"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/mod.rs",
+      "sha256": "86bda101d566881b22bf5ce0e7407c8028b64e6ac381b949e717f5f39dd31109",
+      "git_blob": "6d905a5989887e2591e2c3f36768903f809be400"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/presets.rs",
+      "sha256": "d2c1b6d41bc1b8e53fea4d221b9774f804049a5e4001751d669d6ac91d575077",
+      "git_blob": "91124add38dbb0d837197e33f26328b30f5bce38"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/stats.rs",
+      "sha256": "e0950539698185893ed7570b1d4966ed2f1f6a262ba02acf175b7fb0c2072486",
+      "git_blob": "0e5df7b5d9906b23e81ac7538b2e0349eaaef7c1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/theory.rs",
+      "sha256": "a1265cc6feb2948a41928361185c7d746d9f881b30d9d86751d4c505dfe25c91",
+      "git_blob": "70d7c1ab6944afc2d1a0329220aa71beb164b9c2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/view.rs",
+      "sha256": "f7a7792a8523d24391b53530c0978b6b0dad4b32d5f96f160cff017309714f3a",
+      "git_blob": "f2f76fe7d63d84686ed7efee0133351e1869e552"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ants/world.rs",
+      "sha256": "9a338141cb8cdcc2909349d604c6e7bf2a552f22728a59b2c496069e8d9f5767",
+      "git_blob": "2167f2daa01f3ca3fe3632699003a0105af6f3db"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/analysis.rs",
+      "sha256": "c09a758cd9ea3d204954688f1e991068233c72d27257884dcc1968e9b3056dc3",
+      "git_blob": "f819600dc8f4f8189f604c6a0b63cff966aa1bea"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/config.rs",
+      "sha256": "f5242edca83cebf1f8a5e7c68a7eeff9c632bf14870ec6e1c36f48eaa10c46d2",
+      "git_blob": "5a067cb47e711ed3dbf08c2ec8d1abb970a69178"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/learner.rs",
+      "sha256": "ba70bb1c0cdbe0823cd676f188255d88d143f6aec9ac99562b0ecf56fe9a9185",
+      "git_blob": "9577f41da3cc277861380cec1f643d132ab5c33f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/mechanism.rs",
+      "sha256": "4ca6cbb440b89dfb184b0d615ee057fcbc929ea35a59cd5a7f089d4d414d64bb",
+      "git_blob": "cefec612678ed1f8b819aabb333d7bbc9ad5a891"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/mod.rs",
+      "sha256": "ea0ac3d08184b29339419f5fcd721688f5cda6f442e542ae6229c71516cc23e9",
+      "git_blob": "7d4f297972b969533a312e2e3740adfcf67d40f6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/presets.rs",
+      "sha256": "f7575064b2bc4e0c8edcf7e803cb43b65b6746ff0d3d5845fb0e44843847bea9",
+      "git_blob": "ef3393a39d38724640ff9e97a3fa59d3ec63aec9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/stats.rs",
+      "sha256": "00fe77119abc2fc4296d46e53359aa854927f0e10963a2781c288e0e93d1a697",
+      "git_blob": "188ab510883dbfa6e1f02f20e23dfe8d9e7caecb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/view.rs",
+      "sha256": "e45e46444f24bdbc89874d4bd3980266f24d7d69a84096ad1ea68ed7952cbb78",
+      "git_blob": "836dda54f2aa8b444d9385c9be21e13fdd869c36"
+    },
+    {
+      "path": "crates/sugarscape-core/src/auctions/world.rs",
+      "sha256": "b971b77313834c47e2e7cf0ae2910790fe8e19fa4098de14c8518463190e54d5",
+      "git_blob": "f18a752f8aef517e7f3fc84935a145e2aa7afe2e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/config.rs",
+      "sha256": "b2bd9d59fe591aa2c6344958128e16d424dbbb67931ab814ff0b20a714fd4c61",
+      "git_blob": "02d9416d715292dfa8e17e57ca2763fe9156510e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/data.rs",
+      "sha256": "0761c87b61a5627514827ede8fdc5dbd3039629089c3ad4f134dfd490be3b8cf",
+      "git_blob": "58c4fe7ccb0989bb137bc9d949c8712d0caf1232"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/engine.rs",
+      "sha256": "61c5c467df85b789367d608f1828d7d1c1021fb6031cb89e08d8ef89ba29b482",
+      "git_blob": "025688cca9eeb39d08a207180af3eb9fc0e716f8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/mod.rs",
+      "sha256": "19617a5fc7a2c3c74df52f77234b737b9f34b160894103ca774a5758662fc1ec",
+      "git_blob": "550fc24d46934c2dc2035a64898a72f0a84aa2e8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/presets.rs",
+      "sha256": "cbd361afa3e0a53733eb04e84f96b2e55f1583bc3797fc7c7403d3e3a1f4b503",
+      "git_blob": "f54de6987b26273d8b153724f16d60768769c9f3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/search.rs",
+      "sha256": "cc096a88ace806d62721f3371005dc2490a4d5ebc39e593dfbb5ee1b0b8d2cf8",
+      "git_blob": "fc6b3ae6e4fa628a8f77f67a041f0affeb6b4a55"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/stats.rs",
+      "sha256": "dc52793c92db0c454ec666c1eb9db147c9727527cb8520c9aff632c8c7c2150f",
+      "git_blob": "005acf8ef5f3fb0da426d1235b1994cb9ad580d8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/two_node.rs",
+      "sha256": "6759ee3b0c7967757bd43dc4ca2a99b8629aa84f1c98d3ead748100de28ffa52",
+      "git_blob": "82215caf9e5a69c9cd212351a567fdff2560c29a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/view.rs",
+      "sha256": "8cd0b01db10420bb6d09930d46e3d7c63ea315e00793291b1077cc896fd21f65",
+      "git_blob": "d3a9adf587e954e145ec865e5736656ea588dce3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bali/world.rs",
+      "sha256": "c583a88e34dcd12705f93dae03ea1edc59764597978c06bc0fdb2568cca7d680",
+      "git_blob": "79edc18617b5d1bb41eb94d027cce8afe06388f8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/bits.rs",
+      "sha256": "f2431954d38177779d4c2834d6b95890f6f8eaa7f89f3d173866ff5ff200bd43",
+      "git_blob": "5d6c249568be2d6b05a7d8e7f3e18cf01291e439"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/access.rs",
+      "sha256": "4717a7c22c60c76ee09f6791c3c1f69c8e1b1f57f5e6fe4129593af92ce79559",
+      "git_blob": "2d1c15cc40fec0ec7f78e6f1c8a5c65dd840211c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/actions.rs",
+      "sha256": "08df834681b1ec8c29d42cdd1494a2618714b01120720a721249098248f953d8",
+      "git_blob": "f117c2d3daebe1155035a4efe12c521477ed2a4c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/config.rs",
+      "sha256": "982573596c884c6319c94a8230a31dd208d431c71f7fcad5cbc28aa60658fee5",
+      "git_blob": "40ba4be4330beb8337d3f293b7a0f54120a6c8f9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/controller.rs",
+      "sha256": "6730d478239214ca3c8dd3974248d4d1bc402db9e7a0f6636bcede7236946040",
+      "git_blob": "ad0f7ded4284b0f5ed4c583485e0bdee64d087c0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/fixtures.rs",
+      "sha256": "ef43e69bd8fb956b509d812cebcdca5ab5787c0c11f9f9213f3bc6886f292a80",
+      "git_blob": "1b5fb8835dc9dd73ad619f48d58055a2b0582983"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/ledger.rs",
+      "sha256": "dbed5d5eb39236e949ea6e0120f37f41ec0d0041ea3402c3969276e940280861",
+      "git_blob": "b92af11b84ea13cd468bfbd5737ff1055c2caa42"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/mod.rs",
+      "sha256": "943d9af315076ca903dbc1e9877ed4abc3c4a4b88826dd3356cb88cc501e8a16",
+      "git_blob": "f52ccf3d0e2f7bb307ee42f86792a4d9615bcc87"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/observation.rs",
+      "sha256": "a508bbd609c771bb8b23879eb4210774a11ec825b9e20406e58e0f3f44596f1c",
+      "git_blob": "f42067c7957220bd87ac5b2a048a8adbce61abc2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/runner.rs",
+      "sha256": "feeee4d35a56acc4c16a346b45a71debb13b74045f8e33998f1a45472143e3e5",
+      "git_blob": "dfa23a85d6ff3147db599f751facb5a40583ae80"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/state.rs",
+      "sha256": "69c598e30c868298efe06a549e62513c9fcd69c2b6c9bd090de2e87735e09db6",
+      "git_blob": "53ed7f2bbfc6f9d6a3a790a2ca594cd64ad6bb51"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/tests/access.rs",
+      "sha256": "45f49494a5de0bd8764a110e29f5d1e4e26d041240f964b5c98844085ff13212",
+      "git_blob": "a81f2d71297ab3e29e10db9f2196b3489545cee5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/tests/controller.rs",
+      "sha256": "071c9228e39f38d1f24ab122eb11351e1b3bf8504ff62018ba9d63fca61ae646",
+      "git_blob": "f28e38c678e1193f2050da3c70b86f5f6a060ee0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/tests/material.rs",
+      "sha256": "54ef3a0fad621ea3e6a02889ecd75736e152eb114a0baae2463803088309cfc2",
+      "git_blob": "fa0e715b298a6e28532c2b9a064c3ea24ef67fea"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/tests/mod.rs",
+      "sha256": "d984a73aef1aec5090e8e1db83efe2b47c1a318f5ba71743e92b32b9a3029a18",
+      "git_blob": "12117149a40c5a017eba263f8c806c47930972eb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/tests/runner.rs",
+      "sha256": "53327b0037e0bef8d5a352298035a6450c06f8354e17e3f09246534dd2bd3950",
+      "git_blob": "bf80286bb260846dd7d8c90b847d071f50b65620"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/tests/validation.rs",
+      "sha256": "0dd0053c1c4cc9cec6c12db452d431c0003c8a5a4f848d5178ccb4a5bc6033e5",
+      "git_blob": "dc05aaad56a181eff19326899580fbe10ce2cdbb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/validation.rs",
+      "sha256": "9525f2dc8cf92f76cf1c06f2156522d00526840189ad26c532eea744f3b5f0cf",
+      "git_blob": "73c8dd79ef4e9fbddbb1a31bebae1513a68d3847"
+    },
+    {
+      "path": "crates/sugarscape-core/src/burrow/view.rs",
+      "sha256": "962a80abc30d2cdd511749899de4bfe5d77f9c5ad275a374d3a3c17b20b54118",
+      "git_blob": "27fccf07bc3fb1ee751b2e0ccedc2bc14cdcc78f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/config.rs",
+      "sha256": "eff0d4cb09a65931cae4f11650a8359cef59f48525328e58771798317b3f16a4",
+      "git_blob": "d64699203af3b9dd2edafb1654f6e9905a3f4d59"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/mod.rs",
+      "sha256": "c7bb814664c0ce135b5c37b3505f093e4ae98d6957d95181fff398db8a98c955",
+      "git_blob": "58dcf217006f212c22264a8554d1cdce24971cb3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/presets.rs",
+      "sha256": "10f4ba225ed35d73378370e6fb0467a14f2b1d2ec2c15843aae54730a32e76ee",
+      "git_blob": "3873bac7f76d9a74146e9d839a576b289360c6a5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/stats.rs",
+      "sha256": "177a8c5092e1eaacf26198c7a4c56f544e903a9e81389b757adb6da14e07ee09",
+      "git_blob": "2397cb7f6beb5bb097a7b7eccc8aa3bc37a685c6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/civil/world.rs",
+      "sha256": "d000d4e411ac53f2c35389099fc222a8950d8d5952c12c227604ba584226e33d",
+      "git_blob": "139df5256cf45d857b322ee022902f64e74d8eb8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/config.rs",
+      "sha256": "311c5471d6e92edffee374a04aa5a2c44b7967eb8ddc96e014fe47d373158bf1",
+      "git_blob": "89d5e50b3f0db803fc4e9e6bc513f732d95c0426"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/mod.rs",
+      "sha256": "d3cdf36807738822a77ee8a4e8c96c84d537b5474ff93306e4ba4923d48ad1fd",
+      "git_blob": "8c067aff40de084ea584da3f867457bed8724d93"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/presets.rs",
+      "sha256": "514cec2d0d97d01932570ec8a554b809421a0f5b455f7987c90e1062d6ad6104",
+      "git_blob": "4a55d17a12ae20f227eb6a7651154534a781f943"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/simplex.rs",
+      "sha256": "f3ebcdb94ddd7ef63643ce773bdeaae8c8bb86c16f3965655430a11936335154",
+      "git_blob": "693fee6de35aebe38d9bb50cc031033d31d21d0a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/stats.rs",
+      "sha256": "67fadb94707ec0a287553b764d61d4f033a2bf894365a5fa512d502c5b3506f1",
+      "git_blob": "1e95b58c63794c2df4e4cbd2a879ed8d4486c439"
+    },
+    {
+      "path": "crates/sugarscape-core/src/classes/world.rs",
+      "sha256": "6154472acc27695fa47ee0308d088909a0a5be61614b7bd5731746167a0e9048",
+      "git_blob": "f6cc8f2692d330ab18e56fdfb5431cc5c3084c1a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/analysis.rs",
+      "sha256": "af41f3decd7e3f7d9b61cb18068a544774c2199cba0982be5a95fc91ec50a538",
+      "git_blob": "3fb733fdf2c937da7d3e1058ec336c9f33d60043"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/config.rs",
+      "sha256": "d8b1cfcb300bb66ff43c86e2765ed50eb2dbe11cc4accf30a4f55e64530bb25e",
+      "git_blob": "cc14bc0906e7176f88fd72d59ecd5e3ab725a252"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/demand.rs",
+      "sha256": "18c49d2a1f3f7f30fb46e1ae30688a0a88071c6eb33e9a54f1ef7039122eecc9",
+      "git_blob": "7ab0d03de77561c1b3d78cae8a13a81a93b58bbf"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/learner.rs",
+      "sha256": "da9dff8766deed4480aa5afad5245ab2798edec8bcf9f5cc66b4272f2c557062",
+      "git_blob": "e0b846b068057e85481a61e8e21555e652f4352e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/mod.rs",
+      "sha256": "f477b4e2d9cf4bb8c940f74168993c06a80b1f75e169eb63684e071331b018eb",
+      "git_blob": "4e4e18bbefe740e7c2894b3d1ccee484ae9222f5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/presets.rs",
+      "sha256": "2ef1736c9474559e6dd18d75c354868795f09a5aba87c29a5f3fb6c4cd2e2ec2",
+      "git_blob": "517784dd4c2044b6fc5199e7d408d1296e864fdc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/ran2.rs",
+      "sha256": "178ce1704341478cde4809a12f662ae9b91a7b46a3358980eedae77329874c58",
+      "git_blob": "6c7391a3c82df0a17765e7bdad5f2e2ba6646cbb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/stats.rs",
+      "sha256": "d986194e3e298ddedc65bcfae52788053706de733909af86b58a9c3be08715f5",
+      "git_blob": "b8794cc0ee4236fc4c08a24b780b347545d1aba8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/view.rs",
+      "sha256": "69347e394541707738a671770cc01c4b9e5eb8b5d8cb4ced604be66bcd57c711",
+      "git_blob": "f0958ecba642574c42f4dca1af46031a70002802"
+    },
+    {
+      "path": "crates/sugarscape-core/src/collusion/world.rs",
+      "sha256": "13f9f1685f7b959a94ad986403da4059c28d52cbf74777306dfcac90544060b7",
+      "git_blob": "027d79c99b46e897455bb9946da636957e445357"
+    },
+    {
+      "path": "crates/sugarscape-core/src/config.rs",
+      "sha256": "09ac45cf0e7ac0f9787837b5a7409d77007466fda2d5eb7ef4a0241cacd1474b",
+      "git_blob": "3764bf3524c3d42e0c15c3b4b891d35f1571c7bd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/config.rs",
+      "sha256": "8a62cd3e9ea4e937045b4a47a4652f653bb43721fe327e38b0afa933ca8c6a96",
+      "git_blob": "867ede1eb88af17c71f07b6d30cc57461fb0c191"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/mod.rs",
+      "sha256": "2ffa0c34f141cae7e28b623b648ab74b42463967643f96d4c34543982617b98c",
+      "git_blob": "baa0108d26cbdb555f91ecdeffa677590cedc964"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/presets.rs",
+      "sha256": "b6573c58f5c9e1f7925bb664e5a9ad7a665c65960afa65cd7bdac5fc92a698b4",
+      "git_blob": "032ce0f7b2df9ed7eec2f8bbfcbd3f96d569663a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/stats.rs",
+      "sha256": "af1e0ad4cf28395d853d23f01e540644baba037bc24092f969ed4a1c4d5ee31b",
+      "git_blob": "a79db40e98c6fb5c226c53aa68041efabfddd5a6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/culture/world.rs",
+      "sha256": "ed48c832c8edfb9bcfc9345535ee5e09cd5c66f9b15e0541280d69d591d8ab8e",
+      "git_blob": "9165907edc8075fa2a13743f8d9241f54a3f2f88"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/actions.rs",
+      "sha256": "c445673782bc1428b3754f40320aba84975102ebfa74d5f061999c7308a2c492",
+      "git_blob": "5a7c02798f81846d8949894cb77728f5bb7c9dda"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/best_response.rs",
+      "sha256": "d9c99537eaa888a199731bcf838d2536df7f2f73330af4f656cf4d19958d389f",
+      "git_blob": "f91d8c40e39eac6eb0268af6c52cb33287e67e36"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/diagnostics.rs",
+      "sha256": "8c4007a2bb90eb29e4bcd8202c6d0ebce8317979faa621b31835bbf803d2470d",
+      "git_blob": "35fe03ff85ffd24ecd9014995dd317e551dcb42a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/diagnostics/protocol.rs",
+      "sha256": "3e2860f70bc468863a4de51703ea89a2a1922726e787e19bb88401311d27fcb9",
+      "git_blob": "b4fa2b2b60fd2ceb4670a0c4aafcc8f488ff26da"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/diagnostics/references.rs",
+      "sha256": "8f6707aebf068293731c57e96ec439ca888eb8a16cc30c49a362d0a565bcecef",
+      "git_blob": "ac8f62e574d1dea573e0194d125e9283c750d2a1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/evaluation.rs",
+      "sha256": "6aab97320dd18631077e497d805c67cb87e75a074f1b3ea16fc4f252ea3aad01",
+      "git_blob": "ef0179fd97cf4e3fd020eca1abef5d25e6cb7434"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/fixed_only.rs",
+      "sha256": "fac47a077fc0bd1ed771ab9b2e3bc04dfa138d5ac4095c3f08ce7c4ba282899d",
+      "git_blob": "03c16ed78aa963933b04c14efbd4ae50ed7e68fe"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/mod.rs",
+      "sha256": "1eac010aa609e4d074a27c6b45bbf1d31f33043d63f7483c741e936da218470c",
+      "git_blob": "a0976e671b831078e8e6f51694293530651ef67e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/scoring.rs",
+      "sha256": "8fa340423e6ea3977c62fd8732a133c0979e83b8bfa041411fd69ba2fdba3542",
+      "git_blob": "dcb33f7aae83c7de399b200c173508b3baa510d8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/tests/actions.rs",
+      "sha256": "2f2b876db539cf15cd6e872902f8e47c5353f134e612f3a1e1ae1b04b7c8a58d",
+      "git_blob": "37e582e43c921ea6e116e16dc52c14778496f767"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/tests/attack-reference.json",
+      "sha256": "49d2bb6bee7899a73b6bf5974438196ed9008f5f2d2be820c7d9f855e668db1c",
+      "git_blob": "1dda873f77c55f70fa424680d0be4c0345a0794f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/tests/best_response.rs",
+      "sha256": "0e9e4c64662747302e7a25935b1fa7d479cceba05e5e233114f80b3c6f245349",
+      "git_blob": "3bef7dac520d301ea184ab807d615d6b95bec0a7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/tests/diagnostic-reference.json",
+      "sha256": "68aaa522536276229f014414ebe979755431580e459f680115cb77ba05ed17c4",
+      "git_blob": "11014d5e33c6b59ad0d8559436c7e496a5dc01ae"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/tests/diagnostics.rs",
+      "sha256": "01d5d4ec8eba23bccb80367bc6f017b51f808751af0cf4840b9ff6b6dbdbd6be",
+      "git_blob": "f7476c7894c49a0cb1d369f25c476ddd0dfcef8b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/tests/evaluation-reference.json",
+      "sha256": "38d839d7e9976154df9136f36bc4bf1b906cbe89f8af7b8e3393620719128e76",
+      "git_blob": "b9603a126aa3e527d408ed42950c9c336c5472f2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/adversarial_audit/tests/evaluation.rs",
+      "sha256": "d42387f6446b60a449c381659f042d80faa28026013fb35a16a428ff06f36635",
+      "git_blob": "4491d94e750385dd15dc81b8abb3d9b85228250a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/config.rs",
+      "sha256": "ee165d8a5720c7856a2204cca3b422c591631ab480cfdd2fed9df135f9dc6397",
+      "git_blob": "c4a5777b4ce9e9ef9bc96f759a457efc7b6516cd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/diagnostics.rs",
+      "sha256": "63e79664b084c8b3d91c74985c126a502a8d6d6b0c258ebb62229262b4088910",
+      "git_blob": "a93ee2259751b2692c6184e7a96b9415943daad6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/engine.rs",
+      "sha256": "ed523ec08efb7ff802fd32ee3b897ac59067904f8dc2ade2c12a4d62752db3b3",
+      "git_blob": "28d0b0ec61a1bba30dec908db272346e65b6593b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/mod.rs",
+      "sha256": "92207d7ec246524a99fb40a7991f4ccf0846d2cceaf6eba8a31106332bc6f500",
+      "git_blob": "41cd5e4ca280bcdc869a700a1462b50d043e840b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/observation.rs",
+      "sha256": "63ef38daac5973cad8f8295405234da5ae351ca6f78afde2fed15600aa06e391",
+      "git_blob": "92d035e47aad03a7a50b30b2cf70d948acd44eb4"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/policy.rs",
+      "sha256": "5e9b1e41fbd849a16ea1474c3364ce24d237644b2f45bc7ad38158e557904419",
+      "git_blob": "2e580de026fd29687e709b6959fdb94deb9ee524"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/replay.rs",
+      "sha256": "be72300ede2ff84d28433d1183c9948f5f05416c01eb94043a2187d31169747e",
+      "git_blob": "609fc05c71ebabdfd37575af117106a5a5fda2aa"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/scenario.rs",
+      "sha256": "6806268da55665db6d544fa9a12bbbc2f63624392692c3d45f0795b732ec23c3",
+      "git_blob": "2109cb48149361867cf68f577616401b5c4f89fb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/best_response.rs",
+      "sha256": "530bcf77afa5ceb777280d6a71b67f28bcb6246d9655770ae0045a8dd3cfac83",
+      "git_blob": "f7e653e3d6ea417ba3d2f4e98171f928d819645f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/diagnostics.rs",
+      "sha256": "331d3402cfa55a5c68fcb258ef6a0e9ee5735bc0308d1d7b67c95f9462a07d34",
+      "git_blob": "432410efc4783bc3725aa59f53e3777005472f1b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/enumeration.rs",
+      "sha256": "69a477b76caaba4400ae1578f728b312fabd7612087a5ae388cd39e9aa183108",
+      "git_blob": "2285859c83bcfc155a9ae8df6b0b6f3b36f0b7a9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/evolution.rs",
+      "sha256": "34c1d002564af2338249afc0274b434660791c7611b5ede0cf713b698d2cd318",
+      "git_blob": "4d15d6af3149d3251b09d021494ff86638a90175"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/listeners.rs",
+      "sha256": "0ee99ea9a2f92531f7e00a2d1d3fdc2e1a884b0633457b33367280109ee54793",
+      "git_blob": "06ea79086f08f0fefb8a5a225c02e1028da46150"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/mod.rs",
+      "sha256": "d4ae0ff92cf033162762162201aafbeba7a123e0629c67643d9f0ea9d89eb638",
+      "git_blob": "6c13202913766562908d97398679960ff87bce7c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/policy.rs",
+      "sha256": "351ca357fb2be0aa6c16bcfdbc7a2f0a98c54224758c3f57a4a7cf80a3377c43",
+      "git_blob": "fc1a481915635535f723648137f473200952fe22"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/session.rs",
+      "sha256": "2df7cf234a18760b16896b0687032fed3ccd5a12578b5ab4de2f3be0be827102",
+      "git_blob": "843aab564103ee37f61c805edfa2f8b47ce6f0b9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/tests/atoms.rs",
+      "sha256": "569f93912a6ea6f85ef2b60853d55161e8c753e40ee1ccec6d1d05da898c21c0",
+      "git_blob": "c93fe9f300f3bb52fcd752f762ed3849379434cd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/tests/best_response.rs",
+      "sha256": "f931c21107c7b1bc09d559626fd27e22f3c8efa1733eace61a467d723a2bebed",
+      "git_blob": "c8df67d0efaa742fdfb3a1216f4751eced68b6c1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/tests/enumeration.rs",
+      "sha256": "59c909cc2fcbe554dad4b5e58b3fa41332a0dda818a65d2ca4470704ca956594",
+      "git_blob": "59c43c6444823e8135e1a64c45dc8c18c30ca8ea"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/tests/evolution.rs",
+      "sha256": "f97541cfcc7653ae5c852b61e32cdf5e765fcdeabb12ec05b0f6e1f17f24b98c",
+      "git_blob": "f521299e70088aa1d01e9ae0b4beaa9d0074528e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/tests/session.rs",
+      "sha256": "422a09f8c41882f57f7690facace34e10a22a63f1cb12ffe970e1ee5558692ec",
+      "git_blob": "142352528019fc060c89f85f11eb3fcc79f8ce23"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategic_reporting/types.rs",
+      "sha256": "42a65f995a4fc1f763d1d628fc31a9f62ba7b92b1910ff2f58b367aee5d61f69",
+      "git_blob": "846e6bf732499d2471742b2705602c2ff4ff1457"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/catalog.rs",
+      "sha256": "042f40cda9b928a84935da4223cc997ff5e76d00b73d8400bec2bae72347815b",
+      "git_blob": "bdbb531cc097aa18b5076a85a8c12c1ca108573f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/conditioning.rs",
+      "sha256": "55111edcecf723d59b07c31220fd82fd13a0ca391e4db7f54267b4ba934a97b0",
+      "git_blob": "70be1e3bc9cba70906565ef884636bebbc199af2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/diagnostic-reference.json",
+      "sha256": "b4f89c97aa9b5c6cdb5d68399fac66d3621c4552e533b04cad6d8a5ef7e74d4a",
+      "git_blob": "7f3784ca158c780afbf89bf3fff32d168c57d26b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/diagnostics.rs",
+      "sha256": "47e3d50b2a90aedb67e67f405ca4bacaac46d7005806132472a79f5e496da6f5",
+      "git_blob": "8cc51a570d457b1c49395f92db1275670a6ccace"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/diagnostics/references.rs",
+      "sha256": "72d65c52101cbde9746626f002c60f5e3a4a943c938a81a22f009b5f02350739",
+      "git_blob": "050fb2c725625628f6f2d23d8bcee6a7db2d797c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/evaluation.rs",
+      "sha256": "6d1338d4e7bfc4853b44378dfa0ab58a3b5a7e52805bd92478eba9201a878398",
+      "git_blob": "c9b965a13fa8442f76f4636f8c482dae26af0a54"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/mod.rs",
+      "sha256": "89c4893d530f83e2225869f5ee4424ebb8f122973ebc371f660f8c64881231a9",
+      "git_blob": "11e77f3db3aeb752f802851d2dea521921593274"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/model.rs",
+      "sha256": "ef56e08595fdc9762e61af219fa5678bb0e9586db97a2b2b4c37385152bf6989",
+      "git_blob": "9ae1a211aa73a6a6635a24855be2f6f3453c032a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/tests/catalog.rs",
+      "sha256": "99fa2147b1167313411f8e22cd97a9c53bab632a7d9b41dc86adfbf1013994d2",
+      "git_blob": "21d0eec1fe4135b08affb199b01a162805f8913b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/tests/diagnostics.rs",
+      "sha256": "716dc3338ac03ef29ab1c10f81636c100467666045ea07a53b9fe98aaab5c003",
+      "git_blob": "2ecac4d93efaeeeb6d0783111d74e4847a536664"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/tests/evaluation-reference.json",
+      "sha256": "a3909dd26478684bacc143e5d0e609d418b4418834de1ae250d1b2fe10ed6a6c",
+      "git_blob": "5840ec5c7d491a4b23c2241a0121c220223813df"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/tests/evaluation.rs",
+      "sha256": "d97bde269b75b9866ac40c6d3bb6e4f2903a4eacf34a42ab14591daf64b3140d",
+      "git_blob": "4fee97a3a6f00444f3a610a63ba6f663a1d74d69"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/tests/inference-reference.json",
+      "sha256": "a810976135a377773828383693166c04921cccefa51fdb38d318139375089587",
+      "git_blob": "58747b30ab3f95b246b0e4e6de16e547fc645e4f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/strategy_inference/tests/inference.rs",
+      "sha256": "4835e4125dd14068f41fb04645f0e83adf2f563f605781237063e29e7c9d6f28",
+      "git_blob": "d83f1ca46022bfeaa58f1a48ffeae6c727b93078"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/testimony.rs",
+      "sha256": "279bae068ca3e636f5b1e1eeb04b1fae8ef1556fa310a87f2dd6c6bac5327ba3",
+      "git_blob": "c037cba65bef7b79e530f2cb9f451b1dc7d10907"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/testimony_diagnostics.rs",
+      "sha256": "7781a8971b76b6a2585dd3fbf02a4c5d3deaa6748aaa97dac7fa5c54f05fd62d",
+      "git_blob": "6663e27bfac1c70d1521a39782e14cd32d01b52d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/testimony_game/diagnostics.rs",
+      "sha256": "d91b717434ec55ef2545942c5fbdc4b441490c7d8f58907933dcc81d8eaea150",
+      "git_blob": "16823339d8c85668d0c296049b96a80e587cfd46"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/testimony_game/enumeration.rs",
+      "sha256": "c5251c6e1a201b9d07fa02ae6b16ba46cc382ebb58037d4df07c94d9c571e957",
+      "git_blob": "ae5421d0066b6966313d1337af73537ed6a3aabf"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/testimony_game/evolution.rs",
+      "sha256": "86a06916651da51590d711e8555c6a37e0f3361bdd605d94ab9214719a34d7d2",
+      "git_blob": "e9ea2b965070ba273aaaff9cfc0a8ebc4e69952c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/testimony_game/listeners.rs",
+      "sha256": "c66866cc7abd44da6c78b21460e72b87314439bc8d7f860de3cca2b0ce14a734",
+      "git_blob": "004db455795c59ae1e3d954fd8cf12b59bbe3511"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/testimony_game/mod.rs",
+      "sha256": "92f849f60031950de36c4f5f47b6e81a17ddcd77f7a6f00154f858ea89c25551",
+      "git_blob": "7842c53c71ff23ac7b4e74010093753686cd7759"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/testimony_game/session.rs",
+      "sha256": "81585e2da95dce63820cf1e0f4052a28707b1e95349cc789980230b5d663b817",
+      "git_blob": "9a201826a4286166496ecb2fb37090b894475e70"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/testimony_game/types.rs",
+      "sha256": "eebf40381149d4168f4eff3a49dfb65c37af22399e7b1eeee5bb817f483eb6cf",
+      "git_blob": "5b281d9bd4e8d9401224f307439af7d5d0643d92"
+    },
+    {
+      "path": "crates/sugarscape-core/src/deduction/types.rs",
+      "sha256": "406755718612f9809b3149eeac2d2ee08e00184093b7761a60201fa3b3a6602d",
+      "git_blob": "57b3e31bc81440b88e531e620d7f36586d3dbc51"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/alliances.rs",
+      "sha256": "6b91ffdbe73a83b85882585682d6a48d4cd412cf4277cff07b8dc74cef91fc2c",
+      "git_blob": "41ea1c0e8b721bc264b64c5d5f0e93b31d35acb7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/claims.rs",
+      "sha256": "cb7d11abea36b3a260ec3d878b0f6534e6fb4ee95c45d3ed6372b20182e795fc",
+      "git_blob": "d65e1e5cdab1d60d150d2974669a5e0a3cd31c41"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/combat.rs",
+      "sha256": "e5cd7e614be3ea7232b0c22e1d9f3eab95e6a1dfdee094b089213fc69280af10",
+      "git_blob": "4ee803b96d41c2bf9f79727aeadf89f42bdc8c03"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/config.rs",
+      "sha256": "5ebf92c1630d0672aa6e6c949bbb68a6df6e9a2fd417cc1f272c3f5ee3be208a",
+      "git_blob": "b257331d8fbe07fe2826aa2492905dfd5d039cec"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/decisions.rs",
+      "sha256": "8ed1a1d6bec0d748f2e588b538119c2f356fb72f7a3ec11c9e950e7c1d28c3ce",
+      "git_blob": "28385e4930ece4e514cb434533bb5d9a51aa41a3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/mod.rs",
+      "sha256": "d210c9458a894c9648de41ee48ccf737ce2331177c7f49b02c673207d4eec157",
+      "git_blob": "1aba4fb86686985b0af51d1a23ab2d281c6101c2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/presets.rs",
+      "sha256": "fcd19c765009ebe4be8df52e2f45fdf9a43a7f3b13ad7a6a265e874705717b76",
+      "git_blob": "473ead38328cc250076d343da1a1e6074ddf67e4"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/resources.rs",
+      "sha256": "b8aeb01eaad71b648e7ecc4e5563475d835d90f15536d177bfac407e5178bc8c",
+      "git_blob": "f0ee21aa6174efd88251648a4b60bccea377d1e2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/stats.rs",
+      "sha256": "4a77e5c61d468533225eefcdc5a34cea46fd6f39477c49b739268e6e0f2a1a8d",
+      "git_blob": "f5afe37c85b823b6b3ded8d4f7d62bed2a4ac156"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/territory.rs",
+      "sha256": "0116ce9f1c5184b8b386a102641a42285c8f8e4f1ee8ddb8b9e5f13409b04c63",
+      "git_blob": "b609186f1d476a2195f20b85ef6a26579698cd51"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/tests.rs",
+      "sha256": "341a8808dac8871acb6226d789ec4a0cc346584eaea431664439e89cc3bb3892",
+      "git_blob": "222505f2ca2894d127f9ab4abef67ed142f019e6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/types.rs",
+      "sha256": "f9abe4a8d79894177056d604f65e5e4f1ba033797c365b1f44c3d0e30f11db9a",
+      "git_blob": "4ef80ddf85cce38a7ce73afd93c4866cf72ac43b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/view.rs",
+      "sha256": "87fbd5f2eebd572f809803abd0b42ffee2c24d8f5a817c3a328a1ddbb421ad01",
+      "git_blob": "13041d15b4e7381dd9ebb549f7103a99d455f928"
+    },
+    {
+      "path": "crates/sugarscape-core/src/democratic_peace/world.rs",
+      "sha256": "62a8b517cef73ddac3b989fde9d720b7865f7321573acda764593aed640b6861",
+      "git_blob": "35120ea6bc763c6ab3358a9383483cb9f4b66245"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/config.rs",
+      "sha256": "cc15306415e69e785c4dd93f182e552a3a0fdc96988b1f53d5a3beffac3add05",
+      "git_blob": "3b5c907bbd001aa25cea9a33f964ef7e91905344"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/mod.rs",
+      "sha256": "7beb01c3173c2c12fc0bf9c3ae892cc7744323b83f7e0486cb83f9627a7917dd",
+      "git_blob": "07f74bae0733c68dd18e2df552e0d2d0e74616a4"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/presets.rs",
+      "sha256": "d9c9d692af3ca28ab1d50fdba9952fc2e7bced146e0c2b685eb4a99efebc11d1",
+      "git_blob": "84f4b7e5cbc5286798e1307f5e477a2086002be4"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/stats.rs",
+      "sha256": "e07f373fcf9caecfe78eb2fcad76d617c7196fb0f998c2602f57fb5833a60593",
+      "git_blob": "f8f9bcd87647c0ec691c0064ce89f131e62948cf"
+    },
+    {
+      "path": "crates/sugarscape-core/src/dpd/world.rs",
+      "sha256": "085b55e56bcf8a19a7d96241b4fccd211182b453f210eadc613dcc1ce9e79e7e",
+      "git_blob": "f44aecf96128639038b6849ee80a64905fabe106"
+    },
+    {
+      "path": "crates/sugarscape-core/src/econ.rs",
+      "sha256": "12be1920cae7cfa2fdc249216f3dfaeb31d6d790619a4c95731edf9467c53b46",
+      "git_blob": "7a096c9fcad79c8ec5e7af5f2321212e49c7550b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/edit.rs",
+      "sha256": "4d64496ebdadc37ea7767daf51f85ec2cfe951c4a217c93875cd9da1954633a0",
+      "git_blob": "b66e9ab80009a4e1e02c2fd62e287a6fcb4ceb0b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/config.rs",
+      "sha256": "9baf267bceaacd029e82c6b62d577c14c5cef9ab6855283c681deb83f1991e49",
+      "git_blob": "810f90c6acb63a738577e012c36db90466af3abc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/mod.rs",
+      "sha256": "e5ecd986860dbaad0bc80381da786ae014386a5ace08027c219a7aacb5b31818",
+      "git_blob": "de5c64b1156883acec4bc1ce626677bc7504e2a0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/presets.rs",
+      "sha256": "535a5b0dd139346b47062091cd3e5e4502cc3b4562b309d3c893c0908d2b2c41",
+      "git_blob": "e5145a3846686306c9a2764106e0ad40d4d0065f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/stats.rs",
+      "sha256": "19596fa23d07f23a016b1bae3f6aaf14b89f1df9676cf136d9f016f84bbe9f45",
+      "git_blob": "b41a0b96ccaed8fc72ff5ff958c336bd93ebc636"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ethno/world.rs",
+      "sha256": "baa9a702ff1ffd8e364572a948fa0673c0f88e52a29e78b90b6036885d71442e",
+      "git_blob": "90556d2692e252ed8c1d0afee4426ccd72086efd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/export.rs",
+      "sha256": "2dcab618df2c981f25c2474c7b83d812c977d38235e06b1a5860dfb2aa06f954",
+      "git_blob": "f4d48577128da4f83c6c448d73a73666ae609f57"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/config.rs",
+      "sha256": "4fcfe23cf775d3e8c11681ad85a2dd6d2c5864c85710be7f67dc32d72293652c",
+      "git_blob": "5aa4b32f4b5f9585f95c0437ea34dc4d92e8d345"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/mod.rs",
+      "sha256": "2c93e9ccf8c1bba43ca943d4a5071a3cc82235d9bd1f0346cd3b20b8ee63835d",
+      "git_blob": "8b4ec4c4f8c91435dcae0a478609c353a1a02d36"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/predictors.rs",
+      "sha256": "b158186288997dbd7d8ad99de4704ab03235e8cee4ce2fe23b2f633afb343540",
+      "git_blob": "6f2796f3a29bdca95a39597b173fc0f40dc9d371"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/presets.rs",
+      "sha256": "6ab01fa96aef5f427a2361a00093f2b0ab1af19a73899d3729210782d56c9a5e",
+      "git_blob": "e742ce64f279c7567ba2c25a46061e190a85b0ff"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/stats.rs",
+      "sha256": "80e1bb9603ef703199ba69bf6e939e1fe45d81a54ee90e7229dbd0b15813ad0a",
+      "git_blob": "70e3431c1f3149a5f7e47c883f236b27e46572f8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/view.rs",
+      "sha256": "20e37b9436149e214a011cfffaa889aa05d3dea894abc5a8c8a0ca6d6b37ad43",
+      "git_blob": "e5cb9e8addbb9aa01ae44c34dd192c673e7b8764"
+    },
+    {
+      "path": "crates/sugarscape-core/src/farol/world.rs",
+      "sha256": "079d72122cfd16ae7b50365d46c119ac298bb2f5d1964eb3adccad85710b5dec",
+      "git_blob": "bfba2e185e8c0f09b143752eb6fd734a8ff8e002"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/config.rs",
+      "sha256": "fd13b293e5d42b6599ca14d4f8f73e3ff0b76e935f76796f989d1c1865db7103",
+      "git_blob": "a665d01c3b3933b3a97836a27f59bf83db14ff4b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/effort.rs",
+      "sha256": "608252daddb3f7950852aa21548256298c43e0e921fbb75399533029a4d4f587",
+      "git_blob": "f77ca108af57cc272baf36d1cd947ddac16f0e16"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/fit.rs",
+      "sha256": "1b66ba7c35377e637ba898637306c55720b8958fcaffcba9f532a4d17e96c4b7",
+      "git_blob": "5e94ab986a0c9b1a50adad8fc3719ac11aa6ff2f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/mod.rs",
+      "sha256": "7eaf779c003a9212b68bccab00cd27f5c06841758da76a70642ee5b4b4ba1a58",
+      "git_blob": "48bb562906f0e226747b51d63b0987a81c11d2c9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/presets.rs",
+      "sha256": "a39002179908918083f2e73f3699476cbe00c718729aea4e18bc670f1c9fe3f6",
+      "git_blob": "e12f3bedf75e4a7f385acf3f11cbe3774faaa187"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/stats.rs",
+      "sha256": "90ce3cd4d043c068510e2d2cecc1ca74bb10d13a72c05b96715606d72fd92bd9",
+      "git_blob": "bc8b793f5d3ca29c1790fed067fccfe2bdece896"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/view.rs",
+      "sha256": "c65994dd7178c2bfab7bae17bb4618cfc820159832285dc67ef50590043decf7",
+      "git_blob": "07cf27481a7a20706d726bca20fd776a8fb681d3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/firms/world.rs",
+      "sha256": "708c23c67eef902a122d6ecd6b3084870740c169a44ee0d046c6a79c86803e24",
+      "git_blob": "c0c78d1c2c5ad983d5f05a62938e1db8066e9eff"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/config.rs",
+      "sha256": "4631cf2e0e4278c3b4dc8b50dd4e8b4a391c8ddf08b14bfb2f1ef92d95f95c57",
+      "git_blob": "1f360469cd0eca2d7a2717d31710554b7b3244c1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/controller.rs",
+      "sha256": "3d56d3a9233ab85bacad5db3f601d934f947bcf23258036ce1988a72d04756df",
+      "git_blob": "78a0fcf8c40873281e949cefd3c2bd7da6a68d56"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/draws.rs",
+      "sha256": "e3da7aa3a0b8bdc7f768418242d8658d472bb37f32bb4ae009ea54ebae523820",
+      "git_blob": "ab70f76066c2b8ccfff0343bde195208a37ebaf7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/ledger.rs",
+      "sha256": "f575c17495c353b5970a0d351f2284bb7ca7178a4ce1edcda7110d97bc7bba69",
+      "git_blob": "b97efee484e0ab8b1ebd07b736ce3e2b9fc989f6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/mod.rs",
+      "sha256": "5f864e6bcdb6c3bac3e6c261ac95c3645cd3100828613dcf6940f8e822163acf",
+      "git_blob": "2f27b1971c088b05b61303f8c29f3d24d46acf47"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/movement.rs",
+      "sha256": "e4dc0a9bbe7896971fcc865b5cf52b6d219fe53e558a1f9f450795523fe7fc1d",
+      "git_blob": "5fa868f56f505a22586e6cfb56c23c1f84492672"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/runner.rs",
+      "sha256": "83a1a9149d79b69076b6a036016f6df89b4294fbc674e1ccc6081b0b8669066d",
+      "git_blob": "814d12cab5cf34744c87511113c6e4737c616ecb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/server.rs",
+      "sha256": "d4578746e9d79982b7346cbf2cfd83185eb45e89d444c089066a79ba091135c3",
+      "git_blob": "dd9b7b14a0ed645e7fee9098bda27ed47be19729"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/setup.rs",
+      "sha256": "d81a833a22a04524c2e28cafe9d879e4677b143d5227db0b480c7bde49c83200",
+      "git_blob": "0e80f55b61524347ad1ed50bf9b4c0441fb3c850"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/state.rs",
+      "sha256": "01ea920f21e024a1fe3953080fea1bd10686590dc5ac003393729d26497669b0",
+      "git_blob": "5760065531901de18efd64817b70899c8958faa8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/tests/controller.rs",
+      "sha256": "a2d55d30fc200748a97f9b44b52f8241a0f51623c16f36235947a53ca710e8db",
+      "git_blob": "c1bcb7d514d8b20de9147c44ac1ba521ad4c6a0e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/tests/ledger.rs",
+      "sha256": "6ac4a5496c5d81b7efb08989b967d616c58f30aa73127c8321f50e8e6b459e84",
+      "git_blob": "ddb58d6c67f5711b47d4101d5370f951a4bf0eb0"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/tests/mod.rs",
+      "sha256": "0673745178e054f05c3084576306acd0d2bad44e1969537d6538d8a8f9beaf8a",
+      "git_blob": "e5651bab5d5f41ddf2d92497719ad69b43c7f8ce"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/tests/runner.rs",
+      "sha256": "1fdef2fa8bad13b1b2cf2ad4458bc01838150bd86653c6625444faff42f1eabd",
+      "git_blob": "8c74d1d3e5f035fb2095c18d12a8d795897131e4"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/tests/server.rs",
+      "sha256": "47838e857f136bdf0f8850a1bcc61c29be8233ea985f9d4c87ee7c9f626ae6f4",
+      "git_blob": "6248bd3ed07f3c68edaf7cbb6bfe7925539e59d7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/tests/setup_movement.rs",
+      "sha256": "5cd1c71b1eb9938d7442488fc1ff1fab2b6cffa124a128f1b5217b8f63535c3d",
+      "git_blob": "530d0b23d839456c9baaa8c80949ab14c69f8ff5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/fixed/world.rs",
+      "sha256": "82ed702f7cbb30c6d4ebb22a2f9c1726fabcba9dc6369920a72dbdda73c9ba50",
+      "git_blob": "a5773a33637bf851f1392b8dd0f8060970148239"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/information.rs",
+      "sha256": "8d38140eeb441657b732125b2a3ff3428426dade2e8b5f7fd1678f9f84a48650",
+      "git_blob": "7a20f3526409833940b5cda1a77dfbd9982d285c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/mod.rs",
+      "sha256": "cba9b14575cb707adba9a48196eff6cece74626e4b5bb02e9c38deb8ba15ca59",
+      "git_blob": "4e437d20dcb27d6c787fbfd3aac2f474f4dda338"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/actions.rs",
+      "sha256": "5ae9c9c3342daddfe8974a0f94f22c963216ec17ce8922cfe3179d3209483bfa",
+      "git_blob": "e243f589d0db3a6a8e29e13dff73022e5dc12bc1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/controller.rs",
+      "sha256": "4842b63019f75aff0603683aec4c7db49804bf29a4939590332f85f66a52edba",
+      "git_blob": "64f2f07b4c62f51a13c9e851ee0040a00242a2ba"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/decision.rs",
+      "sha256": "0ca3dcf1c8d694433d1a416ab90846a069103c3ba0817421a9644a1a19085181",
+      "git_blob": "36e0c6fd4b98d7722aadc004d083ccf6e2677f3d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/draws.rs",
+      "sha256": "9d5c8070f7ac9fd0b985f56cdaa50107d41f0b086e36cd5d7b207e4a7bcad367",
+      "git_blob": "48a03645b9508b9b7bc5a88506b84dc993dbb901"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/knowledge.rs",
+      "sha256": "574d53dc5479114710751b10eea0201ffc4597d0ac25d0eb6131db47e120e7d5",
+      "git_blob": "305a3ec1bb46e66a3cd7c084551e8ef76db8340c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/ledger.rs",
+      "sha256": "695a9240abc62496495ef6e305d4805cbd700be9eb68c7db24516787e59683ff",
+      "git_blob": "9eeac657a30b587b1bf3823f0c27a57025dee135"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/metrics.rs",
+      "sha256": "718b69904fe149dc311de6c89cc224bb16f5017e92bf627caddb98d7425674ef",
+      "git_blob": "4d145c89c59140eccd1a24b3895f480d218b2cd3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/mod.rs",
+      "sha256": "28cc966ec51e6f78e7c7593974883983767e05faf83719b60b3b24b0478858f5",
+      "git_blob": "d8c83f11253e3ac6a15e030de315eac49ca43f78"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/navigation.rs",
+      "sha256": "b844b5a06589391655ebe363614776174feb6966bcee097f9f90c953431e95a8",
+      "git_blob": "38b31516ffa8dbe8c6f07a4fa441bc150c4a7359"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/observation.rs",
+      "sha256": "3b688c2f2d2be6f1458a3ee88200f02ca342edd868204ba88a0d0b074f29ac1a",
+      "git_blob": "e6cb311d061bc9e2097f56b6161a254aae3ca268"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/runner.rs",
+      "sha256": "3d28bc2fc3cb77754c04a827da365ab13ee2f2e586df74486294bd1a24a52d90",
+      "git_blob": "469d4362dfd5115981d8558a1f19f63b8508bef1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/server.rs",
+      "sha256": "5042bcd86165aaf1edc814baff2060abaf5ff6294b9b24b1aebf955b67cd7924",
+      "git_blob": "96d83e79414eccf1d8aad1601112944f252bde09"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/setup.rs",
+      "sha256": "2ad195e4e76140a365d8a52fb27d95682748e3bbbc670144535fb8fe7ebd68a0",
+      "git_blob": "e763b5f5f8878cba20467165617646817c6865df"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/state.rs",
+      "sha256": "28691a504cd60885e710f99ea89eddf277bd9e6753ede62a764367f2f42ddf7e",
+      "git_blob": "e43a671293208563cbcad8c37d11ca3ef41428fe"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/tests/controller.rs",
+      "sha256": "b103028d8eb69e2b8e730ecf397c50ac46796d857252bc9a9337815256815848",
+      "git_blob": "63b68c6b6baa591eaf64dad1c1673d9fb75c3f3c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/tests/ledger_server.rs",
+      "sha256": "feedce3168e938e3be64b79e37b56a3b6965abf2d55ac3dfa27341f5954dbfc9",
+      "git_blob": "c776a750a416f47536d7d06b7042ebb55ec1008e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/tests/mod.rs",
+      "sha256": "4f359452dd82ac03195b1dcb4c502cc6289c463e99add94eac5ad1a18289d723",
+      "git_blob": "a09ae03ab7c2e8f62e936b070636f5e578332b74"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/tests/navigation.rs",
+      "sha256": "0fe64a3e61b994aa71e6947b29addcbbc97d66f02715583a2ad5916c0d31f229",
+      "git_blob": "90a70c852e6b5e096704a94f0133537968ff05fe"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/tests/runner.rs",
+      "sha256": "f0b4bd67cf1346a72e1820987fe550f8d8b0064105bf88bf4ad321989355e454",
+      "git_blob": "e29ebf9b0fb14267909ef883d03906da6b5c7252"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/tests/setup_learning.rs",
+      "sha256": "abf4936c6c9ffddee512529bf6fa29b306c887647219debbf7dd6f1b80346e59",
+      "git_blob": "2c58ed3a3d5f7630ff704f000d8b35a4581ca63e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/view.rs",
+      "sha256": "654399cb605e6cd288c4ebd9a1e875c762d01e5b80443a1332b53a7eef765c3b",
+      "git_blob": "53f042f77e35b7625a9f63b608a76a0757bf3965"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/passage/world.rs",
+      "sha256": "fcca40e96c661de5a333f2cf3c4c9f81b37fe68b89280bc53c5fe608a76f3940",
+      "git_blob": "0e57b52e67ff874d53996c8f6daa9a2c2d0cc548"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/rules.rs",
+      "sha256": "39a71849e752648e382ada549a3d7788fc0010b600b6032367b88e02c88fef3a",
+      "git_blob": "9b608d7f97777282a320ac1d90787100cdc68802"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/tests/information.rs",
+      "sha256": "f88a1312581e4b41f96bae1846a897b3b502cce4f396c1d7573580736a114c9c",
+      "git_blob": "8395f94ff70bb9f2356e916c06ad997bb16600b3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/tests/mod.rs",
+      "sha256": "6a01e17a05bb5a6a09a602c5a7b5db596c24539fff7437348498c0b971702501",
+      "git_blob": "a1bdf6d5e6eb7fe6ceabf4b5864796c6c4c29ad7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/foraging/tests/rules.rs",
+      "sha256": "90de9f7ae7b7678f177e0ae5acbb70582b98683ba0a8fcf7cc663b955bd3265d",
+      "git_blob": "9af099c916d76dc534406e28f6907fc3c5a5fd62"
+    },
+    {
+      "path": "crates/sugarscape-core/src/frames.rs",
+      "sha256": "17750258be14f7de8407b23e51da7abe520812428319b3a4e071d4eefc49311a",
+      "git_blob": "72c7af800ffdb976a04f1a4777f3ba28e39d71fd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geometry.rs",
+      "sha256": "32ad1397076da50a8dadc943e6e6528671eee5aad711ec237bc452e0ed32a558",
+      "git_blob": "1969fcc54308bcdaaaef65f1e96e9668871b5f28"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/analysis.rs",
+      "sha256": "f12c274a054551bc5724020e4dc34191c99c70805cd361dd10747f9dda06a85f",
+      "git_blob": "5710139487b717baa1c12fe2c9c149f8325eaccd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/claims.rs",
+      "sha256": "134147e2572ccde8d010f39fc23bc7f032a9ac7bc563dad3f8226d7104cf522d",
+      "git_blob": "968d825df1004f93b47325b67a6e54bf747eef9d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/combat.rs",
+      "sha256": "6e1e811031e455065c64c67d9cebac535d35c0beb84a0f36445da0cacee3af5f",
+      "git_blob": "b34f7ee95a98621fb47784ca9d2fe7120729d0ed"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/config.rs",
+      "sha256": "4d88163ac1702cee05b8c7d359cb64f8b9d7759aedc5d8ec5b632c6f854c7fbe",
+      "git_blob": "673bf54fdf836fdaf865fdc2808a0e8838993b20"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/decision.rs",
+      "sha256": "2a20983dce167d8d46629861f38b7d39e0f75d8339cd69000bdcbc9437d67806",
+      "git_blob": "bc4a65ea513498dbc136c8306b1941e959652e0d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/mod.rs",
+      "sha256": "fb562bbb40a0254fd708b843c974f72404ad3ae82b3a9e2af99deab5bda27b31",
+      "git_blob": "419f82caea623a14c2058b342eca89982c20e358"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/presets.rs",
+      "sha256": "6ba9bc8eb37c0c9334eea881471def4c5528aa9bca6629c4ab69598d9909b299",
+      "git_blob": "d7094a16e9e85575d256134f09675666bc78b9d9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/resources.rs",
+      "sha256": "516d17e62165ebb81d5d340575b242bee957c2d982d4ac80341ffa382a5944b0",
+      "git_blob": "c9b300c255199b6829560e24b8213b60927f3c63"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/stats.rs",
+      "sha256": "8134cdaec9b1403468b6b05afa186ad8232828ed57b1b1abdf49374849c4cf6c",
+      "git_blob": "ea0a19c74fd79ab767f772808f8bfeab202b73f3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/territory.rs",
+      "sha256": "2f7356a3c5e2de9d9bb52130e16a7177da53b5324f8f4db8c71ac3911e9a31a7",
+      "git_blob": "ff2a343b61b72e1e1a00968ad60ccf072e38b99c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/tests.rs",
+      "sha256": "4d074b08a666302590e523f09c53834935d4d37883e2128e804a1444bbf87033",
+      "git_blob": "dde6c23ab4cea077a275562f98d7b76522f891d7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/view.rs",
+      "sha256": "77b9584f079c9da138a21c8345845fab264d2cf0e944523cd2f82e607e05ba22",
+      "git_blob": "4d201c4c9d65586a469f2dbca9f8658063e816ce"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/wars.rs",
+      "sha256": "ad01f67295f55892d3e6abf240766a80d1aa9c7744c6d56ef0c36582c60fd34a",
+      "git_blob": "20e338c3f1c806935b3fb6dae33263a0b3f3223e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/geosim/world.rs",
+      "sha256": "342c3d6129747abd8b0f2f5b3cdcff8ade9fefcc7c52bb64d87dd6ef420c4564",
+      "git_blob": "bdffb11dd89c4bdf59686904c39cfee9d4158c43"
+    },
+    {
+      "path": "crates/sugarscape-core/src/graph.rs",
+      "sha256": "8ac66dbf0a4f7d2abb1bfc33da635fe338e4e1af3789ab5eb8d907ecd48c0fd1",
+      "git_blob": "3c4861aee1cd89dcd7363fdfc29b9437a008167c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/config.rs",
+      "sha256": "c07d63e74a3e6abb3038fcc7f8486fedef151e6f7fa284865c17f22895a2a6d6",
+      "git_blob": "c72630e3581e68b9211473be039e314e6cbb9a3e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/mod.rs",
+      "sha256": "19003ab1170695ea75fa909958271dcf181800c8e84b565f39b824314507e1cb",
+      "git_blob": "f6cd0be6a437768fe4854d8a2fa3357ceddbf69e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/presets.rs",
+      "sha256": "18549481175703384688927bf9df588b7e03ea9ae3fa8b360729d65842702eb1",
+      "git_blob": "5347b04a5fdf2c0ab4ac48e573a2ae71262200f2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/stats.rs",
+      "sha256": "d52d367378d256ce6c83efec2f09a4a00f94eafdde21b4820f038aca2a065109",
+      "git_blob": "381d44412a2b300647fff01e1b6489641daba11a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/view.rs",
+      "sha256": "8a9a53391a89bade48c75133cce1f3114887537b02d5c573f932a50445f14fbc",
+      "git_blob": "e2d29f33cacfcfe25f12fccce3deb4b82b9c9996"
+    },
+    {
+      "path": "crates/sugarscape-core/src/hoard/world.rs",
+      "sha256": "0b6c6edf16194b54448115e668dafb9b13d987ad029d0a0f878d405880f92c5e",
+      "git_blob": "2c1f93dce8f5a2aad4c9d4775a2faf0305333199"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/analytic.rs",
+      "sha256": "018a0002013ef1cfd08b19729f6ed9670c9ae80df1a31c3da2d7adf76e920849",
+      "git_blob": "fc50968d9ba9e4b95d11509621300050c3f37636"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/config.rs",
+      "sha256": "f92dcb2c47a894ff62f0079e4e72c1b6d9420968e502812904b3000f001aef4c",
+      "git_blob": "1bf7272975ce7db49cd3e7c468be6377d27e4a1f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/mod.rs",
+      "sha256": "c4d7f9736a943231a07c6978c4b03c0c7f6f5328a4348de4183d4286d4bc9b5b",
+      "git_blob": "4e58288e44a630fe05e515313d35b19b10c4d5b8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/presets.rs",
+      "sha256": "ee89d1fcf7c27e4476b5cb746963e8a95880460847e84d35b16394ad7f9f778a",
+      "git_blob": "e97221f4987c232f47af90342d2b5a945405fb26"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/stats.rs",
+      "sha256": "6c7bd8994f116212fc9ed1b3fd3f4cfcc5708f0bcfe1c0db0d00d12670c0e103",
+      "git_blob": "3747e481fa2d363e8acd842551417c4071ef8b84"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/strategy.rs",
+      "sha256": "3789a13869554f30ff4dced3a7b4e168b5e0178fd1a6026296a3b59702e8afc5",
+      "git_blob": "b0d8bfe43da6de4cb5b9ecd9e40b2be241963dcd"
+    },
+    {
+      "path": "crates/sugarscape-core/src/image/world.rs",
+      "sha256": "84ebc19e43164ae78422e1e960ea895051299642b2c577caf541f4944974aebd",
+      "git_blob": "d7a043dcef4ff5580444c8e868475c3a37a9cb72"
+    },
+    {
+      "path": "crates/sugarscape-core/src/landscape.rs",
+      "sha256": "fb86f769517dcee118f1b47faffe1c7a280db3f3dd5485c6e3a01aaf0de69920",
+      "git_blob": "359beb4c2416cd660dba76920207e3c91d50cbed"
+    },
+    {
+      "path": "crates/sugarscape-core/src/legacy.rs",
+      "sha256": "1a9b62c8c1ea9bee87deb2324b5986b9fe4db9ab52e6ac6bb27cbe681013ce5d",
+      "git_blob": "1ff0fe40f3840c1969962399629a73694c7b21a6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/lib.rs",
+      "sha256": "8f32d8ef04916f9b1c6ec6b1a8a4f14312e289c137cfdd14081a8dfc38cdcc3e",
+      "git_blob": "bd70a2a472fa9dd0bb03f166661a200e9a7dbc6d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/line.rs",
+      "sha256": "8af725de6e3253fba40a13178f7e63395cc4f994cebaf167762d05d07cc3fe31",
+      "git_blob": "8103db2703edd50ce020246eb9fe45c500dc9ee1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/astar.rs",
+      "sha256": "d806d47ce51574192f30a96bc238e0d3ae3a6a9942814453772bc5845d81cff0",
+      "git_blob": "7db97a2089fe3bd3797e702e6242d27bdbf660b1"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/episodes.rs",
+      "sha256": "651897bdbcbf0bfea5e84224a4dab13485dc98ed31c625fca1a0f192f15f782b",
+      "git_blob": "76790913174446eed3196808e087c8c0b7b64672"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/fates.rs",
+      "sha256": "f59a7b2eeb90c5cc41fe455de80068e9f2f9c6b06048f7b1d881642323e9b01a",
+      "git_blob": "069529b4927b06e8529a5fee216d67d77b97b272"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/lab.rs",
+      "sha256": "25f6eadeec86cedd6270c03f009748eb6a6d43f65a49a2c5e338cb0c79a4e725",
+      "git_blob": "32972a5eaa0ddfc53bd7b50c87bb78740a048ff2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/mod.rs",
+      "sha256": "5273b4d38e89634740f7a9dd5a61db5a636c50b98c187825218529e982dd37ee",
+      "git_blob": "0d2efacd9c145dc11873d11d39cc537e7a7b4667"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/rules.rs",
+      "sha256": "2dfbf6876f5081ec032d81efbce4863b0f4f5201a95b499eb572b367a07b3ca0",
+      "git_blob": "9f7551aa21f1c20f3b8d200f8a6b89bc6e7eb079"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/theft.rs",
+      "sha256": "25a7a804dbaada913e7dd8223bf085c4b79ad0be810f1c71a24fb0684dd66126",
+      "git_blob": "78134933e24a55016197e1c365b5e14f34a4ec87"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/caching/watching.rs",
+      "sha256": "0b2b4a604d3eddd0da0bb4eae18d9e35b6e2ce0e5716cbfcb622a1a61d71295c",
+      "git_blob": "3d5541f4c18a7854352dd246eda9407a3414837f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/central.rs",
+      "sha256": "7a6e9b3abf8f7a36e07df9098bfdb53b3cc6d84c791f9062bdb89add4fc0991c",
+      "git_blob": "e8d37744907b0b4135151f7ead1a7a45b6180413"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/goap/forage.rs",
+      "sha256": "993ce759124e0d15c90d4a41804cbd6251e09bd1bb17d306fe3bce759a30ca9f",
+      "git_blob": "6df2e91cb8242195e02c2d0262b0feb73aee6fb8"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/goap/mod.rs",
+      "sha256": "6ff718d88ab52724581d76128a09ce7b1f9938e8da894baf1701c14d98ed6551",
+      "git_blob": "ee21c7e263dda04178d8a7e5be3a5b2e2d55f917"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/goap/strips.rs",
+      "sha256": "e85daae220858f25ed89f5fb1e7aff6b618ea4afc99c77fe127dbe0a518f5aaf",
+      "git_blob": "05ef4c68b4153eb5c3dd477f48767ec59eff0a83"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/grid.rs",
+      "sha256": "c40ceb2bf17647c5996985e556a890c757b63a255e662390de7c079aa2bdaae2",
+      "git_blob": "415cc9876a74c23faad885c2608dd1824039d479"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/memory.rs",
+      "sha256": "67d7c5024a621986075fa70123a4e914085c5fdef9e25affc0ec50d60a8c20a0",
+      "git_blob": "ea6923c56bdd213bb830f2e66f6055667979633b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/mod.rs",
+      "sha256": "66928e151b131975bd997f2c9d1f770ceaa870d5c8c0514cecf7da4f3ea0c84e",
+      "git_blob": "7bf03684b6a54117e241872dd3ad8628353209ac"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/mvt.rs",
+      "sha256": "fbc73520ed33dbed835a512b0c52e1626c94b88542a43135c5684cd74b5e64f2",
+      "git_blob": "a68d86c732dc5858c95b7f99d626d9f19a563847"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/controller.rs",
+      "sha256": "7acc5feb472621fc11ce7fac1edab7c24efac1fc1cc557cbb8468c85b0b4faba",
+      "git_blob": "24e6a24417c7d0bff7ec5d40d25205e11ae72f7a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/lab.rs",
+      "sha256": "ae96c8c39c5fef0d5b8cedf77e53a67f21724388729805932a4df0b3d75a4a38",
+      "git_blob": "cec73aafdbe00e401fbce55d87dab8f8ef037063"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/ledger.rs",
+      "sha256": "21cfaaa3b509927be2f1c992f856b481b3d26591863e4f9856b066e435b49069",
+      "git_blob": "19cd6ab098ff558385c74113e5bd89ce2b513701"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/mod.rs",
+      "sha256": "77980a954730d2903f01c1b2896a8ad8fd79017ad253e4200fb2439ad63c9391",
+      "git_blob": "90166eeac32901eecc6d4e4ea9c1a6917ce89ea9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/runner.rs",
+      "sha256": "dd223e7294b417f42e9116594c4a1f9233cfa1b9c7be2d8baf0a9477e1857c48",
+      "git_blob": "2892cb168bc7de220d05b030c909066cf76d114e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/state.rs",
+      "sha256": "6c4103dabaf35613b9f73501dc020a28407c4b277beab007a09f5c3b0f210c73",
+      "git_blob": "e1d092986b442e564bfade32c8a417cae4e8e0a9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/tests.rs",
+      "sha256": "5d9364046f8272ebeb87e1a55b5b3b0dd5100c72e985be19b144fdd8496fc41e",
+      "git_blob": "5db23f5c1a9ab76e9ececa0abfda35732713c778"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/protection/tests_support.rs",
+      "sha256": "815cd99d85fdd8ebd2a9b9771d77bca03f8fd43d86d6c3b80ef3b5f7a599d68a",
+      "git_blob": "15b7c7f9a0d3731969593365eb4a50405bec3edf"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/access.rs",
+      "sha256": "ecd0eee15bb7cbb366c91de03a70c36d205c60e17ac4e4a0faff5e6a3cb77549",
+      "git_blob": "4cfff9f1c177600ce11b7045c924e94e95016474"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/controller_tests.rs",
+      "sha256": "30508f8989a24dcb6ef7532f627332bcd865e0fd30f9727549766fa1042f5726",
+      "git_blob": "9a90ad4fee682876d993fec92c77cfae28e11fc4"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/delivery.rs",
+      "sha256": "32ce7ddcb6e70c75406a7f4df6d79eabfb6985b314d31987c983d0d4aa00a27f",
+      "git_blob": "3642ead4ff13f9ce09ef0bfe5bd3ed20cee2ad35"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/guard.rs",
+      "sha256": "19067bbd32cb26c8fe8f14244f8fff6e56c924ecd6a49f49783167313d24d9a2",
+      "git_blob": "cd4e84a88f3838a5ed16a0021150f53eda264a1c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/inheritance.rs",
+      "sha256": "8f1e73dbb5e12a52f91c4ea5a5231d9444bda29394dc1435af075113afc543b9",
+      "git_blob": "f8cd6a4823e661cb5696acd18a31599dc9e52a0c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/mod.rs",
+      "sha256": "8dc31434a4efbaea8bb6193d5c75c401d2264b6f3364d04443178c6524041276",
+      "git_blob": "fa2ae8b0ee3af8eaf72ab1584d8ee2a882790cee"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/runner.rs",
+      "sha256": "32c69d8b363be954c0b89533c1cc4634450decd87fcf130cc66110bab8438a77",
+      "git_blob": "0d5a1cdd4dc50a3f9fb7cb61c135fbd17eca94f9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/state.rs",
+      "sha256": "4730e91e480b063d412ebda2e6ef9eeec0dff48de619b92b22d55a3190f22474",
+      "git_blob": "a23b6478def288c356976b0483bd0c038559a422"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/stores.rs",
+      "sha256": "cf084a6d830396adcb7c64ff80032077dd1db602790e75672c9b3deaf56bf358",
+      "git_blob": "4bfbbdd087d65864509f22765f0a0f998977fba7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/spatial_hoarding/watching.rs",
+      "sha256": "f2dd5d1171dda614647202d1fe413ccdea01e86cf867d0fee3bf3fff7d5cb41e",
+      "git_blob": "77d319ec5878d37bb89762e007d51492557307fc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/minds/utility.rs",
+      "sha256": "6d48db4613158ac220d0422cc8db5f8f2943e793d83751d01e5e12eeaa17a572",
+      "git_blob": "75e1f8a13c60f98ae89f9a2de6c0f485f1d7bfa6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/model.rs",
+      "sha256": "f2fdeebd1de5cb53db3e749b6a8329a4514275792fb8ab5b9808be0a19d2df66",
+      "git_blob": "2922297760a10f77d9af02b213d3fada5e464b56"
+    },
+    {
+      "path": "crates/sugarscape-core/src/network.rs",
+      "sha256": "4c5c0740b3d09a4977d6abe2ee8ce03a850cfab6737928dfc99b19d91ec0e512",
+      "git_blob": "a2d536217c1e5455f8615ae321cee64123f3c0ef"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/config.rs",
+      "sha256": "a70d935f04cde03644939013c6ea56e6d49333cf5da6216982588c7bf1983671",
+      "git_blob": "285b05beabac4382d6626309498ee13133f02902"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/mod.rs",
+      "sha256": "e6162a75108f0eec5679b53ad36667d5f4aae27b5d37363dd3773384258caaed",
+      "git_blob": "6e20a3a795c2f67bcd54f522510103875cd9584c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/presets.rs",
+      "sha256": "5edecd7fb31f91878e7ad40beab018cdc483013633f1a48b54fbf0c8af4c529c",
+      "git_blob": "8445cfe0bd2bed38456958d6cb40d5ffe0e721b5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/stats.rs",
+      "sha256": "fec463645e822208773a09b92bd1918d425ef0ab25599e9a4ab1d3ab2a9dde4f",
+      "git_blob": "28674d658c6dcb50c0aab8164b3875387e9f4067"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/view.rs",
+      "sha256": "b54cfb4330a8635fe1549ccdcaa66bca326ac89b6780e853541b8ff199edbbf0",
+      "git_blob": "b623f20fbe002616bd0a1e4c60327276406fbf5a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/norms/world.rs",
+      "sha256": "f91be21038d83846f753d514a670aa94e4e441391b67964e7e3db640a08647af",
+      "git_blob": "c5bb857da64a250e2cd8fa0cfb2d4f1c6baa77b3"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/config.rs",
+      "sha256": "dd508e445b18b1b17a3586fa8de0712db8a93128b65b1efe8f0a839aade36552",
+      "git_blob": "59a2deff342e186256fbfe61be69a1773e679d73"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/mod.rs",
+      "sha256": "7825d3baaa63c8bd8a6a863981990643c4a4a6cfde248f8359e4e5bf53cfc522",
+      "git_blob": "afb4c08d911ffbb4f6378ac91d036fd9f3823797"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/presets.rs",
+      "sha256": "d8d84ab5b721707a05fd96b13108e818355cb2022d900a09ca436eacb82f99b5",
+      "git_blob": "2fae7e9ab047a0b1bacfb956ff2dd03cd081ae88"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/stats.rs",
+      "sha256": "1cd7cad45e85337a75f6ed438aae3f73a7541dda04389ae9b0f265ed08ee1475",
+      "git_blob": "7ade65582df5eb42d717e9d8f3fdf6a75fa5e348"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/view.rs",
+      "sha256": "a3e656ef268a5be899c1dc6398fa6d4be6be60a9612cacb81eab764f59608e16",
+      "git_blob": "2c9f866fbb01203f3e8325bcb17550fb9145a840"
+    },
+    {
+      "path": "crates/sugarscape-core/src/opinions/world.rs",
+      "sha256": "75348ca05c680a97e466e7151263a8616acde03b707f01d0149baec55d164a24",
+      "git_blob": "c06912cd845a48a11de719f625a361c2e102dc17"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/alliance.rs",
+      "sha256": "435b9a87a4cc6a19c29dacba050ea908f4dd0090f1d0bd1a9f95e886d0e8c99b",
+      "git_blob": "dd7d6d3a15acf2dd087afc1a6e477467618a0244"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/analysis.rs",
+      "sha256": "e07253726bedddc60ffa66444dd76878d24c5512bb33ebc778e99854e01f02d7",
+      "git_blob": "650baefd94aad0c534f3eda891c98522ba2c0d09"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/combat.rs",
+      "sha256": "b861f8bc43ba09082cadcecc34bf9c5c24de8aaff9782e8a001fc429dd77acfc",
+      "git_blob": "7a4703d46e9b3a549ddb99ec08f571f76187844e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/config.rs",
+      "sha256": "b3444b63e436b2d3f6cd560e4ee6e2d5b46ced222f3cb84540693b505c93f387",
+      "git_blob": "e9bf53c7928f56b846bd48529b7645e77bfcb12b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/decision.rs",
+      "sha256": "a12b659649df1ef954de2db8bfa8192dfd5366f26623a9721d9cd9b7a7bef624",
+      "git_blob": "2dfa6b8298ef729f9211f66c8b4dfd86a6bc799b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/mod.rs",
+      "sha256": "87a6032e6c080f55d7d1df11dd00c2f6eb4ba4ce7a18025ec457bfe3f4bcceb3",
+      "git_blob": "a7b26e158b0cfce1a721ef4e94a21f12c800e3a9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/presets.rs",
+      "sha256": "6b2e6303ea3f684af3f0fe5a9decb05c55232c36d4c819558f28e61d2c9fb379",
+      "git_blob": "04d6b5e41c1b7609e0e8f4d3a02933a91e500014"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/resources.rs",
+      "sha256": "c59615803e4fbf7edb34be3ca1e6d91d905264588b5c3813f68b5057eab23dd1",
+      "git_blob": "525028304949f525245bf17490201a5dbb79544a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/stats.rs",
+      "sha256": "eb43fbf64c1453be52208d4d612559f718891b0ca1b95a964cb64712bbee8cde",
+      "git_blob": "2e8c1758f574f7fc92995e9112a2d0a79d801daf"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/territory.rs",
+      "sha256": "d7c7334bb2daa2c26509eb4819cb0b118eeb5fbc4ba0a1ceb957de55d0025b07",
+      "git_blob": "944c03b102fbf5e9124b02436ce3d45f6b5d530b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/tests.rs",
+      "sha256": "4d5cea5d2e68c022837b46e97bd42b965ef865cecf12a57362b086ccc0e0b2dd",
+      "git_blob": "6d519f3a2cc68f98c6549c12dcdaa1763827878c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/view.rs",
+      "sha256": "da10a726b824d58e4dd7388d490106b05bea9e5a10fad96f607e83727d61e345",
+      "git_blob": "95a9ed8b4afb8c1b26a046ad54d0b1ed32c0c35b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/polarity/world.rs",
+      "sha256": "9fedf8b4c2035a8a9f5e69a2e0f9ede07fe21d78ac93683737a6cbd0706a0951",
+      "git_blob": "7ee380b9ce2162aa5744e3b6f3ca76f9f9933a1c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/portable.rs",
+      "sha256": "f6fc3e202b2ed0463b6957eb28597d95f6e8b0670a174ce743790d570661cc23",
+      "git_blob": "fa3cc8e1991ba0176618100f47c930878b8f9556"
+    },
+    {
+      "path": "crates/sugarscape-core/src/presets.rs",
+      "sha256": "c3acff9f960c66e3b78807010ccc2188048d5192b8528c974e29e61c8a2205f0",
+      "git_blob": "92156b5c9aeb660b20a32a7c1a02d8f1ab928e8b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/config.rs",
+      "sha256": "57dea31048062453b7fe0b2d144451b8ccac22ac95e3349ac5e7eec1d71c4c83",
+      "git_blob": "04a8f2052bbd8086d39d7ac470380bfaf6a31e7d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/mod.rs",
+      "sha256": "86973e9ac8b2e2f67017c4027129d697784e8929ac9c84c6de258f3823e63365",
+      "git_blob": "a9a161cbef06235a6a7b41034369aebb26ae098f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/presets.rs",
+      "sha256": "6780c497298377d566dbcbac61f2fd555c64f00149444732e007a1de74bb66f3",
+      "git_blob": "8befd48cf4863db8fdfa974cc6514f67174d83d2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/stats.rs",
+      "sha256": "66b72d06ef6a0f582b3c8fb437aec0af557908145a5993dd54899bc9fcb14167",
+      "git_blob": "ea5338f27115e0168fddad6f8608d1379aded536"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/view.rs",
+      "sha256": "1a89b2651fe570cffc525a9aac2559b6c36addeabc898e17486efc06903f6b22",
+      "git_blob": "c7a01fbc6c0a7fcd82657ebbeb8cccef5d9052b5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/punishment/world.rs",
+      "sha256": "821339aee3c674446ecfc50b5501164f18165ba672ffd90764d9fb3a7bcdfb74",
+      "git_blob": "354b9f73834596709ae0d7c6c76c4f6f3654b159"
+    },
+    {
+      "path": "crates/sugarscape-core/src/render.rs",
+      "sha256": "4f411007d2f0865100ee2e8e4fb35843d37b165c0270f91a1e6f2c02eaea4c84",
+      "git_blob": "4fb630eb4b0d1b6e7531c50ab702ae962b911ff7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/config.rs",
+      "sha256": "ad08cac8e1f22a6b7993e409cf2e728f44a22b653f85083282ac649b8c411f6d",
+      "git_blob": "9737f5652d0cba2e21005ff4ebe408b36c936027"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/mod.rs",
+      "sha256": "3e4fe9622deb6b8909383275fa8acefa30f64d19b670ad12713f52ce798a7eba",
+      "git_blob": "9ef9a369c106b51861ef8f4cbc017ffeb6b8e8a2"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/presets.rs",
+      "sha256": "fbc1273ad29436c982d15acb4a918c1b7ee3b2403acc6cc72a96dc99db4b84f3",
+      "git_blob": "0412045859a56c9fd37da24a545fde86003e1ded"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/stats.rs",
+      "sha256": "f4da0f5d7c74dabbad00cb6674f24fca2956ff10362fcc45453aa1c42026305d",
+      "git_blob": "f2bfe14d9fa3580b2845aa7dcc2ae26f2b90195d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/view.rs",
+      "sha256": "f7ad9d74c6f16d030dcd084a15129bc6071820d21591fb2516322739542a907f",
+      "git_blob": "49f0dd962f5a111f5ae86f59c2cc24a9a45833fc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/retirement/world.rs",
+      "sha256": "0b9ed17cb39caba2c6969ac676a7802d923560036fdb8032f896e86bf36f19ab",
+      "git_blob": "6967e89dea83f0bef50e6c0022c53ae4d9509bb5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/ring.rs",
+      "sha256": "c3631094c2f102d97a22bc6fe8629c95a97f5a84150601740baa0389e23553d6",
+      "git_blob": "d12405d5ce86001326818979b3d396332ea27b3f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rng.rs",
+      "sha256": "af425707764621e3e11eed48574498671d3ba52927ab266a660295b51b9e2d1d",
+      "git_blob": "f8bc3a70a87a804ca10b8121768140b1803f2e96"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/combat.rs",
+      "sha256": "75ecbfc1957dbac790f4d901247fd553a816c54b16c76fb0a170c4cff9dccb41",
+      "git_blob": "49c8fbca8e32c04e27b18b8518036642fea16c40"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/credit.rs",
+      "sha256": "43e826845e5cdf5039dc516ef22a22a9ed4c780ca48f75538f4c32f92224e7d1",
+      "git_blob": "2071d6c45cac94fa2416973b16309b261fe06548"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/culture.rs",
+      "sha256": "2113dcce3122f2f586f156135971d3e480bca4dfbd1cf6d8f5c55a3630a71b86",
+      "git_blob": "ad28fe720a53567cb3c1ee7802bf690e6115105a"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/disease.rs",
+      "sha256": "6bcd0ce5970c82f7a203982888cdaefb01bc42755d9f199d0a27486af1bcc207",
+      "git_blob": "2669629801f7fdf2d61ab3774ffb60c470270dde"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/growback.rs",
+      "sha256": "8377cb3bdda25e1da0d6c7542665a0a4195bfb48bd968c949e6d5a808d91561f",
+      "git_blob": "d42490c9c7fdc0b2f0f72ad4fc95843b0cfa8ed6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/lifecycle.rs",
+      "sha256": "8af09427c53ffeaa0032d91ce52ebe2472f740d3d357a6442b045d2868852148",
+      "git_blob": "87200731007c40bc0eabfc9a16a39ba80482cbfb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/mod.rs",
+      "sha256": "7ad48ca7273e1b651703294737cd838f7982052df29976c31c6c089ed2a33221",
+      "git_blob": "f95d2ffbaf599283c623e3715ef8df459e827a4f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/movement.rs",
+      "sha256": "fe8dd16ef7aafef041d17daca89db394fe4ca324bec60a59fbdd20eecf7b9ecf",
+      "git_blob": "f2ce0245fc6bd15233c814e61d8b8e28c7138de9"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/pollution.rs",
+      "sha256": "92512a110030af7e7495ac5b7c19bdf3f5d02964baca44e57ff0585d2d66b0be",
+      "git_blob": "a0d63bfdfad620f3b8a5dcfca190987e0e6a8519"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/replacement.rs",
+      "sha256": "db91df25518f2166d4b0ab9547783dcd111d11415c35ccd2fac3db203b48de3f",
+      "git_blob": "6aec11c086eaf4d63e607b2345558a46fa53bec4"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/sex.rs",
+      "sha256": "94a7a6f10ea1feb30c3e9ab82d2fb32624271fc7055ae0fb9a14216286fb9d02",
+      "git_blob": "f4e9fe5518c929b21d52a846b6be405e0ad954df"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/trade.rs",
+      "sha256": "b8a6e006e8208278ce46783e7ec6ea2e62d8135dc25118d681be41c9fe169a87",
+      "git_blob": "395c1483c25d4db7f98f84426e85da56cb35e58e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/rules/truffles.rs",
+      "sha256": "4ae84e990ad3312f3a85df9869e8dbfd7615b2f46e88c43f48c9cf8a1bba97a3",
+      "git_blob": "c0d0ed7b1971c12d1dc8158c0e923b55000cc20d"
+    },
+    {
+      "path": "crates/sugarscape-core/src/schelling.rs",
+      "sha256": "17395b9fe8cb2c7f5186b9176c3700da583c373b83cc149e68b2c7d11eb1a387",
+      "git_blob": "1c8178e43284487c1c7520ea24d9101e4b726212"
+    },
+    {
+      "path": "crates/sugarscape-core/src/schema.rs",
+      "sha256": "725cbedf40a17694d6afdb1792d7efefc33922ede7992510df5980e4cdc595bf",
+      "git_blob": "d0a23c4a281b50bbf203759c1e83feb5fb15db70"
+    },
+    {
+      "path": "crates/sugarscape-core/src/social.rs",
+      "sha256": "8ba9fb3986f6e54cf0ab095414f1b66bf952c84e12c3f95780c98b0212bcb42f",
+      "git_blob": "7c658907380f0824870ea7e2e7465b875c094d20"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/config.rs",
+      "sha256": "14d0a9a956aa159110093cf22355286b911dda744cd96a07336aa75d883e2cb9",
+      "git_blob": "4f84951e1d335e8b4ab7235ba3b0da5f3794446c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/geometry.rs",
+      "sha256": "cee656ad640d6e2d0ce05cb325752460ab0a1f3bd17792580ef1766de4c8c9b3",
+      "git_blob": "5d20d3d2a00734c875f9f82f544cd055e71f666b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/mod.rs",
+      "sha256": "4f2434164682d386da239075f13d953379129b923bcf7741235cefaf605e9e86",
+      "git_blob": "c760c25c477868382eb68bba8097bd1a48fcbea5"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/presets.rs",
+      "sha256": "389f07ee571bbd594cb370766a4a869c36755eee2ae770631ace2f325659c3f6",
+      "git_blob": "b6c0d27b4f79b896fd1ee621f33c179e2296a039"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/stats.rs",
+      "sha256": "09535e57b7513d48bf0015d562cfdf354deadfad51f3bfa17ef60441e12dc34b",
+      "git_blob": "d327614fc1e20610a93faa6f349c1ff913108e9c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/spatial/world.rs",
+      "sha256": "fea3a86c8c70e16cf1ac4949682260fbbcc87adf4b2c9cc69de0ffad540dd937",
+      "git_blob": "817f7fbac5a6cef4bef0ab49a054f46ddc54e5a4"
+    },
+    {
+      "path": "crates/sugarscape-core/src/stats.rs",
+      "sha256": "50148ec3e03cc148011f53199daea129d9056af28a989195a38767029dcac736",
+      "git_blob": "c15dff512fdee35f4e983db85250fafc9532be94"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/config.rs",
+      "sha256": "117a038eee82caba408909e1bba83244645f6f844fcfaf337c8c71648f26b7c0",
+      "git_blob": "2523291f4dfb41e6a4a7b58bcc544f6f283c6f78"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/graph.rs",
+      "sha256": "d82bdaf59162b1f81ca78a22495a1f87e359d6b7bf92c01302da127da5d7c7c9",
+      "git_blob": "2dbba03b902792c95fb1da2c97377055306e9b21"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/mod.rs",
+      "sha256": "7e6a906bd81fb65cfcd81cfaf9ef5338453cbddb71e248c64ab241380c8b6804",
+      "git_blob": "bc2541430f2f662866d4cf36d572f181ffb05519"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/presets.rs",
+      "sha256": "1128bba8bac3dfa955d11892d2a06e5073229f2094a4e1d11d8abcc94e3cb336",
+      "git_blob": "f01d88a559a68c35c00b199fdb96ef2789ff4900"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/stats.rs",
+      "sha256": "8245c25d27398c10573f6063f17608322c3f9c8269fb0ccb4319fb45191ebe14",
+      "git_blob": "25a70673b0dbbf897fba5de547d1e83f1ddb1349"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/view.rs",
+      "sha256": "6bb67134560cccaa0a16e6ced2b29120cae62e1a04da7bf027935c134273c9d6",
+      "git_blob": "96021a0bf78421b7d71b4414a6f15534052b27dc"
+    },
+    {
+      "path": "crates/sugarscape-core/src/structure/world.rs",
+      "sha256": "f5e42bbf4fdac8c2138f36c61f3feaf0277ea90f9a06ed65840706b9527e62ca",
+      "git_blob": "007868d7da4800ec57f34d0b391db00bb742c110"
+    },
+    {
+      "path": "crates/sugarscape-core/src/sweep.rs",
+      "sha256": "3d79b0c4037095efb03a135a03a4f710598c0c0a93259319f5781346eeb8cbd3",
+      "git_blob": "0a053c9b4b0839ea1f29a0e3d85ea5c798402708"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/config.rs",
+      "sha256": "5f7968b2b170ab2e4f584b9774acc6a396889ef8f2eb42f4da0f3bbb1a4ebce9",
+      "git_blob": "d5e7671e99ca877043ce89a5ded0c4b7b374ad91"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/mod.rs",
+      "sha256": "9623e7855629474eacadc8a0099554db5a673de8272f05b4f0cfc1b8be9f5cac",
+      "git_blob": "36cf3d2a15763a7cfe194096922b88c0be76b386"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/presets.rs",
+      "sha256": "400e86b41bab90a7c0ba8182b1c7f7d87f502b39756aeb8b6876ca9615b83d86",
+      "git_blob": "1f11a991588f87f448dc7bc09a858f308c543872"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/stats.rs",
+      "sha256": "0c506f9022a1ce2720428d592db4397f38c3006e8803eedcd3e08eb57768bc50",
+      "git_blob": "99a6e12e91bc0e76eaab2d1def2daff31f653a3f"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tags/world.rs",
+      "sha256": "48fa765a287962b91d7eea5213a16c6b9f5a198db4ba619fc6fe6de72c6b300f",
+      "git_blob": "f391a3dfc3ab999711c1fc7bc4c301dbadf02626"
+    },
+    {
+      "path": "crates/sugarscape-core/src/testkit.rs",
+      "sha256": "3f7687a4fbbed9f3b8c093637b7cfca7e56adaca37e3b7059349e8a5b2dd1784",
+      "git_blob": "f749d3b89fb5a538f509e629e5202fd445ffd540"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/config.rs",
+      "sha256": "9854528cd6b7307c93b7669d025d938b945296bfc6ef25caf071016b5133bdbc",
+      "git_blob": "2c2c832c8cabe027962d817b21fee70bfdbbce8c"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/crowd.rs",
+      "sha256": "cd6e54cb9bff52594bd38fbb7b98f491c41051df6e0d5e9236bf75cb300c440e",
+      "git_blob": "15c03b77c290b63484aeacbb112ce2393c3ff9bb"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/mod.rs",
+      "sha256": "05021d6f52edb660e7c15a7a7c4d423e73185418fefd1da6409a912117050c8c",
+      "git_blob": "0690f75396ec989c85bba8a5aabf72e8ea320882"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/presets.rs",
+      "sha256": "417209c606fbb60a41cb542159254e7c7109e8e466cc8cdb13ed37fa53b73178",
+      "git_blob": "730739931fb6fd10a6ebbee006c286a256da7442"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/stats.rs",
+      "sha256": "cd1665508a2f3a754390b1d3fc3de1077faffacff68e536ba3d10694a6aae503",
+      "git_blob": "7d826494e806fb9e4bf5ab60feef98bac2683a35"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/theory.rs",
+      "sha256": "aa20eca4dfa383fef871d4201a25002459f461ce7f994babae12fabfbb3b360a",
+      "git_blob": "0875b0dbbeb8018550d2fdade86a2b16725737e6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/view.rs",
+      "sha256": "d99b1fc1f1adcf5c5e0a1197b06816eb390aa4d4e010cc672838332631b8da81",
+      "git_blob": "18317437cd894eaec1e1b196123d91506462a26e"
+    },
+    {
+      "path": "crates/sugarscape-core/src/thresholds/world.rs",
+      "sha256": "a233584d4787854e328e0e16c47af2367b54fd923b5608f59f19a3740b53ce6a",
+      "git_blob": "cf4a9ce668a5c124ad19a2f16d29f1fa249070b7"
+    },
+    {
+      "path": "crates/sugarscape-core/src/tipping.rs",
+      "sha256": "1a8fcb5610be30683d82cc73283fd176ecb6a4d3d9308b93999dc6259dc3b6fc",
+      "git_blob": "0510cadda42b61269055acb750f40d13b3837f83"
+    },
+    {
+      "path": "crates/sugarscape-core/src/titles.rs",
+      "sha256": "33d2c9c255df449cfe9d7d6a4d542d03d3951466852fe16eac8865733e56c226",
+      "git_blob": "136567ec4ebc1e1e46487adb83504ce5bf0327a6"
+    },
+    {
+      "path": "crates/sugarscape-core/src/world.rs",
+      "sha256": "1f862c8add3fb6417616918d6f70217d0cf394a6cac2149712710b7ee011c8eb",
+      "git_blob": "70e2626a5bd22d2697dd4e2272cdc19321433335"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/config.rs",
+      "sha256": "76fb4c606fd66de09c9fa483b0fafe1acbcde119c22fb6aea555cd05db27c05d",
+      "git_blob": "7aca2c9992df9d6c930ca7930326bb97241d19ab"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/market.rs",
+      "sha256": "d6528ec094dd90980eaf823a66a45a76fac7069ee7115ab61f1408eb3ceb8618",
+      "git_blob": "2d34d48cd61a29e5379529e130b182d2a7ce7f30"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/mod.rs",
+      "sha256": "e170e389adf1e53f7e0149a442a78681d028ca5765a5f671524604dab1e0e23b",
+      "git_blob": "c214c59589866b0006e1db42a14c3d153a9a2313"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/presets.rs",
+      "sha256": "23db1228a268182f37df372b21929fb7d2d229889da9710a00f2f4a5eb372e0c",
+      "git_blob": "5ba0a47a342133700a0cfe6ba7ccf4c402389b58"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/stats.rs",
+      "sha256": "22ea07dbff98808943cc0aad54e3ea09073a1596901669476c49e2c9de0a7093",
+      "git_blob": "fbffe05227a0630da3caf88afbc10e435a5c528b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/view.rs",
+      "sha256": "23351b8ee3e9e9a31b3ad87c947fff21f65bbc748514295b9cc8aeb713f48dec",
+      "git_blob": "829ac32caa0504d1799e03c8d918abf3ef54b30b"
+    },
+    {
+      "path": "crates/sugarscape-core/src/zi/world.rs",
+      "sha256": "03380114d85f206688c51e0ffddb6ca0b1f48b8c3752543fb6ca6e39f90e91c2",
+      "git_blob": "551498dbb011d89c0ed1be21bb71e68ff7d647d9"
+    },
+    {
+      "path": "survey/Cargo.lock",
+      "sha256": "1ebf300527d73c5fab50afe7451d8d41b7cce9d5aca13d62adbaeae58df88c81",
+      "git_blob": "289741dec2902ed28e29bb0a742c4a879ecc3411"
+    },
+    {
+      "path": "survey/Cargo.toml",
+      "sha256": "e8a720a196e6e097cc2806801893793147ebd0f8943f0b3e5c7e2017bc11c337",
+      "git_blob": "758d760cdab9c6529b38cb6b8a39bce1b4b4f7a3"
+    },
+    {
+      "path": "survey/src/bin/democratic_peace.rs",
+      "sha256": "5c527a07137b13c2487b857028da684ec90e6c89d41a28c66abd4dcad04ba590",
+      "git_blob": "98eea2f7271e89e33157b49aab27243cbbcdd8ad"
+    },
+    {
+      "path": "survey/src/bin/geosim.rs",
+      "sha256": "6e94ca809278216e837b6726173341c80301cff4b2b3ed41ffce909934dea044",
+      "git_blob": "57f06702651d2d04f241a8eeac28049f83bc5a48"
+    },
+    {
+      "path": "survey/src/bin/polarity.rs",
+      "sha256": "854191fdeac0f51e10fcf6f26871ddbaa0c81014a0dbac49c8847d1bbd7efc68",
+      "git_blob": "fbbfeae5411ee0caf8bbe5a3adaec286fbb30202"
+    },
+    {
+      "path": "survey/src/claim.rs",
+      "sha256": "bc19e53accb8e382e118f2783c9c9d4da6450b935b26e6c4d3e7dc9efff2d4f2",
+      "git_blob": "b8dc3bdfca58cb9698bd8bdae390d38a3647a548"
+    },
+    {
+      "path": "survey/src/claims/agreement.rs",
+      "sha256": "1c2e300c33a88abecdb7788663e1c063849d3e202f8a80262379b21d87b56814",
+      "git_blob": "304a8911c4664a8e305e5ca72f06e5efea07900f"
+    },
+    {
+      "path": "survey/src/claims/ants.rs",
+      "sha256": "10c1e324b5fb0358d3765f74aa2e84ab16c85e61d296ea4a6b8a43041ea9d5cc",
+      "git_blob": "1ac2e63c9d64ae2ab18502203b579648043c1383"
+    },
+    {
+      "path": "survey/src/claims/auctions-source-figures.json",
+      "sha256": "0a4cd0f9777b2f644911ce6e14525662a2158e62c81cdca8d0b0c8a534a3bd7f",
+      "git_blob": "ee2868c245a25bca2dc09870871854e6240d60c8"
+    },
+    {
+      "path": "survey/src/claims/auctions.rs",
+      "sha256": "37238e636069713c2c0cc40ba423b2cdb61891871cb4f40b4050b6a3ea6aca6b",
+      "git_blob": "d11d2382f07a9c81ab0e3d823a0cb6d12b45db15"
+    },
+    {
+      "path": "survey/src/claims/bali.rs",
+      "sha256": "1450df7634bf185e540c3ceeaa4e87917b5194a030f402f3b1d431386f788226",
+      "git_blob": "9d6f3a5611034a67097ecfccf9aab18e1604f827"
+    },
+    {
+      "path": "survey/src/claims/burrow.rs",
+      "sha256": "e01caa23bdea6fcc75861626862913daaee2fc0876a8788128f94ebcfde9aaf6",
+      "git_blob": "ad0a73e36d6a543af091e700e5219b26b6bc9ddb"
+    },
+    {
+      "path": "survey/src/claims/burrow_archive.rs",
+      "sha256": "6e280888331bfd1cab93452c0e1d2eab185e6342bae9ca9d71b7de1b16e0a928",
+      "git_blob": "4c3e551848612a2175dea3014efc7f1acc1bcdce"
+    },
+    {
+      "path": "survey/src/claims/burrow_archive_tests.rs",
+      "sha256": "8f9c107d7a21b2a4203ad6ecc6d00959018eff81c8f139349deade48b49ad3bd",
+      "git_blob": "395f14e9b03307ad091c4426f7cb7483ee7c070d"
+    },
+    {
+      "path": "survey/src/claims/burrow_report.rs",
+      "sha256": "0a37643b4b1fbfe540acfa52fbade03bfdddddc9c91f6f48efc9c067da6f3586",
+      "git_blob": "fb45ac6d00853418d48d4f9b30b0ad2c21fef2db"
+    },
+    {
+      "path": "survey/src/claims/burrow_report_tests.rs",
+      "sha256": "a90d341f1af23dd159b181a00fba0b056756a064cd85a349cf8e7fce9c590d9c",
+      "git_blob": "f97ef72b89bebb70da92eb2862bba3c2d3e69bf3"
+    },
+    {
+      "path": "survey/src/claims/burrow_tests.rs",
+      "sha256": "f2b18c6367d4cb964c8a1fcab0893940259bfca8669f17768626ce914983b5d9",
+      "git_blob": "00b1e960936d711172da80e0643092df1ea65053"
+    },
+    {
+      "path": "survey/src/claims/ch2.rs",
+      "sha256": "63e5d7e3b612da8924ed3cb8a1ddb258292b7872aaeeee20458030f896c772f1",
+      "git_blob": "3bdd11ab65e4dbbcf58ea7f7be0458d789dc743a"
+    },
+    {
+      "path": "survey/src/claims/ch3.rs",
+      "sha256": "abae74767029a4d4c0b306bcb0e0cad4dc839edaca48121fd7c629ca12cdbf98",
+      "git_blob": "9761a35b607981b3b2cba7a025baada34f7f83c5"
+    },
+    {
+      "path": "survey/src/claims/ch4.rs",
+      "sha256": "9decc8922f21221f71134a02063e0a250a6258f37d5ee256abe77b4d7d3f1bd6",
+      "git_blob": "103cddf4e9000dc95b5c7a690dd7024eef284684"
+    },
+    {
+      "path": "survey/src/claims/ch5.rs",
+      "sha256": "35d5d96bfddae88ca6825ed42b457bd9b8704bd83b0d1daf389aaf0b4d0e512e",
+      "git_blob": "298b9f88ec28979df0e23fa761bf432e355fe2ca"
+    },
+    {
+      "path": "survey/src/claims/ch6.rs",
+      "sha256": "7985d078979976305add7c6b378501b63c50f606ee6fa33507ef53a6cd0f207c",
+      "git_blob": "58d445afdc2e09b6370579464eaf600f2a600ede"
+    },
+    {
+      "path": "survey/src/claims/civil.rs",
+      "sha256": "ab92ad6a55bb791368e5b05f22732cb1695fbe050812716275482239478cd96a",
+      "git_blob": "eb621703a92df29c38dd3bf28d5db757fcda6ff5"
+    },
+    {
+      "path": "survey/src/claims/classes.rs",
+      "sha256": "056fd5b479b3755d32117ce882e5d5157c65963050fd995dd4c5f3686f35c2cf",
+      "git_blob": "8670b374feaa589b4e17b4abb9a85ee973111dd5"
+    },
+    {
+      "path": "survey/src/claims/collusion-figures.json",
+      "sha256": "cf4dbdbb022373d703d7c785d82a4426823390f4ad51eb54e99b57181aca0424",
+      "git_blob": "66d05de4c70f501a3042e3e422cd58761888d5b5"
+    },
+    {
+      "path": "survey/src/claims/collusion.rs",
+      "sha256": "c035dc7d0b28173a57d516c9122b1fdee782e7580941b05cd07dc7f5262521cb",
+      "git_blob": "bf5da3bbcc936583d405d09ce6938bdba07ca0bb"
+    },
+    {
+      "path": "survey/src/claims/culture.rs",
+      "sha256": "08c5bfb9a0079843d357a43d8bd3f1b63667cec9074c7cdfbcf9ab0312b68f2d",
+      "git_blob": "9ac06911ad6733ae81be0a6949448bde3ac64465"
+    },
+    {
+      "path": "survey/src/claims/dpd.rs",
+      "sha256": "d8b260a24da68321d35b2eee12b5c69fa87fb11e54f4c05d5b4a76dc9e4150b0",
+      "git_blob": "695cf81d4f5a33241f6b2c068f24d8b418c6c6ca"
+    },
+    {
+      "path": "survey/src/claims/ethno.rs",
+      "sha256": "df81b0f9f4a4fa42a525636a3462f2b43b37032ec68da49f219fc06fd8ed7a12",
+      "git_blob": "7a23a853606310a272a2a3bfcbe21965e6a08570"
+    },
+    {
+      "path": "survey/src/claims/farol.rs",
+      "sha256": "231325a0184d0ce082311f7422acf6370e71f06cce67e794a0e924c53b8ecc19",
+      "git_blob": "f2eb9df5330206d7c2db0678dc9a6c65799c266f"
+    },
+    {
+      "path": "survey/src/claims/firms.rs",
+      "sha256": "6f3f71765e9f3e93509117c30a64a29d0e8e6dac4b248e5557841066854fac85",
+      "git_blob": "2a9c2a8f37bd9a6294d63c1b3db564471e2b397a"
+    },
+    {
+      "path": "survey/src/claims/image.rs",
+      "sha256": "57560eb4ab8eb6e46764c23a1d830925a1d3f1aa60f706fc042776bfba97c3db",
+      "git_blob": "fd03b8d3ab44701123be00e7a31b3c4da8a2e1c3"
+    },
+    {
+      "path": "survey/src/claims/minds1.rs",
+      "sha256": "845d1aded0053df22e992e39e4eee1bb52fd3995ce5b963bd8899b3d58a5b6ea",
+      "git_blob": "9674a0295803af41915c5db005ac18a88061e2f2"
+    },
+    {
+      "path": "survey/src/claims/minds2.rs",
+      "sha256": "783e57f55b12e269dca6550c705c2ee26eae490f908183faaa3d0f915845d1bb",
+      "git_blob": "f6c2d93fad07da678ae24fdb9f5a23508451ce81"
+    },
+    {
+      "path": "survey/src/claims/minds3.rs",
+      "sha256": "2a7313c4b26b05cc13c9bae5b0af1299505d33fce1cd7d15ccf792f5eb080765",
+      "git_blob": "d30d2d3433a8bab44327eecdc608bbc8fcba8871"
+    },
+    {
+      "path": "survey/src/claims/minds4.rs",
+      "sha256": "ae5b557db24903e676b0cdd8790b1280a105420ac0c5c92a2b926f996dfa88f0",
+      "git_blob": "60595a959181e8d4f37567c1938ea7487c594261"
+    },
+    {
+      "path": "survey/src/claims/minds5.rs",
+      "sha256": "3bfd7c96017c42381dd7042b1e1f46c450c3fe9f58e9a13f43a6a2d9c1cccc5a",
+      "git_blob": "6f7f7efdd3adeb1516bbb077b759994b84043155"
+    },
+    {
+      "path": "survey/src/claims/minds6.rs",
+      "sha256": "ed4ece0b888bb2e9517c01a486a4d9b9dc01492c9f343f7ced8b7f64f1b1fd50",
+      "git_blob": "93fd078327196a867df1d5936d502b3c32aa29e9"
+    },
+    {
+      "path": "survey/src/claims/minds7.rs",
+      "sha256": "f8007acb1882394517ccb3ea9e1b7bd7fa588791064bdfcf0169babecb6149b5",
+      "git_blob": "aca92619b9014b54e13e9de648feed0a6a00815b"
+    },
+    {
+      "path": "survey/src/claims/minds8.rs",
+      "sha256": "6e0a179ae314c548361201ba7c09b2d03180a08656db0f5a95252df105ab49ee",
+      "git_blob": "ddc080252acefb92ce93c5399afb25179151136b"
+    },
+    {
+      "path": "survey/src/claims/minds8b.rs",
+      "sha256": "3b8aa6dcb9494643d375c7b2375c60b80f94d243756ea82cea88d88c82fc1724",
+      "git_blob": "54dd8c2843ccdc4c650ea3f7260ee441c06fbeb0"
+    },
+    {
+      "path": "survey/src/claims/minds9.rs",
+      "sha256": "7661c2491b8825fd79651fc9355dc403b4a0450246c8d6b138f50fa86c8503be",
+      "git_blob": "7f0aa93b2edf82fed4a1d0fa3b1afa1317e0be18"
+    },
+    {
+      "path": "survey/src/claims/mod.rs",
+      "sha256": "86028de19b872de5bc22c575c30df825aa08d0a97dfb28508885bbe2244d2bcb",
+      "git_blob": "e2e105e5a5ef3c9c96357ca2e3d90c8f44a71f0a"
+    },
+    {
+      "path": "survey/src/claims/norms.rs",
+      "sha256": "b7e5f5beb69aeb48624a126111072a6171df27e1bd679e6d5ca62e7b39b79a0a",
+      "git_blob": "949aa24bc61757f9535480a667ca92cb68a433cf"
+    },
+    {
+      "path": "survey/src/claims/opinions.rs",
+      "sha256": "9fee9a789c5acde5f8526310a767635a52401b355e7de63b513f4e844cf75f0b",
+      "git_blob": "47ff8dcf9c0ce3e7e3305bc8f6e097ddbf73b858"
+    },
+    {
+      "path": "survey/src/claims/protection.rs",
+      "sha256": "09899e58bdf81dbf4ebc9ef4763170355b050845868a19167023c3b9844372ee",
+      "git_blob": "bc4410f9d0988322489fb83d06bcbc42c4b435a3"
+    },
+    {
+      "path": "survey/src/claims/protection_archive.rs",
+      "sha256": "0aabbb449e8e0eae9b32b4c94589aac6fb66733dd2ef8d0ad47cd01ed848aa64",
+      "git_blob": "6b9b5b813278a6d28bc91476cc5cbdd35a43c229"
+    },
+    {
+      "path": "survey/src/claims/protection_report.rs",
+      "sha256": "d8d9500e29ce03184049156569831e037163e6eba1186298f3bbbb4bea8717f9",
+      "git_blob": "576faf823a2684522487de10fb1b7b6a073df362"
+    },
+    {
+      "path": "survey/src/claims/punishment.rs",
+      "sha256": "ab64b7f0f03558a58c79115f2a51daa1132926881ffbcfba101949cca8b98587",
+      "git_blob": "482f890906f4033ec8d6b747e5831e97c444b3cd"
+    },
+    {
+      "path": "survey/src/claims/retirement.rs",
+      "sha256": "eff0f302d5a54cc766b6db53f5fda4b30ec0bab6c2fe6af2dab34ea88a6858a7",
+      "git_blob": "cc42a8c2ff6ad5b2d4315145cd7ebe5b4c3f717a"
+    },
+    {
+      "path": "survey/src/claims/schelling71.rs",
+      "sha256": "22d7d83013525d306d76d1faaa2432b8b26b28556777758123d8b08b7bb1ffbf",
+      "git_blob": "35a601f9faa3e4cedc60d99e2372059d47353d33"
+    },
+    {
+      "path": "survey/src/claims/spatial.rs",
+      "sha256": "a1f051f8be4175778c04e2c0fec97b09e1886255c57761723b7adf716a07ed96",
+      "git_blob": "e8c65272d45eda15ad4618f02335ee8d563cb19a"
+    },
+    {
+      "path": "survey/src/claims/structure.rs",
+      "sha256": "402dffb1c73e66785787e6437e14dfa5bf24a039b2b1feaee47d3a0825b7cec4",
+      "git_blob": "f36302f3f7e157fbf67a134f924b8fdaf2e60e8c"
+    },
+    {
+      "path": "survey/src/claims/tags.rs",
+      "sha256": "d739bb9d288d413a2292c6eef216673c74f16be5b9213fca388a737f0e385094",
+      "git_blob": "36243e8b104500bcbdc9178fe411bf08fc9b9e16"
+    },
+    {
+      "path": "survey/src/claims/thresholds.rs",
+      "sha256": "8d99c5bea44b28016a987cea080cdcbca2f73b19e1db1d73a67916a1c0211620",
+      "git_blob": "43b8f522ccf3b3990fa0d76cede9190ba1a36a58"
+    },
+    {
+      "path": "survey/src/claims/tipping.rs",
+      "sha256": "690ee345f566cfbd39b40cd8c471441a0f32bf9c31a1ae31f6fecd2cb39d5a13",
+      "git_blob": "b976ad0069ee8bbd73c4c996705016d0cfd1fc94"
+    },
+    {
+      "path": "survey/src/claims/variations.rs",
+      "sha256": "9f922cbd879bf3062745786d7cd903de1cc8dfb8ad0a4300224bdf16fe100f67",
+      "git_blob": "282694f9c8d3182a92a2fae4ad3d2c6cbdb5acde"
+    },
+    {
+      "path": "survey/src/claims/zi.rs",
+      "sha256": "87ee647333ce8b693aad2f3866685a208c21f44332ba3c928f3cf22e6a989f4b",
+      "git_blob": "536e9a6981982ed4ec70dd3ab478eadc1a08537f"
+    },
+    {
+      "path": "survey/src/democratic_peace_followup.rs",
+      "sha256": "aca65a403d5c11719d3b4ef438a1e730e8e17f33b900ab2e241607e072db2f9a",
+      "git_blob": "22561441055cd851245bc323b2ef6b65eefb9bef"
+    },
+    {
+      "path": "survey/src/main.rs",
+      "sha256": "f5ebe0053d95a49698d6ec69d667d03a2f0e96ad31863ae98bb4a4b1909be3d4",
+      "git_blob": "517ee986170554a42273f451aebac67a19f88a54"
+    },
+    {
+      "path": "survey/src/runner.rs",
+      "sha256": "d4c583419f6f9ac34db27d583019d4649a6ecfc23de2f442956de2ec3239e19e",
+      "git_blob": "64acfb42d358aaf2b62091decf6bf2236e1d6184"
+    },
+    {
+      "path": "survey/src/stats.rs",
+      "sha256": "6d9bd4581e4d7a641e3e7b4c9bca1281425228c889d3709fbd80a764efe76acc",
+      "git_blob": "7e82efaf7e9e449b725b936cb9fba4c11b25fffe"
+    }
+  ],
+  "source_archive_scope": "selective core/survey source+spec export; not complete build inputs",
+  "complete_source_archive": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/complete-tracked-source-e733b989.tar.gz",
+  "complete_source_archive_sha256": "028796230873510cdedad6d0336982b5d8743b1e809cb24950cc7a256fdb713b"
+}

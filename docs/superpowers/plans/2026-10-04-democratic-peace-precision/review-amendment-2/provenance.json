@@ -1,0 +1,21 @@
+{
+  "previous_manifest_sha256": "6b4803143c3bdc63e55d5c8484d6dc172709d66b95310b61bc5d3e70f6b25ead",
+  "amended_manifest_sha256": "9fbbc2cf450aab310d46f645fc954c5a65233b5f515e782230f5752a3ea39e2a",
+  "product_fix_base": "9f9a2662053497d4f1d1ac13ac72fc901777a596",
+  "product_fix_head": "f225a3d28c4b5bf7779afed7141cd4617d12b586",
+  "scientific_source_unchanged": true,
+  "registered_histories": 0,
+  "previous_to_new_checkpoints": {
+    "0": 0,
+    "1": 1,
+    "2": 2,
+    "3": 3,
+    "4": 4,
+    "5": 5,
+    "6": 6,
+    "7": 8,
+    "8": 9,
+    "9": 10,
+    "10": 11
+  }
+}

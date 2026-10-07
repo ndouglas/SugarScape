@@ -1,0 +1,50 @@
+{
+  "checked_utc": "2026-10-07T01:37:38.245722+00:00",
+  "binding": {
+    "source_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+    "code_revision": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+    "protocol_revision": "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+    "protocol_sha256": "e9ab9622a53c29920d01292ffbc713376315bd6f8d3f89c2c2b16ff8304ec42f",
+    "binary_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey",
+    "binary_sha256": "a3e21584b44859da394906e9923be9fbd8d1eea06d9e46e5215fd1c9f8dc8454",
+    "manifest_sha256": "e594664990afcf949c13a0090d38daeb57f9466f52f2fe7f4ad5f293abfc257f",
+    "construction_sha256": "7b56663339d4f1fa7d2997283e4a1b06b5b20030b11af0f101a4bbfa0b67abae",
+    "configurations_sha256": "fed57e4f62c7c00ff29e81e910fb7306c1a6247419120c041ba1e2d594560763",
+    "readiness_report_json_sha256": "efc56eced1ac9e2e927c0b11d17ad5417f60df5125f288b88a6e226503b7bf36",
+    "readiness_report_md_sha256": "98909e00251efa26327a80c432ea029ac0500052a2b1151481d018b8db202c48",
+    "packet_index_sha256": "ddd8c37d3a4cd34af755d4aa6ec3abd12884090eb2b99c277a3212cc94c73de3",
+    "complete_source_archive": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/complete-tracked-source-e733b989.tar.gz",
+    "complete_source_archive_sha256": "028796230873510cdedad6d0336982b5d8743b1e809cb24950cc7a256fdb713b"
+  },
+  "gate_receipt": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution/.superpowers/sdd/2026-10-06-minds-protection-execution/task-p3-prospective-review.json",
+  "gate_sha256": "004e55b11c197ec7411579afadec0d52dd3be6f0fef0e3bf486d0407fb1f568d",
+  "sealed_packet_manifest_sha256": "ddd8c37d3a4cd34af755d4aa6ec3abd12884090eb2b99c277a3212cc94c73de3",
+  "sealed_payload_count": 130,
+  "working_source_members_verified": 2251,
+  "actual_manifest_sha256": "e594664990afcf949c13a0090d38daeb57f9466f52f2fe7f4ad5f293abfc257f",
+  "argv": [
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey",
+    "--protection",
+    "--run",
+    "--protocol-revision",
+    "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+    "--out",
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989"
+  ],
+  "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+  "fresh_campaign": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989",
+  "fresh_reanalysis": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989-reanalysis-1",
+  "tracked_status": "",
+  "source_head": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+  "runtime_environment": {
+    "PATH": "/Users/nathan/.elan/bin:/Users/nathan/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/nathan/.nvm/versions/node/v18.20.1/bin:/Users/nathan/.gem/ruby/3.1.3/bin:/Users/nathan/.rubies/ruby-3.1.3/lib/ruby/gems/3.1.0/bin:/Users/nathan/.rubies/ruby-3.1.3/bin:/Users/nathan/.venv/bin:/Users/nathan/Projects/flutterSDK/flutter:/opt/homebrew/anaconda3/bin:/opt/homebrew/opt/gnu-getopt/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/TeX/texbin:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/Users/nathan/.codex/packages/app-server-daemon/releases/0.160.1-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0MljiKz:/Users/nathan/.codex/tmp/arg0/codex-arg0nQ2cjt:/Users/nathan/.codex/packages/app-server-daemon/releases/0.160.0-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0cnpEgC:/Users/nathan/.codex/packages/app-server-daemon/releases/0.159.3-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg029xf8O:/Users/nathan/.codex/packages/app-server-daemon/releases/0.159.2-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0Wjw9MB:/Users/nathan/.codex/packages/app-server-daemon/releases/0.159.1-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0UEIdTF:/Users/nathan/.codex/packages/app-server-daemon/releases/0.159.0-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0sU1COl:/Users/nathan/.codex/packages/app-server-daemon/releases/0.158.0-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0P5WDiI:/opt/homebrew/lib/node_modules/@openai/codex/node_modules/@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/codex-path:/Users/nathan/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand:/Users/nathan/Library/Application Support/Code/User/globalStorage/github.copilot-chat/copilotCli:/Users/nathan/.elan/bin:/Users/nathan/.cabal/bin:/Users/nathan/.ghcup/bin:/Users/nathan/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/nathan/.nvm/versions/node/v18.20.1/bin:/Users/nathan/.venv/bin:/Users/nathan/Projects/flutterSDK/flutter:/opt/homebrew/anaconda3/bin:/opt/homebrew/opt/gnu-getopt/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/bin:/usr/local/sbin:/Users/nathan/.cargo/bin:/Users/nathan/.vscode/extensions/ms-python.debugpy-2026.6.0-darwin-arm64/bundled/scripts/noConfigScripts:/Users/nathan/go/bin:/Users/nathan/.pub-cache/bin:/Users/nathan/go/bin:/Users/nathan/.pub-cache/bin",
+    "RUSTFLAGS": null,
+    "CARGO_ENCODED_RUSTFLAGS": null,
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "RUST_BACKTRACE": null,
+    "DYLD_LIBRARY_PATH": null,
+    "DYLD_INSERT_LIBRARIES": null,
+    "RAYON_NUM_THREADS": null
+  }
+}

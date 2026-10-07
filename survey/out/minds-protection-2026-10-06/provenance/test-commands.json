@@ -1,0 +1,76 @@
+[
+  {
+    "name": "core-protection",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "sugarscape-core",
+      "--lib",
+      "minds::protection::",
+      "--locked"
+    ],
+    "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+    "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+    "start": "2026-10-07T01:23:36.689893+00:00",
+    "end": "2026-10-07T01:25:41.531505+00:00",
+    "exit_code": 0,
+    "log": "core-protection.log"
+  },
+  {
+    "name": "core-state",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "sugarscape-core",
+      "--test",
+      "protection",
+      "--locked"
+    ],
+    "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+    "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+    "start": "2026-10-07T01:25:41.531986+00:00",
+    "end": "2026-10-07T01:26:43.282050+00:00",
+    "exit_code": 0,
+    "log": "core-state.log"
+  },
+  {
+    "name": "core-checkpoint",
+    "command": [
+      "cargo",
+      "test",
+      "-p",
+      "sugarscape-core",
+      "--test",
+      "checkpoint",
+      "protection_",
+      "--locked"
+    ],
+    "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+    "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+    "start": "2026-10-07T01:26:43.282363+00:00",
+    "end": "2026-10-07T01:26:45.661974+00:00",
+    "exit_code": 0,
+    "log": "core-checkpoint.log"
+  },
+  {
+    "name": "survey-protection",
+    "command": [
+      "cargo",
+      "test",
+      "--manifest-path",
+      "survey/Cargo.toml",
+      "--bin",
+      "survey",
+      "protection_",
+      "--locked"
+    ],
+    "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+    "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+    "start": "2026-10-07T01:26:45.662315+00:00",
+    "end": "2026-10-07T01:32:32.979376+00:00",
+    "exit_code": 0,
+    "log": "survey-protection.log"
+  }
+]

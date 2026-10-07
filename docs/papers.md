@@ -5,6 +5,16 @@ ambiguity or departure as a named switch, and reports where a paper's claims do 
 (see the survey, `docs/superpowers/specs/2026-09-24-model-survey-design.md`). This file tracks the
 source papers: which milestone used each, which critiques we have, and the queue.
 
+The [reproducibility register](reproducibility.md) maintains claim-level discrepancies, source
+identity and measurement gaps, corrected issues and concrete next actions across the completed
+catalog and Minds programme. It keeps conditional mismatches separate from unmeasured leads.
+
+The [2026-10-06 Minds P3 findings](superpowers/specs/2026-10-06-minds-protection-findings.md)
+report the complete registered re-caching mechanism campaign (7,680 episodes), independently
+reviewed; publication remains pending. Corvid sources motivate its qualitative interventions; this is our own experiment,
+not a numerical reproduction of a source paper. Costs, renewed observation, cue mismatch and
+reflected recovery geometry remain visible in all registered comparisons.
+
 **Where the files are.** Local copies live in `papers/<topic>/`, which is gitignored: they are
 personal copies, never committed or redistributed. File names are
 `<authors>-<year>[-<venue>]-<short-title>.<pdf|html>`. A paper marked *not in `papers/`* was
@@ -82,6 +92,23 @@ record the next review gate. The [F1 reference guide](foraging.md) documents imp
 | 36 | `polarity` | `geopolitics/cederman-1994-isq-emergent-polarity.pdf`; Cederman 1997 ch.4–5; Radax, Störmer/Köhler et al. and Duffy in [reading notes](superpowers/specs/2026-10-02-emergent-polarity-reading-notes.md) | Complete 572-arm/28,520-session reconstruction measured: 45 Compatible, 24 Incompatible, 3 Unresolved; Defense P2 aggregate: Fails; Alliance P3 aggregate: Fails; 239 invalid outcomes retained. Direct endpoint stock frequencies and Störmer 110-configuration scatter; approved corrections, including the per-period domestic decision repair, retain original verdicts and same-seed provenance ([findings](superpowers/specs/2026-10-02-emergent-polarity-findings.md)); published |
 | 37 | `geosim` | `geopolitics/cederman-2003-apsr-modeling-the-size-of-wars.pdf`; the 2002 PNAS predecessor; Clauset 2018/2019 tail-analysis follow-ups | 37 arms / 1,490 attempts retained: 1,486 complete, 4 invalid. Conditional source comparisons: 10 Unresolved, 1 Incompatible (75×75 grid); exact source equivalence remains Unresolved. Eight of 88 source targets available; all six technology/context contrasts Unresolved. Modern pooled iid checks: 15 reject, 5 do not reject, 2 inconclusive ([findings](superpowers/specs/2026-10-03-geosim-findings.md), [provenance](superpowers/specs/2026-10-03-geosim-provenance.json)); published ([publication receipt](superpowers/specs/2026-10-03-geosim-publication.md)) |
 | 38 | `democratic_peace` | `geopolitics/cederman-2001-jcr-democratic-peace-kantian-selection-process.pdf`; Cederman/Rao 2001 and Cederman/Gleditsch 2004 in [reading notes](superpowers/specs/2026-10-03-democratic-peace-reading-notes.md) | Complete original-only census: 108 arms / 3,240 attempts, all complete, no invalid or missing keys. Precision not registered under the fixed runtime gate; all source scopes and six primary/six secondary contrasts Unresolved. 78 of 105 source slots readable; exact source equivalence Unresolved ([findings](superpowers/specs/2026-10-03-democratic-peace-findings.md), [provenance](superpowers/specs/2026-10-03-democratic-peace-provenance.json)); reviewed and published ([publication receipt](superpowers/specs/2026-10-04-democratic-peace-publication.md)) |
+
+Milestone38 also has an approved [prospective precision/probability-reading follow-up](superpowers/specs/2026-10-04-democratic-peace-precision-design.md) and [separate preparation/export tooling](../survey/democratic_peace/FOLLOWUP.md). Its new10800literal and10800prose histories remain unmeasured and independently gated.
+
+The preceding paragraph records prospective preparation. The separately dated
+[2026-10-05 measured follow-up](superpowers/specs/2026-10-05-democratic-peace-precision-findings.md)
+contains all 21,600 new attempts, all complete, with no missing, pending, partial or
+invalid histories. Literal and prose combined readable source scopes are
+conditionally Incompatible; prose Figure 10 is Compatible only for its 15/33
+readable slots. Literal primary/secondary mechanism aggregates are
+Inconclusive/Fails; prose aggregates are Holds/Holds. Separate
+[provenance](superpowers/specs/2026-10-05-democratic-peace-precision-provenance.json),
+[literal findings](superpowers/specs/2026-10-05-democratic-peace-precision-literal-findings.json),
+[prose findings](superpowers/specs/2026-10-05-democratic-peace-precision-prose-findings.json),
+and [figures](superpowers/specs/2026-10-05-democratic-peace-precision-figures/plot-inventory.json)
+retain the frozen scientific identity, extinction/undefined census and descriptive
+reading sensitivity. This extends milestone 38 without revising its original
+measured row; historical executable/RNG/statistic equivalence remains Unresolved.
 
 Recovered GeoSim code stays reference-only: GeoSim0 declares GPL-2.0-or-later; the GROWLab framework declares LGPL-2.1-or-later; nested GeoSim2 headers leave model-specific licensing unresolved. No author model source was transplanted. See the [author provenance](superpowers/specs/2026-10-03-geosim-author-code-reading-notes.md) and [artifact audit](superpowers/specs/2026-10-03-geosim-artifact-audit.md).
 

@@ -1,0 +1,30 @@
+{
+  "argv": [
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey",
+    "--protection",
+    "--analyze",
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989/index.json",
+    "--out",
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989-reanalysis-1"
+  ],
+  "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+  "started_utc": "2026-10-07T01:39:38.540967+00:00",
+  "ended_utc": "2026-10-07T01:39:42.870045+00:00",
+  "elapsed_seconds": 4.329124415293336,
+  "exit_code": 0,
+  "combined_stdout_stderr": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989-reanalysis-1.log",
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "campaign_seal_sha256": "b26f6e4dd6dff3876063f32b71f2e8eff6e23540050aac321e595567d33d16e3",
+  "artifact_comparisons": {
+    "analysis.json": {
+      "original_sha256": "f18645c48819c7c257c2f354a8e5388955d3758c47c47142847f1530b774f3a4",
+      "reanalysis_sha256": "f18645c48819c7c257c2f354a8e5388955d3758c47c47142847f1530b774f3a4",
+      "byte_identical": true
+    },
+    "results.md": {
+      "original_sha256": "6875fd974cdfa3a82215fc42ec8227114646af51adfdbdd4a35848cd3c0a5a90",
+      "reanalysis_sha256": "6875fd974cdfa3a82215fc42ec8227114646af51adfdbdd4a35848cd3c0a5a90",
+      "byte_identical": true
+    }
+  }
+}

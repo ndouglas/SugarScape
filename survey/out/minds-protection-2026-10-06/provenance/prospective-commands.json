@@ -1,0 +1,35 @@
+{
+  "status": "HOLD: requires fresh independent prospective acceptance; these commands have not run",
+  "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+  "code_revision": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+  "protocol_revision": "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+  "compiled_source_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+  "CARGO_MANIFEST_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution/survey",
+  "target_dir": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+  "run_command": [
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey",
+    "--protection",
+    "--run",
+    "--protocol-revision",
+    "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+    "--out",
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989"
+  ],
+  "run_stdout_stderr_destination": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989-run.log",
+  "exit_and_census_destination": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989-exit-census.json",
+  "analyze_command": [
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey",
+    "--protection",
+    "--analyze",
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989/index.json",
+    "--out",
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989-reanalysis-1"
+  ],
+  "run_out_exists": false,
+  "reanalyze_out_exists": false,
+  "single_writer": true,
+  "serial_order": "lexicographically sorted condition id then increasing seed; fixed 192 x 40",
+  "no_overwrite_no_resume": true,
+  "error_policy": "capture command, combined stdout/stderr and exit code outside campaign directory; retain every raw envelope and index.incomplete.json; enumerate expected/present/missing paths against expected-raw-census.json, first missing canonical cell is attempted-failure candidate; no retry; a runner construction error can abort before that cell has an envelope; preserve exception as unpersisted attempt/error, never successful or zero food",
+  "later_reanalysis": "only after full index/raw validation succeeds, fresh destination; compare analysis.json and results.md byte-for-byte; preserve availability reasons and every missing lineage seed"
+}

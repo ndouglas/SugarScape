@@ -220,6 +220,11 @@ def resolved_payload(export):
 
 
 def validate_record(row, arm, binding):
+    if type(row.get('schema_version')) is int and row['schema_version'] == 2:
+        from .followup import validate_record as followup_record
+        return followup_record(row, arm, binding)
+    if arm.get('schema_version', 1) != 1:
+        raise ValueError('record/arm schema mismatch')
     _fields(row, RECORD_FIELDS, 'record')
     if type(row['schema_version']) is not int or row['schema_version'] != 1 or row['model'] != 'democratic_peace':
         raise ValueError('invalid record/model version')
@@ -276,7 +281,8 @@ def read_sessions(path, manifest, resolved, binding):
     configs = {arm['id']: arm['config'] for arm in resolved['arms']}
     if len(configs) != len(resolved['arms']) or set(configs) != {arm['id'] for arm in manifest['arms']}:
         raise ValueError('resolved arm family mismatch or duplicate')
-    arms = {arm['id']: {**arm, 'config': configs[arm['id']], 'execution_mode': manifest['execution_mode']} for arm in manifest['arms']}
+    arms = {arm['id']: {**arm, 'config': configs[arm['id']], 'execution_mode': manifest['execution_mode'], 'schema_version': manifest['schema_version'],
+        **({k: manifest[k] for k in ('phase', 'study_protocol')} if manifest['schema_version'] == 2 else {})} for arm in manifest['arms']}
     result = {}
     with Path(path).open(encoding='utf-8', newline='') as file:
         for number, line in enumerate(file, 1):

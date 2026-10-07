@@ -1,7 +1,7 @@
 # Research-anchored foraging and construction design
 
 **Date:** 2026-10-04.
-**Status:** written design approved by the user on 2026-10-04. The [F1 implementation plan](../plans/2026-10-04-foraging-1-cpfa-rules.md) was approved by the user on 2026-10-04; the [F1 reference](../../foraging.md) is implemented and independently reviewed, merged into `main` at `5819a04`; scientific registration/execution remain separate.
+**Status:** written design approved by the user on 2026-10-04. The [F1 implementation plan](../plans/2026-10-04-foraging-1-cpfa-rules.md) was approved by the user on 2026-10-04; the [F1 reference](../../foraging.md) is implemented and independently reviewed, merged into `main` at `5819a04`; F2 is also implemented, independently reviewed and locally merged into `main` at `a194f8e`, with [execution evidence](../plans/2026-10-05-foraging-2-fixed-world.md#execution-and-review-evidence--2026-10-05); fresh merged-tree verification passed. F3 is implemented, independently reviewed and locally merged into `main` at `c0e551a`, with 2,663 merged-tree tests passed, 0 failed and 103 ignored. F4 shared-worker construction is implemented, independently reviewed and locally merged at `568a3fa` on 2026-10-07, with fresh merged-tree verification (2,852 passed, 0 failed, 103 existing ignored), formatting and core Clippy clean. Scientific registration/execution remain separate.
 **Programme:** construction B3, with later bridges to collective-agency communication and costly assistance.
 **Evidence:** [source audit](../../studies/2026-10-04-foraging-construction-reading.md).
 **Implemented starting point:** [Burrow resource access](2026-10-04-burrow-2-resource-access-design.md), integrated into main.
@@ -30,7 +30,7 @@ This spec covers the programme sequence and the first source-rule increment. Sub
 | F4: construction coupling | Excavation and spoil/food interaction with measured delivery | New composition of verified components |
 | F5: shortcut comparison | Straight/detour/twisting geometries and cost/route/delivery measurements | Defined computational comparison with a biological phenomenon |
 
-F1–F5 are local labels for this branch of B3, not replacements for Minds or C1–C10. The next implementation plan covers F1 only. Food extraction, physical carrying and excavation are later increments rather than hidden additions to F1.
+F1–F5 are local labels for this branch of B3, not replacements for Minds or C1–C10. F1 and F2 are merged and verified; F3 engineering, independent reviews and verified local integration into `main` at `c0e551a` are complete. F4 construction coupling is also implemented, reviewed and locally merged at `568a3fa`. F5 shortcut/termite comparison is the next design increment, with separate source-reconciliation and scientific-protocol gates. Food extraction, physical carrying and excavation are later increments rather than hidden additions to F1.
 
 ## F1 boundary and architecture
 
@@ -116,3 +116,35 @@ Quantitative reproduction of the paper's optimized performance requires its evol
 ## Review handoff
 
 The written design was checked for scope, source provenance and separation of verified rules from supplied choices, and approved by the user on 2026-10-04. Review of the [F1 implementation plan](../plans/2026-10-04-foraging-1-cpfa-rules.md) was approved by the user on 2026-10-04. Execution followed the user's standing subagent-driven preference; implementation, acceptance and independent reviews are complete. Integration into `main` completed at `5819a04`. Scientific registration/execution remain separate from engineering implementation.
+
+## F2 follow-up
+
+The [F2 historical audit](../../studies/2026-10-04-foraging-fixed-world-reading.md) and [fixed-world design](2026-10-04-foraging-2-fixed-world-design.md) are complete; the user approved the written spec on 2026-10-05. The [F2 implementation plan](../plans/2026-10-05-foraging-2-fixed-world.md) was approved on 2026-10-05; implementation and independent reviews are complete. Local integration into `main` completed at `a194f8e` on 2026-10-05. Fresh merged-tree verification passed: `cargo test --workspace` reported 2,463 passed, 0 failed and 103 ignored; `cargo fmt --all --check` and core clippy with warnings denied passed. F3 passage adaptation is implemented and independently reviewed; F4 next adds excavation and separate spoil/food logistics. Scientific execution has not started. The recovered historical source informs eight-neighbor angular movement, delays and completed-return scoring; release identity and quantitative reproduction remain unestablished.
+
+## F3 follow-up
+
+The [F3 passage design](2026-10-05-foraging-3-passage-design.md) was approved by the
+user on 2026-10-06. The user selected private learned maps and approved local
+observations, coordinate-only recruitment and a multi-cell nest chamber with
+two-worker capacity throughout. The spec makes supplied exploration, action
+cadence, information boundaries and bounded diagnostics explicit. The [five-stage implementation plan](../plans/2026-10-06-foraging-3-passage.md) is
+approved on 2026-10-06; engineering implementation and independent
+task/whole-branch reviews are complete; local integration into `main` completed
+at `c0e551a` on 2026-10-06. Final runtime `693c02b` passed
+workspace verification (2,563 passed, 0 failed, 103 ignored), formatting and core
+clippy. Fresh merged-tree verification reports 2,663 passed, 0 failed and 103
+ignored, with formatting and core clippy clean. Scientific evaluation remains
+separate. F4 is the
+separate excavation and spoil/food integration increment described below.
+
+## F4 follow-up
+
+The [F4 construction design](2026-10-06-foraging-4-construction-design.md) was
+approved by the user on 2026-10-06. Shared workers, direct transport, one common
+carrying slot, distinct food/spoil destinations and local dynamic-map updates
+were approved conversationally on 2026-10-06. Role allocation and relay
+transport are explicitly deferred. The spec proposes exploration before
+excavation, paused food-trip resumption after spoil disposal, separate material
+conservation and structural-access versus realized-delivery measurements.
+The [five-stage implementation plan](../plans/2026-10-06-foraging-4-construction.md)
+was approved on 2026-10-06. All five engineering stages and independent task/whole-branch reviews are complete. Runtime `25375c3` passed workspace 2,852/0/103 (passed/failed/existing ignored), rustdoc, formatting and core Clippy. Verified local integration into `main` completed at `568a3fa` on 2026-10-07; fresh merged-tree workspace verification also reports 2,852 passed, 0 failed and 103 existing ignored, with formatting and core all-target Clippy clean. Evidence and cleanup are recorded in the plan; only this feature worktree/branch were retired. Scientific evaluation has not started.

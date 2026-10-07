@@ -1,0 +1,435 @@
+{
+  "status": "packet complete; scientific execution held pending fresh independent prospective acceptance",
+  "generated_utc": "2026-10-07T01:33:40.713770+00:00",
+  "source_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+  "code_revision": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+  "protocol_revision": "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+  "protocol_sha256": "e9ab9622a53c29920d01292ffbc713376315bd6f8d3f89c2c2b16ff8304ec42f",
+  "protocol_exact_bytes_match_committed_revision": true,
+  "manifest": {
+    "schema": "minds-protection-measured-v1",
+    "conditions": 192,
+    "panels": {
+      "single": 64,
+      "mixed": 32,
+      "cue": 32,
+      "stumble": 64
+    },
+    "seeds": [
+      10001,
+      10002,
+      10003,
+      10004,
+      10005,
+      10006,
+      10007,
+      10008,
+      10009,
+      10010,
+      10011,
+      10012,
+      10013,
+      10014,
+      10015,
+      10016,
+      10017,
+      10018,
+      10019,
+      10020,
+      10021,
+      10022,
+      10023,
+      10024,
+      10025,
+      10026,
+      10027,
+      10028,
+      10029,
+      10030,
+      10031,
+      10032,
+      10033,
+      10034,
+      10035,
+      10036,
+      10037,
+      10038,
+      10039,
+      10040
+    ],
+    "ticks": 64,
+    "episodes": 7680,
+    "canonical_order": "condition id, then seed",
+    "sha256": "e594664990afcf949c13a0090d38daeb57f9466f52f2fe7f4ad5f293abfc257f",
+    "commit_binding": "manifest source in committed code HEAD; actual printed JSON retained"
+  },
+  "binary": {
+    "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey",
+    "sha256": "a3e21584b44859da394906e9923be9fbd8d1eea06d9e46e5215fd1c9f8dc8454",
+    "size": 18319088,
+    "mode": "0o755",
+    "file": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey: Mach-O 64-bit executable arm64\n",
+    "dependencies": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)\n",
+    "build_command": [
+      "cargo",
+      "build",
+      "--manifest-path",
+      "survey/Cargo.toml",
+      "--bin",
+      "survey",
+      "--release",
+      "--locked"
+    ],
+    "build_target": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+    "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+    "build_exit": 0
+  },
+  "build_context": {
+    "source_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+    "runtime_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006",
+    "target_dir": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+    "head": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+    "tracked_status": "",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: aarch64-apple-darwin\nrelease: 1.98.1\nLLVM version: 22.1.8\n",
+    "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)\nrelease: 1.98.1\ncommit-hash: 797e8a9bca276c1c9f9f738d2a20f484fa4eea9d\ncommit-date: 2026-08-05\nhost: aarch64-apple-darwin\nlibgit2: 1.9.4 (sys:0.21.0 vendored)\nlibcurl: 8.7.1 (sys:0.4.90+curl-8.21.0 system ssl:(SecureTransport) LibreSSL/3.3.6)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Mac OS 15.6.1 [64-bit]\n",
+    "uname": "Darwin MacBookPro.local 24.6.0 Darwin Kernel Version 24.6.0: Mon Jul 14 11:30:29 PDT 2025; root:xnu-11417.140.69~1/RELEASE_ARM64_T6000 arm64\n",
+    "environment": {
+      "PATH": "/Users/nathan/.elan/bin:/Users/nathan/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/nathan/.nvm/versions/node/v18.20.1/bin:/Users/nathan/.gem/ruby/3.1.3/bin:/Users/nathan/.rubies/ruby-3.1.3/lib/ruby/gems/3.1.0/bin:/Users/nathan/.rubies/ruby-3.1.3/bin:/Users/nathan/.venv/bin:/Users/nathan/Projects/flutterSDK/flutter:/opt/homebrew/anaconda3/bin:/opt/homebrew/opt/gnu-getopt/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/TeX/texbin:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/Users/nathan/.codex/packages/app-server-daemon/releases/0.160.1-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0MljiKz:/Users/nathan/.codex/tmp/arg0/codex-arg0nQ2cjt:/Users/nathan/.codex/packages/app-server-daemon/releases/0.160.0-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0cnpEgC:/Users/nathan/.codex/packages/app-server-daemon/releases/0.159.3-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg029xf8O:/Users/nathan/.codex/packages/app-server-daemon/releases/0.159.2-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0Wjw9MB:/Users/nathan/.codex/packages/app-server-daemon/releases/0.159.1-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0UEIdTF:/Users/nathan/.codex/packages/app-server-daemon/releases/0.159.0-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0sU1COl:/Users/nathan/.codex/packages/app-server-daemon/releases/0.158.0-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0P5WDiI:/opt/homebrew/lib/node_modules/@openai/codex/node_modules/@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/codex-path:/Users/nathan/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand:/Users/nathan/Library/Application Support/Code/User/globalStorage/github.copilot-chat/copilotCli:/Users/nathan/.elan/bin:/Users/nathan/.cabal/bin:/Users/nathan/.ghcup/bin:/Users/nathan/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/nathan/.nvm/versions/node/v18.20.1/bin:/Users/nathan/.venv/bin:/Users/nathan/Projects/flutterSDK/flutter:/opt/homebrew/anaconda3/bin:/opt/homebrew/opt/gnu-getopt/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/bin:/usr/local/sbin:/Users/nathan/.cargo/bin:/Users/nathan/.vscode/extensions/ms-python.debugpy-2026.6.0-darwin-arm64/bundled/scripts/noConfigScripts:/Users/nathan/go/bin:/Users/nathan/.pub-cache/bin:/Users/nathan/go/bin:/Users/nathan/.pub-cache/bin"
+    },
+    "inherited_cargo_config": [
+      {
+        "path": "/Users/nathan/.cargo/config.toml",
+        "sha256": "d1c0ec173c0342c0fd0cba7ad16b1901325c64220eb6abd8082b99f76811d24c",
+        "text": "[build]\nrustflags = [\"--cfg\", \"tokio_unstable\"]\n[net]\ngit-fetch-with-cli = true\n"
+      }
+    ],
+    "protocol_revision": "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+    "effective_rustflags": [
+      "--cfg",
+      "tokio_unstable"
+    ],
+    "RUSTFLAGS": "unset",
+    "CARGO_ENCODED_RUSTFLAGS": "unset"
+  },
+  "construction": {
+    "construction_condition_seed_census": "all 96 base cells x exactly 7/8; no duplicated or missing pair",
+    "construction_episodes": 192,
+    "pure_configs": 192,
+    "all_preparation_holdings_24_and_original_stock_12": true,
+    "all_fixture_and_ledger_error_lists_empty": true,
+    "all_cost_switches_match_manifest": true,
+    "source": ".superpowers/sdd/2026-10-06-minds-protection-execution/receipts/construction_probe.rs",
+    "source_sha256": "be687b05164cf2a2da371e4f31a363850ff7a3245f6d9442e20be741820daac5",
+    "helper_build_method": "rustc --extern committed-source release sugarscape_core and serde_json rlibs; exact argv in probe-build.json",
+    "execution_method": "run_episode(lab.clone(), seed, true), full 64-tick base episodes at approved construction seeds; then export opportunity/construction diagnostics only; not partial-world stepping",
+    "reflections": "pure rig_config only; no reflected full episode from helper",
+    "scientific_seed_execution": 0,
+    "empirical_estimates_exported": false,
+    "helper_binary": {
+      "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/construction-probe",
+      "sha256": "e71bc2b33a93dcd6325d5018fe514da4ad4b7d49e7166843d61663555b947e72",
+      "size": 2661456
+    },
+    "release_extern_inputs": [
+      {
+        "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/deps/libsugarscape_core-d2a6dbe2053dfbc7.rlib",
+        "sha256": "89f9037a9d4d6839cff7aefaa92d837a5d5651b936b9b1be25f451cb6ef910ed",
+        "size": 72737528
+      },
+      {
+        "path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/deps/libserde_json-7e1d3161d8d76b78.rlib",
+        "sha256": "ddb75d066dbc13709c12176ff481d1aef8bba6a6e094d01489cdd049f49a062c",
+        "size": 2323424
+      }
+    ]
+  },
+  "source_equivalence": {
+    "receipt": "receipts/p3-active-source-equivalence.json",
+    "files": 57,
+    "all_equal": true,
+    "assessment": "added unrelated modules/host variants/route burrow branch precedes protection only when its flag appears; P3 invocation contains only --protection. libm and sha2 added for unrelated engines/provenance; existing P3 dependency versions and active source unchanged. Fresh binary and native fixture/archive tests verify current build integration."
+  },
+  "native_wasm_checkpoint": {
+    "closure": "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+    "current_head": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+    "checks": [
+      {
+        "path": "crates/sugarscape-wasm/src/lib.rs",
+        "section": "protection_config_json",
+        "closure_sha256": "2844e0268a18dc79637685f3dbfd986a63277c42bd04870203bd3fe898abadd5",
+        "current_sha256": "2844e0268a18dc79637685f3dbfd986a63277c42bd04870203bd3fe898abadd5",
+        "byte_equal": true
+      },
+      {
+        "path": "crates/sugarscape-wasm/src/lib.rs",
+        "section": "read_protection_config",
+        "closure_sha256": "5b434f3b5c505376ec44f5bad9e733df164f7506afb5f4672ea3ba99c31a3d11",
+        "current_sha256": "5b434f3b5c505376ec44f5bad9e733df164f7506afb5f4672ea3ba99c31a3d11",
+        "byte_equal": true
+      },
+      {
+        "path": "crates/sugarscape-wasm/src/lib.rs",
+        "section": "protection_episode_json",
+        "closure_sha256": "9e0285a5ddd179f634972751631ac2f8d237337e31524339ca50d3ae7b5d628a",
+        "current_sha256": "9e0285a5ddd179f634972751631ac2f8d237337e31524339ca50d3ae7b5d628a",
+        "byte_equal": true
+      },
+      {
+        "path": "crates/sugarscape-wasm/src/lib.rs",
+        "section": "decimal_seed",
+        "closure_sha256": "64d7602276482156beb015bfeddc4a6e0a12e34638c0e7f35c6ada63fa58bd9b",
+        "current_sha256": "64d7602276482156beb015bfeddc4a6e0a12e34638c0e7f35c6ada63fa58bd9b",
+        "byte_equal": true
+      },
+      {
+        "path": "crates/sugarscape-wasm/src/lib.rs",
+        "section": "field_errors",
+        "closure_sha256": "438a5bbd0dc5d281985e8657a4a84e65041e26beb41bf5ac7d15b393646ff5bc",
+        "current_sha256": "438a5bbd0dc5d281985e8657a4a84e65041e26beb41bf5ac7d15b393646ff5bc",
+        "byte_equal": true
+      },
+      {
+        "path": "web/src/determinism.test.ts",
+        "section": "protection checked WASM boundary block including four native/WASM fixture comparisons",
+        "closure_sha256": "275faf1f3bb8b6913b80960491d224e21aca856076af06dd077e6974ae119566",
+        "current_sha256": "275faf1f3bb8b6913b80960491d224e21aca856076af06dd077e6974ae119566",
+        "byte_equal": true
+      },
+      {
+        "path": "crates/sugarscape-core/tests/checkpoint.rs",
+        "section": "protection_checkpoints_cover_prepared_memory_and_every_stage",
+        "closure_sha256": "a139e15944ddd7b53d9839a37f4287e483d74da712311b25fdf1b6001afca1de",
+        "current_sha256": "a139e15944ddd7b53d9839a37f4287e483d74da712311b25fdf1b6001afca1de",
+        "byte_equal": true
+      }
+    ],
+    "historical_evidence_limit": "Committed closure and completed plan state native/WASM verification passed; old Vitest receipt and old independent-review ledger were not located. These comparisons establish source equivalence, not a fresh WASM build/test or reconstruction of missing historical receipts. Current native protection and checkpoint tests are separate fresh evidence."
+  },
+  "fresh_tests": [
+    {
+      "name": "core-protection",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-core",
+        "--lib",
+        "minds::protection::",
+        "--locked"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:23:36.689893+00:00",
+      "end": "2026-10-07T01:25:41.531505+00:00",
+      "exit_code": 0,
+      "log": "core-protection.log",
+      "test_results": [
+        "test result: ok. 55 passed; 0 failed; 0 ignored; 0 measured; 2415 filtered out; finished in 0.25s"
+      ]
+    },
+    {
+      "name": "core-state",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-core",
+        "--test",
+        "protection",
+        "--locked"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:25:41.531986+00:00",
+      "end": "2026-10-07T01:26:43.282050+00:00",
+      "exit_code": 0,
+      "log": "core-state.log",
+      "test_results": [
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    {
+      "name": "core-checkpoint",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-core",
+        "--test",
+        "checkpoint",
+        "protection_",
+        "--locked"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:26:43.282363+00:00",
+      "end": "2026-10-07T01:26:45.661974+00:00",
+      "exit_code": 0,
+      "log": "core-checkpoint.log",
+      "test_results": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.04s"
+      ]
+    },
+    {
+      "name": "survey-protection",
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "survey/Cargo.toml",
+        "--bin",
+        "survey",
+        "protection_",
+        "--locked"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:26:45.662315+00:00",
+      "end": "2026-10-07T01:32:32.979376+00:00",
+      "exit_code": 0,
+      "log": "survey-protection.log",
+      "test_results": [
+        "test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 186 filtered out; finished in 273.74s"
+      ]
+    }
+  ],
+  "additional_checks": [
+    {
+      "name": "default-off-golden",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-core",
+        "--test",
+        "golden",
+        "earlier_presets_are_unchanged",
+        "--locked"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:27:09.586751+00:00",
+      "end": "2026-10-07T01:29:52.401973+00:00",
+      "exit_code": 0,
+      "log": "default-off-golden.log",
+      "test_results": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 106.27s"
+      ]
+    },
+    {
+      "name": "workspace-fmt",
+      "command": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:29:52.403140+00:00",
+      "end": "2026-10-07T01:30:20.130864+00:00",
+      "exit_code": 0,
+      "log": "workspace-fmt.log",
+      "test_results": []
+    },
+    {
+      "name": "survey-fmt",
+      "command": [
+        "cargo",
+        "fmt",
+        "--manifest-path",
+        "survey/Cargo.toml",
+        "--",
+        "--check"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:30:20.131317+00:00",
+      "end": "2026-10-07T01:30:20.878383+00:00",
+      "exit_code": 0,
+      "log": "survey-fmt.log",
+      "test_results": []
+    }
+  ],
+  "retention": {
+    "complete_tracked_source_archive": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/complete-tracked-source-e733b989.tar.gz",
+    "sha256": "028796230873510cdedad6d0336982b5d8743b1e809cb24950cc7a256fdb713b",
+    "verified_members": 2251,
+    "historical_logs_retained": 32,
+    "historical_limit": "old independent review ledger and Vitest receipt were not located; no recovered acceptance asserted",
+    "selective_archive_scope": "selective core/survey source+spec export; not complete build inputs"
+  },
+  "producer_consumer_contract": "run_episode preserves fixture/lineage errors and complete role/death/action frames; run serially saves each envelope before complete archive validation/analysis; validators enforce exact manifest/seeds/configs/schedules/horizon/identities/raw confinement/reconciliation; unavailable lineage remains unavailable with explicit reasons and full registered seed denominator",
+  "prospective_commands": {
+    "status": "HOLD: requires fresh independent prospective acceptance; these commands have not run",
+    "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+    "code_revision": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+    "protocol_revision": "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+    "compiled_source_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+    "CARGO_MANIFEST_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution/survey",
+    "target_dir": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+    "run_command": [
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey",
+      "--protection",
+      "--run",
+      "--protocol-revision",
+      "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+      "--out",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989"
+    ],
+    "run_stdout_stderr_destination": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989-run.log",
+    "exit_and_census_destination": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989-exit-census.json",
+    "analyze_command": [
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey",
+      "--protection",
+      "--analyze",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989/index.json",
+      "--out",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989-reanalysis-1"
+    ],
+    "run_out_exists": false,
+    "reanalyze_out_exists": false,
+    "single_writer": true,
+    "serial_order": "lexicographically sorted condition id then increasing seed; fixed 192 x 40",
+    "no_overwrite_no_resume": true,
+    "error_policy": "capture command, combined stdout/stderr and exit code outside campaign directory; retain every raw envelope and index.incomplete.json; enumerate expected/present/missing paths against expected-raw-census.json, first missing canonical cell is attempted-failure candidate; no retry; a runner construction error can abort before that cell has an envelope; preserve exception as unpersisted attempt/error, never successful or zero food",
+    "later_reanalysis": "only after full index/raw validation succeeds, fresh destination; compare analysis.json and results.md byte-for-byte; preserve availability reasons and every missing lineage seed"
+  },
+  "independent_review_required": true,
+  "independent_acceptance": null,
+  "scientific_execution_authorized_by_this_packet": false,
+  "limitations": [
+    "No fresh WASM build or Vitest execution; exact P3 boundary/test source equivalence and committed implementation closure are historical evidence only, with missing old receipts explicitly disclosed.",
+    "Full reflected construction episodes were not run; reflected configuration and geometry were checked without consuming the predeclared transfer panel.",
+    "A run_episode construction error can precede a raw envelope. Retain external command/error/exit receipt, partial index/raw and explicit attempted/missing canonical census; no silent retry."
+  ],
+  "final_verification": {
+    "head": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+    "tracked_status": "",
+    "before_after_index_equal": true,
+    "all_2251_working_tracked_payloads_equal_verified_head_archive": true,
+    "binary_hash_unchanged": true,
+    "campaign_parent_empty": true,
+    "source_out_census_unchanged": true,
+    "registered_episodes_executed": 0,
+    "gate_acceptance_created": false
+  },
+  "artifact_sha256": {
+    "manifest.json": "e594664990afcf949c13a0090d38daeb57f9466f52f2fe7f4ad5f293abfc257f",
+    "manifest-default.json": "e594664990afcf949c13a0090d38daeb57f9466f52f2fe7f4ad5f293abfc257f",
+    "help.txt": "1efc5fa854d91b1639f8e5c62d58648b2dc6a3b57ebfd2435cce3ee64aa58726",
+    "construction-opportunities.json": "7b56663339d4f1fa7d2997283e4a1b06b5b20030b11af0f101a4bbfa0b67abae",
+    "condition-configurations.json": "fed57e4f62c7c00ff29e81e910fb7306c1a6247419120c041ba1e2d594560763",
+    "expected-raw-census.json": "cc2e584409302ba06fac7519edb2c864e147f9ead4ce0e4c4ee0eb1c1b137d15",
+    "prospective-commands.json": "a919e21774ac681204377a53a090b4a1721f06699bb763b222982a70329b7bed",
+    "receipts/construction_probe.rs": "be687b05164cf2a2da371e4f31a363850ff7a3245f6d9442e20be741820daac5",
+    "receipts/complete-source-archive.json": "06e477e6657ca2c97040311bda83aff6ad2a030477914a9b8784d4c9a2ccff3a",
+    "receipts/source-and-protocol-identities.json": "dfd5af8a4c315c09a3f13c8de693c112c42165028697003ea16ec4a3e815137c",
+    "receipts/binary.json": "e2329f85b04381909614f11c1835089a8a13ac1939f9352aef932bea21164c6c",
+    "receipts/test-commands.json": "8b32fc41527243915372cde3332d93b40abaca1a78eae9b8fd24a289a5507e9f",
+    "receipts/additional-checks.json": "2bc85625dc11e8fb7f1f2678868d475d07b0e370b8650b186ed460177fe9f7be",
+    "receipts/native-wasm-checkpoint-source-equivalence.json": "3883159b1892473cde920201335974011819cc62d8df13d27cdef7eab252b510",
+    "receipts/p3-active-source-equivalence.json": "ff3c638e17268108e0c94af8540f442fbdac1533e654bb24a5e7d417282278b0"
+  }
+}

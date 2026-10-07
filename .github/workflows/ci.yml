@@ -96,3 +96,20 @@ jobs:
       - run: python -m unittest discover -s survey/geosim -p 'test_*.py'
       - run: cargo test --locked --manifest-path survey/Cargo.toml --bin democratic_peace --test democratic_peace_native
       - run: python -m unittest discover -s survey/democratic_peace -p 'test_*.py'
+  democratic-peace-report:
+    runs-on: ubuntu-latest
+    env:
+      OPENBLAS_NUM_THREADS: "1"
+      OMP_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: 3.13.5
+          cache: pip
+          cache-dependency-path: survey/democratic_peace/report-requirements.txt
+      - run: python -m venv survey/out/democratic-peace-report-env
+      - run: survey/out/democratic-peace-report-env/bin/python -m pip install -r survey/democratic_peace/report-requirements.txt
+      - run: survey/out/democratic-peace-report-env/bin/python -m unittest discover -s survey/democratic_peace/report_tests -p 'test_*.py'

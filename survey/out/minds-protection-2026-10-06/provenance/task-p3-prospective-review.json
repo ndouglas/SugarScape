@@ -1,0 +1,276 @@
+{
+  "verdict": "Approved",
+  "review_type": "new independent prospective scientific execution gate",
+  "reviewer": "/root/p3_prospective_gate",
+  "reviewed_utc": "2026-10-07T01:35:44.272716+00:00",
+  "binding": {
+    "source_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+    "code_revision": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+    "protocol_revision": "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+    "protocol_sha256": "e9ab9622a53c29920d01292ffbc713376315bd6f8d3f89c2c2b16ff8304ec42f",
+    "binary_path": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey",
+    "binary_sha256": "a3e21584b44859da394906e9923be9fbd8d1eea06d9e46e5215fd1c9f8dc8454",
+    "manifest_sha256": "e594664990afcf949c13a0090d38daeb57f9466f52f2fe7f4ad5f293abfc257f",
+    "construction_sha256": "7b56663339d4f1fa7d2997283e4a1b06b5b20030b11af0f101a4bbfa0b67abae",
+    "configurations_sha256": "fed57e4f62c7c00ff29e81e910fb7306c1a6247419120c041ba1e2d594560763",
+    "readiness_report_json_sha256": "efc56eced1ac9e2e927c0b11d17ad5417f60df5125f288b88a6e226503b7bf36",
+    "readiness_report_md_sha256": "98909e00251efa26327a80c432ea029ac0500052a2b1151481d018b8db202c48",
+    "packet_index_sha256": "ddd8c37d3a4cd34af755d4aa6ec3abd12884090eb2b99c277a3212cc94c73de3",
+    "complete_source_archive": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/complete-tracked-source-e733b989.tar.gz",
+    "complete_source_archive_sha256": "028796230873510cdedad6d0336982b5d8743b1e809cb24950cc7a256fdb713b"
+  },
+  "scope": {
+    "panels": {
+      "single": 64,
+      "mixed": 32,
+      "cue": 32,
+      "stumble": 64
+    },
+    "conditions": 192,
+    "seeds": [
+      10001,
+      10002,
+      10003,
+      10004,
+      10005,
+      10006,
+      10007,
+      10008,
+      10009,
+      10010,
+      10011,
+      10012,
+      10013,
+      10014,
+      10015,
+      10016,
+      10017,
+      10018,
+      10019,
+      10020,
+      10021,
+      10022,
+      10023,
+      10024,
+      10025,
+      10026,
+      10027,
+      10028,
+      10029,
+      10030,
+      10031,
+      10032,
+      10033,
+      10034,
+      10035,
+      10036,
+      10037,
+      10038,
+      10039,
+      10040
+    ],
+    "episodes": 7680,
+    "ticks": 64,
+    "policies": [
+      "off",
+      "selective",
+      "indiscriminate",
+      "erased"
+    ],
+    "construction_seeds": [
+      7,
+      8
+    ],
+    "reviewer_simulations_run": 0,
+    "reviewer_product_source_edits": 0
+  },
+  "blocking_findings": [],
+  "independent_checks": [
+    "Independently reconstructed all 192 Cartesian condition IDs: single64/mixed32/cue32/stumble64; exact seeds10001\u201310040, canonical order, schema and all7680 prospective raw paths.",
+    "Checked all192 pure configurations against fixed walls, role setup source, resource/cost/caching/watching/reserve settings, disabled mechanisms, horizons and reflection code.",
+    "Checked all192 construction pairs against exact96base cells\u00d77/8; preparation holdings24/stock12, 12 or6+6 deposits, source cues, actual sightings, zero errors and tick8 cost switch.",
+    "Checked every exported preparation route, mixed owner route/deposition reversal, stumble encounter route, retrieve8/walk9/deposit10 sequence, actual redeposit sighting, release vacancy and observer access when witnessed.",
+    "Checked mixed Selective sourceA-only withdrawals and Indiscriminate oldest-deposit order in both orders; Off/Erased no protective withdrawals. These are programmed construction properties, not findings of economic benefit.",
+    "Checked source-level 64tick loop, living-owner counting, continuation after owner death, immutable raw-before-analysis boundary, failure handling, ledger reconciliation, strict archive validation and registered report contrasts.",
+    "Independently verified binary and archive SHA256, all468 inventoried build files, all2251 tracked index entries, all2251 regular-file archive payloads against working bytes, exact protocol bytes and clean reviewed HEAD.",
+    "Inspected final test logs and exit receipts; all130 packet hashes matched. Reviewed unchanged P3/core path and existing third-party dependency identities; independently checked unchanged P3 WASM export functions and parity test block.",
+    "Checked full prospective run/reanalysis argv, absent destinations, empty campaignparent, complete canonical raw census and no-resume/no-retry retention plan."
+  ],
+  "test_receipts_reviewed": [
+    {
+      "name": "core-protection",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-core",
+        "--lib",
+        "minds::protection::",
+        "--locked"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:23:36.689893+00:00",
+      "end": "2026-10-07T01:25:41.531505+00:00",
+      "exit_code": 0,
+      "log": "core-protection.log",
+      "test_results": [
+        "test result: ok. 55 passed; 0 failed; 0 ignored; 0 measured; 2415 filtered out; finished in 0.25s"
+      ]
+    },
+    {
+      "name": "core-state",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-core",
+        "--test",
+        "protection",
+        "--locked"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:25:41.531986+00:00",
+      "end": "2026-10-07T01:26:43.282050+00:00",
+      "exit_code": 0,
+      "log": "core-state.log",
+      "test_results": [
+        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    {
+      "name": "core-checkpoint",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-core",
+        "--test",
+        "checkpoint",
+        "protection_",
+        "--locked"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:26:43.282363+00:00",
+      "end": "2026-10-07T01:26:45.661974+00:00",
+      "exit_code": 0,
+      "log": "core-checkpoint.log",
+      "test_results": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.04s"
+      ]
+    },
+    {
+      "name": "survey-protection",
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "survey/Cargo.toml",
+        "--bin",
+        "survey",
+        "protection_",
+        "--locked"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:26:45.662315+00:00",
+      "end": "2026-10-07T01:32:32.979376+00:00",
+      "exit_code": 0,
+      "log": "survey-protection.log",
+      "test_results": [
+        "test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 186 filtered out; finished in 273.74s"
+      ]
+    },
+    {
+      "name": "default-off-golden",
+      "command": [
+        "cargo",
+        "test",
+        "-p",
+        "sugarscape-core",
+        "--test",
+        "golden",
+        "earlier_presets_are_unchanged",
+        "--locked"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:27:09.586751+00:00",
+      "end": "2026-10-07T01:29:52.401973+00:00",
+      "exit_code": 0,
+      "log": "default-off-golden.log",
+      "test_results": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 106.27s"
+      ]
+    },
+    {
+      "name": "workspace-fmt",
+      "command": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:29:52.403140+00:00",
+      "end": "2026-10-07T01:30:20.130864+00:00",
+      "exit_code": 0,
+      "log": "workspace-fmt.log",
+      "test_results": []
+    },
+    {
+      "name": "survey-fmt",
+      "command": [
+        "cargo",
+        "fmt",
+        "--manifest-path",
+        "survey/Cargo.toml",
+        "--",
+        "--check"
+      ],
+      "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+      "CARGO_TARGET_DIR": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target",
+      "start": "2026-10-07T01:30:20.131317+00:00",
+      "end": "2026-10-07T01:30:20.878383+00:00",
+      "exit_code": 0,
+      "log": "survey-fmt.log",
+      "test_results": []
+    }
+  ],
+  "limitations": [
+    "No fresh WASM build or Vitest run. Historical verification is supported by committed closure/completed plan and exact unchanged P3 boundary/test/core source; missing old Vitest and independent-review receipts were not reconstructed or inferred from unrelated logs.",
+    "Construction uses full64tick base episodes at7/8, not partial preparations. This is expressly permitted deterministic construction; exported diagnostics contain no primary theft/survival estimates. Reflected full episodes and registered seeds remain unexecuted.",
+    "run_episode Err/panic before envelope persistence can leave an unpersisted cell. Preserve external command/stdout/stderr/exit and all raw/index artifacts; classify attempted/error/unknown only from evidence. First missing path is a frontier candidate, not proof of exact attempted failure.",
+    "The source tar initially selected only core/survey files; a separately hashed complete tracked archive now includes all2251 regular files and compile-time assets. Neither archive vendors external registry packages; locked identities and retained binary bind the reviewed execution.",
+    "Approval is prospective and limited to the fixed native campaign. It establishes no empirical protection effect, animal cognition, causal source-paper replication, deception result or safety/regulation conclusion."
+  ],
+  "mandatory_execution_controls": [
+    "Use exactly the reviewed retained binary, committed clean source root/HEAD, protocol and manifest; recheck identities before launch. Source/binary/protocol/matrix changes invalidate this approval pending review.",
+    "Run once serially in canonical condition/seed order into the declared fresh destination; no pilot, outcome tuning, override, overwrite, automatic retry or resume.",
+    "Capture command, combined stdout/stderr and exit outside campaign output. Retain incomplete index and every complete/partial raw file on any failure, plus expected/present/missing census; never turn missing records into zeros or analyze an incomplete archive.",
+    "On successful complete validation, reanalyze saved raw data into the declared fresh destination and compare analysis.json/results.md byte-for-byte. Preserve all192 cells, 64primary estimates, unavailable-lineage seeds, per-source diagnostics and duplicate-trajectory reporting."
+  ],
+  "approved_run_command": [
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey",
+    "--protection",
+    "--run",
+    "--protocol-revision",
+    "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+    "--out",
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989"
+  ],
+  "approved_reanalysis_command": [
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey",
+    "--protection",
+    "--analyze",
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989/index.json",
+    "--out",
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989-reanalysis-1"
+  ],
+  "prior_acceptance_reconstructed": false,
+  "empirical_results_reviewed": false
+}

@@ -1,0 +1,1235 @@
+diff --git a/survey/democratic_peace/followup-default-config.json b/survey/democratic_peace/followup-default-config.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9ff87f164a5c0182a5b1b614e765419236a9f010
+--- /dev/null
++++ b/survey/democratic_peace/followup-default-config.json
+@@ -0,0 +1 @@
++{"alliance_maintenance":"rebuild_each_period","assignment":"independent_bernoulli","capital_capture":"collapse_only","claim_locking":"affected_cells","clustering_exposure":"unique_state_neighbors","clustering_weights":"territory_weighted","distance_gradient":0.95,"distance_metric":"euclidean","enemy_total":"active_fronts","event_limit":1000,"event_recording":false,"height":15,"horizon_periods":1000,"inactive_commitment":"per_front_opponent","initial_democratic_share":0.0,"initial_resourced_share":0.05,"latent_regime":"persistent_cell_tags","mechanism":"tagging","min_threat":2.0,"mobile_share":0.15,"obligation_observation":"prior_actions","opposing_victories":"independent_claims","periods_per_tick":100,"probability_direction":"printed_decreasing","security_scope":"all_democracies","stalemate_probability":0.2,"superiority_exponent":30,"superiority_threshold":2.2,"tax_rate":1.0,"threat_ties":"lowest_state_id","victory_exponent":10,"victory_threshold":2.2,"width":15,"zero_ratio":"equal_zero_neutral"}
+diff --git a/survey/democratic_peace/followup-methods.json b/survey/democratic_peace/followup-methods.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..3af12dc1371ae6a3c93f14696ba90d39eb28e758
+--- /dev/null
++++ b/survey/democratic_peace/followup-methods.json
+@@ -0,0 +1 @@
++{"baseline":{"availability":{"extinction":"territory_zero_clustering_undefined","invalid":"retained_partial_no_final_inference","missing":"retained_key_no_seed_replacement","source_equivalence":"Unresolved"},"contrasts":{"bootstrap_draws":100000,"groups":"independent_whole_histories_100_each","p":"(1+absolute_exceedances)/(B+1)","permutation":"uniform_permutation_pooled_200_split_100","permutations":100000,"primary_family":6,"reject_below":0.05,"secondary_family":6},"fixture_tolerance":{"derived_metrics_absolute":1e-12},"interval":{"indices":"floor(.025*(B-1)),ceil(.975*(B-1))","level":0.95},"revision":"democratic-peace-offline-v1-premeasurement","rng":{"child":"SeedSequence(root,spawn_key=(fixed_job_index,))","contrast_bootstrap_batch":256,"contrast_bootstrap_order":"left_indices_then_right_indices","generator":"PCG64","jobs":129,"predictive_batch":512,"root":2026100302},"runtime":{"numpy":"2.4.6","python":"3.13.5"},"source":{"clustering":"mean_conditioned_on_surviving_democracies","draws":100000,"family_size":105,"interval_p":"inclusive_plus_one_exact_knots_and_open_intervals","minimum_defined_draws":10000,"minimum_surviving_precision":2,"original_histories":30,"precision_histories":100,"reject_below":0.05,"unavailable_family_slots":"internal_p_one_report_null"}},"baseline_method_sha256":"15b3da5153bf09b775dd1e62cf935dffce7678fa0dfc82bd6840c15e2ad4de34","phase_roots":{"literal_precision":2026100302,"prose_precision":2026100402},"population":{"arms":108,"fresh_histories":100,"historical_literal_original":30,"literal_eligibility":"fresh_100_and_original_30_complete","pooling":"none","prose_eligibility":"fresh_100_and_verified_historical_archive_no_prose_original"},"revision":"democratic-peace-followup-v1"}
+diff --git a/survey/democratic_peace/followup.py b/survey/democratic_peace/followup.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..b395138133ac8d97057b50dcea9de5c9e3b488a6
+--- /dev/null
++++ b/survey/democratic_peace/followup.py
+@@ -0,0 +1,147 @@
++"""Schema 2 follow-up populations; schema 1 identities never become fresh rows."""
++from copy import deepcopy
++import hashlib
++from pathlib import Path
++import re
++import tarfile
++import numpy as np
++from . import manifest as baseline, records, source
++from .methods import canonical_bytes, method_contract, contract_sha256
++from .provenance import safe_source_path
++
++PROTOCOL = 'democratic-peace-followup-v1'
++SPEC = 'docs/superpowers/specs/2026-10-04-democratic-peace-precision-design.md'
++PHASES = {'literal_precision': ('printed_decreasing', 390000001, 2026100302),
++          'prose_precision': ('prose_increasing', 410000001, 2026100402)}
++HISTORICAL_FIELDS = {'study_id', 'manifest_sha256', 'source_inventory_sha256',
++    'binary_sha256', 'build_receipt_sha256', 'resolved_configs_sha256', 'raw_sha256',
++    'preservation_inventory_sha256'}
++FIELDS = baseline.MANIFEST_FIELDS | {'study_protocol', 'phase', 'reading', 'historical_input'}
++ORIGINAL_INVENTORY_SHA256 = '18da5bc191a00f1ed199dc1b54639a925f733b63db5c677a756e3c9bb30215bd'
++ORIGINAL_SOURCE_SHA256 = 'fad57148ae9ca5f29d99df7777c235bd03b44187d9254d9d45d7dbd01bd856e2'
++ORIGINAL_ARCHIVE_SHA256 = '69f7bbf5acd3a61190eea49df0657c3e72694d987c3de43f109f9bd70b3c70fa'
++ORIGINAL_BINARY_SHA256 = '8bfac59be856cd68cf22186eff69c2f070026622fc7f81cfc2d0520f031461a5'
++ORIGINAL_RAW_SHA256 = '753a1d5ff6236ba4720e0c52e46ab061643a5d27ef5c5d00175e0ff3f6d6c492'
++EXPECTED_HISTORICAL = {'study_id':'democratic-peace-original-2026-10-04',
++    'manifest_sha256':'8a2f365365ae1b5b5f71d8319225c6e565fb60ffe52e7d1008e5e04f296bb10a',
++    'source_inventory_sha256':ORIGINAL_SOURCE_SHA256,'binary_sha256':ORIGINAL_BINARY_SHA256,
++    'build_receipt_sha256':'239c1b10ac022564d9c2a86f7cbe13f63c17c24e47f548942124a170fe86f965',
++    'resolved_configs_sha256':'ffb684d35cc0bfe0630c63aeef1e53306a0bdccdb0133a9ae08090338a228455',
++    'raw_sha256':ORIGINAL_RAW_SHA256,'preservation_inventory_sha256':ORIGINAL_INVENTORY_SHA256}
++SOURCE_TABLE_SHA256 = '221e944eefc22b166ce907c7bafc5acda95a76e3dbd84b2db240b5eb92366ed0'
++
++
++def sha(data):
++    return hashlib.sha256(data).hexdigest()
++
++
++def validate_historical_input(value):
++    records._fields(value, HISTORICAL_FIELDS, 'historical input')
++    if value['study_id'] != 'democratic-peace-original-2026-10-04' or any(
++        not isinstance(value[k], str) or re.fullmatch('[0-9a-f]{64}', value[k]) is None
++        for k in HISTORICAL_FIELDS - {'study_id'}):
++        raise ValueError('invalid historical identity')
++    if value != EXPECTED_HISTORICAL:
++        raise ValueError('wrong historical archive binding')
++
++
++def followup_contract():
++    return {'revision': PROTOCOL, 'baseline_method_sha256': contract_sha256(),
++        'baseline': method_contract(), 'population': {'fresh_histories': 100, 'arms': 108,
++            'historical_literal_original': 30, 'pooling': 'none',
++            'literal_eligibility': 'fresh_100_and_original_30_complete',
++            'prose_eligibility': 'fresh_100_and_verified_historical_archive_no_prose_original'},
++        'phase_roots': {p: v[2] for p, v in PHASES.items()}}
++
++
++def canonical_arms(phase):
++    if phase not in PHASES:
++        raise ValueError('unsupported follow-up phase')
++    reading, first, _ = PHASES[phase]
++    arms = baseline.canonical_arms(True)[108:]
++    for arm in arms:
++        arm.update(id=phase + '.' + arm['id'], index=arm['canonical_index'],
++            first_seed=first + arm['canonical_index'] * 10000)
++        arm['config_overrides']['probability_direction'] = reading
++    return arms
++
++
++def analysis_jobs(phase):
++    root = PHASES[phase][2]
++    result = baseline.analysis_jobs(None)
++    for job in result:
++        job.update(root_entropy=root, state_u32=np.random.SeedSequence(root,
++            spawn_key=(job['index'],)).generate_state(4).tolist())
++    return result
++
++
++def job_rng(job, phase):
++    expected = analysis_jobs(phase)
++    if type(job.get('index')) is not int or not 0 <= job['index'] < len(expected) or not records._same_json_types(job, expected[job['index']]):
++        raise ValueError('follow-up analysis job seed/payload mismatch')
++    return np.random.Generator(np.random.PCG64(np.random.SeedSequence(PHASES[phase][2],
++        spawn_key=(job['index'],))))
++
++
++def build_manifest(table, source_bytes, phase, historical_input):
++    validate_historical_input(historical_input)
++    if phase not in PHASES:
++        raise ValueError('unsupported follow-up phase')
++    value = baseline.build_manifest(table, source_bytes)
++    contract = followup_contract()
++    value.update(schema_version=2, study_protocol=PROTOCOL, phase=phase,
++        reading=PHASES[phase][0], historical_input=deepcopy(historical_input), spec=SPEC,
++        precision_registered=True, runtime_gate='followup_full_precision',
++        analysis_seed=PHASES[phase][2], arms=canonical_arms(phase),
++        analysis_jobs=analysis_jobs(phase), method_contract=contract,
++        method_contract_json=canonical_bytes(contract).decode(),
++        method_contract_sha256=sha(canonical_bytes(contract)))
++    return value
++
++
++def expected_keys(value):
++    records._fields(value, FIELDS, 'follow-up manifest')
++    if type(value['schema_version']) is not int or value['schema_version'] != 2 or value['study_protocol'] != PROTOCOL or value['phase'] not in PHASES:
++        raise ValueError('unsupported follow-up schema/protocol/phase')
++    phase = value['phase']; contract = followup_contract()
++    fixed = {'model': 'democratic_peace', 'execution_mode': 'registered', 'spec': SPEC,
++        'precision_registered': True, 'runtime_gate': 'followup_full_precision',
++        'reading': PHASES[phase][0], 'analysis_seed': PHASES[phase][2],
++        'source_draws': 100000, 'permutation_draws': 100000, 'contrast_draws': 100000,
++        'method_contract': contract, 'method_contract_json': canonical_bytes(contract).decode(),
++        'method_contract_sha256': sha(canonical_bytes(contract)),
++        'arms': canonical_arms(phase), 'analysis_jobs': analysis_jobs(phase)}
++    if any(not records._same_json_types(value[k], v) for k, v in fixed.items()):
++        raise ValueError('fixed follow-up protocol changed')
++    if value['provenance_status'] not in ('provisional_unfrozen', 'frozen'):
++        raise ValueError('invalid follow-up provenance status')
++    validate_historical_input(value['historical_input'])
++    keys = [(a['id'], a['first_seed'] + r) for a in value['arms'] for r in range(100)]
++    if len(keys) != 10800 or len({s for _, s in keys}) != 10800:
++        raise ValueError('incomplete/duplicate fresh population')
++    return keys
++
++
++def validate_record(row, arm, binding):
++    records._fields(row, records.RECORD_FIELDS | {'study_protocol', 'phase'}, 'follow-up record')
++    if type(row['schema_version']) is not int or row['schema_version'] != 2 or row['study_protocol'] != PROTOCOL or row['phase'] not in PHASES:
++        raise ValueError('unsupported follow-up row')
++    if arm.get('schema_version') != 2 or row['phase'] != arm.get('phase') or row['study_protocol'] != arm.get('study_protocol') or not row['arm'].startswith(row['phase'] + '.precision.'):
++        raise ValueError('mixed follow-up record phase')
++    # Reuse science/attempt validation after this separate envelope is accepted.
++    payload = {k: v for k, v in row.items() if k not in ('study_protocol', 'phase')}
++    payload['schema_version'] = 1
++    return records.validate_record(payload, {k:v for k,v in arm.items() if k != 'schema_version'}, binding)
++
++
++
++def validate_resolved(value, resolved):
++    expected_keys(value)
++    records.resolved_payload(resolved)
++    base = records.strict_json(Path(__file__).with_name('followup-default-config.json').read_bytes())
++    expected = [{'id':arm['id'],'config':{**base,**arm['config_overrides']}} for arm in value['arms']]
++    if not records._same_json_types(resolved['arms'],expected):
++        raise ValueError('resolved follow-up defaults/reading/config drift')
++    if resolved.get('schema_version') != 2 or resolved.get('phase') != value['phase'] or resolved.get('study_protocol') != PROTOCOL:
++        raise ValueError('resolved follow-up envelope mismatch')
++    return expected
+diff --git a/survey/democratic_peace/historical.py b/survey/democratic_peace/historical.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..5106f56a6fb1370c5074120709e82c931e29b4e5
+--- /dev/null
++++ b/survey/democratic_peace/historical.py
+@@ -0,0 +1,65 @@
++"""Read-only original preservation, source tar and dataset validation."""
++from pathlib import Path
++import tarfile
++from . import manifest as baseline, records
++from .methods import canonical_bytes
++from .provenance import safe_source_path
++from .followup import sha, ORIGINAL_INVENTORY_SHA256, ORIGINAL_SOURCE_SHA256, ORIGINAL_ARCHIVE_SHA256, ORIGINAL_BINARY_SHA256, ORIGINAL_RAW_SHA256
++
++def verify_preservation(root, inventory):
++    if not isinstance(inventory, list) or not inventory:
++        raise ValueError('empty preservation inventory')
++    prior = ''
++    for entry in inventory:
++        records._fields(entry, {'path', 'bytes', 'sha256'}, 'preservation entry')
++        name = entry['path']; data = safe_source_path(root, name).read_bytes()
++        if name <= prior or type(entry['bytes']) is not int or len(data) != entry['bytes'] or sha(data) != entry['sha256']:
++            raise ValueError('preservation byte identity/sort mismatch')
++        prior = name
++    return sha(canonical_bytes(inventory))
++
++
++def historical_dataset(*, study_root, inventory_path, source_archive, binary):
++    """Read the original with its own bindings and frozen tar, never current sources."""
++    root = Path(study_root)
++    inventory_bytes = Path(inventory_path).read_bytes()
++    inventory = records.strict_json(inventory_bytes)
++    if sha(inventory_bytes) != ORIGINAL_INVENTORY_SHA256 or len(inventory) != 13:
++        raise ValueError('wrong original preservation inventory')
++    verify_preservation(root, inventory)
++    manifest_bytes = (root/'manifest.json').read_bytes(); value = records.strict_json(manifest_bytes)
++    if value['schema_version'] != 1 or value['precision_registered'] or len(baseline.expected_keys(value)) != 3240 or value['source_inventory_sha256'] != ORIGINAL_SOURCE_SHA256:
++        raise ValueError('wrong historical manifest/population')
++    from .run import sha256_file
++    if sha256_file(source_archive) != ORIGINAL_ARCHIVE_SHA256 or sha256_file(binary) != ORIGINAL_BINARY_SHA256 or sha256_file(root/'sessions.jsonl') != ORIGINAL_RAW_SHA256:
++        raise ValueError('wrong historical archive/binary/raw identity')
++    with tarfile.open(source_archive, 'r:') as archive:
++        members = archive.getmembers(); names = [m.name for m in members]
++        if len(names) != len(set(names)):
++            raise ValueError('duplicate frozen source member')
++        for entry in value['source_inventory']:
++            member = archive.getmember(entry['path'])
++            if not member.isfile() or member.size != entry['bytes'] or sha(archive.extractfile(member).read()) != entry['sha256']:
++                raise ValueError('frozen original source inventory mismatch')
++        if sha(canonical_bytes(value['source_inventory'])) != ORIGINAL_SOURCE_SHA256:
++            raise ValueError('frozen source inventory digest mismatch')
++        receipt_bytes = (root/'build-receipt.json').read_bytes(); receipt = records.strict_json(receipt_bytes)
++        records.validate_build_receipt(receipt, sha(manifest_bytes), ORIGINAL_BINARY_SHA256, ORIGINAL_SOURCE_SHA256)
++        for name, digest in receipt['lockfile_hashes'].items():
++            if sha(archive.extractfile(name).read()) != digest:
++                raise ValueError('historical lockfile identity mismatch')
++    resolved = records.strict_json((root/'resolved.json').read_bytes())
++    binding = {'manifest_sha256': sha(manifest_bytes), 'binary_sha256': ORIGINAL_BINARY_SHA256,
++        'source_inventory_sha256': ORIGINAL_SOURCE_SHA256, 'build_receipt_sha256': sha(receipt_bytes),
++        'resolved_configs_sha256': resolved['resolved_configs_sha256']}
++    rows = records.read_sessions(root/'sessions.jsonl', value, resolved, binding)
++    if len(rows) != 3240 or any(not records.history_metrics(r)['complete'] for r in rows.values()):
++        raise ValueError('historical complete census mismatch')
++    if verify_preservation(root, inventory) != sha(canonical_bytes(inventory)):
++        raise ValueError('historical input changed during validation')
++    if Path(inventory_path).read_bytes() != inventory_bytes or sha256_file(source_archive) != ORIGINAL_ARCHIVE_SHA256 or sha256_file(binary) != ORIGINAL_BINARY_SHA256:
++        raise ValueError('historical authorities changed during validation')
++    historical_input = {'study_id': 'democratic-peace-original-2026-10-04', **binding,
++        'raw_sha256': ORIGINAL_RAW_SHA256, 'preservation_inventory_sha256': sha(inventory_bytes)}
++    return {'manifest': value, 'resolved': resolved, 'binding': binding, 'records': rows,
++        'data_sha256': ORIGINAL_RAW_SHA256, 'historical_input': historical_input}
+diff --git a/survey/democratic_peace/manifest.py b/survey/democratic_peace/manifest.py
+index 8f9462f54102b175e48be03c3cf08ba4eb87dbbf..5187e431e23f09a1153f41826de182cfedc8a6f7 100644
+--- a/survey/democratic_peace/manifest.py
++++ b/survey/democratic_peace/manifest.py
+@@ -108,6 +108,9 @@ def build_manifest(source, source_bytes=None, *, precision_registered=False):
+ 
+ 
+ def expected_keys(manifest):
++    if type(manifest.get('schema_version')) is int and manifest['schema_version'] == 2:
++        from .followup import expected_keys as followup_keys
++        return followup_keys(manifest)
+     if set(manifest) != MANIFEST_FIELDS or type(manifest['schema_version']) is not int or manifest['schema_version'] != 1:
+         raise ValueError('unknown or missing manifest fields/version')
+     for key, value in [('analysis_seed', ROOT_SEED), ('source_draws', 100000), ('permutation_draws', 100000), ('contrast_draws', 100000)]:
+diff --git a/survey/democratic_peace/records.py b/survey/democratic_peace/records.py
+index 73a3f44c94b09995458be08229441fb7bbfd45c6..e3cf7b5b6a039ed42d2c271ec6baf0f7482ce436 100644
+--- a/survey/democratic_peace/records.py
++++ b/survey/democratic_peace/records.py
+@@ -220,6 +220,11 @@ def resolved_payload(export):
+ 
+ 
+ def validate_record(row, arm, binding):
++    if type(row.get('schema_version')) is int and row['schema_version'] == 2:
++        from .followup import validate_record as followup_record
++        return followup_record(row, arm, binding)
++    if arm.get('schema_version', 1) != 1:
++        raise ValueError('record/arm schema mismatch')
+     _fields(row, RECORD_FIELDS, 'record')
+     if type(row['schema_version']) is not int or row['schema_version'] != 1 or row['model'] != 'democratic_peace':
+         raise ValueError('invalid record/model version')
+@@ -276,7 +281,8 @@ def read_sessions(path, manifest, resolved, binding):
+     configs = {arm['id']: arm['config'] for arm in resolved['arms']}
+     if len(configs) != len(resolved['arms']) or set(configs) != {arm['id'] for arm in manifest['arms']}:
+         raise ValueError('resolved arm family mismatch or duplicate')
+-    arms = {arm['id']: {**arm, 'config': configs[arm['id']], 'execution_mode': manifest['execution_mode']} for arm in manifest['arms']}
++    arms = {arm['id']: {**arm, 'config': configs[arm['id']], 'execution_mode': manifest['execution_mode'], 'schema_version': manifest['schema_version'],
++        **({k: manifest[k] for k in ('phase', 'study_protocol')} if manifest['schema_version'] == 2 else {})} for arm in manifest['arms']}
+     result = {}
+     with Path(path).open(encoding='utf-8', newline='') as file:
+         for number, line in enumerate(file, 1):
+diff --git a/survey/src/bin/democratic_peace.rs b/survey/src/bin/democratic_peace.rs
+index aa24ea9f353d0b4b4f7cb22f39bcabac6b6f3087..9dee11b1b9ed551fab7faeedd1707c63e35c2734 100644
+--- a/survey/src/bin/democratic_peace.rs
++++ b/survey/src/bin/democratic_peace.rs
+@@ -12,6 +12,9 @@ use std::{
+ };
+ use sugarscape_core::democratic_peace::{DemocraticPeaceConfig, DemocraticPeaceWorld};
+ 
++#[path = "../democratic_peace_followup.rs"]
++mod followup;
++
+ struct Strict(Value);
+ impl<'de> Deserialize<'de> for Strict {
+     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+@@ -284,35 +287,51 @@ struct Prepared {
+ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String> {
+     let bytes = read(path)?;
+     let m = strict_json(&bytes)?;
+-    exact(
+-        &m,
+-        &[
+-            "schema_version",
+-            "model",
+-            "execution_mode",
+-            "provenance_status",
+-            "spec",
+-            "precision_registered",
+-            "runtime_gate",
+-            "analysis_seed",
+-            "source_draws",
+-            "permutation_draws",
+-            "contrast_draws",
+-            "source_table_sha256",
+-            "method_contract",
+-            "method_contract_json",
+-            "method_contract_sha256",
+-            "source_inventory",
+-            "source_inventory_sha256",
+-            "arms",
+-            "analysis_jobs",
+-        ],
+-    )?;
++    let schema = uint(&m, "schema_version")?;
++    require(schema == 1 || schema == 2, "unsupported manifest schema")?;
++    let followup = schema == 2;
++    let mut manifest_fields = vec![
++        "schema_version",
++        "model",
++        "execution_mode",
++        "provenance_status",
++        "spec",
++        "precision_registered",
++        "runtime_gate",
++        "analysis_seed",
++        "source_draws",
++        "permutation_draws",
++        "contrast_draws",
++        "source_table_sha256",
++        "method_contract",
++        "method_contract_json",
++        "method_contract_sha256",
++        "source_inventory",
++        "source_inventory_sha256",
++        "arms",
++        "analysis_jobs",
++    ];
++    if followup {
++        manifest_fields.extend(["study_protocol", "phase", "reading", "historical_input"]);
++    }
++    exact(&m, &manifest_fields)?;
++    let phase = if followup {
++        {
++            followup::historical(&m)?;
++            Some(followup::phase(&m)?)
++        }
++    } else {
++        None
++    };
++    let root_seed = phase.map_or(2026100302, |v| v.2);
+     require(
+-        uint(&m, "schema_version")? == 1 && text(&m, "model")? == "democratic_peace",
++        text(&m, "model")? == "democratic_peace",
+         "unsupported manifest schema/model",
+     )?;
+-    require(text(&m, "spec")? == SPEC, "wrong approved specification")?;
++    require(
++        text(&m, "spec")? == if followup { followup::SPEC } else { SPEC },
++        "wrong approved specification",
++    )?;
+     let mode = text(&m, "execution_mode")?;
+     require(
+         ["registered", "fixture", "runtime_probe"].contains(&mode),
+@@ -337,7 +356,7 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
+         )?;
+     }
+     require(
+-        uint(&m, "analysis_seed")? == 2026100302,
++        uint(&m, "analysis_seed")? == root_seed,
+         "wrong analysis root",
+     )?;
+     for k in ["source_draws", "permutation_draws", "contrast_draws"] {
+@@ -355,7 +374,11 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
+         digest(contract.as_bytes()) == text(&m, "method_contract_sha256")?,
+         "method contract digest mismatch",
+     )?;
+-    let template = strict_json(include_bytes!("../../democratic_peace/methods.json"))?;
++    let template = strict_json(if followup {
++        include_bytes!("../../democratic_peace/followup-methods.json").as_slice()
++    } else {
++        include_bytes!("../../democratic_peace/methods.json").as_slice()
++    })?;
+     require(
+         m["method_contract"] == template,
+         "method contract differs from production template",
+@@ -365,6 +388,12 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
+         text(&m, "source_table_sha256")? == digest(&table),
+         "source table changed",
+     )?;
++    if followup {
++        require(
++            digest(&table) == "221e944eefc22b166ce907c7bafc5acda95a76e3dbd84b2db240b5eb92366ed0",
++            "fixed follow-up audited source table changed",
++        )?;
++    }
+     let table_value = strict_json(&table)?;
+     require(
+         text(&table_value, "paper_sha256")?
+@@ -391,12 +420,33 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
+         )?;
+     }
+     let inventory_sha = validate_inventory(&m, root, will_run || provenance == "frozen")?;
++    if followup && (will_run || provenance == "frozen") {
++        let names: BTreeSet<&str> = array(&m, "source_inventory")?
++            .iter()
++            .map(|e| text(e, "path"))
++            .collect::<Result<_, _>>()?;
++        for name in [
++            followup::SPEC,
++            "survey/src/democratic_peace_followup.rs",
++            "survey/democratic_peace/followup-probe-schedule.json",
++            "survey/democratic_peace/followup-default-config.json",
++            "survey/democratic_peace/report-requirements.txt",
++            "survey/democratic_peace/FOLLOWUP.md",
++        ] {
++            require(
++                names.contains(name),
++                "follow-up normative inventory incomplete",
++            )?;
++        }
++    }
+     let precision = m["precision_registered"]
+         .as_bool()
+         .ok_or("precision_registered must be boolean")?;
+     require(
+         text(&m, "runtime_gate")?
+-            == if precision {
++            == if followup {
++                "followup_full_precision"
++            } else if precision {
+                 "full_precision"
+             } else {
+                 "original_only"
+@@ -406,7 +456,7 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
+     let entries = array(&m, "arms")?;
+     if registered {
+         require(
+-            entries.len() == if precision { 216 } else { 108 },
++            entries.len() == if precision && !followup { 216 } else { 108 },
+             "registered population cannot be incomplete",
+         )?;
+     } else {
+@@ -479,7 +529,11 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
+                     && uint(v, "density_index")? == di as u64,
+                 "factor index disagreement",
+             )?;
+-            let expected_family = if i < 108 { "original" } else { "precision" };
++            let expected_family = if followup || i >= 108 {
++                "precision"
++            } else {
++                "original"
++            };
+             require(family == expected_family, "family order drift")?;
+             let expected_id = format!(
+                 "{expected_family}.mobile{}.{}.density{}",
+@@ -487,29 +541,59 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
+                 mechanisms[mech],
+                 densities[di].to_string().replace('.', "_")
+             );
++            let expected_id = if followup {
++                format!("{}.{}", text(&m, "phase")?, expected_id)
++            } else {
++                expected_id
++            };
+             require(id == expected_id, "registered canonical arm ID drift")?;
+             require(
+-                sessions == if i < 108 { 30 } else { 100 },
++                sessions == if !followup && i < 108 { 30 } else { 100 },
+                 "registered sample size drift",
+             )?;
+             require(
+                 first
+-                    == if i < 108 {
++                    == if followup {
++                        phase.ok_or("missing phase")?.1 + canonical * 10000
++                    } else if i < 108 {
+                         380000001 + canonical * 10000
+                     } else {
+                         390000001 + canonical * 10000
+                     },
+                 "registered seeds drift",
+             )?;
+-            exact(
+-                &v["config_overrides"],
+-                &[
++            let mut fields = vec![
++                "mobile_share",
++                "mechanism",
++                "initial_democratic_share",
++                "periods_per_tick",
++            ];
++            if followup {
++                fields.push("probability_direction");
++            }
++            exact(&v["config_overrides"], &fields)?;
++            if followup {
++                require(
++                    config["probability_direction"] == json!(phase.ok_or("missing phase")?.0),
++                    "follow-up reading drift",
++                )?;
++                let mut literal = config.clone();
++                literal["probability_direction"] = json!("printed_decreasing");
++                let mut expected = serde_json::to_value(DemocraticPeaceConfig::default())
++                    .map_err(|e| e.to_string())?;
++                for k in [
+                     "mobile_share",
+                     "mechanism",
+                     "initial_democratic_share",
+                     "periods_per_tick",
+-                ],
+-            )?;
++                ] {
++                    expected[k] = config[k].clone();
++                }
++                require(
++                    literal == expected,
++                    "resolved follow-up differs beyond one reading field",
++                )?;
++            }
+             require(
+                 config["mobile_share"] == json!(mobiles[mi])
+                     && config["mechanism"] == json!(mechanisms[mech])
+@@ -567,7 +651,7 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
+         )?;
+         require(
+             uint(j, "index")? == i as u64
+-                && uint(j, "root_entropy")? == 2026100302
++                && uint(j, "root_entropy")? == root_seed
+                 && j["spawn_key"] == json!([i]),
+             "analysis child stream drift",
+         )?;
+@@ -585,7 +669,8 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
+     }
+     if registered {
+         require(
+-            hash_json(&m["analysis_jobs"])? == REGISTERED_ANALYSIS_JOBS_SHA256,
++            hash_json(&m["analysis_jobs"])?
++                == phase.map_or(REGISTERED_ANALYSIS_JOBS_SHA256, |v| v.3),
+             "registered analysis job payload drift",
+         )?;
+     }
+@@ -874,7 +959,7 @@ fn record(p: &Prepared, a: &Arm, r: u64, receipt: &Option<String>) -> Result<Val
+     let mut row = identity(p, receipt);
+     let o = row.as_object_mut().ok_or("record identity invalid")?;
+     for (k, v) in [
+-        ("schema_version", json!(1)),
++        ("schema_version", p.manifest["schema_version"].clone()),
+         ("model", json!("democratic_peace")),
+         ("arm", json!(a.id)),
+         ("seed", json!(seed)),
+@@ -892,6 +977,13 @@ fn record(p: &Prepared, a: &Arm, r: u64, receipt: &Option<String>) -> Result<Val
+     ] {
+         o.insert(k.into(), v);
+     }
++    if p.manifest["schema_version"] == json!(2) {
++        o.insert(
++            "study_protocol".into(),
++            p.manifest["study_protocol"].clone(),
++        );
++        o.insert("phase".into(), p.manifest["phase"].clone());
++    }
+     Ok(row)
+ }
+ 
+@@ -1208,30 +1300,37 @@ fn validate_existing(
+     p: &Prepared,
+     receipt: &Option<String>,
+ ) -> Result<(String, u64), String> {
+-    exact(
+-        row,
+-        &[
+-            "schema_version",
+-            "model",
+-            "arm",
+-            "seed",
+-            "arm_index",
+-            "canonical_index",
+-            "repeat_index",
+-            "family",
+-            "execution_mode",
+-            "config",
+-            "attempt",
+-            "outcome",
+-            "manifest_sha256",
+-            "binary_sha256",
+-            "source_inventory_sha256",
+-            "build_receipt_sha256",
+-            "resolved_configs_sha256",
+-        ],
+-    )?;
++    let mut fields = vec![
++        "schema_version",
++        "model",
++        "arm",
++        "seed",
++        "arm_index",
++        "canonical_index",
++        "repeat_index",
++        "family",
++        "execution_mode",
++        "config",
++        "attempt",
++        "outcome",
++        "manifest_sha256",
++        "binary_sha256",
++        "source_inventory_sha256",
++        "build_receipt_sha256",
++        "resolved_configs_sha256",
++    ];
++    if p.manifest["schema_version"] == json!(2) {
++        fields.extend(["study_protocol", "phase"]);
++        require(
++            row["study_protocol"] == p.manifest["study_protocol"]
++                && row["phase"] == p.manifest["phase"],
++            "mixed follow-up resume phase",
++        )?;
++    }
++    exact(row, &fields)?;
+     require(
+-        uint(row, "schema_version")? == 1 && text(row, "model")? == "democratic_peace",
++        row["schema_version"] == p.manifest["schema_version"]
++            && text(row, "model")? == "democratic_peace",
+         "resume schema/model mismatch",
+     )?;
+     let binding = identity(p, receipt);
+@@ -1313,7 +1412,23 @@ fn run() -> Result<(), String> {
+             validate = true;
+         } else {
+             require(
+-                ["--manifest", "--resolved", "--out", "--receipt", "--repo"].contains(&k.as_str()),
++                [
++                    "--manifest",
++                    "--resolved",
++                    "--out",
++                    "--receipt",
++                    "--repo",
++                    "--declaration",
++                    "--declaration-review",
++                    "--runtime-receipt",
++                    "--historical-study-root",
++                    "--historical-inventory",
++                    "--historical-source-archive",
++                    "--historical-binary",
++                    "--literal-sessions",
++                    "--max-new-histories",
++                ]
++                .contains(&k.as_str()),
+                 "unknown command option",
+             )?;
+             let v = args
+@@ -1363,6 +1478,39 @@ fn run() -> Result<(), String> {
+         walk_files(&root, &root.join("survey/democratic_peace"), &mut sources)?;
+         inputs.extend(sources.into_iter().map(|name| root.join(name)));
+     }
++    if p.manifest["schema_version"] == json!(2) {
++        inputs.extend(
++            [
++                followup::SPEC,
++                "survey/src/democratic_peace_followup.rs",
++                "survey/democratic_peace/FOLLOWUP.md",
++                "survey/democratic_peace/report-requirements.txt",
++            ]
++            .iter()
++            .map(|name| root.join(name)),
++        );
++    }
++    if p.manifest["schema_version"] == json!(1) {
++        require(
++            !opts.keys().any(|k| {
++                [
++                    "--declaration",
++                    "--declaration-review",
++                    "--runtime-receipt",
++                    "--historical-study-root",
++                    "--historical-inventory",
++                    "--historical-source-archive",
++                    "--historical-binary",
++                    "--literal-sessions",
++                    "--max-new-histories",
++                ]
++                .contains(&k.as_str())
++            }),
++            "schema1 does not admit follow-up gates",
++        )?;
++    } else if !validate {
++        inputs.extend(followup::activation(&p, &receipt, &root, &opts)?);
++    }
+     let mut outputs = vec![resolved.clone()];
+     if let Some(path) = opts.get("--out") {
+         outputs.push(PathBuf::from(path));
+@@ -1370,7 +1518,17 @@ fn run() -> Result<(), String> {
+     validate_destinations(&inputs, &outputs)?;
+     let mut export = identity(&p, &receipt);
+     let o = export.as_object_mut().ok_or("export identity invalid")?;
+-    o.insert("schema_version".into(), json!(1));
++    o.insert(
++        "schema_version".into(),
++        p.manifest["schema_version"].clone(),
++    );
++    if p.manifest["schema_version"] == json!(2) {
++        o.insert("phase".into(), p.manifest["phase"].clone());
++        o.insert(
++            "study_protocol".into(),
++            p.manifest["study_protocol"].clone(),
++        );
++    }
+     o.insert("model".into(), json!("democratic_peace"));
+     o.insert("arms".into(), strict_json(&p.payload)?);
+     o.insert(
+@@ -1392,6 +1550,20 @@ fn run() -> Result<(), String> {
+     }
+     let out = PathBuf::from(opts.get("--out").ok_or("--out required for execution")?);
+     safe_path(&out)?;
++    let maximum = opts
++        .get("--max-new-histories")
++        .map(|s| {
++            s.parse::<u64>()
++                .map_err(|_| "invalid new-history checkpoint bound".to_string())
++        })
++        .transpose()?;
++    if let Some(maximum) = maximum {
++        require(
++            p.manifest["schema_version"] == json!(2) && (1..=10800).contains(&maximum),
++            "checkpoint bound requires schema2 and1..10800histories",
++        )?;
++    }
++    let mut recorded = 0u64;
+     let mut seen = BTreeSet::new();
+     if out.exists() {
+         let bytes = read(&out)?;
+@@ -1423,6 +1595,9 @@ fn run() -> Result<(), String> {
+             if seen.contains(&key) {
+                 continue;
+             }
++            if maximum.is_some_and(|m| recorded >= m) {
++                continue;
++            }
+             let row = record(&p, a, r, &receipt)?;
+             validate_existing(&row, &p, &receipt)?;
+             serde_json::to_writer(&mut writer, &row).map_err(|e| e.to_string())?;
+@@ -1430,8 +1605,14 @@ fn run() -> Result<(), String> {
+             writer.flush().map_err(|e| e.to_string())?;
+             writer.sync_data().map_err(|e| e.to_string())?;
+             seen.insert(key);
++            recorded += 1;
+         }
+     }
++    let required = p.arms.iter().map(|a| a.sessions).sum::<u64>();
++    if (seen.len() as u64) < required && maximum.is_some() {
++        println!("checkpoint: attempted={}, newly_recorded={}, pending={}; declared population unchanged",seen.len(),recorded,required-seen.len() as u64);
++        return Ok(());
++    }
+     require(
+         seen.len() as u64 == p.arms.iter().map(|a| a.sessions).sum::<u64>(),
+         "attempted census incomplete",
+diff --git a/survey/src/democratic_peace_followup.rs b/survey/src/democratic_peace_followup.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..22561441055cd851245bc323b2ef6b65eefb9bef
+--- /dev/null
++++ b/survey/src/democratic_peace_followup.rs
+@@ -0,0 +1,467 @@
++//! Follow-up envelope rules, separate from the schema 1 scientific registration.
++use super::*;
++pub(super) const SPEC: &str =
++    "docs/superpowers/specs/2026-10-04-democratic-peace-precision-design.md";
++pub(super) const PROTOCOL: &str = "democratic-peace-followup-v1";
++pub(super) fn phase(m: &Value) -> Result<(&str, u64, u64, &str), String> {
++    require(
++        text(m, "study_protocol")? == PROTOCOL,
++        "unknown follow-up protocol",
++    )?;
++    let result = match text(m, "phase")? {
++        "literal_precision" => (
++            "printed_decreasing",
++            390000001,
++            2026100302,
++            REGISTERED_ANALYSIS_JOBS_SHA256,
++        ),
++        "prose_precision" => (
++            "prose_increasing",
++            410000001,
++            2026100402,
++            "42c9dabf3a91b43ba1925845959a3ba024b9a314eb68c7a93470f2c8a15cf20f",
++        ),
++        _ => return Err("unsupported follow-up phase".into()),
++    };
++    require(
++        text(m, "reading")? == result.0,
++        "follow-up phase/reading mismatch",
++    )?;
++    require(
++        text(m, "execution_mode")? == "registered"
++            && m["precision_registered"] == json!(true)
++            && text(m, "runtime_gate")? == "followup_full_precision",
++        "follow-up population gate changed",
++    )?;
++    let h = &m["historical_input"];
++    exact(
++        h,
++        &[
++            "study_id",
++            "manifest_sha256",
++            "source_inventory_sha256",
++            "binary_sha256",
++            "build_receipt_sha256",
++            "resolved_configs_sha256",
++            "raw_sha256",
++            "preservation_inventory_sha256",
++        ],
++    )?;
++    require(
++        text(h, "study_id")? == "democratic-peace-original-2026-10-04",
++        "wrong historical study",
++    )?;
++    for k in [
++        "manifest_sha256",
++        "source_inventory_sha256",
++        "binary_sha256",
++        "build_receipt_sha256",
++        "resolved_configs_sha256",
++        "raw_sha256",
++        "preservation_inventory_sha256",
++    ] {
++        require(is_hash(text(h, k)?), "incomplete historical binding")?;
++    }
++    Ok(result)
++}
++
++pub(super) fn historical(m: &Value) -> Result<(), String> {
++    let expected = json!({"study_id":"democratic-peace-original-2026-10-04",
++        "manifest_sha256":"8a2f365365ae1b5b5f71d8319225c6e565fb60ffe52e7d1008e5e04f296bb10a",
++        "source_inventory_sha256":"fad57148ae9ca5f29d99df7777c235bd03b44187d9254d9d45d7dbd01bd856e2",
++        "binary_sha256":"8bfac59be856cd68cf22186eff69c2f070026622fc7f81cfc2d0520f031461a5",
++        "build_receipt_sha256":"239c1b10ac022564d9c2a86f7cbe13f63c17c24e47f548942124a170fe86f965",
++        "resolved_configs_sha256":"ffb684d35cc0bfe0630c63aeef1e53306a0bdccdb0133a9ae08090338a228455",
++        "raw_sha256":"753a1d5ff6236ba4720e0c52e46ab061643a5d27ef5c5d00175e0ff3f6d6c492",
++        "preservation_inventory_sha256":"18da5bc191a00f1ed199dc1b54639a925f733b63db5c677a756e3c9bb30215bd"});
++    require(
++        m["historical_input"] == expected,
++        "wrong historical archive binding",
++    )
++}
++fn option_path(opts: &BTreeMap<String, String>, key: &str) -> Result<PathBuf, String> {
++    Ok(PathBuf::from(opts.get(key).ok_or_else(|| {
++        format!("{key} required before registered follow-up")
++    })?))
++}
++fn review(v: &Value, declaration_sha: &str, runtime_sha: &str) -> Result<(), String> {
++    exact(
++        v,
++        &[
++            "schema_version",
++            "study_protocol",
++            "decision",
++            "independent",
++            "reviewer",
++            "registered_histories",
++            "declaration_sha256",
++            "runtime_receipt_sha256",
++        ],
++    )?;
++    require(
++        uint(v, "schema_version")? == 1
++            && text(v, "study_protocol")? == PROTOCOL
++            && text(v, "decision")? == "accepted_prospective_followup"
++            && v["independent"] == json!(true)
++            && !text(v, "reviewer")?.trim().is_empty()
++            && uint(v, "registered_histories")? == 0,
++        "independent premeasurement declaration review required",
++    )?;
++    require(
++        text(v, "declaration_sha256")? == declaration_sha
++            && text(v, "runtime_receipt_sha256")? == runtime_sha,
++        "review receipt identity mismatch",
++    )
++}
++fn forecast(v: &Value) -> Result<f64, String> {
++    exact(
++        v,
++        &[
++            "cpu_seconds",
++            "cpu_hours",
++            "generation_cpu_seconds",
++            "analysis_cpu_seconds",
++            "analysis_writer_cpu_seconds",
++            "forecast_multiplier",
++            "native_attempts",
++            "analysis_jobs",
++            "draws_per_job",
++            "native_workers",
++            "peak_rss_bytes",
++            "within_budget",
++            "assumptions",
++        ],
++    )?;
++    require(
++        uint(v, "forecast_multiplier")? == 2
++            && uint(v, "native_attempts")? == 10800
++            && uint(v, "analysis_jobs")? == 129
++            && uint(v, "draws_per_job")? == 100000
++            && uint(v, "native_workers")? == 1
++            && v["within_budget"] == json!(true)
++            && uint(v, "peak_rss_bytes")? > 0
++            && uint(v, "peak_rss_bytes")? <= 2147483648,
++        "complete phase forecast exceeds scheduling gate",
++    )?;
++    let cpu = number(v, "cpu_seconds")?;
++    let parts = [
++        "generation_cpu_seconds",
++        "analysis_cpu_seconds",
++        "analysis_writer_cpu_seconds",
++    ];
++    let mut sum = 0.;
++    for k in parts {
++        let value = number(v, k)?;
++        require(value > 0., "invalid forecast measurement")?;
++        sum += value;
++    }
++    require(
++        cpu > 0.
++            && cpu <= 43200.
++            && (cpu - 2. * sum).abs() <= 1e-8
++            && number(v, "cpu_hours")? == cpu / 3600.,
++        "forecast arithmetic mismatch",
++    )?;
++    require(
++        array(v, "assumptions")?.iter().all(Value::is_string),
++        "forecast assumptions required",
++    )?;
++    Ok(cpu)
++}
++fn git(root: &Path, args: &[&str]) -> Result<Vec<u8>, String> {
++    let out = std::process::Command::new("git")
++        .args(args)
++        .current_dir(root)
++        .output()
++        .map_err(|e| e.to_string())?;
++    require(
++        out.status.success(),
++        "committed source/declaration lookup failed",
++    )?;
++    Ok(out.stdout)
++}
++pub(super) fn activation(
++    p: &Prepared,
++    receipt: &Option<String>,
++    root: &Path,
++    opts: &BTreeMap<String, String>,
++) -> Result<Vec<PathBuf>, String> {
++    let dp = option_path(opts, "--declaration")?;
++    let rp = option_path(opts, "--declaration-review")?;
++    let tp = option_path(opts, "--runtime-receipt")?;
++    let db = read(&dp)?;
++    let rb = read(&rp)?;
++    let tb = read(&tp)?;
++    let d = strict_json(&db)?;
++    let r = strict_json(&rb)?;
++    let t = strict_json(&tb)?;
++    exact(
++        &d,
++        &[
++            "schema_version",
++            "study_protocol",
++            "spec",
++            "status",
++            "motivated_by_observed_original",
++            "historical_input",
++            "method_contract_sha256",
++            "source_table_sha256",
++            "benchmark_evidence_sha256",
++            "phase_order",
++            "registered_attempts",
++            "phases",
++        ],
++    )?;
++    require(
++        uint(&d, "schema_version")? == 1
++            && text(&d, "study_protocol")? == PROTOCOL
++            && text(&d, "spec")? == SPEC
++            && text(&d, "status")? == "prospective_frozen_not_blind"
++            && d["motivated_by_observed_original"] == json!(true)
++            && d["historical_input"] == p.manifest["historical_input"]
++            && d["method_contract_sha256"] == p.manifest["method_contract_sha256"]
++            && d["source_table_sha256"] == p.manifest["source_table_sha256"]
++            && d["phase_order"] == json!(["literal_precision", "prose_precision"])
++            && uint(&d, "registered_attempts")? == 21600
++            && is_hash(text(&d, "benchmark_evidence_sha256")?),
++        "prospective declaration contract mismatch",
++    )?;
++    let phases = array(&d, "phases")?;
++    require(phases.len() == 2, "both phases must freeze beforeL")?;
++    for (i, phase) in phases.iter().enumerate() {
++        exact(
++            phase,
++            &[
++                "phase",
++                "reading",
++                "manifest_sha256",
++                "binary_sha256",
++                "source_inventory_sha256",
++                "build_receipt_sha256",
++                "resolved_configs_sha256",
++                "analysis_jobs_sha256",
++                "native_keys_sha256",
++            ],
++        )?;
++        let name = if i == 0 {
++            "literal_precision"
++        } else {
++            "prose_precision"
++        };
++        require(
++            text(phase, "phase")? == name
++                && text(phase, "reading")?
++                    == if i == 0 {
++                        "printed_decreasing"
++                    } else {
++                        "prose_increasing"
++                    },
++            "phase declaration order/reading drift",
++        )?;
++        for key in [
++            "manifest_sha256",
++            "binary_sha256",
++            "source_inventory_sha256",
++            "build_receipt_sha256",
++            "resolved_configs_sha256",
++            "analysis_jobs_sha256",
++            "native_keys_sha256",
++        ] {
++            require(is_hash(text(phase, key)?), "incomplete declaration binding")?;
++        }
++        let expected_jobs = if i == 0 {
++            REGISTERED_ANALYSIS_JOBS_SHA256
++        } else {
++            "42c9dabf3a91b43ba1925845959a3ba024b9a314eb68c7a93470f2c8a15cf20f"
++        };
++        require(
++            text(phase, "analysis_jobs_sha256")? == expected_jobs,
++            "declaration phase job drift",
++        )?;
++        let mut keys = Vec::new();
++        for a in &p.arms {
++            for repeat in 0..100 {
++                let suffix = a.id.split_once('.').ok_or("bad phase arm")?.1;
++                keys.push(json!([
++                    format!("{name}.{suffix}"),
++                    if i == 0 { 390000001 } else { 410000001 } + a.canonical * 10000 + repeat
++                ]));
++            }
++        }
++        require(
++            text(phase, "native_keys_sha256")? == hash_json(&json!(keys))?,
++            "declaration phase key drift",
++        )?;
++        if name == text(&p.manifest, "phase")? {
++            for (key, value) in object(&identity(p, receipt))? {
++                require(
++                    phase[key] == *value,
++                    "activation native phase binding mismatch",
++                )?;
++            }
++        }
++    }
++    exact(
++        &t,
++        &[
++            "schema_version",
++            "study_protocol",
++            "status",
++            "declaration_sha256",
++            "benchmark_evidence_sha256",
++            "phases",
++            "combined_cpu_seconds",
++        ],
++    )?;
++    require(
++        uint(&t, "schema_version")? == 1
++            && text(&t, "study_protocol")? == PROTOCOL
++            && text(&t, "status")? == "approved_complete_phase_forecast"
++            && text(&t, "declaration_sha256")? == digest(&db)
++            && t["benchmark_evidence_sha256"] == d["benchmark_evidence_sha256"],
++        "runtime attestation chain mismatch",
++    )?;
++    exact(&t["phases"], &["literal_precision", "prose_precision"])?;
++    let total =
++        forecast(&t["phases"]["literal_precision"])? + forecast(&t["phases"]["prose_precision"])?;
++    require(
++        total <= 86400. && number(&t, "combined_cpu_seconds")? == total,
++        "combined24CPUhour forecast gate exceeded",
++    )?;
++    review(&r, &digest(&db), &digest(&tb))?;
++    require(
++        git(root, &["status", "--porcelain", "--untracked-files=no"])?.is_empty(),
++        "registered follow-up requires clean committed sources",
++    )?;
++    let committed_path = fs::canonicalize(&dp).map_err(|e| e.to_string())?;
++    let relative = committed_path
++        .strip_prefix(root)
++        .map_err(|_| "declaration must be committed inside source repository")?
++        .to_str()
++        .ok_or("invalid declaration path")?;
++    for entry in array(&p.manifest, "source_inventory")? {
++        let name = text(entry, "path")?;
++        require(name != relative, "declaration cannot enter own inventory")?;
++        require(
++            digest(&git(root, &["show", &format!("HEAD:{name}")])?) == text(entry, "sha256")?,
++            "normative source not committed atHEAD",
++        )?;
++    }
++    require(
++        git(root, &["show", &format!("HEAD:{relative}")])? == db,
++        "declaration bytes not committed atHEAD",
++    )?;
++    let hp = option_path(opts, "--historical-study-root")?;
++    let ip = option_path(opts, "--historical-inventory")?;
++    let ap = option_path(opts, "--historical-source-archive")?;
++    let bp = option_path(opts, "--historical-binary")?;
++    let ib = read(&ip)?;
++    require(
++        digest(&ib)
++            == text(
++                &p.manifest["historical_input"],
++                "preservation_inventory_sha256",
++            )?,
++        "wrong original preservation inventory",
++    )?;
++    let entries = strict_json(&ib)?;
++    let entries = entries
++        .as_array()
++        .ok_or("historical inventory must be array")?;
++    require(entries.len() == 13, "original13files required")?;
++    let mut inputs = vec![dp, rp, tp, ip, ap.clone(), bp.clone()];
++    let mut prior = "";
++    for entry in entries {
++        exact(entry, &["path", "bytes", "sha256"])?;
++        let name = text(entry, "path")?;
++        require(name > prior, "historical inventory order/duplicate")?;
++        prior = name;
++        let path = source_path(&hp, Path::new(name))?;
++        let bytes = read(&path)?;
++        require(
++            bytes.len() as u64 == uint(entry, "bytes")? && digest(&bytes) == text(entry, "sha256")?,
++            "historical preservation mismatch",
++        )?;
++        inputs.push(path);
++    }
++    require(
++        digest(&read(&ap)?) == "69f7bbf5acd3a61190eea49df0657c3e72694d987c3de43f109f9bd70b3c70fa"
++            && digest(&read(&bp)?) == text(&p.manifest["historical_input"], "binary_sha256")?,
++        "historical tar/executable mismatch",
++    )?;
++    if text(&p.manifest, "phase")? == "prose_precision" {
++        let lp = option_path(opts, "--literal-sessions")?;
++        let bytes = read(&lp)?;
++        require(
++            bytes.last() == Some(&b'\n'),
++            "literal phase interrupted before prose",
++        )?;
++        let literal = &phases[0];
++        let mut lm = p.manifest.clone();
++        lm["phase"] = json!("literal_precision");
++        let mut la = Vec::new();
++        for a in &p.arms {
++            let mut c = serde_json::to_value(&a.config).map_err(|e| e.to_string())?;
++            c["probability_direction"] = json!("printed_decreasing");
++            la.push(Arm {
++                id: format!(
++                    "literal_precision.{}",
++                    a.id.split_once('.').ok_or("bad phase arm")?.1
++                ),
++                index: a.index,
++                canonical: a.canonical,
++                family: a.family.clone(),
++                sessions: 100,
++                first_seed: 390000001 + a.canonical * 10000,
++                config: serde_json::from_value(c).map_err(|e| e.to_string())?,
++            });
++        }
++        let lp_prepared = Prepared {
++            manifest: lm,
++            arms: la,
++            payload: Vec::new(),
++            payload_sha: text(literal, "resolved_configs_sha256")?.into(),
++            manifest_sha: text(literal, "manifest_sha256")?.into(),
++            binary_sha: text(literal, "binary_sha256")?.into(),
++            inventory_sha: Some(text(literal, "source_inventory_sha256")?.into()),
++        };
++        let lr = Some(text(literal, "build_receipt_sha256")?.to_string());
++        let mut keys = BTreeSet::new();
++        for line in BufReader::new(bytes.as_slice()).lines() {
++            let row = strict_json(line.map_err(|e| e.to_string())?.as_bytes())?;
++            require(
++                keys.insert(validate_existing(&row, &lp_prepared, &lr)?),
++                "duplicate literal predecessor key",
++            )?;
++        }
++        require(
++            keys.len() == 10800,
++            "prose requires full literal attempted census",
++        )?;
++        inputs.push(lp);
++    }
++    Ok(inputs)
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn independent_review_identity_and_resource_gates_are_strict() {
++        let mut r = json!({"schema_version":1,"study_protocol":PROTOCOL,"decision":"accepted_prospective_followup",
++            "independent":true,"reviewer":"synthetic-boundary-test","registered_histories":0,
++            "declaration_sha256":"a".repeat(64),"runtime_receipt_sha256":"b".repeat(64)});
++        assert!(review(&r, &"a".repeat(64), &"b".repeat(64)).is_ok());
++        r["independent"] = json!(false);
++        assert!(review(&r, &"a".repeat(64), &"b".repeat(64)).is_err());
++        let mut f = json!({"cpu_seconds":6.,"cpu_hours":6./3600.,"generation_cpu_seconds":1.,"analysis_cpu_seconds":1.,
++            "analysis_writer_cpu_seconds":1.,"forecast_multiplier":2,"native_attempts":10800,"analysis_jobs":129,
++            "draws_per_job":100000,"native_workers":1,"peak_rss_bytes":1024,"within_budget":true,"assumptions":["synthetic"]});
++        assert_eq!(forecast(&f).unwrap(), 6.);
++        f["forecast_multiplier"] = json!(1);
++        assert!(forecast(&f).is_err());
++        f["forecast_multiplier"] = json!(2);
++        f["peak_rss_bytes"] = json!(2147483649u64);
++        assert!(forecast(&f).is_err());
++    }
++}

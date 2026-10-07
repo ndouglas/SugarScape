@@ -1,0 +1,170 @@
+[
+  {
+    "name": "final-replay-task2-tests",
+    "command": [
+      "/opt/homebrew/opt/python@3.13/bin/python3.13",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision/docs/superpowers/plans/2026-10-04-democratic-peace-precision/replay.py",
+      "--target",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay",
+      "--through",
+      "3"
+    ],
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "final-replay-task2-red",
+    "command": [
+      "/opt/homebrew/opt/python@3.13/bin/python3.13",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "survey/democratic_peace"
+    ],
+    "exit_code": 1,
+    "expected_success": false
+  },
+  {
+    "name": "final-replay-task2-implementation",
+    "command": [
+      "/opt/homebrew/opt/python@3.13/bin/python3.13",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision/docs/superpowers/plans/2026-10-04-democratic-peace-precision/replay.py",
+      "--target",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay",
+      "--through",
+      "4"
+    ],
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "final-replay-task2-green",
+    "command": [
+      "/opt/homebrew/opt/python@3.13/bin/python3.13",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "survey/democratic_peace"
+    ],
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "final-replay-task3-tests",
+    "command": [
+      "/opt/homebrew/opt/python@3.13/bin/python3.13",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision/docs/superpowers/plans/2026-10-04-democratic-peace-precision/replay.py",
+      "--target",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay",
+      "--through",
+      "5"
+    ],
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "final-replay-task3-red",
+    "command": [
+      "/opt/homebrew/opt/python@3.13/bin/python3.13",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "survey/democratic_peace"
+    ],
+    "exit_code": 1,
+    "expected_success": false
+  },
+  {
+    "name": "final-replay-task3-implementation",
+    "command": [
+      "/opt/homebrew/opt/python@3.13/bin/python3.13",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision/docs/superpowers/plans/2026-10-04-democratic-peace-precision/replay.py",
+      "--target",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay",
+      "--through",
+      "6"
+    ],
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "final-replay-task3-green",
+    "command": [
+      "/opt/homebrew/opt/python@3.13/bin/python3.13",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "survey/democratic_peace"
+    ],
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "final-replay-task4-tests",
+    "command": [
+      "/opt/homebrew/opt/python@3.13/bin/python3.13",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision/docs/superpowers/plans/2026-10-04-democratic-peace-precision/replay.py",
+      "--target",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay",
+      "--through",
+      "7"
+    ],
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "final-replay-task4-red",
+    "command": [
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-report-env/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "survey/democratic_peace/report_tests"
+    ],
+    "exit_code": 1,
+    "expected_success": false
+  },
+  {
+    "name": "final-replay-task4-implementation",
+    "command": [
+      "/opt/homebrew/opt/python@3.13/bin/python3.13",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision/docs/superpowers/plans/2026-10-04-democratic-peace-precision/replay.py",
+      "--target",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay",
+      "--through",
+      "8"
+    ],
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "final-replay-task4-green",
+    "command": [
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-scratch/survey/out/democratic-peace-report-env/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "survey/democratic_peace/report_tests"
+    ],
+    "exit_code": 0,
+    "expected_success": true
+  },
+  {
+    "name": "final-replay-exact-final",
+    "command": [
+      "/opt/homebrew/opt/python@3.13/bin/python3.13",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision/docs/superpowers/plans/2026-10-04-democratic-peace-precision/replay.py",
+      "--target",
+      "/Users/nathan/.config/superpowers/worktrees/SugarScape/democratic-peace-precision-final-replay",
+      "--verify-only"
+    ],
+    "exit_code": 0,
+    "expected_success": true
+  }
+]

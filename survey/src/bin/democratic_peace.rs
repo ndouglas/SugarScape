@@ -12,6 +12,9 @@ use std::{
 };
 use sugarscape_core::democratic_peace::{DemocraticPeaceConfig, DemocraticPeaceWorld};
 
+#[path = "../democratic_peace_followup.rs"]
+mod followup;
+
 struct Strict(Value);
 impl<'de> Deserialize<'de> for Strict {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
@@ -284,35 +287,51 @@ struct Prepared {
 fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String> {
     let bytes = read(path)?;
     let m = strict_json(&bytes)?;
-    exact(
-        &m,
-        &[
-            "schema_version",
-            "model",
-            "execution_mode",
-            "provenance_status",
-            "spec",
-            "precision_registered",
-            "runtime_gate",
-            "analysis_seed",
-            "source_draws",
-            "permutation_draws",
-            "contrast_draws",
-            "source_table_sha256",
-            "method_contract",
-            "method_contract_json",
-            "method_contract_sha256",
-            "source_inventory",
-            "source_inventory_sha256",
-            "arms",
-            "analysis_jobs",
-        ],
-    )?;
+    let schema = uint(&m, "schema_version")?;
+    require(schema == 1 || schema == 2, "unsupported manifest schema")?;
+    let followup = schema == 2;
+    let mut manifest_fields = vec![
+        "schema_version",
+        "model",
+        "execution_mode",
+        "provenance_status",
+        "spec",
+        "precision_registered",
+        "runtime_gate",
+        "analysis_seed",
+        "source_draws",
+        "permutation_draws",
+        "contrast_draws",
+        "source_table_sha256",
+        "method_contract",
+        "method_contract_json",
+        "method_contract_sha256",
+        "source_inventory",
+        "source_inventory_sha256",
+        "arms",
+        "analysis_jobs",
+    ];
+    if followup {
+        manifest_fields.extend(["study_protocol", "phase", "reading", "historical_input"]);
+    }
+    exact(&m, &manifest_fields)?;
+    let phase = if followup {
+        {
+            followup::historical(&m)?;
+            Some(followup::phase(&m)?)
+        }
+    } else {
+        None
+    };
+    let root_seed = phase.map_or(2026100302, |v| v.2);
     require(
-        uint(&m, "schema_version")? == 1 && text(&m, "model")? == "democratic_peace",
+        text(&m, "model")? == "democratic_peace",
         "unsupported manifest schema/model",
     )?;
-    require(text(&m, "spec")? == SPEC, "wrong approved specification")?;
+    require(
+        text(&m, "spec")? == if followup { followup::SPEC } else { SPEC },
+        "wrong approved specification",
+    )?;
     let mode = text(&m, "execution_mode")?;
     require(
         ["registered", "fixture", "runtime_probe"].contains(&mode),
@@ -337,7 +356,7 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
         )?;
     }
     require(
-        uint(&m, "analysis_seed")? == 2026100302,
+        uint(&m, "analysis_seed")? == root_seed,
         "wrong analysis root",
     )?;
     for k in ["source_draws", "permutation_draws", "contrast_draws"] {
@@ -355,7 +374,11 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
         digest(contract.as_bytes()) == text(&m, "method_contract_sha256")?,
         "method contract digest mismatch",
     )?;
-    let template = strict_json(include_bytes!("../../democratic_peace/methods.json"))?;
+    let template = strict_json(if followup {
+        include_bytes!("../../democratic_peace/followup-methods.json").as_slice()
+    } else {
+        include_bytes!("../../democratic_peace/methods.json").as_slice()
+    })?;
     require(
         m["method_contract"] == template,
         "method contract differs from production template",
@@ -365,6 +388,12 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
         text(&m, "source_table_sha256")? == digest(&table),
         "source table changed",
     )?;
+    if followup {
+        require(
+            digest(&table) == "221e944eefc22b166ce907c7bafc5acda95a76e3dbd84b2db240b5eb92366ed0",
+            "fixed follow-up audited source table changed",
+        )?;
+    }
     let table_value = strict_json(&table)?;
     require(
         text(&table_value, "paper_sha256")?
@@ -391,12 +420,33 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
         )?;
     }
     let inventory_sha = validate_inventory(&m, root, will_run || provenance == "frozen")?;
+    if followup && (will_run || provenance == "frozen") {
+        let names: BTreeSet<&str> = array(&m, "source_inventory")?
+            .iter()
+            .map(|e| text(e, "path"))
+            .collect::<Result<_, _>>()?;
+        for name in [
+            followup::SPEC,
+            "survey/src/democratic_peace_followup.rs",
+            "survey/democratic_peace/followup-probe-schedule.json",
+            "survey/democratic_peace/followup-default-config.json",
+            "survey/democratic_peace/report-requirements.txt",
+            "survey/democratic_peace/FOLLOWUP.md",
+        ] {
+            require(
+                names.contains(name),
+                "follow-up normative inventory incomplete",
+            )?;
+        }
+    }
     let precision = m["precision_registered"]
         .as_bool()
         .ok_or("precision_registered must be boolean")?;
     require(
         text(&m, "runtime_gate")?
-            == if precision {
+            == if followup {
+                "followup_full_precision"
+            } else if precision {
                 "full_precision"
             } else {
                 "original_only"
@@ -406,7 +456,7 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
     let entries = array(&m, "arms")?;
     if registered {
         require(
-            entries.len() == if precision { 216 } else { 108 },
+            entries.len() == if precision && !followup { 216 } else { 108 },
             "registered population cannot be incomplete",
         )?;
     } else {
@@ -479,7 +529,11 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
                     && uint(v, "density_index")? == di as u64,
                 "factor index disagreement",
             )?;
-            let expected_family = if i < 108 { "original" } else { "precision" };
+            let expected_family = if followup || i >= 108 {
+                "precision"
+            } else {
+                "original"
+            };
             require(family == expected_family, "family order drift")?;
             let expected_id = format!(
                 "{expected_family}.mobile{}.{}.density{}",
@@ -487,29 +541,59 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
                 mechanisms[mech],
                 densities[di].to_string().replace('.', "_")
             );
+            let expected_id = if followup {
+                format!("{}.{}", text(&m, "phase")?, expected_id)
+            } else {
+                expected_id
+            };
             require(id == expected_id, "registered canonical arm ID drift")?;
             require(
-                sessions == if i < 108 { 30 } else { 100 },
+                sessions == if !followup && i < 108 { 30 } else { 100 },
                 "registered sample size drift",
             )?;
             require(
                 first
-                    == if i < 108 {
+                    == if followup {
+                        phase.ok_or("missing phase")?.1 + canonical * 10000
+                    } else if i < 108 {
                         380000001 + canonical * 10000
                     } else {
                         390000001 + canonical * 10000
                     },
                 "registered seeds drift",
             )?;
-            exact(
-                &v["config_overrides"],
-                &[
+            let mut fields = vec![
+                "mobile_share",
+                "mechanism",
+                "initial_democratic_share",
+                "periods_per_tick",
+            ];
+            if followup {
+                fields.push("probability_direction");
+            }
+            exact(&v["config_overrides"], &fields)?;
+            if followup {
+                require(
+                    config["probability_direction"] == json!(phase.ok_or("missing phase")?.0),
+                    "follow-up reading drift",
+                )?;
+                let mut literal = config.clone();
+                literal["probability_direction"] = json!("printed_decreasing");
+                let mut expected = serde_json::to_value(DemocraticPeaceConfig::default())
+                    .map_err(|e| e.to_string())?;
+                for k in [
                     "mobile_share",
                     "mechanism",
                     "initial_democratic_share",
                     "periods_per_tick",
-                ],
-            )?;
+                ] {
+                    expected[k] = config[k].clone();
+                }
+                require(
+                    literal == expected,
+                    "resolved follow-up differs beyond one reading field",
+                )?;
+            }
             require(
                 config["mobile_share"] == json!(mobiles[mi])
                     && config["mechanism"] == json!(mechanisms[mech])
@@ -567,7 +651,7 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
         )?;
         require(
             uint(j, "index")? == i as u64
-                && uint(j, "root_entropy")? == 2026100302
+                && uint(j, "root_entropy")? == root_seed
                 && j["spawn_key"] == json!([i]),
             "analysis child stream drift",
         )?;
@@ -585,7 +669,8 @@ fn prepare(path: &Path, root: &Path, will_run: bool) -> Result<Prepared, String>
     }
     if registered {
         require(
-            hash_json(&m["analysis_jobs"])? == REGISTERED_ANALYSIS_JOBS_SHA256,
+            hash_json(&m["analysis_jobs"])?
+                == phase.map_or(REGISTERED_ANALYSIS_JOBS_SHA256, |v| v.3),
             "registered analysis job payload drift",
         )?;
     }
@@ -874,7 +959,7 @@ fn record(p: &Prepared, a: &Arm, r: u64, receipt: &Option<String>) -> Result<Val
     let mut row = identity(p, receipt);
     let o = row.as_object_mut().ok_or("record identity invalid")?;
     for (k, v) in [
-        ("schema_version", json!(1)),
+        ("schema_version", p.manifest["schema_version"].clone()),
         ("model", json!("democratic_peace")),
         ("arm", json!(a.id)),
         ("seed", json!(seed)),
@@ -891,6 +976,13 @@ fn record(p: &Prepared, a: &Arm, r: u64, receipt: &Option<String>) -> Result<Val
         ("outcome", outcome),
     ] {
         o.insert(k.into(), v);
+    }
+    if p.manifest["schema_version"] == json!(2) {
+        o.insert(
+            "study_protocol".into(),
+            p.manifest["study_protocol"].clone(),
+        );
+        o.insert("phase".into(), p.manifest["phase"].clone());
     }
     Ok(row)
 }
@@ -1208,30 +1300,37 @@ fn validate_existing(
     p: &Prepared,
     receipt: &Option<String>,
 ) -> Result<(String, u64), String> {
-    exact(
-        row,
-        &[
-            "schema_version",
-            "model",
-            "arm",
-            "seed",
-            "arm_index",
-            "canonical_index",
-            "repeat_index",
-            "family",
-            "execution_mode",
-            "config",
-            "attempt",
-            "outcome",
-            "manifest_sha256",
-            "binary_sha256",
-            "source_inventory_sha256",
-            "build_receipt_sha256",
-            "resolved_configs_sha256",
-        ],
-    )?;
+    let mut fields = vec![
+        "schema_version",
+        "model",
+        "arm",
+        "seed",
+        "arm_index",
+        "canonical_index",
+        "repeat_index",
+        "family",
+        "execution_mode",
+        "config",
+        "attempt",
+        "outcome",
+        "manifest_sha256",
+        "binary_sha256",
+        "source_inventory_sha256",
+        "build_receipt_sha256",
+        "resolved_configs_sha256",
+    ];
+    if p.manifest["schema_version"] == json!(2) {
+        fields.extend(["study_protocol", "phase"]);
+        require(
+            row["study_protocol"] == p.manifest["study_protocol"]
+                && row["phase"] == p.manifest["phase"],
+            "mixed follow-up resume phase",
+        )?;
+    }
+    exact(row, &fields)?;
     require(
-        uint(row, "schema_version")? == 1 && text(row, "model")? == "democratic_peace",
+        row["schema_version"] == p.manifest["schema_version"]
+            && text(row, "model")? == "democratic_peace",
         "resume schema/model mismatch",
     )?;
     let binding = identity(p, receipt);
@@ -1313,7 +1412,23 @@ fn run() -> Result<(), String> {
             validate = true;
         } else {
             require(
-                ["--manifest", "--resolved", "--out", "--receipt", "--repo"].contains(&k.as_str()),
+                [
+                    "--manifest",
+                    "--resolved",
+                    "--out",
+                    "--receipt",
+                    "--repo",
+                    "--declaration",
+                    "--declaration-review",
+                    "--runtime-receipt",
+                    "--historical-study-root",
+                    "--historical-inventory",
+                    "--historical-source-archive",
+                    "--historical-binary",
+                    "--literal-sessions",
+                    "--max-new-histories",
+                ]
+                .contains(&k.as_str()),
                 "unknown command option",
             )?;
             let v = args
@@ -1331,6 +1446,25 @@ fn run() -> Result<(), String> {
     safe_path(&root)?;
     let root = fs::canonicalize(root).map_err(|e| e.to_string())?;
     let p = prepare(&manifest, &root, !validate)?;
+    if p.manifest["schema_version"] == json!(2) && validate {
+        require(
+            !opts.keys().any(|k| {
+                [
+                    "--declaration",
+                    "--declaration-review",
+                    "--runtime-receipt",
+                    "--historical-study-root",
+                    "--historical-inventory",
+                    "--historical-source-archive",
+                    "--historical-binary",
+                    "--literal-sessions",
+                    "--max-new-histories",
+                ]
+                .contains(&k.as_str())
+            }),
+            "follow-up gate options are unsupported in validate-only mode",
+        )?;
+    }
     let receipt_path = opts.get("--receipt").map(PathBuf::from);
     let receipt = receipt(receipt_path.as_deref(), &p, !validate, &root)?;
     let mut inputs = vec![
@@ -1363,6 +1497,39 @@ fn run() -> Result<(), String> {
         walk_files(&root, &root.join("survey/democratic_peace"), &mut sources)?;
         inputs.extend(sources.into_iter().map(|name| root.join(name)));
     }
+    if p.manifest["schema_version"] == json!(2) {
+        inputs.extend(
+            [
+                followup::SPEC,
+                "survey/src/democratic_peace_followup.rs",
+                "survey/democratic_peace/FOLLOWUP.md",
+                "survey/democratic_peace/report-requirements.txt",
+            ]
+            .iter()
+            .map(|name| root.join(name)),
+        );
+    }
+    if p.manifest["schema_version"] == json!(1) {
+        require(
+            !opts.keys().any(|k| {
+                [
+                    "--declaration",
+                    "--declaration-review",
+                    "--runtime-receipt",
+                    "--historical-study-root",
+                    "--historical-inventory",
+                    "--historical-source-archive",
+                    "--historical-binary",
+                    "--literal-sessions",
+                    "--max-new-histories",
+                ]
+                .contains(&k.as_str())
+            }),
+            "schema1 does not admit follow-up gates",
+        )?;
+    } else if !validate {
+        inputs.extend(followup::activation(&p, &receipt, &root, &opts)?);
+    }
     let mut outputs = vec![resolved.clone()];
     if let Some(path) = opts.get("--out") {
         outputs.push(PathBuf::from(path));
@@ -1370,7 +1537,17 @@ fn run() -> Result<(), String> {
     validate_destinations(&inputs, &outputs)?;
     let mut export = identity(&p, &receipt);
     let o = export.as_object_mut().ok_or("export identity invalid")?;
-    o.insert("schema_version".into(), json!(1));
+    o.insert(
+        "schema_version".into(),
+        p.manifest["schema_version"].clone(),
+    );
+    if p.manifest["schema_version"] == json!(2) {
+        o.insert("phase".into(), p.manifest["phase"].clone());
+        o.insert(
+            "study_protocol".into(),
+            p.manifest["study_protocol"].clone(),
+        );
+    }
     o.insert("model".into(), json!("democratic_peace"));
     o.insert("arms".into(), strict_json(&p.payload)?);
     o.insert(
@@ -1392,6 +1569,20 @@ fn run() -> Result<(), String> {
     }
     let out = PathBuf::from(opts.get("--out").ok_or("--out required for execution")?);
     safe_path(&out)?;
+    let maximum = opts
+        .get("--max-new-histories")
+        .map(|s| {
+            s.parse::<u64>()
+                .map_err(|_| "invalid new-history checkpoint bound".to_string())
+        })
+        .transpose()?;
+    if let Some(maximum) = maximum {
+        require(
+            p.manifest["schema_version"] == json!(2) && (1..=10800).contains(&maximum),
+            "checkpoint bound requires schema2 and1..10800histories",
+        )?;
+    }
+    let mut recorded = 0u64;
     let mut seen = BTreeSet::new();
     if out.exists() {
         let bytes = read(&out)?;
@@ -1423,6 +1614,9 @@ fn run() -> Result<(), String> {
             if seen.contains(&key) {
                 continue;
             }
+            if maximum.is_some_and(|m| recorded >= m) {
+                continue;
+            }
             let row = record(&p, a, r, &receipt)?;
             validate_existing(&row, &p, &receipt)?;
             serde_json::to_writer(&mut writer, &row).map_err(|e| e.to_string())?;
@@ -1430,7 +1624,13 @@ fn run() -> Result<(), String> {
             writer.flush().map_err(|e| e.to_string())?;
             writer.sync_data().map_err(|e| e.to_string())?;
             seen.insert(key);
+            recorded += 1;
         }
+    }
+    let required = p.arms.iter().map(|a| a.sessions).sum::<u64>();
+    if (seen.len() as u64) < required && maximum.is_some() {
+        println!("checkpoint: attempted={}, newly_recorded={}, pending={}; declared population unchanged",seen.len(),recorded,required-seen.len() as u64);
+        return Ok(());
     }
     require(
         seen.len() as u64 == p.arms.iter().map(|a| a.sessions).sum::<u64>(),

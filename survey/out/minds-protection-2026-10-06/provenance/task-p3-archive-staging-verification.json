@@ -1,0 +1,30 @@
+{
+  "status": "INCOMPLETE final archive; fresh baseline verification passed",
+  "checked_utc": "2026-10-07T01:44:35.911868+00:00",
+  "archive_root": "/Users/nathan/.local/share/sugarscape/evidence/minds-protection-2026-10-06-staging-20261007T014345375561Z",
+  "baseline_inventory_sha256": "131f4fcb8d00fb5b911ee15ea1addd33388b79474fd207d68f43feb30298da54",
+  "baseline_members_checked": 7840,
+  "baseline_bytes": 683653558,
+  "all_original_and_archive_hash_size_modes_equal": true,
+  "all_science_runtime_members_exactly_in_inventory": true,
+  "symlinks": 0,
+  "relative_index_raw_references": 7680,
+  "raw_inventory_sha256": "f524b8dedc3b8f42dd3f3f7224fa456a6fa1de8cbe40a234fa9a30a8d2e8e00f",
+  "raw_bytes": 571055314,
+  "configuration_identity_checked": 7680,
+  "errors": [],
+  "survey_invocations": 0,
+  "archive_analyzer_invocations": 0,
+  "pending": [
+    "Final dated report figures and their exact inputs",
+    "Independent empirical/specification/code-quality reviews and any fixes",
+    "Navigation/documentation/report commits and reviewed local-main integration",
+    "Affected final-head format/lint/test/build checks",
+    "Remote CI/deployment receipts and served artifact hashes",
+    "Whole-branch review",
+    "Final implementation-plan snapshot",
+    "Complete final owned execution metadata (current controller progress excluded from this baseline)",
+    "Final archive relocation analysis invocation and independent acceptance",
+    "Any cleanup after final archive acceptance"
+  ]
+}

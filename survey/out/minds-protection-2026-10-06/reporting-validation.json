@@ -1,0 +1,1055 @@
+{
+  "analysis_sha256": "f18645c48819c7c257c2f354a8e5388955d3758c47c47142847f1530b774f3a4",
+  "conditions": 192,
+  "endpoints": 7680,
+  "primary_estimates": 64,
+  "audited_estimates": 208,
+  "audits": [
+    {
+      "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=observed/c=0.25/m=0 minus single/p=off/i=observed/r=observed/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=observed/c=0.25/m=0 minus single/p=off/i=observed/r=observed/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=observed/c=0.25/m=1 minus single/p=off/i=observed/r=observed/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=observed/c=0.25/m=1 minus single/p=off/i=observed/r=observed/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=observed/c=0/m=0 minus single/p=off/i=observed/r=observed/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=observed/c=0/m=0 minus single/p=off/i=observed/r=observed/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=observed/c=0/m=1 minus single/p=off/i=observed/r=observed/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=observed/c=0/m=1 minus single/p=off/i=observed/r=observed/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=private/c=0.25/m=0 minus single/p=off/i=observed/r=private/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=private/c=0.25/m=0 minus single/p=off/i=observed/r=private/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=private/c=0.25/m=1 minus single/p=off/i=observed/r=private/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=private/c=0.25/m=1 minus single/p=off/i=observed/r=private/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=private/c=0/m=0 minus single/p=off/i=observed/r=private/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=private/c=0/m=0 minus single/p=off/i=observed/r=private/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=private/c=0/m=1 minus single/p=off/i=observed/r=private/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=observed/r=private/c=0/m=1 minus single/p=off/i=observed/r=private/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=observed/c=0.25/m=0 minus single/p=off/i=private/r=observed/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=observed/c=0.25/m=0 minus single/p=off/i=private/r=observed/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=observed/c=0.25/m=1 minus single/p=off/i=private/r=observed/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=observed/c=0.25/m=1 minus single/p=off/i=private/r=observed/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=observed/c=0/m=0 minus single/p=off/i=private/r=observed/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=observed/c=0/m=0 minus single/p=off/i=private/r=observed/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=observed/c=0/m=1 minus single/p=off/i=private/r=observed/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=observed/c=0/m=1 minus single/p=off/i=private/r=observed/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=private/c=0.25/m=0 minus single/p=off/i=private/r=private/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=private/c=0.25/m=0 minus single/p=off/i=private/r=private/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=private/c=0.25/m=1 minus single/p=off/i=private/r=private/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=private/c=0.25/m=1 minus single/p=off/i=private/r=private/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=private/c=0/m=0 minus single/p=off/i=private/r=private/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=private/c=0/m=0 minus single/p=off/i=private/r=private/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=private/c=0/m=1 minus single/p=off/i=private/r=private/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=erased/i=private/r=private/c=0/m=1 minus single/p=off/i=private/r=private/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0.25/m=0 minus single/p=indiscriminate/i=observed/r=observed/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0.25/m=0 minus single/p=indiscriminate/i=observed/r=observed/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0.25/m=0 minus single/p=off/i=observed/r=observed/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0.25/m=0 minus single/p=off/i=observed/r=observed/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0.25/m=1 minus single/p=indiscriminate/i=observed/r=observed/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0.25/m=1 minus single/p=indiscriminate/i=observed/r=observed/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0.25/m=1 minus single/p=off/i=observed/r=observed/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0.25/m=1 minus single/p=off/i=observed/r=observed/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0/m=0 minus single/p=indiscriminate/i=observed/r=observed/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0/m=0 minus single/p=indiscriminate/i=observed/r=observed/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0/m=0 minus single/p=off/i=observed/r=observed/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0/m=0 minus single/p=off/i=observed/r=observed/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0/m=1 minus single/p=indiscriminate/i=observed/r=observed/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0/m=1 minus single/p=indiscriminate/i=observed/r=observed/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0/m=1 minus single/p=off/i=observed/r=observed/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=observed/c=0/m=1 minus single/p=off/i=observed/r=observed/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0.25/m=0 minus single/p=indiscriminate/i=observed/r=private/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0.25/m=0 minus single/p=indiscriminate/i=observed/r=private/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0.25/m=0 minus single/p=off/i=observed/r=private/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0.25/m=0 minus single/p=off/i=observed/r=private/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0.25/m=1 minus single/p=indiscriminate/i=observed/r=private/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0.25/m=1 minus single/p=indiscriminate/i=observed/r=private/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0.25/m=1 minus single/p=off/i=observed/r=private/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0.25/m=1 minus single/p=off/i=observed/r=private/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0/m=0 minus single/p=indiscriminate/i=observed/r=private/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0/m=0 minus single/p=indiscriminate/i=observed/r=private/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0/m=0 minus single/p=off/i=observed/r=private/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0/m=0 minus single/p=off/i=observed/r=private/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0/m=1 minus single/p=indiscriminate/i=observed/r=private/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0/m=1 minus single/p=indiscriminate/i=observed/r=private/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0/m=1 minus single/p=off/i=observed/r=private/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=observed/r=private/c=0/m=1 minus single/p=off/i=observed/r=private/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0.25/m=0 minus single/p=indiscriminate/i=private/r=observed/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0.25/m=0 minus single/p=indiscriminate/i=private/r=observed/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0.25/m=0 minus single/p=off/i=private/r=observed/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0.25/m=0 minus single/p=off/i=private/r=observed/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0.25/m=1 minus single/p=indiscriminate/i=private/r=observed/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0.25/m=1 minus single/p=indiscriminate/i=private/r=observed/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0.25/m=1 minus single/p=off/i=private/r=observed/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0.25/m=1 minus single/p=off/i=private/r=observed/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0/m=0 minus single/p=indiscriminate/i=private/r=observed/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0/m=0 minus single/p=indiscriminate/i=private/r=observed/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0/m=0 minus single/p=off/i=private/r=observed/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0/m=0 minus single/p=off/i=private/r=observed/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0/m=1 minus single/p=indiscriminate/i=private/r=observed/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0/m=1 minus single/p=indiscriminate/i=private/r=observed/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0/m=1 minus single/p=off/i=private/r=observed/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=observed/c=0/m=1 minus single/p=off/i=private/r=observed/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0.25/m=0 minus single/p=indiscriminate/i=private/r=private/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0.25/m=0 minus single/p=indiscriminate/i=private/r=private/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0.25/m=0 minus single/p=off/i=private/r=private/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0.25/m=0 minus single/p=off/i=private/r=private/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0.25/m=1 minus single/p=indiscriminate/i=private/r=private/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0.25/m=1 minus single/p=indiscriminate/i=private/r=private/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0.25/m=1 minus single/p=off/i=private/r=private/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0.25/m=1 minus single/p=off/i=private/r=private/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0/m=0 minus single/p=indiscriminate/i=private/r=private/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0/m=0 minus single/p=indiscriminate/i=private/r=private/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0/m=0 minus single/p=off/i=private/r=private/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0/m=0 minus single/p=off/i=private/r=private/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0/m=1 minus single/p=indiscriminate/i=private/r=private/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0/m=1 minus single/p=indiscriminate/i=private/r=private/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0/m=1 minus single/p=off/i=private/r=private/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "single/p=selective/i=private/r=private/c=0/m=1 minus single/p=off/i=private/r=private/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=erased/i=observed/f=0/c=0.25/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=erased/i=observed/f=0/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=erased/i=observed/f=0/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=erased/i=observed/f=0/c=0.25/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=erased/i=observed/f=0/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=erased/i=observed/f=0/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=0 minus stumble/p=erased/i=observed/f=0/c=0/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=0 minus stumble/p=erased/i=observed/f=0/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=0 minus stumble/p=erased/i=observed/f=0/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=1 minus stumble/p=erased/i=observed/f=0/c=0/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=1 minus stumble/p=erased/i=observed/f=0/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=1 minus stumble/p=erased/i=observed/f=0/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=0 minus stumble/p=erased/i=private/f=0/c=0.25/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.6653345369377348e-16
+    },
+    {
+      "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=0 minus stumble/p=erased/i=private/f=0/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=0 minus stumble/p=erased/i=private/f=0/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=1 minus stumble/p=erased/i=private/f=0/c=0.25/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.6653345369377348e-16
+    },
+    {
+      "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=1 minus stumble/p=erased/i=private/f=0/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=1 minus stumble/p=erased/i=private/f=0/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=erased/i=private/f=0.25/c=0/m=0 minus stumble/p=erased/i=private/f=0/c=0/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.6653345369377348e-16
+    },
+    {
+      "id": "stumble/p=erased/i=private/f=0.25/c=0/m=0 minus stumble/p=erased/i=private/f=0/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=erased/i=private/f=0.25/c=0/m=0 minus stumble/p=erased/i=private/f=0/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=erased/i=private/f=0.25/c=0/m=1 minus stumble/p=erased/i=private/f=0/c=0/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.6653345369377348e-16
+    },
+    {
+      "id": "stumble/p=erased/i=private/f=0.25/c=0/m=1 minus stumble/p=erased/i=private/f=0/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=erased/i=private/f=0.25/c=0/m=1 minus stumble/p=erased/i=private/f=0/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.1102230246251565e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 4.440892098500626e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.1102230246251565e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 4.440892098500626e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=0 minus stumble/p=indiscriminate/i=observed/f=0/c=0/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 2.220446049250313e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=0 minus stumble/p=indiscriminate/i=observed/f=0/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 8.881784197001252e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=0 minus stumble/p=indiscriminate/i=observed/f=0/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=1 minus stumble/p=indiscriminate/i=observed/f=0/c=0/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 2.220446049250313e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=1 minus stumble/p=indiscriminate/i=observed/f=0/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 8.881784197001252e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=1 minus stumble/p=indiscriminate/i=observed/f=0/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=0 minus stumble/p=indiscriminate/i=private/f=0/c=0.25/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.1102230246251565e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=0 minus stumble/p=indiscriminate/i=private/f=0/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 4.440892098500626e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=0 minus stumble/p=indiscriminate/i=private/f=0/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=1 minus stumble/p=indiscriminate/i=private/f=0/c=0.25/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.1102230246251565e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=1 minus stumble/p=indiscriminate/i=private/f=0/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 4.440892098500626e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=1 minus stumble/p=indiscriminate/i=private/f=0/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=0 minus stumble/p=indiscriminate/i=private/f=0/c=0/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 2.220446049250313e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=0 minus stumble/p=indiscriminate/i=private/f=0/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 8.881784197001252e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=0 minus stumble/p=indiscriminate/i=private/f=0/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=1 minus stumble/p=indiscriminate/i=private/f=0/c=0/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 2.220446049250313e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=1 minus stumble/p=indiscriminate/i=private/f=0/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 8.881784197001252e-16
+    },
+    {
+      "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=1 minus stumble/p=indiscriminate/i=private/f=0/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=off/i=observed/f=0/c=0.25/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=off/i=observed/f=0/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=off/i=observed/f=0/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=off/i=observed/f=0/c=0.25/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=off/i=observed/f=0/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=off/i=observed/f=0/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=off/i=observed/f=0.25/c=0/m=0 minus stumble/p=off/i=observed/f=0/c=0/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=off/i=observed/f=0.25/c=0/m=0 minus stumble/p=off/i=observed/f=0/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=off/i=observed/f=0.25/c=0/m=0 minus stumble/p=off/i=observed/f=0/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=off/i=observed/f=0.25/c=0/m=1 minus stumble/p=off/i=observed/f=0/c=0/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=off/i=observed/f=0.25/c=0/m=1 minus stumble/p=off/i=observed/f=0/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=off/i=observed/f=0.25/c=0/m=1 minus stumble/p=off/i=observed/f=0/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=0 minus stumble/p=off/i=private/f=0/c=0.25/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.6653345369377348e-16
+    },
+    {
+      "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=0 minus stumble/p=off/i=private/f=0/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=0 minus stumble/p=off/i=private/f=0/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=1 minus stumble/p=off/i=private/f=0/c=0.25/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.6653345369377348e-16
+    },
+    {
+      "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=1 minus stumble/p=off/i=private/f=0/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=1 minus stumble/p=off/i=private/f=0/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=off/i=private/f=0.25/c=0/m=0 minus stumble/p=off/i=private/f=0/c=0/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.6653345369377348e-16
+    },
+    {
+      "id": "stumble/p=off/i=private/f=0.25/c=0/m=0 minus stumble/p=off/i=private/f=0/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=off/i=private/f=0.25/c=0/m=0 minus stumble/p=off/i=private/f=0/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=off/i=private/f=0.25/c=0/m=1 minus stumble/p=off/i=private/f=0/c=0/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.6653345369377348e-16
+    },
+    {
+      "id": "stumble/p=off/i=private/f=0.25/c=0/m=1 minus stumble/p=off/i=private/f=0/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=off/i=private/f=0.25/c=0/m=1 minus stumble/p=off/i=private/f=0/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=selective/i=observed/f=0/c=0.25/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.1102230246251565e-16
+    },
+    {
+      "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=selective/i=observed/f=0/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 4.440892098500626e-16
+    },
+    {
+      "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=selective/i=observed/f=0/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=selective/i=observed/f=0/c=0.25/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.1102230246251565e-16
+    },
+    {
+      "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=selective/i=observed/f=0/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 4.440892098500626e-16
+    },
+    {
+      "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=selective/i=observed/f=0/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=0 minus stumble/p=selective/i=observed/f=0/c=0/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 2.220446049250313e-16
+    },
+    {
+      "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=0 minus stumble/p=selective/i=observed/f=0/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 8.881784197001252e-16
+    },
+    {
+      "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=0 minus stumble/p=selective/i=observed/f=0/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=1 minus stumble/p=selective/i=observed/f=0/c=0/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 2.220446049250313e-16
+    },
+    {
+      "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=1 minus stumble/p=selective/i=observed/f=0/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 8.881784197001252e-16
+    },
+    {
+      "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=1 minus stumble/p=selective/i=observed/f=0/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 0.0
+    },
+    {
+      "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=0 minus stumble/p=selective/i=private/f=0/c=0.25/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.6653345369377348e-16
+    },
+    {
+      "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=0 minus stumble/p=selective/i=private/f=0/c=0.25/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=0 minus stumble/p=selective/i=private/f=0/c=0.25/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=1 minus stumble/p=selective/i=private/f=0/c=0.25/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.6653345369377348e-16
+    },
+    {
+      "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=1 minus stumble/p=selective/i=private/f=0/c=0.25/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=1 minus stumble/p=selective/i=private/f=0/c=0.25/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=selective/i=private/f=0.25/c=0/m=0 minus stumble/p=selective/i=private/f=0/c=0/m=0",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.6653345369377348e-16
+    },
+    {
+      "id": "stumble/p=selective/i=private/f=0.25/c=0/m=0 minus stumble/p=selective/i=private/f=0/c=0/m=0",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=selective/i=private/f=0.25/c=0/m=0 minus stumble/p=selective/i=private/f=0/c=0/m=0",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=selective/i=private/f=0.25/c=0/m=1 minus stumble/p=selective/i=private/f=0/c=0/m=1",
+      "metric": "discovered_encounters",
+      "interval_max_abs_error": 1.6653345369377348e-16
+    },
+    {
+      "id": "stumble/p=selective/i=private/f=0.25/c=0/m=1 minus stumble/p=selective/i=private/f=0/c=0/m=1",
+      "metric": "original_food_transferred",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "id": "stumble/p=selective/i=private/f=0.25/c=0/m=1 minus stumble/p=selective/i=private/f=0/c=0/m=1",
+      "metric": "owner_ticks_alive",
+      "interval_max_abs_error": 1.7763568394002505e-15
+    }
+  ],
+  "versions": {
+    "python": "3.13.5",
+    "matplotlib": "3.10.9",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1"
+  }
+}

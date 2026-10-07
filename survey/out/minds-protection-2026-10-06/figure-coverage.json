@@ -1,0 +1,1066 @@
+{
+  "01-primary": {
+    "estimates": [
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0.25/m=0 minus single/p=off/i=observed/r=observed/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0/m=0 minus single/p=off/i=observed/r=observed/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0.25/m=0 minus single/p=off/i=observed/r=private/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0/m=0 minus single/p=off/i=observed/r=private/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0.25/m=0 minus single/p=off/i=private/r=observed/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0/m=0 minus single/p=off/i=private/r=observed/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0.25/m=0 minus single/p=off/i=private/r=private/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0/m=0 minus single/p=off/i=private/r=private/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0.25/m=0 minus single/p=indiscriminate/i=observed/r=observed/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0/m=0 minus single/p=indiscriminate/i=observed/r=observed/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0.25/m=0 minus single/p=indiscriminate/i=observed/r=private/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0/m=0 minus single/p=indiscriminate/i=observed/r=private/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0.25/m=0 minus single/p=indiscriminate/i=private/r=observed/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0/m=0 minus single/p=indiscriminate/i=private/r=observed/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0.25/m=0 minus single/p=indiscriminate/i=private/r=private/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0/m=0 minus single/p=indiscriminate/i=private/r=private/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0.25/m=0 minus single/p=off/i=observed/r=observed/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0/m=0 minus single/p=off/i=observed/r=observed/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0.25/m=0 minus single/p=off/i=observed/r=private/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0/m=0 minus single/p=off/i=observed/r=private/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0.25/m=0 minus single/p=off/i=private/r=observed/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0/m=0 minus single/p=off/i=private/r=observed/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0.25/m=0 minus single/p=off/i=private/r=private/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0/m=0 minus single/p=off/i=private/r=private/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0.25/m=0 minus single/p=indiscriminate/i=observed/r=observed/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0/m=0 minus single/p=indiscriminate/i=observed/r=observed/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0.25/m=0 minus single/p=indiscriminate/i=observed/r=private/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0/m=0 minus single/p=indiscriminate/i=observed/r=private/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0.25/m=0 minus single/p=indiscriminate/i=private/r=observed/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0/m=0 minus single/p=indiscriminate/i=private/r=observed/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0.25/m=0 minus single/p=indiscriminate/i=private/r=private/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0/m=0 minus single/p=indiscriminate/i=private/r=private/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0.25/m=1 minus single/p=off/i=observed/r=observed/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0/m=1 minus single/p=off/i=observed/r=observed/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0.25/m=1 minus single/p=off/i=observed/r=private/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0/m=1 minus single/p=off/i=observed/r=private/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0.25/m=1 minus single/p=off/i=private/r=observed/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0/m=1 minus single/p=off/i=private/r=observed/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0.25/m=1 minus single/p=off/i=private/r=private/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0/m=1 minus single/p=off/i=private/r=private/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0.25/m=1 minus single/p=indiscriminate/i=observed/r=observed/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0/m=1 minus single/p=indiscriminate/i=observed/r=observed/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0.25/m=1 minus single/p=indiscriminate/i=observed/r=private/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0/m=1 minus single/p=indiscriminate/i=observed/r=private/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0.25/m=1 minus single/p=indiscriminate/i=private/r=observed/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0/m=1 minus single/p=indiscriminate/i=private/r=observed/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0.25/m=1 minus single/p=indiscriminate/i=private/r=private/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0/m=1 minus single/p=indiscriminate/i=private/r=private/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0.25/m=1 minus single/p=off/i=observed/r=observed/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0/m=1 minus single/p=off/i=observed/r=observed/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0.25/m=1 minus single/p=off/i=observed/r=private/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0/m=1 minus single/p=off/i=observed/r=private/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0.25/m=1 minus single/p=off/i=private/r=observed/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0/m=1 minus single/p=off/i=private/r=observed/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0.25/m=1 minus single/p=off/i=private/r=private/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0/m=1 minus single/p=off/i=private/r=private/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0.25/m=1 minus single/p=indiscriminate/i=observed/r=observed/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0/m=1 minus single/p=indiscriminate/i=observed/r=observed/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0.25/m=1 minus single/p=indiscriminate/i=observed/r=private/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0/m=1 minus single/p=indiscriminate/i=observed/r=private/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0.25/m=1 minus single/p=indiscriminate/i=private/r=observed/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0/m=1 minus single/p=indiscriminate/i=private/r=observed/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0.25/m=1 minus single/p=indiscriminate/i=private/r=private/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0/m=1 minus single/p=indiscriminate/i=private/r=private/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      }
+    ],
+    "cells": []
+  },
+  "02-opportunity": {
+    "estimates": [
+      {
+        "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=observed/r=observed/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "opportunity interaction single/p=selective/i=private/r=observed/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      }
+    ],
+    "cells": []
+  },
+  "03-memory-erased": {
+    "estimates": [
+      {
+        "id": "single/p=erased/i=observed/r=observed/c=0.25/m=0 minus single/p=off/i=observed/r=observed/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=observed/c=0/m=0 minus single/p=off/i=observed/r=observed/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=private/c=0.25/m=0 minus single/p=off/i=observed/r=private/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=private/c=0/m=0 minus single/p=off/i=observed/r=private/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=private/r=observed/c=0.25/m=0 minus single/p=off/i=private/r=observed/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=private/r=observed/c=0/m=0 minus single/p=off/i=private/r=observed/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=private/r=private/c=0.25/m=0 minus single/p=off/i=private/r=private/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=private/r=private/c=0/m=0 minus single/p=off/i=private/r=private/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=observed/c=0.25/m=0 minus single/p=off/i=observed/r=observed/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=observed/c=0/m=0 minus single/p=off/i=observed/r=observed/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=private/c=0.25/m=0 minus single/p=off/i=observed/r=private/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=private/c=0/m=0 minus single/p=off/i=observed/r=private/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=private/r=observed/c=0.25/m=0 minus single/p=off/i=private/r=observed/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=private/r=observed/c=0/m=0 minus single/p=off/i=private/r=observed/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=private/r=private/c=0.25/m=0 minus single/p=off/i=private/r=private/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=private/r=private/c=0/m=0 minus single/p=off/i=private/r=private/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=observed/c=0.25/m=1 minus single/p=off/i=observed/r=observed/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=observed/c=0/m=1 minus single/p=off/i=observed/r=observed/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=private/c=0.25/m=1 minus single/p=off/i=observed/r=private/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=private/c=0/m=1 minus single/p=off/i=observed/r=private/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=private/r=observed/c=0.25/m=1 minus single/p=off/i=private/r=observed/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=private/r=observed/c=0/m=1 minus single/p=off/i=private/r=observed/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=private/r=private/c=0.25/m=1 minus single/p=off/i=private/r=private/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=private/r=private/c=0/m=1 minus single/p=off/i=private/r=private/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=observed/c=0.25/m=1 minus single/p=off/i=observed/r=observed/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=observed/c=0/m=1 minus single/p=off/i=observed/r=observed/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=private/c=0.25/m=1 minus single/p=off/i=observed/r=private/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=observed/r=private/c=0/m=1 minus single/p=off/i=observed/r=private/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=private/r=observed/c=0.25/m=1 minus single/p=off/i=private/r=observed/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=private/r=observed/c=0/m=1 minus single/p=off/i=private/r=observed/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=private/r=private/c=0.25/m=1 minus single/p=off/i=private/r=private/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "single/p=erased/i=private/r=private/c=0/m=1 minus single/p=off/i=private/r=private/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      }
+    ],
+    "cells": []
+  },
+  "04-stumble-contrasts": {
+    "estimates": [
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=erased/i=observed/f=0/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=0 minus stumble/p=erased/i=observed/f=0/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=0 minus stumble/p=erased/i=private/f=0/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0/m=0 minus stumble/p=erased/i=private/f=0/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=0 minus stumble/p=indiscriminate/i=observed/f=0/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=0 minus stumble/p=indiscriminate/i=private/f=0/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=0 minus stumble/p=indiscriminate/i=private/f=0/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=off/i=observed/f=0/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0/m=0 minus stumble/p=off/i=observed/f=0/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=0 minus stumble/p=off/i=private/f=0/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0/m=0 minus stumble/p=off/i=private/f=0/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=selective/i=observed/f=0/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=0 minus stumble/p=selective/i=observed/f=0/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=0 minus stumble/p=selective/i=private/f=0/c=0.25/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0/m=0 minus stumble/p=selective/i=private/f=0/c=0/m=0",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=erased/i=observed/f=0/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=0 minus stumble/p=erased/i=observed/f=0/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=0 minus stumble/p=erased/i=private/f=0/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0/m=0 minus stumble/p=erased/i=private/f=0/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=0 minus stumble/p=indiscriminate/i=observed/f=0/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=0 minus stumble/p=indiscriminate/i=private/f=0/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=0 minus stumble/p=indiscriminate/i=private/f=0/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=off/i=observed/f=0/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0/m=0 minus stumble/p=off/i=observed/f=0/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=0 minus stumble/p=off/i=private/f=0/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0/m=0 minus stumble/p=off/i=private/f=0/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=selective/i=observed/f=0/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=0 minus stumble/p=selective/i=observed/f=0/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=0 minus stumble/p=selective/i=private/f=0/c=0.25/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0/m=0 minus stumble/p=selective/i=private/f=0/c=0/m=0",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=erased/i=observed/f=0/c=0.25/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=0 minus stumble/p=erased/i=observed/f=0/c=0/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=0 minus stumble/p=erased/i=private/f=0/c=0.25/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0/m=0 minus stumble/p=erased/i=private/f=0/c=0/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=0 minus stumble/p=indiscriminate/i=observed/f=0/c=0/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=0 minus stumble/p=indiscriminate/i=private/f=0/c=0.25/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=0 minus stumble/p=indiscriminate/i=private/f=0/c=0/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=off/i=observed/f=0/c=0.25/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0/m=0 minus stumble/p=off/i=observed/f=0/c=0/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=0 minus stumble/p=off/i=private/f=0/c=0.25/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0/m=0 minus stumble/p=off/i=private/f=0/c=0/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=0 minus stumble/p=selective/i=observed/f=0/c=0.25/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=0 minus stumble/p=selective/i=observed/f=0/c=0/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=0 minus stumble/p=selective/i=private/f=0/c=0.25/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0/m=0 minus stumble/p=selective/i=private/f=0/c=0/m=0",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=erased/i=observed/f=0/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=1 minus stumble/p=erased/i=observed/f=0/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=1 minus stumble/p=erased/i=private/f=0/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0/m=1 minus stumble/p=erased/i=private/f=0/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=1 minus stumble/p=indiscriminate/i=observed/f=0/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=1 minus stumble/p=indiscriminate/i=private/f=0/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=1 minus stumble/p=indiscriminate/i=private/f=0/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=off/i=observed/f=0/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0/m=1 minus stumble/p=off/i=observed/f=0/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=1 minus stumble/p=off/i=private/f=0/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0/m=1 minus stumble/p=off/i=private/f=0/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=selective/i=observed/f=0/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=1 minus stumble/p=selective/i=observed/f=0/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=1 minus stumble/p=selective/i=private/f=0/c=0.25/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0/m=1 minus stumble/p=selective/i=private/f=0/c=0/m=1",
+        "metric": "original_food_transferred"
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=erased/i=observed/f=0/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=1 minus stumble/p=erased/i=observed/f=0/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=1 minus stumble/p=erased/i=private/f=0/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0/m=1 minus stumble/p=erased/i=private/f=0/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=1 minus stumble/p=indiscriminate/i=observed/f=0/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=1 minus stumble/p=indiscriminate/i=private/f=0/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=1 minus stumble/p=indiscriminate/i=private/f=0/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=off/i=observed/f=0/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0/m=1 minus stumble/p=off/i=observed/f=0/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=1 minus stumble/p=off/i=private/f=0/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0/m=1 minus stumble/p=off/i=private/f=0/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=selective/i=observed/f=0/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=1 minus stumble/p=selective/i=observed/f=0/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=1 minus stumble/p=selective/i=private/f=0/c=0.25/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0/m=1 minus stumble/p=selective/i=private/f=0/c=0/m=1",
+        "metric": "owner_ticks_alive"
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=erased/i=observed/f=0/c=0.25/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=1 minus stumble/p=erased/i=observed/f=0/c=0/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=1 minus stumble/p=erased/i=private/f=0/c=0.25/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0/m=1 minus stumble/p=erased/i=private/f=0/c=0/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=1 minus stumble/p=indiscriminate/i=observed/f=0/c=0/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=1 minus stumble/p=indiscriminate/i=private/f=0/c=0.25/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=1 minus stumble/p=indiscriminate/i=private/f=0/c=0/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=off/i=observed/f=0/c=0.25/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0/m=1 minus stumble/p=off/i=observed/f=0/c=0/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=1 minus stumble/p=off/i=private/f=0/c=0.25/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0/m=1 minus stumble/p=off/i=private/f=0/c=0/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=1 minus stumble/p=selective/i=observed/f=0/c=0.25/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=1 minus stumble/p=selective/i=observed/f=0/c=0/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=1 minus stumble/p=selective/i=private/f=0/c=0.25/m=1",
+        "metric": "discovered_encounters"
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0/m=1 minus stumble/p=selective/i=private/f=0/c=0/m=1",
+        "metric": "discovered_encounters"
+      }
+    ],
+    "cells": []
+  },
+  "05-single-cells": {
+    "estimates": [],
+    "cells": [
+      "single/p=erased/i=observed/r=observed/c=0.25/m=0",
+      "single/p=erased/i=observed/r=observed/c=0.25/m=1",
+      "single/p=erased/i=observed/r=observed/c=0/m=0",
+      "single/p=erased/i=observed/r=observed/c=0/m=1",
+      "single/p=erased/i=observed/r=private/c=0.25/m=0",
+      "single/p=erased/i=observed/r=private/c=0.25/m=1",
+      "single/p=erased/i=observed/r=private/c=0/m=0",
+      "single/p=erased/i=observed/r=private/c=0/m=1",
+      "single/p=erased/i=private/r=observed/c=0.25/m=0",
+      "single/p=erased/i=private/r=observed/c=0.25/m=1",
+      "single/p=erased/i=private/r=observed/c=0/m=0",
+      "single/p=erased/i=private/r=observed/c=0/m=1",
+      "single/p=erased/i=private/r=private/c=0.25/m=0",
+      "single/p=erased/i=private/r=private/c=0.25/m=1",
+      "single/p=erased/i=private/r=private/c=0/m=0",
+      "single/p=erased/i=private/r=private/c=0/m=1",
+      "single/p=indiscriminate/i=observed/r=observed/c=0.25/m=0",
+      "single/p=indiscriminate/i=observed/r=observed/c=0.25/m=1",
+      "single/p=indiscriminate/i=observed/r=observed/c=0/m=0",
+      "single/p=indiscriminate/i=observed/r=observed/c=0/m=1",
+      "single/p=indiscriminate/i=observed/r=private/c=0.25/m=0",
+      "single/p=indiscriminate/i=observed/r=private/c=0.25/m=1",
+      "single/p=indiscriminate/i=observed/r=private/c=0/m=0",
+      "single/p=indiscriminate/i=observed/r=private/c=0/m=1",
+      "single/p=indiscriminate/i=private/r=observed/c=0.25/m=0",
+      "single/p=indiscriminate/i=private/r=observed/c=0.25/m=1",
+      "single/p=indiscriminate/i=private/r=observed/c=0/m=0",
+      "single/p=indiscriminate/i=private/r=observed/c=0/m=1",
+      "single/p=indiscriminate/i=private/r=private/c=0.25/m=0",
+      "single/p=indiscriminate/i=private/r=private/c=0.25/m=1",
+      "single/p=indiscriminate/i=private/r=private/c=0/m=0",
+      "single/p=indiscriminate/i=private/r=private/c=0/m=1",
+      "single/p=off/i=observed/r=observed/c=0.25/m=0",
+      "single/p=off/i=observed/r=observed/c=0.25/m=1",
+      "single/p=off/i=observed/r=observed/c=0/m=0",
+      "single/p=off/i=observed/r=observed/c=0/m=1",
+      "single/p=off/i=observed/r=private/c=0.25/m=0",
+      "single/p=off/i=observed/r=private/c=0.25/m=1",
+      "single/p=off/i=observed/r=private/c=0/m=0",
+      "single/p=off/i=observed/r=private/c=0/m=1",
+      "single/p=off/i=private/r=observed/c=0.25/m=0",
+      "single/p=off/i=private/r=observed/c=0.25/m=1",
+      "single/p=off/i=private/r=observed/c=0/m=0",
+      "single/p=off/i=private/r=observed/c=0/m=1",
+      "single/p=off/i=private/r=private/c=0.25/m=0",
+      "single/p=off/i=private/r=private/c=0.25/m=1",
+      "single/p=off/i=private/r=private/c=0/m=0",
+      "single/p=off/i=private/r=private/c=0/m=1",
+      "single/p=selective/i=observed/r=observed/c=0.25/m=0",
+      "single/p=selective/i=observed/r=observed/c=0.25/m=1",
+      "single/p=selective/i=observed/r=observed/c=0/m=0",
+      "single/p=selective/i=observed/r=observed/c=0/m=1",
+      "single/p=selective/i=observed/r=private/c=0.25/m=0",
+      "single/p=selective/i=observed/r=private/c=0.25/m=1",
+      "single/p=selective/i=observed/r=private/c=0/m=0",
+      "single/p=selective/i=observed/r=private/c=0/m=1",
+      "single/p=selective/i=private/r=observed/c=0.25/m=0",
+      "single/p=selective/i=private/r=observed/c=0.25/m=1",
+      "single/p=selective/i=private/r=observed/c=0/m=0",
+      "single/p=selective/i=private/r=observed/c=0/m=1",
+      "single/p=selective/i=private/r=private/c=0.25/m=0",
+      "single/p=selective/i=private/r=private/c=0.25/m=1",
+      "single/p=selective/i=private/r=private/c=0/m=0",
+      "single/p=selective/i=private/r=private/c=0/m=1"
+    ]
+  },
+  "06-mixed-cells": {
+    "estimates": [],
+    "cells": [
+      "mixed/p=erased/o=a-first/c=0.25/m=0",
+      "mixed/p=erased/o=a-first/c=0.25/m=1",
+      "mixed/p=erased/o=a-first/c=0/m=0",
+      "mixed/p=erased/o=a-first/c=0/m=1",
+      "mixed/p=erased/o=b-first/c=0.25/m=0",
+      "mixed/p=erased/o=b-first/c=0.25/m=1",
+      "mixed/p=erased/o=b-first/c=0/m=0",
+      "mixed/p=erased/o=b-first/c=0/m=1",
+      "mixed/p=indiscriminate/o=a-first/c=0.25/m=0",
+      "mixed/p=indiscriminate/o=a-first/c=0.25/m=1",
+      "mixed/p=indiscriminate/o=a-first/c=0/m=0",
+      "mixed/p=indiscriminate/o=a-first/c=0/m=1",
+      "mixed/p=indiscriminate/o=b-first/c=0.25/m=0",
+      "mixed/p=indiscriminate/o=b-first/c=0.25/m=1",
+      "mixed/p=indiscriminate/o=b-first/c=0/m=0",
+      "mixed/p=indiscriminate/o=b-first/c=0/m=1",
+      "mixed/p=off/o=a-first/c=0.25/m=0",
+      "mixed/p=off/o=a-first/c=0.25/m=1",
+      "mixed/p=off/o=a-first/c=0/m=0",
+      "mixed/p=off/o=a-first/c=0/m=1",
+      "mixed/p=off/o=b-first/c=0.25/m=0",
+      "mixed/p=off/o=b-first/c=0.25/m=1",
+      "mixed/p=off/o=b-first/c=0/m=0",
+      "mixed/p=off/o=b-first/c=0/m=1",
+      "mixed/p=selective/o=a-first/c=0.25/m=0",
+      "mixed/p=selective/o=a-first/c=0.25/m=1",
+      "mixed/p=selective/o=a-first/c=0/m=0",
+      "mixed/p=selective/o=a-first/c=0/m=1",
+      "mixed/p=selective/o=b-first/c=0.25/m=0",
+      "mixed/p=selective/o=b-first/c=0.25/m=1",
+      "mixed/p=selective/o=b-first/c=0/m=0",
+      "mixed/p=selective/o=b-first/c=0/m=1"
+    ]
+  },
+  "07-cue-cells": {
+    "estimates": [],
+    "cells": [
+      "cue/p=erased/e=unseen-watcher/c=0.25/m=0",
+      "cue/p=erased/e=unseen-watcher/c=0.25/m=1",
+      "cue/p=erased/e=unseen-watcher/c=0/m=0",
+      "cue/p=erased/e=unseen-watcher/c=0/m=1",
+      "cue/p=erased/e=visible-nonwatcher/c=0.25/m=0",
+      "cue/p=erased/e=visible-nonwatcher/c=0.25/m=1",
+      "cue/p=erased/e=visible-nonwatcher/c=0/m=0",
+      "cue/p=erased/e=visible-nonwatcher/c=0/m=1",
+      "cue/p=indiscriminate/e=unseen-watcher/c=0.25/m=0",
+      "cue/p=indiscriminate/e=unseen-watcher/c=0.25/m=1",
+      "cue/p=indiscriminate/e=unseen-watcher/c=0/m=0",
+      "cue/p=indiscriminate/e=unseen-watcher/c=0/m=1",
+      "cue/p=indiscriminate/e=visible-nonwatcher/c=0.25/m=0",
+      "cue/p=indiscriminate/e=visible-nonwatcher/c=0.25/m=1",
+      "cue/p=indiscriminate/e=visible-nonwatcher/c=0/m=0",
+      "cue/p=indiscriminate/e=visible-nonwatcher/c=0/m=1",
+      "cue/p=off/e=unseen-watcher/c=0.25/m=0",
+      "cue/p=off/e=unseen-watcher/c=0.25/m=1",
+      "cue/p=off/e=unseen-watcher/c=0/m=0",
+      "cue/p=off/e=unseen-watcher/c=0/m=1",
+      "cue/p=off/e=visible-nonwatcher/c=0.25/m=0",
+      "cue/p=off/e=visible-nonwatcher/c=0.25/m=1",
+      "cue/p=off/e=visible-nonwatcher/c=0/m=0",
+      "cue/p=off/e=visible-nonwatcher/c=0/m=1",
+      "cue/p=selective/e=unseen-watcher/c=0.25/m=0",
+      "cue/p=selective/e=unseen-watcher/c=0.25/m=1",
+      "cue/p=selective/e=unseen-watcher/c=0/m=0",
+      "cue/p=selective/e=unseen-watcher/c=0/m=1",
+      "cue/p=selective/e=visible-nonwatcher/c=0.25/m=0",
+      "cue/p=selective/e=visible-nonwatcher/c=0.25/m=1",
+      "cue/p=selective/e=visible-nonwatcher/c=0/m=0",
+      "cue/p=selective/e=visible-nonwatcher/c=0/m=1"
+    ]
+  },
+  "08-stumble-cells": {
+    "estimates": [],
+    "cells": [
+      "stumble/p=erased/i=observed/f=0.25/c=0.25/m=0",
+      "stumble/p=erased/i=observed/f=0.25/c=0.25/m=1",
+      "stumble/p=erased/i=observed/f=0.25/c=0/m=0",
+      "stumble/p=erased/i=observed/f=0.25/c=0/m=1",
+      "stumble/p=erased/i=observed/f=0/c=0.25/m=0",
+      "stumble/p=erased/i=observed/f=0/c=0.25/m=1",
+      "stumble/p=erased/i=observed/f=0/c=0/m=0",
+      "stumble/p=erased/i=observed/f=0/c=0/m=1",
+      "stumble/p=erased/i=private/f=0.25/c=0.25/m=0",
+      "stumble/p=erased/i=private/f=0.25/c=0.25/m=1",
+      "stumble/p=erased/i=private/f=0.25/c=0/m=0",
+      "stumble/p=erased/i=private/f=0.25/c=0/m=1",
+      "stumble/p=erased/i=private/f=0/c=0.25/m=0",
+      "stumble/p=erased/i=private/f=0/c=0.25/m=1",
+      "stumble/p=erased/i=private/f=0/c=0/m=0",
+      "stumble/p=erased/i=private/f=0/c=0/m=1",
+      "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=0",
+      "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=1",
+      "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=0",
+      "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=1",
+      "stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=0",
+      "stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=1",
+      "stumble/p=indiscriminate/i=observed/f=0/c=0/m=0",
+      "stumble/p=indiscriminate/i=observed/f=0/c=0/m=1",
+      "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=0",
+      "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=1",
+      "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=0",
+      "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=1",
+      "stumble/p=indiscriminate/i=private/f=0/c=0.25/m=0",
+      "stumble/p=indiscriminate/i=private/f=0/c=0.25/m=1",
+      "stumble/p=indiscriminate/i=private/f=0/c=0/m=0",
+      "stumble/p=indiscriminate/i=private/f=0/c=0/m=1",
+      "stumble/p=off/i=observed/f=0.25/c=0.25/m=0",
+      "stumble/p=off/i=observed/f=0.25/c=0.25/m=1",
+      "stumble/p=off/i=observed/f=0.25/c=0/m=0",
+      "stumble/p=off/i=observed/f=0.25/c=0/m=1",
+      "stumble/p=off/i=observed/f=0/c=0.25/m=0",
+      "stumble/p=off/i=observed/f=0/c=0.25/m=1",
+      "stumble/p=off/i=observed/f=0/c=0/m=0",
+      "stumble/p=off/i=observed/f=0/c=0/m=1",
+      "stumble/p=off/i=private/f=0.25/c=0.25/m=0",
+      "stumble/p=off/i=private/f=0.25/c=0.25/m=1",
+      "stumble/p=off/i=private/f=0.25/c=0/m=0",
+      "stumble/p=off/i=private/f=0.25/c=0/m=1",
+      "stumble/p=off/i=private/f=0/c=0.25/m=0",
+      "stumble/p=off/i=private/f=0/c=0.25/m=1",
+      "stumble/p=off/i=private/f=0/c=0/m=0",
+      "stumble/p=off/i=private/f=0/c=0/m=1",
+      "stumble/p=selective/i=observed/f=0.25/c=0.25/m=0",
+      "stumble/p=selective/i=observed/f=0.25/c=0.25/m=1",
+      "stumble/p=selective/i=observed/f=0.25/c=0/m=0",
+      "stumble/p=selective/i=observed/f=0.25/c=0/m=1",
+      "stumble/p=selective/i=observed/f=0/c=0.25/m=0",
+      "stumble/p=selective/i=observed/f=0/c=0.25/m=1",
+      "stumble/p=selective/i=observed/f=0/c=0/m=0",
+      "stumble/p=selective/i=observed/f=0/c=0/m=1",
+      "stumble/p=selective/i=private/f=0.25/c=0.25/m=0",
+      "stumble/p=selective/i=private/f=0.25/c=0.25/m=1",
+      "stumble/p=selective/i=private/f=0.25/c=0/m=0",
+      "stumble/p=selective/i=private/f=0.25/c=0/m=1",
+      "stumble/p=selective/i=private/f=0/c=0.25/m=0",
+      "stumble/p=selective/i=private/f=0/c=0.25/m=1",
+      "stumble/p=selective/i=private/f=0/c=0/m=0",
+      "stumble/p=selective/i=private/f=0/c=0/m=1"
+    ]
+  }
+}
