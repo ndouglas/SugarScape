@@ -136,3 +136,16 @@ clippy. Fresh merged-tree verification reports 2,663 passed, 0 failed and 103
 ignored, with formatting and core clippy clean. Scientific evaluation remains
 separate. F4 remains the
 separate excavation and spoil/food integration increment.
+
+## F4 follow-up
+
+The [F4 construction design](2026-10-06-foraging-4-construction-design.md) was
+approved by the user on 2026-10-06. Shared workers, direct transport, one common
+carrying slot, distinct food/spoil destinations and local dynamic-map updates
+were approved conversationally on 2026-10-06. Role allocation and relay
+transport are explicitly deferred. The spec proposes exploration before
+excavation, paused food-trip resumption after spoil disposal, separate material
+conservation and structural-access versus realized-delivery measurements.
+The [five-stage implementation plan](../plans/2026-10-06-foraging-4-construction.md)
+was approved on 2026-10-06; subagent-driven engineering execution is starting.
+Scientific evaluation has not started.

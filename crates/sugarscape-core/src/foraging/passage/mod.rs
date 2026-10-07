@@ -70,3 +70,11 @@ mod view;
 pub use metrics::ComputeCounts;
 pub use runner::{run, Episode, RunOptions};
 pub use view::{AgentView, FindView, KnowledgeView, Snapshot, Summary, WaypointView};
+
+/// Read-only cloned RNG continuation for the construction no-dig unit regression.
+#[cfg(test)]
+pub(crate) fn construction_rng_probe(world: &World) -> [u64; 4] {
+    use rand::RngCore;
+    let mut rng = world.rng.clone();
+    std::array::from_fn(|_| rng.next_u64())
+}
