@@ -277,8 +277,12 @@ was approved on 2026-10-06. All five implementation stages and independent task
 reviews are complete; the whole-branch review approved the engineering result.
 Final runtime `25375c3` passed 2,852 workspace tests with zero failures and 103
 existing ignored; construction rustdoc, formatting and core Clippy passed.
-Integration awaits selection; scientific evaluation has not started. Detailed
-evidence is archived at `/tmp/sugarscape-f4-evidence-20261006/sdd/`.
+Local integration into `main` completed at `568a3fa` on 2026-10-07. Fresh
+merged-tree verification passed 2,852 workspace tests, zero failures and 103
+existing ignored, with formatting and core all-target Clippy clean. The feature
+worktree and branch were retired after evidence preservation. Branch evidence
+is archived at `/tmp/sugarscape-f4-evidence-20261006/sdd/`; integration logs are
+in `/tmp/sugarscape-f4-integration-20261007/`. Scientific evaluation has not started.
 
 
 ## Construction public usage (F4)

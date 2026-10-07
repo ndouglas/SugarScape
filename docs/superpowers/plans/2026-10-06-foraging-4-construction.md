@@ -594,7 +594,7 @@ Task5 runtime `25375c3`: runner14/public6/workspace2,852 passed,0 failed,103 ign
 
 ## Final review and completion
 
-Whole-branch review of `e733b98..2fa0802` approved merge readiness with no Critical, Important or runtime findings. Its sole minor status-wording item is resolved by this evidence-only archive. All five stages are complete. Final runtime `25375c3` passed workspace2,852/0/103, runner14/public6, construction rustdoc, formatter and core all-target Clippy. Exact commands, frozen-source audits, review reports and supplemental test timing are preserved at `/tmp/sugarscape-f4-evidence-20261006/sdd/`. No runtime change follows that verification. The completed root tracker is removed after preservation; feature branch/worktree remain for the integration choice. No scientific execution was performed.
+Whole-branch review of `e733b98..2fa0802` approved merge readiness with no Critical, Important or runtime findings. Its sole minor status-wording item is resolved by this evidence-only archive. All five stages are complete. Final runtime `25375c3` passed workspace2,852/0/103, runner14/public6, construction rustdoc, formatter and core all-target Clippy. Exact commands, frozen-source audits, review reports and supplemental test timing are preserved at `/tmp/sugarscape-f4-evidence-20261006/sdd/`. No runtime change follows that verification. The completed root tracker is removed after preservation; feature branch/worktree were retired after verified local integration and remaining-file preservation. No scientific execution was performed.
 
 ### Rulings I made
 
@@ -614,3 +614,11 @@ Whole-branch review of `e733b98..2fa0802` approved merge readiness with no Criti
 - Final-review boundary — Accept no restoration or arbitrary external private-state editing contract; specified corruption/illegal-action rollback is judged. If wrong, add a restoration schema/validation and corruption-coverage contract.
 - Final-review boundary — Accept CLI/WASM/browser/ModelKind/persistent migrations/deployment as excluded from this core-only API increment. If wrong, design and implement those integration surfaces.
 - Final-review boundary — Accept merge/push/concurrent-tree verification as separate from read-only branch review; verify actual integration after its selection. If wrong, review and verify the actual merged tree before claiming integration.
+
+## Local integration — 2026-10-07
+
+The user explicitly selected local merge. Initial Git writes were blocked by a session policy marking `.git` read-only; after the user restored full access, main and feature working trees were confirmed clean and origin fetched. Main/origin were synchronized at `a69a994`; the reviewed feature ended at `392aba9`. Merge `568a3fa` preserved concurrent main changes and completed without conflicts.
+
+Fresh merged-tree gates passed: `cargo test --workspace` 2,852 passed, 0 failed, 103 existing ignored; `cargo fmt --all --check`; `cargo clippy -p sugarscape-core --all-targets -- -D warnings`. All 533 tracked Rust file hashes remained unchanged during verification. Full commands, output, exits, timing and merge parents are preserved in `/tmp/sugarscape-f4-integration-20261007/`. The tracked-Rust audit includes files beyond the earlier 471-file crate source/test manifest; the merged Rust tree matches the reviewed feature.
+
+The completed SDD evidence had already been archived. The remaining ignored `.superpowers/sdd/.gitignore` was copied and hash-verified before removing only the F4 worktree and deleting its merged branch. This integration record changes only documentation after the verified merge. No push or scientific evaluation was performed. F5 source reconciliation and comparison design are the next increment; role allocation and relay transport retain their separate future design gates.
