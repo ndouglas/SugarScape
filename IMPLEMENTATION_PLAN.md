@@ -6,7 +6,7 @@ Spec/plan approved 2026-10-06. Subagent-driven execution. Detailed evidence: doc
 **Goal**: Validated indexed terrain and dynamic private classifications.
 **Success Criteria**: Stale walls remain private; legitimate revisions/own digs and counters are atomic.
 **Tests**: `cargo test -p sugarscape-core foraging::construction::tests::setup_learning`
-**Status**: In Progress
+**Status**: Complete
 **Evidence**: Task 1 implementer: focused 12 passed; workspace 2726 passed/0 failed/103 ignored; fmt/core all-target Clippy clean. Full logs/report: `.superpowers/sdd/2026-10-06-foraging-4-construction/task-1-report.md`. Parent independent reviews pending.
 
 ## Stage 2: Private navigation

@@ -180,7 +180,7 @@ impl DrawSource for Scripted {
 **Consumes:** Public F3 Pos/Parameters/Resource, FieldError, existing SimRng/Serde.
 **Produces:** All shared Task 1 signatures above.
 
-- [ ] Write tests first for dimensions 2/126, worker 0/257, food257, duplicate/invalid mask/open/nest/food, disconnected/singleton nest, outlet solid/in-nest/disconnected, three same-cell spawns and invalid parameters. Include open outlet not in diggable mask, diggable overlap with initial open cells, protected buried food, disconnected exposed food and IDs0/u64::MAX. Validate original indices before sorting; preserve worker order. Representative tests:
+- [x] Write tests first for dimensions 2/126, worker 0/257, food257, duplicate/invalid mask/open/nest/food, disconnected/singleton nest, outlet solid/in-nest/disconnected, three same-cell spawns and invalid parameters. Include open outlet not in diggable mask, diggable overlap with initial open cells, protected buried food, disconnected exposed food and IDs0/u64::MAX. Validate original indices before sorting; preserve worker order. Representative tests:
 
 ```rust
 #[test]
@@ -201,8 +201,8 @@ fn remote_wall_memory_waits_for_local_revision() {
 }
 ```
 
-- [ ] Run `cargo test -p sugarscape-core foraging::construction::tests::setup_learning`; wait for/inspect red before implementation; record missing-interface failures honestly.
-- [ ] Implement original-input aggregate validation/normalization and indexed terrain. Mask eligibility is `!open[index] && diggable[index]`; capacity counts initial solid masked cells. Terrain.dig rejects already open/protected/out-of-bounds without changing arrays/counts and prepares checked increment before mutation.
+- [x] Run `cargo test -p sugarscape-core foraging::construction::tests::setup_learning`; wait for/inspect red before implementation; record missing-interface failures honestly.
+- [x] Implement original-input aggregate validation/normalization and indexed terrain. Mask eligibility is `!open[index] && diggable[index]`; capacity counts initial solid masked cells. Terrain.dig rejects already open/protected/out-of-bounds without changing arrays/counts and prepares checked increment before mutation.
 
 ```rust
 if self.open[index] || !self.diggable[index] {
@@ -213,9 +213,9 @@ let next=self.excavated.checked_add(1)
 self.open[index]=true; self.excavated=next;
 ```
 
-- [ ] Implement complete current/cardinal observations; open entries have diggable=false, occupancy<=2 and optional available food; solid entries have zero occupants/food and observed mask value. Source lists/material truth are lookup-only inside observe and never passed to decision/navigation. Validate all incoming map updates before mutation: Unknown→observed; equal→unchanged; KnownSolid(true)→Open revision; protected opening, Open→Solid or changed solid mask flag→error. confirm_dig requires adjacent known-open origin and known diggable-solid target, counts own confirmation once; repeat is an error, next ordinary observation adds no revision.
-- [ ] Add late-batch contradiction rollback, malformed/missing/nonlocal observation cells, boundary ordering, no hidden-food exposure, map size/counts/sorted view, malicious uniform/half-open endpoints, singleton/empty draws, and checked computation overflow tests. Queue peaks use max; all other counts checked sums prepared before assignment.
-- [ ] Focused GREEN, fmt check, core all-target clippy -D warnings and workspace final task gate; self-review/fresh task reviews, tracker evidence and commit `feat(foraging): add checked construction terrain and local revisions`. Only narrowly named staged dead-code allowances for Tasks 2–4 consumers are allowed; remove all by Task 4.
+- [x] Implement complete current/cardinal observations; open entries have diggable=false, occupancy<=2 and optional available food; solid entries have zero occupants/food and observed mask value. Source lists/material truth are lookup-only inside observe and never passed to decision/navigation. Validate all incoming map updates before mutation: Unknown→observed; equal→unchanged; KnownSolid(true)→Open revision; protected opening, Open→Solid or changed solid mask flag→error. confirm_dig requires adjacent known-open origin and known diggable-solid target, counts own confirmation once; repeat is an error, next ordinary observation adds no revision.
+- [x] Add late-batch contradiction rollback, malformed/missing/nonlocal observation cells, boundary ordering, no hidden-food exposure, map size/counts/sorted view, malicious uniform/half-open endpoints, singleton/empty draws, and checked computation overflow tests. Queue peaks use max; all other counts checked sums prepared before assignment.
+- [x] Focused GREEN, fmt check, core all-target clippy -D warnings and workspace final task gate; self-review/fresh task reviews, tracker evidence and commit `feat(foraging): add checked construction terrain and local revisions`. Only narrowly named staged dead-code allowances for Tasks 2–4 consumers are allowed; remove all by Task 4.
 
 ### Task 2: Private open routes, dig faces and outlet exploration
 
@@ -552,3 +552,24 @@ Plan type names/fields/signatures and visibility were checked across consuming t
 Clarification during planning: the spec's acceptance phrase “protected/solid outlet” meant a solid outlet is invalid whether protected or diggable. An initially open outlet need not be in the diggable mask; its explicit setup contract requires openness/connectivity, not excavatable substrate. The spec wording is corrected accordingly, and Task 1 pins the valid open-unmasked case. This changes no intended physics or architecture.
 
 The user approved the written spec on 2026-10-06. The user approved this written plan on 2026-10-06; subagent-driven execution is starting. Verify current worktree/base/concurrent work, establish fresh baseline, create the five-stage tracker and begin Task 1 without asking for approval/method again. Scientific execution remains separate.
+
+## Execution and review evidence — 2026-10-06
+
+Baseline at approved tree: workspace 2,714 passed, 0 failed, 103 ignored. Task1
+runtime `848b406`: 12 focused tests; workspace 2,726 passed, 0 failed, 103 ignored;
+fmt/core clippy passed. Task review identified mandatory public signature spelling
+and missing solid/masked outlet coverage. Scoped fix `96bbf8d` changed only the
+two result spellings and one already-correct-behavior fixture; final focused13,
+fmt and clippy passed; no redundant workspace repeat. Scoped re-review approved
+both findings with no new breakage. Initial RED was missing-interface compilation;
+supplemental test timing and frozen revision hashes are disclosed in reports.
+
+Preflight rulings: validate remembered diggability against indexed immutable
+setup mask, not current excavation eligibility, so stale opened walls remain
+valid; if wrong, belief checks need rework. Add internal excavation-history
+predicate and encapsulated AccessObserver::check to authenticate spoil origins
+and cached records without field exposure or counted BFS repetition; if wrong,
+internal interfaces need rework. Neither ruling adds worker/public knowledge.
+
+Detailed evidence is in the plan-specific ignored SDD workspace and
+`/tmp/sugarscape-f4-evidence-20261006/`. Other campaigns remain untouched.
