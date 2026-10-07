@@ -10,7 +10,7 @@
 
 **Spec:** [approved design](../specs/2026-10-07-active-surface-experiments-design.md). User-reviewed proposal SHA256 `4b91565a48c1ca5b6c3e693ccccce3c0bd42f1155b3144e10c42084b96c117f9`; approval response `LGTM!` is retained in `.superpowers/sdd/2026-10-07-active-surface-experiments/design-approval.json`.
 
-**Status:** Written plan for user review; product code and collection have not started. Record actual execution HEAD after approval. Planning started from crowd `de690b664d6c858b0b04e6a7ed2f13aa430967cf`; newer main and concurrent work must be reconciled before integration without discarding either.
+**Status:** Written plan approved by the user October 7, 2026; subagent-driven execution authorized. Actual execution HEAD is recorded in retained plan-approval.json; collection still requires the independent precollection gate. Planning started from crowd `de690b664d6c858b0b04e6a7ed2f13aa430967cf`; newer main and concurrent work must be reconciled before integration without discarding either.
 
 ## Global Constraints
 
