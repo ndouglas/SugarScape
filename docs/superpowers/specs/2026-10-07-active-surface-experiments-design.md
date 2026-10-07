@@ -2,9 +2,9 @@
 
 ## Status and purpose
 
-**Date:** October 7, 2026. **Status:** proposed design for review; no implementation or new experiment collection authorized by this document.
+**Date:** October 7, 2026. **Status:** written design approved by the user October 7, 2026. Implementation planning is authorized; written-plan review precedes code and collection.
 
-The user accepted the direction of replacing mandatory calibration with choices about probing, communicating, and trusted inspection. This proposal develops that direction into a bounded first study. The first study uses one experimenting Agent and one supplied responding Agent; this is the recommended scope assumption pending the user's answer. Simultaneous experiment selection by both Agents is a separate extension.
+The user accepted the direction of replacing mandatory calibration with choices about probing, communicating, and trusted inspection. This proposal develops that direction into a bounded first study. The first study uses one experimenting Agent and one supplied responding Agent; the user approved this initial scope with the written design. Simultaneous experiment selection by both Agents is a separate extension.
 
 The question is whether an Agent chooses evidence that improves its expected task outcome after paying for that evidence. Model identification, using another Agent's information, and benefiting from communication remain separate measurements. An optimal controller in a finite supplied model is an engineering comparison, not empirical evidence of spontaneous cooperation or open-ended scientific discovery.
 
@@ -106,6 +106,8 @@ Add a separate active-experiment namespace and CLI diagnostic beside the frozen 
 
 Preserve the existing crowd worktree and all experimental evidence. Never stage `.claude/`, `papers/`, `survey/out/`, or ignored evidence. Retain exclusive first/repeat outputs, source/settings/binary snapshots, independent reference, reviews, all declared settings, and failures. A more compact trace representation can reduce repeated prefixes only if reconstruction and current-payload integrity remain exact; report-size improvement cannot silently drop the raw observation contract.
 
-This written design requires user review, followed by a separately reviewed implementation plan. Implementation uses subagent-driven development with independent task and whole-source reviews. Independently verify and freeze source/settings before collection, commit working increments, merge completed work into main while preserving concurrent work, push normally, and check CI for the exact pushed commit.
+This written design is approved; a separately reviewed implementation plan is next. Implementation uses subagent-driven development with independent task and whole-source reviews. Independently verify and freeze source/settings before collection, commit working increments, merge completed work into main while preserving concurrent work, push normally, and check CI for the exact pushed commit.
 
 After this study, selecting raw probes or adding a second adaptive investigator requires a new design. Gates/access constraints, complementary reusable discoveries, and oversight remain later increments in the collective-agency campaign.
+
+**Approval receipt:** User response “LGTM!”; approved proposal SHA256 `4b91565a48c1ca5b6c3e693ccccce3c0bd42f1155b3144e10c42084b96c117f9`. Only approval metadata differs from that proposal.
