@@ -393,3 +393,9 @@ F3 per-step food/worker projections and cloned PCG continuation, including an
 initially open mask entry. Extra construction diagnostics need not match F3 bytes.
 Dedicated roles, relay/drop/pile transport and F5 scientific comparisons remain
 separately deferred and require their own approved design/protocol.
+
+## F5 comparison design
+
+The user approved a mechanism-first comparison and collection/analysis architecture around unchanged F4. The [draft F5 specification](superpowers/specs/2026-10-07-foraging-5-shortcut-comparison-design.md) defines supplied straight/detour/twisting geometries, paid/protected/already-open regimes, a separate sealed-access panel, fixed candidate inputs, complete censoring and saved-only native survey analysis. Its exact geometry/workload/measurement rules await written-spec review; no implementation or scientific collection has begun.
+
+The [source audit](studies/2026-10-07-foraging-shortcut-reading.md) distinguishes inspected material from inaccessible workbook/figure content. This is a computational mechanism design, not a source-calibrated biological reproduction. Dedicated roles and relay transport remain deferred.

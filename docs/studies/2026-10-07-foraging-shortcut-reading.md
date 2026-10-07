@@ -36,7 +36,7 @@ For each layout, compare paid diggable terrain with the same initial open route 
 
 Candidate outcomes are delivered food by cutoff; pickup/delivery timing with censored failures; current shortest physical distances; excavation, food/spoil carrying, disposal and congestion work. Report components separately rather than inventing an energy-weighted net score. Protected or unfinished food/cargo remain recorded, and all worlds execute the same full horizon. No preferred seed, optimized parameters or guaranteed shortcut/delivery result is selected here.
 
-A geometry-only benchmark is a smaller alternative, but would not establish the delivery/cost question. Quantitative biological reproduction is a larger alternative requiring recovered data, geometry/width/backfill/feeding definitions and calibration beyond current F4. The user approved the mechanism-first comparison scope on 2026-10-07. Collection/analysis architecture, exact geometries and frozen protocol values remain to be designed and approved.
+A geometry-only benchmark is a smaller alternative, but would not establish the delivery/cost question. Quantitative biological reproduction is a larger alternative requiring recovered data, geometry/width/backfill/feeding definitions and calibration beyond current F4. The user approved the mechanism-first comparison scope on 2026-10-07. The user also approved collection/analysis architecture. Concrete supplied geometries and fixed workload/measurement rules are now in the [draft F5 specification](../superpowers/specs/2026-10-07-foraging-5-shortcut-comparison-design.md), awaiting written-spec review.
 
 ## Remaining source/design gates
 

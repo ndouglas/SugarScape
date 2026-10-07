@@ -148,3 +148,7 @@ excavation, paused food-trip resumption after spoil disposal, separate material
 conservation and structural-access versus realized-delivery measurements.
 The [five-stage implementation plan](../plans/2026-10-06-foraging-4-construction.md)
 was approved on 2026-10-06. All five engineering stages and independent task/whole-branch reviews are complete. Runtime `25375c3` passed workspace 2,852/0/103 (passed/failed/existing ignored), rustdoc, formatting and core Clippy. Verified local integration into `main` completed at `568a3fa` on 2026-10-07; fresh merged-tree workspace verification also reports 2,852 passed, 0 failed and 103 existing ignored, with formatting and core all-target Clippy clean. Evidence and cleanup are recorded in the plan; only this feature worktree/branch were retired. Scientific evaluation has not started.
+
+## F5 design handoff
+
+The user approved mechanism-first scope and an immutable collector/saved-only analyzer architecture on 2026-10-07. The [draft F5 comparison specification](2026-10-07-foraging-5-shortcut-comparison-design.md) now records supplied geometry, controls, fixed candidate workload, outcomes and archive boundaries for written-spec review. The [preliminary source audit](../../studies/2026-10-07-foraging-shortcut-reading.md) retains unresolved data/figure access and model/source differences. Implementation planning, executable registration and scientific collection remain separate; no F5 scientific outcome exists.
