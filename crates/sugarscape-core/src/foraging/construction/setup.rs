@@ -187,14 +187,14 @@ impl Setup {
     pub(super) fn contains(&self, p: Pos) -> bool {
         p.x < self.width && p.y < self.height
     }
-    pub fn site(&self, p: Pos) -> Checked<u64> {
+    pub fn site(&self, p: Pos) -> Result<u64, Vec<FieldError>> {
         dimensions(self.width, self.height)?;
         if !self.contains(p) {
             return Err(vec![FieldError::new("site", "must be inside the grid")]);
         }
         Ok(u64::from(p.y) * u64::from(self.width) + u64::from(p.x))
     }
-    pub fn position(&self, site: u64) -> Checked<Pos> {
+    pub fn position(&self, site: u64) -> Result<Pos, Vec<FieldError>> {
         dimensions(self.width, self.height)?;
         if site >= u64::from(self.width) * u64::from(self.height) {
             return Err(vec![FieldError::new(

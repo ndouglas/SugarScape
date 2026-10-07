@@ -39,6 +39,14 @@ fn rejects_bad_dimensions_and_lengths() {
     assert!(s.validate().is_err());
 }
 #[test]
+fn rejects_solid_diggable_waste_outlet() {
+    let mut s = setup();
+    s.waste = pos(2, 1);
+    s.diggable.push(s.waste);
+    let errors = s.validate().unwrap_err();
+    assert!(errors.iter().any(|error| error.field == "waste"));
+}
+#[test]
 fn rejects_original_indexed_geometry_food_and_parameter_errors() {
     let mutations: Vec<fn(&mut Setup)> = vec![
         |s| s.open.push(s.open[0]),
