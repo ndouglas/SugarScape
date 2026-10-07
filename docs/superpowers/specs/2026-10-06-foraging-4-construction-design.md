@@ -1,7 +1,7 @@
 # F4: shared-worker construction and food return
 
 **Date:** 2026-10-06.
-**Status:** conversational architecture approved: one worker kind can forage and excavate, hands hold one food or spoil token, loaded workers finish transport first, food and spoil have separate destinations, and private maps revise locally observed openings. The user explicitly deferred role allocation and relay transport. The user approved the complete written spec on 2026-10-06. The [implementation plan](../plans/2026-10-06-foraging-4-construction.md) is prepared for written review; execution has not started.
+**Status:** conversational architecture approved: one worker kind can forage and excavate, hands hold one food or spoil token, loaded workers finish transport first, food and spoil have separate destinations, and private maps revise locally observed openings. The user explicitly deferred role allocation and relay transport. The user approved the complete written spec on 2026-10-06. The [implementation plan](../plans/2026-10-06-foraging-4-construction.md) was approved by the user on 2026-10-06; engineering execution is starting.
 **Programme:** [F1–F5 foraging/construction sequence](2026-10-04-foraging-construction-design.md), construction B3.
 **Baselines:** [F3 passage foraging](2026-10-05-foraging-3-passage-design.md), merged at `c0e551a` with verified integration recorded at `852fcbc`; [Burrow excavation](2026-10-03-burrow-1-excavation-design.md) and [structural access](2026-10-04-burrow-2-resource-access-design.md).
 
@@ -158,7 +158,7 @@ Spec self-review checked the F3/Burrow source patterns, both conservation equati
 
 ## Handoff and deferred work
 
-Conversational architecture and the complete written spec are approved; the implementation plan awaits written review on isolated `foraging-4-design`, created from current main `e733b98` after concurrent Crowd work advanced it. The foraging/Burrow baseline matches verified integration `852fcbc`; other campaigns were preserved. The [five-stage implementation plan](../plans/2026-10-06-foraging-4-construction.md) is prepared for review. No runtime change, merge, push or scientific evaluation is performed here. Plan approval precedes code under the standing subagent-driven preference.
+Conversational architecture and the complete written spec are approved; the implementation plan is approved on isolated `foraging-4-design`, created from current main `e733b98` after concurrent Crowd work advanced it. The foraging/Burrow baseline matches verified integration `852fcbc`; other campaigns were preserved. The [five-stage implementation plan](../plans/2026-10-06-foraging-4-construction.md) was approved on 2026-10-06; engineering execution uses the standing subagent-driven preference. Integration, push and scientific evaluation remain separate.
 
 Future role allocation can vary who chooses food/excavation and how workers coordinate. Future relay transport must add loose material, drop/pickup/handoff costs, history bounds and obstruction choices without conflating food and spoil. Those features are explicitly deferred, not hidden incomplete behavior in the first F4 contract.
 

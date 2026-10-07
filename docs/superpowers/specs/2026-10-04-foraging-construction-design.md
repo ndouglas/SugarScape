@@ -147,5 +147,5 @@ transport are explicitly deferred. The spec proposes exploration before
 excavation, paused food-trip resumption after spoil disposal, separate material
 conservation and structural-access versus realized-delivery measurements.
 The [five-stage implementation plan](../plans/2026-10-06-foraging-4-construction.md)
-is prepared for written review with subagent-driven execution already selected.
-Runtime implementation and scientific evaluation have not started.
+was approved on 2026-10-06; subagent-driven engineering execution is starting.
+Scientific evaluation has not started.

@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Spec approved on 2026-10-06. This written implementation plan awaits review; code has not started. Subagent-driven execution is already selected by the user's standing instructions.
+- Spec approved on 2026-10-06. The user approved this written implementation plan on 2026-10-06; engineering execution is starting. Subagent-driven execution is already selected by the user's standing instructions.
 - One homogeneous worker kind; one tagged Food/Spoil token or empty hands. Role allocation, relay transport, drops, loose/initial spoil, piles, sharing and mid-load switching are explicitly deferred.
 - Dimensions 3–125; 1–256 spawn-list workers; food 0–256 with arbitrary unique u64 IDs/distinct cells outside nest/outlet; 1–7,200 ticks and at most 1,000,000 opportunities.
 - Nest has at least two connected initially open cells; workers spawn there; capacity two applies to every cell. One initially open outlet lies outside nest and connects to it through initial open cells. It need not be diggable.
@@ -107,6 +107,7 @@ struct Terrain {
 // Terrain::new(&Setup) -> Checked<Terrain>, validates before dense allocation
 // Terrain::is_open(&self, Pos) -> Checked<bool>
 // Terrain::is_diggable(&self, Pos) -> Checked<bool>, eligibility = solid && mask
+// Terrain::was_excavated(&self, Pos) -> Checked<bool>, open now but initially solid
 // Terrain::dig(&mut self, Pos) -> Checked<()>, no cargo responsibility here
 // Terrain::counts(&self) -> TerrainInventory
 // Terrain::open_positions(&self) -> Vec<Pos>, sorted Pos
@@ -144,7 +145,7 @@ struct PcgDraws<'a>(&'a mut crate::rng::SimRng);
 // choose(&[Pos],&mut impl DrawSource) -> Checked<Option<Pos>>
 ```
 
-Do not invoke private F3 `Pos::neighbors` or `Parameters::information`. Implement the tiny construction-local geometry helper and construct the unchanged CpfaParameters adapter in Task 3 using public parameter fields with omega/lambda_informed zero. Public aliased Parameters::validate is available.
+Do not invoke private F3 `Pos::neighbors` or `Parameters::information`. Implement the tiny construction-local geometry helper and construct the unchanged CpfaParameters adapter in Task 3 using public parameter fields with omega/lambda_informed zero. Public aliased Parameters::validate is available. Terrain::was_excavated is a read-only physical history predicate for spoil-origin checks; it never enters worker inputs. AccessObserver::check keeps its cache/record validation encapsulated rather than exposing mutable fields to controller.
 
 Fixture in tests/mod.rs:
 
@@ -338,6 +339,7 @@ struct AccessDelta { exposure:Option<EventMilestone>,access:Option<EventMileston
 // milestone(&self,&EventContext,pos:Pos) -> Checked<EventMilestone>
 // summary(&self) -> Checked<AccessSummary>
 // distance(&self,pos:Pos) -> Checked<Option<u32>>
+// check(&self,&Setup,&Terrain,&FoodLedger) -> Checked<()>, researcher cache/records
 pub struct Milestones {
     pub first_excavation:Option<EventMilestone>,pub first_exposure:Option<EventMilestone>,
     pub first_access:Option<EventMilestone>,pub first_disposal:Option<EventMilestone>,
@@ -378,7 +380,7 @@ fn connected_exposed_pocket_gets_access_without_exposure_event() {
 }
 ```
 
-- [ ] Test initial accessibility with None event, empty/protected censoring, stable per-food IDs, first milestone frozen after shorter later routes, cached current distances, readonly observer summaries, and separate calls/visits/max peaks. Concrete detour case: nest `(0,0),(1,0)`, waste `(0,1)`, initial open path `(1,1),(1,2),(2,2),(3,2)` and exposed food `(3,0)`; masked gap `(3,1)` establishes first access with distance6, then masked `(2,0)` shortens current distance to2 while first_access distance stays6. Use valid ascending-ID event contexts, for example tick10/opportunity11 then tick20/opportunity21 for one worker. Valid update provenance must be a successful one-cell terrain increment; wrong dimensions/future/inconsistent exposure/cache errors retain observer state. Work checked sums/equations atomic under overflow.
+- [ ] Test initial accessibility with None event, empty/protected censoring, stable per-food IDs, first milestone frozen after shorter later routes, cached current distances, readonly observer summaries, and separate calls/visits/max peaks. Concrete detour case: nest `(0,0),(1,0)`, waste `(0,1)`, initial open path `(1,1),(1,2),(2,2),(3,2)` and exposed food `(3,0)`; masked gap `(3,1)` establishes first access with distance6, then masked `(2,0)` shortens current distance to2 while first_access distance stays6. Use valid ascending-ID event contexts, for example tick10/opportunity11 then tick20/opportunity21 for one worker. Valid update provenance must be a successful one-cell terrain increment; wrong dimensions/future/inconsistent exposure/cache errors retain observer state. AccessObserver::check validates dimensions, seen-dig/call counts, context/record bounds and cached distance consistency: closed cells None, nest cells zero, every non-nest Some distance has an open predecessor one smaller, adjacent reachable open distances differ at most one, and an open None cell cannot adjoin a Some cell. No extra counted BFS is run by check/views. Work checked sums/equations atomic under overflow.
 - [ ] Verify focused GREEN/fmt/core clippy/workspace; fresh reviews/Stage 3; commit `feat(foraging): conserve construction materials and record food access`.
 
 ### Task 4: Coupled worker decisions and complete atomic ticks
@@ -549,4 +551,4 @@ Plan type names/fields/signatures and visibility were checked across consuming t
 
 Clarification during planning: the spec's acceptance phrase “protected/solid outlet” meant a solid outlet is invalid whether protected or diggable. An initially open outlet need not be in the diggable mask; its explicit setup contract requires openness/connectivity, not excavatable substrate. The spec wording is corrected accordingly, and Task 1 pins the valid open-unmasked case. This changes no intended physics or architecture.
 
-The user approved the written spec on 2026-10-06. This written plan awaits review; the execution method is already subagent-driven. After plan approval, verify current worktree/base/concurrent work, establish fresh baseline, create the five-stage tracker and begin Task 1. No implementation or scientific execution has occurred during planning.
+The user approved the written spec on 2026-10-06. The user approved this written plan on 2026-10-06; subagent-driven execution is starting. Verify current worktree/base/concurrent work, establish fresh baseline, create the five-stage tracker and begin Task 1 without asking for approval/method again. Scientific execution remains separate.
