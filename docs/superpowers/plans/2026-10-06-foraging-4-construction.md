@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Spec approved on 2026-10-06. The user approved this written implementation plan on 2026-10-06; engineering execution is starting. Subagent-driven execution is already selected by the user's standing instructions.
+- Spec approved on 2026-10-06. The user approved this written implementation plan on 2026-10-06; engineering execution is complete. Subagent-driven execution is already selected by the user's standing instructions.
 - One homogeneous worker kind; one tagged Food/Spoil token or empty hands. Role allocation, relay transport, drops, loose/initial spoil, piles, sharing and mid-load switching are explicitly deferred.
 - Dimensions 3–125; 1–256 spawn-list workers; food 0–256 with arbitrary unique u64 IDs/distinct cells outside nest/outlet; 1–7,200 ticks and at most 1,000,000 opportunities.
 - Nest has at least two connected initially open cells; workers spawn there; capacity two applies to every cell. One initially open outlet lies outside nest and connects to it through initial open cells. It need not be diggable.
@@ -543,7 +543,7 @@ cargo test --workspace
 git diff --check
 ```
 
-- [ ] Fresh Task 5 spec/quality review, then parent whole-branch review against approved spec/plan/evidence. Resolve blocking findings through consolidated scoped corrections with observed reds, greens and fresh re-review. Parent owns tracker completion/removal and evidence archival after final gate; implementer does not spawn reviewers or claim review approval. Commit `feat(foraging): expose bounded construction runs and access outcomes`, then evidence-only archive as appropriate. No feature merge/push/scientific execution here.
+- [x] Fresh Task 5 spec/quality review, then parent whole-branch review against approved spec/plan/evidence. Resolve blocking findings through consolidated scoped corrections with observed reds, greens and fresh re-review. Parent owns tracker completion/removal and evidence archival after final gate; implementer does not spawn reviewers or claim review approval. Commit `feat(foraging): expose bounded construction runs and access outcomes`, then evidence-only archive as appropriate. No feature merge/push/scientific execution here.
 
 ## Planning clarification and self-review
 
@@ -553,7 +553,7 @@ Plan type names/fields/signatures and visibility were checked across consuming t
 
 Clarification during planning: the spec's acceptance phrase “protected/solid outlet” meant a solid outlet is invalid whether protected or diggable. An initially open outlet need not be in the diggable mask; its explicit setup contract requires openness/connectivity, not excavatable substrate. The spec wording is corrected accordingly, and Task 1 pins the valid open-unmasked case. This changes no intended physics or architecture.
 
-The user approved the written spec on 2026-10-06. The user approved this written plan on 2026-10-06; subagent-driven execution is starting. Verify current worktree/base/concurrent work, establish fresh baseline, create the five-stage tracker and begin Task 1 without asking for approval/method again. Scientific execution remains separate.
+The user approved the written spec on 2026-10-06. The user approved this written plan on 2026-10-06; subagent-driven execution is complete. Current worktree/base/concurrent work were verified, the baseline and five-stage tracker established, and all five implementation stages completed without repeating approval. Scientific execution remains separate.
 
 ## Execution and review evidence — 2026-10-06
 
@@ -590,4 +590,27 @@ Task4 runtime `d75c2d9`:117 construction tests including38 controller/workspace2
 
 Task4 ruling: KnownOpen informed-site travel clears obsolete face only while retaining F3 frontier cadence. Parent checked F3 branch and required direct retained-frontier/cleared-face/action/draw regression. If wrong, small private policy/test rework; no F3 production change.
 
-Task5 runtime `25375c3`: runner14/public6/workspace2,852 passed,0 failed,103 ignored; construction rustdoc/fmt/core clippy/diffcheck clean. Independent task review approved with no findings, including a focused unchanged-helper view-purity check; parent matched all474 frozen files (471Rust plus guide/tracker/spec). Final whole-branch review and archival remain pending. All five implementation task reviews are complete.
+Task5 runtime `25375c3`: runner14/public6/workspace2,852 passed,0 failed,103 ignored; construction rustdoc/fmt/core clippy/diffcheck clean. Independent task review approved with no findings, including a focused unchanged-helper view-purity check; parent matched all474 frozen files (471Rust plus guide/tracker/spec). Final whole-branch review approved the result; archival is complete. All five implementation task reviews are complete.
+
+## Final review and completion
+
+Whole-branch review of `e733b98..2fa0802` approved merge readiness with no Critical, Important or runtime findings. Its sole minor status-wording item is resolved by this evidence-only archive. All five stages are complete. Final runtime `25375c3` passed workspace2,852/0/103, runner14/public6, construction rustdoc, formatter and core all-target Clippy. Exact commands, frozen-source audits, review reports and supplemental test timing are preserved at `/tmp/sugarscape-f4-evidence-20261006/sdd/`. No runtime change follows that verification. The completed root tracker is removed after preservation; feature branch/worktree remain for the integration choice. No scientific execution was performed.
+
+### Rulings I made
+
+- Controller dynamic knowledge checks validate remembered diggability against an indexed immutable Setup.diggable set, not Terrain::is_diggable, which is current solid-and-mask eligibility — legitimate stale opened walls otherwise falsely fail; the authoritative index stays outside worker inputs — if wrong, belief validation needs rework; no added knowledge or runtime policy is introduced.
+- Add internal Terrain::was_excavated for spoil-origin validation and AccessObserver::check for encapsulated cached-distance/record invariants — existing exact validation duties need physical history and private observer checks without opening fields or rerunning counted BFS — if wrong, internal accessors/checks need rework; worker knowledge and public API remain unchanged.
+- Task5 may add one cfg(test) crate-visible F3 PCG probe in passage/mod.rs, returning a fixed array of raw outputs from a cloned World RNG — construction tests cannot access sibling-private F3 RNG but the approved plan requires no-dig continuation comparison; no field visibility, simulation behavior or production API changes — if wrong, remove/rework the test-only seam; original worlds remain unmodified. Apply tracked plan ownership update after Task2 commit/review to avoid dirtying implementer workspace mid-gate.
+- Task3 AccessObserver adds private observed_open:Vec<bool> of exactly grid size. Existing dimensions/digcount/distances cannot distinguish new openings from corrupted prior-cache None entries; full planned rollback requires prior graph provenance. Validate old cache locally on stored graph, exactly one terrain false->true increment, then one staged BFS/candidate check. No worker/API/history or extra BFS; if wrong remove/rework field/validation at cost of one grid-sized bitmap. Plan/brief/shared contracts updated during Task3 by parent, implementer informed.
+- Task3 provenance — reject newly opened cells with no physical nest distance, since legal worker Digs originate from nest-connected reachable cells and EventMilestone has nonoptional distance. Initial disconnected pockets stay valid/censored. No encoding/API change; if wrong, observer primitive provenance/event representation needs rework. Focused rollback coverage required; record tracked at next parent bookkeeping.
+- Task3 self-review invariant — validate strictly ordered food IDs before binary-search transactions; require after-Dig context spoil_disposed < excavated because the new token remains carried. Accepted within planned invariant/provenance checks, targeted supplemental red/green required. If wrong, relax/rework local validation; no legal-worker behavior/API change. Track at next parent bookkeeping.
+- Task3 fixture — require one-worker observer detour contexts to record prior spoil disposal before second Dig; fix helper only. Declined additional production disposal lower-bound rule in observer because no spoil ledger is passed and physical/joined checks belong to controller. Await running v2 suite, refreeze corrected fixture and final gates on exact tree; retain timing/evidence. If wrong, test context or observer validation responsibility needs rework. Track at next bookkeeping.
+- Task4 KnownOpen informed-site pursuit clears obsolete face only, retaining frontier to match F3 target cadence. Parent checked F3 decision.rs120–126 after implementer raised compatibility concern. Direct test must assert retained frontier/cleared face plus unchanged action/draw behavior; no F3 production change. If wrong, small policy/test rework; authoritative state remains private.
+- Final-review boundary — Accept scientific efficacy/biological fidelity/termite comparisons as deferred: this engineering increment supplies deterministic mechanics, not an approved controlled study. If wrong, source/protocol/evaluation work is required.
+- Final-review boundary — Accept roles/relay/drops/piles/sharing/mid-load switching as excluded from homogeneous direct transport. If wrong, design and implement new allocation/material/handoff states and costs.
+- Final-review boundary — Accept congestion, finite-horizon censoring and no universal completion/fairness guarantee; conservation, cargo retention and paid waits remain judged. If wrong, redesign scheduler/progress policy and tests.
+- Final-review boundary — Accept no absolute throughput or resident-memory guarantee; finite grid/map/record/scratch and snapshot-JSON bounds are judged and documented. If wrong, define and verify performance/memory budgets.
+- Final-review boundary — Accept no cross-platform/version trajectory identity or universal F3 equivalence beyond compatible no-dig scenes; native replay and specified projections are judged. If wrong, add portability/versioning and broader equivalence work.
+- Final-review boundary — Accept no restoration or arbitrary external private-state editing contract; specified corruption/illegal-action rollback is judged. If wrong, add a restoration schema/validation and corruption-coverage contract.
+- Final-review boundary — Accept CLI/WASM/browser/ModelKind/persistent migrations/deployment as excluded from this core-only API increment. If wrong, design and implement those integration surfaces.
+- Final-review boundary — Accept merge/push/concurrent-tree verification as separate from read-only branch review; verify actual integration after its selection. If wrong, review and verify the actual merged tree before claiming integration.

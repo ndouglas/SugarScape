@@ -265,16 +265,20 @@ calibration is not imported. F4 must explicitly handle excavation changing
 Unknown/KnownSolid cells and maintain separate spoil/food ledgers, destinations,
 hands and paid actions; immutable F3 knowledge is insufficient for dynamic maps.
 
-## F4 implementation in progress
+## F4 engineering completion
 
-The [construction coupling spec](superpowers/specs/2026-10-06-foraging-4-construction-design.md)
-proposes shared workers, one tagged food/spoil carrying slot, paid excavation,
+The implementation follows the [construction coupling spec](superpowers/specs/2026-10-06-foraging-4-construction-design.md)
+with shared workers, one tagged food/spoil carrying slot, paid excavation,
 direct spoil transport to a separate outlet, and private local map revisions.
 The user approved that conversational architecture and deferred role allocation
 and relay transport. The written spec was approved on 2026-10-06. The
 [five-stage implementation plan](superpowers/plans/2026-10-06-foraging-4-construction.md)
-was approved on 2026-10-06; subagent-driven engineering execution is starting.
-Scientific evaluation has not started.
+was approved on 2026-10-06. All five implementation stages and independent task
+reviews are complete; the whole-branch review approved the engineering result.
+Final runtime `25375c3` passed 2,852 workspace tests with zero failures and 103
+existing ignored; construction rustdoc, formatting and core Clippy passed.
+Integration awaits selection; scientific evaluation has not started. Detailed
+evidence is archived at `/tmp/sugarscape-f4-evidence-20261006/sdd/`.
 
 
 ## Construction public usage (F4)
