@@ -139,11 +139,13 @@ separate excavation and spoil/food integration increment.
 
 ## F4 follow-up
 
-The [F4 construction design](2026-10-06-foraging-4-construction-design.md) is
-prepared for written review. Shared workers, direct transport, one common
+The [F4 construction design](2026-10-06-foraging-4-construction-design.md) was
+approved by the user on 2026-10-06. Shared workers, direct transport, one common
 carrying slot, distinct food/spoil destinations and local dynamic-map updates
 were approved conversationally on 2026-10-06. Role allocation and relay
 transport are explicitly deferred. The spec proposes exploration before
 excavation, paused food-trip resumption after spoil disposal, separate material
 conservation and structural-access versus realized-delivery measurements.
-Implementation planning/execution and scientific evaluation have not started.
+The [five-stage implementation plan](../plans/2026-10-06-foraging-4-construction.md)
+is prepared for written review with subagent-driven execution already selected.
+Runtime implementation and scientific evaluation have not started.
