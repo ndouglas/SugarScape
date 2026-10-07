@@ -1,9 +1,11 @@
 # Minds P3: costly re-caching findings
 
 **Campaign label:** 2026-10-06 (America/New_York). **Execution and reporting UTC date:** 2026-10-07.
-**Status:** complete fixed native campaign and saved-data reanalysis; findings and figures pending independent empirical and visual review. This reporting record does not change the original registration.
+**Status:** COMPLETE MEASURED / REVIEWED: fixed native campaign, saved-data reanalysis, findings and all eight PNG/SVG figures independently Approved with no open findings. Whole-branch integration, publication and final archival remain pending. This reporting record does not change the original registration.
 **Registration:** [design](2026-10-02-minds-protection-design.md), [fixed protocol](2026-10-02-minds-protection-protocol.md), [completed implementation plan](../plans/2026-10-02-minds-protection.md).
 **Evidence:** [complete public packet](../../../survey/out/minds-protection-2026-10-06/README.md), [exact analysis](../../../survey/out/minds-protection-2026-10-06/analysis.json), [all comparisons and cells](../../../survey/out/minds-protection-2026-10-06/results.md), [reproducibility register](../../reproducibility.md#rr-p3-01).
+
+**Actual empirical review:** [Approved receipt](../../../survey/out/minds-protection-2026-10-06/provenance/task-p3-empirical-review.md) and [exact identities](../../../survey/out/minds-protection-2026-10-06/provenance/task-p3-empirical-review.json) bind reporting HEAD `68614dbd4d47f8437ff194e8d8900b6be63db346` and the prior 58-member reviewed packet. Later receipt/status packaging is separately inventoried and does not claim the review approved its own addition.
 
 ## What this campaign measured
 

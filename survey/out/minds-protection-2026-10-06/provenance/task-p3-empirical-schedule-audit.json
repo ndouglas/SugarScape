@@ -1,0 +1,12 @@
+{
+  "reviewer": "/root/p3_empirical_review",
+  "audited_utc": "2026-10-07T01:44:54.654307+00:00",
+  "exact_proscribed_estimate_identity_set_verified": 208,
+  "raw_schedule_checks": 7680,
+  "restriction_counts": {
+    "{'1': 8, '2': 12}": 3840,
+    "{'1': 8, '2': 20}": 1280,
+    "{'1': 8, '2': 18}": 2560
+  },
+  "old_new_arrival_raid_checks": 7680
+}

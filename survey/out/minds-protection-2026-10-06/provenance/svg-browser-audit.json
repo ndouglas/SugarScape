@@ -1,0 +1,82 @@
+[
+  {
+    "figure": "01-primary",
+    "clipped": [],
+    "fonts": [
+      "\"DejaVu Sans\""
+    ],
+    "height": 875.1953125,
+    "textCount": 65,
+    "width": 1163.1953125
+  },
+  {
+    "figure": "02-opportunity",
+    "clipped": [],
+    "fonts": [
+      "\"DejaVu Sans\""
+    ],
+    "height": 875.1953125,
+    "textCount": 58,
+    "width": 1355.1953125
+  },
+  {
+    "figure": "03-memory-erased",
+    "clipped": [],
+    "fonts": [
+      "\"DejaVu Sans\""
+    ],
+    "height": 875.1953125,
+    "textCount": 62,
+    "width": 1355.1953125
+  },
+  {
+    "figure": "04-stumble-contrasts",
+    "clipped": [],
+    "fonts": [
+      "\"DejaVu Sans\""
+    ],
+    "height": 1067.1953125,
+    "textCount": 142,
+    "width": 2027.1953125
+  },
+  {
+    "figure": "05-single-cells",
+    "clipped": [],
+    "fonts": [
+      "\"DejaVu Sans\""
+    ],
+    "height": 1381.15625,
+    "textCount": 855,
+    "width": 1516.9453125
+  },
+  {
+    "figure": "06-mixed-cells",
+    "clipped": [],
+    "fonts": [
+      "\"DejaVu Sans\""
+    ],
+    "height": 826.96875,
+    "textCount": 473,
+    "width": 1435.03125
+  },
+  {
+    "figure": "07-cue-cells",
+    "clipped": [],
+    "fonts": [
+      "\"DejaVu Sans\""
+    ],
+    "height": 826.96875,
+    "textCount": 472,
+    "width": 1500.265625
+  },
+  {
+    "figure": "08-stumble-cells",
+    "clipped": [],
+    "fonts": [
+      "\"DejaVu Sans\""
+    ],
+    "height": 1381.15625,
+    "textCount": 855,
+    "width": 1492.2578125
+  }
+]

@@ -2983,7 +2983,7 @@ Our own bounded mechanism experiment extends watching with local memory of wheth
 was visible at burial, followed by paid physical relocation. The fixed campaign completed all
 192 conditions × 40 seeds (7,680 episodes), with [208 descriptive estimates and full evidence](survey/out/minds-protection-2026-10-06/README.md);
 the [dated findings and figures](docs/superpowers/specs/2026-10-06-minds-protection-findings.md)
-await independent reporting review.
+are independently reviewed; publication and final archival remain pending.
 
 After initially observed burial, private re-caching changes Selective minus Off by −12 original
 food units transferred and +12 owner ticks free/+9 paid. Renewed observation changes those effects

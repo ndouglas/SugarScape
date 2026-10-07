@@ -10,8 +10,8 @@ identity and measurement gaps, corrected issues and concrete next actions across
 catalog and Minds programme. It keeps conditional mismatches separate from unmeasured leads.
 
 The [2026-10-06 Minds P3 findings](superpowers/specs/2026-10-06-minds-protection-findings.md)
-report the complete registered re-caching mechanism campaign (7,680 episodes), pending independent
-reporting review. Corvid sources motivate its qualitative interventions; this is our own experiment,
+report the complete registered re-caching mechanism campaign (7,680 episodes), independently
+reviewed; publication remains pending. Corvid sources motivate its qualitative interventions; this is our own experiment,
 not a numerical reproduction of a source paper. Costs, renewed observation, cue mismatch and
 reflected recovery geometry remain visible in all registered comparisons.
 

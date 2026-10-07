@@ -2,8 +2,8 @@
   "members": [
     {
       "path": "README.md",
-      "bytes": 6580,
-      "sha256": "ba932e4106102dbf2e58b12fb690085067fa61e412957b5ae578836c5212f38b"
+      "bytes": 5373,
+      "sha256": "b392e21a731304517355434cf53976f0b61803648f5c54737203ce4038a85deb"
     },
     {
       "path": "analysis.json",
@@ -156,11 +156,6 @@
       "sha256": "7b56663339d4f1fa7d2997283e4a1b06b5b20030b11af0f101a4bbfa0b67abae"
     },
     {
-      "path": "provenance/empirical-reviewed-public-members.json",
-      "bytes": 9892,
-      "sha256": "515f0fea9fc01dfac877d11ce93f5d568d22af6c3036d8709df9160307752dde"
-    },
-    {
       "path": "provenance/manifest.json",
       "bytes": 76286,
       "sha256": "e594664990afcf949c13a0090d38daeb57f9466f52f2fe7f4ad5f293abfc257f"
@@ -226,11 +221,6 @@
       "sha256": "dfd5af8a4c315c09a3f13c8de693c112c42165028697003ea16ec4a3e815137c"
     },
     {
-      "path": "provenance/svg-browser-audit.json",
-      "bytes": 1445,
-      "sha256": "98ba20eda7434cff745f88e41e4d74560b8f17b37246d2e0f9ecfb2f692cf22e"
-    },
-    {
       "path": "provenance/task-p3-archive-staging-report.json",
       "bytes": 4076,
       "sha256": "d5ef5aea4157dc2646a191197599aacc0fe4c85f188af01278d1ecd85b9faf12"
@@ -261,26 +251,6 @@
       "sha256": "aeaac56a9a57bfd811d008f805dde7051fe0d37ecba579bd8f48a5222929826b"
     },
     {
-      "path": "provenance/task-p3-empirical-initial-audit.json",
-      "bytes": 2672,
-      "sha256": "9bd824f87ea87fa0cd7171b069d5d85831772f8624651e116b925256ea690601"
-    },
-    {
-      "path": "provenance/task-p3-empirical-review.json",
-      "bytes": 40027,
-      "sha256": "16a144917d8df8656926f124442102f440cb52e5b41ef40d1b33da06feb27ff2"
-    },
-    {
-      "path": "provenance/task-p3-empirical-review.md",
-      "bytes": 5444,
-      "sha256": "397fe57eadf584cb7fed3d5d39fc36b1d9e4527a23e1bef29fb43d0947014218"
-    },
-    {
-      "path": "provenance/task-p3-empirical-schedule-audit.json",
-      "bytes": 350,
-      "sha256": "6b01cb370f6befe59a62e304c708a7530d81718a032a85f12a03f1bb849a1f92"
-    },
-    {
       "path": "provenance/task-p3-prospective-review.json",
       "bytes": 12764,
       "sha256": "004e55b11c197ec7411579afadec0d52dd3be6f0fef0e3bf486d0407fb1f568d"
@@ -307,8 +277,8 @@
     },
     {
       "path": "provenance.json",
-      "bytes": 4948,
-      "sha256": "d4d271d671b1502475d490ef4d2094d2cd37154ad37577a826146ef6823dde29"
+      "bytes": 1733,
+      "sha256": "0391442411f99ab0360c2da057635c844073cbe56d9a54732365877b79f67d7d"
     },
     {
       "path": "reporting-validation.json",

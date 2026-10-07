@@ -10,7 +10,7 @@ their mechanisms, empirical targets and implementation plans require individual 
 reviewed and merged. Scientific execution of its
 [protocol](2026-10-02-minds-protection-protocol.md) is complete: all 7,680 fixed episodes and
 208 descriptive estimates are retained in the [dated P3 findings](2026-10-06-minds-protection-findings.md),
-pending independent empirical/reporting review. Private relocation helps in some single-cache
+independently reviewed; publication pending. Private relocation helps in some single-cache
 strata; renewed observation, costs, cue mismatch and reflected recovery geometry constrain benefit.
 Deception follows as a separate design. [Hornvale's repaired asks request](../../studies/prompts/2026-10-03-hornvale-asks-prompt-v2.md)
 adds an independent exchange-design branch using the existing identity, memory and valuation
