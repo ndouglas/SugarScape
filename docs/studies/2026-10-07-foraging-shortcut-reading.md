@@ -28,7 +28,7 @@ F4 supports at most 256 workers, two-worker cell capacity, finite nonregeneratin
 
 Because F4 keeps food-access records at original resource positions after delivery, their cached current nest distances can describe structural route shortening separately from realized pickup/delivery. An initially accessible food site has no first-access event: its initial distance and subsequent current distance are the relevant comparison. No hidden physical distance may guide workers.
 
-## Proposed first comparison, pending design discussion
+## Approved comparison scope; design discussion continues
 
 The working recommendation is a mechanism-oriented test of whether paid excavation can improve finite-horizon food return in F4. It would use common nest, outlet, food patch, worker spawns, explicit fixed controller parameters, horizon and predetermined seed blocks across geometry-inspired straight/detour/twisting layouts.
 
@@ -36,7 +36,7 @@ For each layout, compare paid diggable terrain with the same initial open route 
 
 Candidate outcomes are delivered food by cutoff; pickup/delivery timing with censored failures; current shortest physical distances; excavation, food/spoil carrying, disposal and congestion work. Report components separately rather than inventing an energy-weighted net score. Protected or unfinished food/cargo remain recorded, and all worlds execute the same full horizon. No preferred seed, optimized parameters or guaranteed shortcut/delivery result is selected here.
 
-A geometry-only benchmark is a smaller alternative, but would not establish the delivery/cost question. Quantitative biological reproduction is a larger alternative requiring recovered data, geometry/width/backfill/feeding definitions and calibration beyond current F4. The user has been asked which primary claim to pursue; no answer is presumed by this note.
+A geometry-only benchmark is a smaller alternative, but would not establish the delivery/cost question. Quantitative biological reproduction is a larger alternative requiring recovered data, geometry/width/backfill/feeding definitions and calibration beyond current F4. The user approved the mechanism-first comparison scope on 2026-10-07. Collection/analysis architecture, exact geometries and frozen protocol values remain to be designed and approved.
 
 ## Remaining source/design gates
 
