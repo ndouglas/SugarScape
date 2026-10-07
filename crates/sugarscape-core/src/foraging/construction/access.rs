@@ -22,23 +22,28 @@ pub struct EventMilestone {
     pub pos: Pos,
     pub nest_distance: u32,
 }
+/// Researcher physical access for one original food token, independent of
+/// worker knowledge and occupancy. First-event distances remain frozen;
+/// `distance` is the cached current shortest open path to any nest cell.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
-pub(super) struct FoodAccessRecord {
-    pub(super) id: u64,
-    pub(super) initially_exposed: bool,
-    pub(super) initially_accessible: bool,
-    pub(super) first_exposure: Option<EventMilestone>,
-    pub(super) first_access: Option<EventMilestone>,
-    pub(super) accessible: bool,
-    pub(super) distance: Option<u32>,
+pub struct FoodAccessRecord {
+    pub id: u64,
+    pub initially_exposed: bool,
+    pub initially_accessible: bool,
+    pub first_exposure: Option<EventMilestone>,
+    pub first_access: Option<EventMilestone>,
+    pub accessible: bool,
+    pub distance: Option<u32>,
 }
+/// Cached physical food connectivity and separate researcher computation.
+/// Initial flags describe setup geometry and never fabricate action milestones.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
-pub(super) struct AccessSummary {
-    pub(super) initially_exposed: u32,
-    pub(super) initially_accessible: u32,
-    pub(super) accessible: u32,
-    pub(super) records: Vec<FoodAccessRecord>,
-    pub(super) compute: AccessCompute,
+pub struct AccessSummary {
+    pub initially_exposed: u32,
+    pub initially_accessible: u32,
+    pub accessible: u32,
+    pub records: Vec<FoodAccessRecord>,
+    pub compute: AccessCompute,
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct AccessObserver {

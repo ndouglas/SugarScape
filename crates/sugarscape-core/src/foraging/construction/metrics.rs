@@ -2,17 +2,17 @@ use super::Checked;
 use crate::config::FieldError;
 /// Computational diagnostics; queue peaks aggregate by maximum rather than sum.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize)]
-pub(super) struct ComputeCounts {
-    pub(super) observations: u64,
-    pub(super) cells_inspected: u64,
-    pub(super) cells_learned: u64,
-    pub(super) observed_revisions: u64,
-    pub(super) dig_confirmations: u64,
-    pub(super) face_scans: u64,
-    pub(super) route_calls: u64,
-    pub(super) route_visits: u64,
-    pub(super) peak_queue: u64,
-    pub(super) frontier_scans: u64,
+pub struct ComputeCounts {
+    pub observations: u64,
+    pub cells_inspected: u64,
+    pub cells_learned: u64,
+    pub observed_revisions: u64,
+    pub dig_confirmations: u64,
+    pub face_scans: u64,
+    pub route_calls: u64,
+    pub route_visits: u64,
+    pub peak_queue: u64,
+    pub frontier_scans: u64,
 }
 impl ComputeCounts {
     pub(super) fn checked_include(&mut self, other: &Self) -> Checked<()> {
@@ -55,10 +55,10 @@ impl ComputeCounts {
 
 /// Researcher-only connectivity work.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize)]
-pub(super) struct AccessCompute {
-    pub(super) calls: u64,
-    pub(super) visits: u64,
-    pub(super) peak_queue: u64,
+pub struct AccessCompute {
+    pub calls: u64,
+    pub visits: u64,
+    pub peak_queue: u64,
 }
 impl AccessCompute {
     pub(super) fn checked_include(&mut self, other: &Self) -> Checked<()> {

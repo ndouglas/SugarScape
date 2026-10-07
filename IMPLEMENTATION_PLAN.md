@@ -35,4 +35,4 @@ Spec/plan approved 2026-10-06. Subagent-driven execution. Detailed evidence: doc
 **Goal**: Bounded public views/run and compatible no-dig F3 reduction.
 **Success Criteria**: Replay/purity/storage/budget checks and task/whole-branch reviews pass.
 **Tests**: `cargo test --workspace; cargo fmt --all --check; cargo clippy -p sugarscape-core --all-targets -- -D warnings`
-**Status**: Not Started
+**Status**: In Progress

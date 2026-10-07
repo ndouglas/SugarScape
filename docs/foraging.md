@@ -1,4 +1,4 @@
-# CPFA rules (F1), fixed-world reference (F2) and passage foraging (F3)
+# CPFA rules (F1), fixed-world reference (F2), passage (F3) and construction (F4)
 
 The top-level public `sugarscape_core::foraging` API verifies stateless rules from Hecker and Moses (2015). Engineering implementation and independent task/whole-branch reviews are complete; this work merged into `main` at `5819a04`. F1 neither simulates foraging nor reproduces evolved performance. It supplies no world, heading sampler, scheduler, food ledger or waypoint server.
 
@@ -275,3 +275,113 @@ and relay transport. The written spec was approved on 2026-10-06. The
 [five-stage implementation plan](superpowers/plans/2026-10-06-foraging-4-construction.md)
 was approved on 2026-10-06; subagent-driven engineering execution is starting.
 Scientific evaluation has not started.
+
+
+## Construction public usage (F4)
+
+`foraging::construction` adds `World::new`, atomic `step`, read-only `summary`,
+`snapshot` and single-worker `knowledge`, plus bounded `run`. F1/F2/F3 and
+Burrow retain their existing APIs and behavior. The [approved F4 design](superpowers/specs/2026-10-06-foraging-4-construction-design.md)
+defines one homogeneous worker population, shared hands and direct transport.
+
+```rust
+use sugarscape_core::foraging::construction::{
+    run, Parameters, Pos, Resource, RunOptions, Setup, World,
+};
+let pos = |x, y| Pos { x, y };
+let setup = Setup {
+    width: 5, height: 3,
+    open: vec![pos(0,0), pos(1,0), pos(2,0), pos(0,1)],
+    diggable: vec![pos(3,0)], nest: vec![pos(0,0), pos(1,0)],
+    waste: pos(0,1), workers: vec![pos(0,0)],
+    food: vec![Resource { id: u64::MAX, pos: pos(3,0) }],
+    parameters: Parameters {
+        p_search: 1.0, p_return: 0.0, lambda_fidelity: 0.0,
+        lambda_publish: 0.0, lambda_waypoint: 0.0,
+    },
+};
+let episode = run(setup.clone(), 12,
+    RunOptions { ticks: 40, sample_every: 7, snapshots: true }).unwrap();
+let mut world = World::new(setup, 12).unwrap();
+for _ in 0..40 { world.step().unwrap(); }
+assert_eq!(episode.summary, world.summary().unwrap());
+assert_eq!(episode.summary.work.opportunities, 40);
+assert_eq!(episode.snapshots.first().unwrap().summary.completed_ticks, 0);
+assert_eq!(episode.snapshots.last().unwrap().summary.completed_ticks, 40);
+assert_eq!(run(episode.setup.clone(), episode.seed, episode.options.clone()).unwrap(), episode);
+```
+
+All five active passage parameters are explicit: `p_search` and `p_return`
+are finite in `[0,1]`; `lambda_fidelity` and `lambda_publish` are finite in
+`[0,256]`; `lambda_waypoint` is finite and nonnegative. Construction uses
+F1 information mathematics with zero angular fields. There is no dig
+probability, role fraction, relay length or global food/route guidance.
+The example is an engineering acceptance fixture, not an efficacy claim.
+
+Setup dimensions are 3–125 per axis; workers 1–256; food 0–256 with unique
+arbitrary `u64` IDs and distinct original coordinates outside nest/outlet.
+A nest contains at least two connected initially open cells. Worker order
+identifies workers; at most two can occupy any cell. The initially open waste
+outlet lies outside the nest and connects to it through initially open cells.
+The immutable mask may overlap open cells; only currently solid masked cells
+can be excavated. Protected buried food and disconnected exposed pockets are
+valid censored inputs. Geometry and food are sorted for replay without
+reordering workers or changing food origins. Invalid fields are aggregated
+against original indices before dense allocation.
+
+Hands hold `None`, `Cargo::Food(id)` or `Cargo::Spoil(id)`; equal numeric IDs
+in the two material namespaces remain distinct. A successful Dig pays one
+opportunity, opens one cell, exposes any Hidden food and creates carried spoil.
+It does not move or collect food. Food returns to a nest cell; spoil goes directly
+to the waste outlet. Loaded workers finish their current transport first,
+subject to the same capacity and ascending-ID scheduler as empty workers.
+DisposeSpoil resumes the paused Departing/Searching food intent on the next
+opportunity, with no food arrival/publication draws or inflated food-trip counts.
+Only DepositFood can publish its successful frozen food find.
+
+Food conservation is `initial = hidden + available + carried + delivered`;
+spoil conservation is `excavated = carried + disposed`; terrain conservation
+is `open = initial_open + excavated`. Hidden food becomes Available at Dig;
+physical accessibility means a current open route to the nest, ignoring workers.
+Exposed food can remain inaccessible, and access can precede pickup and delivery.
+`Summary.access` reports fixed per-food initial flags, first new exposure/access
+and current shortest physical nest distances. First-event distances and contexts
+stay frozen as later geometry changes. Researchers pay one multi-source BFS
+at construction and each Dig, reported in `AccessCompute` separately from
+worker `ComputeCounts`. Workers never receive that cache or hidden-food locations.
+
+Private maps contain current/cardinal classifications and diggability only.
+Workers prefer reachable private open frontiers before known diggable faces.
+Another worker's dig leaves remote KnownSolid beliefs stale until fresh local
+observation; these old walls are valid private beliefs. `KnowledgeView` labels
+this memory rather than current physical truth. Snapshots expose researcher
+terrain/food/spoil/advice and small knowledge counts, with full maps requested
+one worker at a time. Views do not learn, run BFS, expire weak waypoints, revise
+milestones or draw RNG. Queue peaks aggregate by maximum; other counts use
+checked sums. Move + Dig + PickupFood + DepositFood + DisposeSpoil + Wait
+always equals paid opportunities. Food/spoil/empty movement and congestion
+remain separate, along with unpaid computation.
+
+Runs request 1–7,200 ticks and at most 1,000,000 worker opportunities;
+individual steps enforce the same cumulative bounds. Every requested tick
+runs after milestones, exhaustion or delivery. Sampling intervals must be
+positive even when disabled. Initial/final samples occur once; disabled
+recording yields no frames and zero bytes. The 64 MiB cap sums compact JSON
+for every Snapshot, including repeated inventories, access records and
+geometry, excluding the Episode/setup/options wrapper and frame delimiters.
+A bounded counting writer checks before committing each frame and byte count.
+A run error returns no successful partial Episode. Maps and route scratch are
+grid-bounded, with at most 4,000,000 classifications and at most 15,625 fixed
+spoil records; initially open mask entries do not add spoil capacity. This
+output cap is not a total-process-memory or throughput guarantee.
+
+Events use processing ticks starting at zero and one-based committed opportunity
+indices; snapshots count completed ticks. Missing pickup/delivery/access/disposal
+at cutoff is censored; carried food/spoil remains unfinished. Empty food sets
+create no fictitious completion milestone. Replay requires the same setup,
+seed, options, implementation and supported platform; no JSON restoration or
+cross-platform identity is promised. Compatible no-dig scenes are checked against
+F3 per-step food/worker projections and cloned PCG continuation, including an
+initially open mask entry. Extra construction diagnostics need not match F3 bytes.
+Dedicated roles, relay/drop/pile transport and F5 scientific comparisons remain
+separately deferred and require their own approved design/protocol.
