@@ -22,8 +22,6 @@ pub struct EventMilestone {
     pub pos: Pos,
     pub nest_distance: u32,
 }
-// Staged Task 4 observer/world and Task 5 researcher-view consumers.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 pub(super) struct FoodAccessRecord {
     pub(super) id: u64,
@@ -34,8 +32,6 @@ pub(super) struct FoodAccessRecord {
     pub(super) accessible: bool,
     pub(super) distance: Option<u32>,
 }
-// Staged Task 4 observer/world and Task 5 researcher-view consumers.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 pub(super) struct AccessSummary {
     pub(super) initially_exposed: u32,
@@ -44,8 +40,6 @@ pub(super) struct AccessSummary {
     pub(super) records: Vec<FoodAccessRecord>,
     pub(super) compute: AccessCompute,
 }
-// Staged Task 4 observer/world and Task 5 researcher-view consumers.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct AccessObserver {
     width: u32,
@@ -58,8 +52,6 @@ pub(super) struct AccessObserver {
     observed_open: Vec<bool>,
     compute: AccessCompute,
 }
-// Staged Task 4 observer/world and Task 5 researcher-view consumers.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct AccessDelta {
     pub(super) exposure: Option<EventMilestone>,
@@ -75,8 +67,6 @@ pub struct Milestones {
     pub first_delivery_tick: Option<u32>,
     pub all_food_delivered_tick: Option<u32>,
 }
-// Staged Task 4 transactional world observation and Task 5 output consumers.
-#[allow(dead_code)]
 impl AccessObserver {
     pub(super) fn new(setup: &Setup, terrain: &Terrain, food: &FoodLedger) -> Checked<Self> {
         setup.validate()?;

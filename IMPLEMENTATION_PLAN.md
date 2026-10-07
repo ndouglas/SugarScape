@@ -26,7 +26,8 @@ Spec/plan approved 2026-10-06. Subagent-driven execution. Detailed evidence: doc
 **Goal**: Cargo-first worker policy and ordered physical transactions.
 **Success Criteria**: Paused food intent, one action, and complete terrain/ledger/observer/RNG rollback.
 **Tests**: `cargo test -p sugarscape-core foraging::construction::tests::controller`
-**Status**: Not Started
+**Status**: In Progress
+**Evidence**: Task 4 frozen revision: 117 construction tests (38 controller) passed; workspace 2831 passed/0 failed/103 existing ignored; fmt/core all-target Clippy clean; hashes unchanged. Full logs/report: `.superpowers/sdd/2026-10-06-foraging-4-construction/task-4-report.md`. Parent independent review pending.
 
 ## Stage 5: Output and acceptance
 **Goal**: Bounded public views/run and compatible no-dig F3 reduction.

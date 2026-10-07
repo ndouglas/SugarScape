@@ -11,8 +11,6 @@ use super::{
 use crate::config::FieldError;
 use std::collections::{BTreeSet, VecDeque};
 
-// Staged Task 4 controller route outcomes and retained destinations.
-#[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Navigation {
     AtGoal,
@@ -20,14 +18,12 @@ pub(super) enum Navigation {
     Blocked,
     Unreachable,
 }
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct Frontier {
     pub(super) pos: Pos,
     pub(super) unknown_neighbors: Vec<Pos>,
     pub(super) distance: u32,
 }
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct Face {
     pub(super) pos: Pos,
@@ -87,8 +83,6 @@ fn distances(knowledge: &Knowledge, seeds: &[Pos]) -> Checked<(Vec<Option<u32>>,
 
 /// Scans count reachable KnownOpen cells whose neighbors are examined.
 /// Candidate and unknown-neighbor order is Pos, independently of BFS order.
-// Staged Task 4 food/outlet exploration and destination validity.
-#[allow(dead_code)]
 pub(super) fn frontiers(
     knowledge: &Knowledge,
     origin: Pos,
@@ -135,8 +129,6 @@ fn reachable_approaches(knowledge: &Knowledge, face: Pos, distance: &[Option<u32
 
 /// Scans count every remembered solid entry examined, including protected walls
 /// and diggable walls without a reachable privately open approach.
-// Staged Task 4 exploration-first excavation and retained-face validity.
-#[allow(dead_code)]
 pub(super) fn faces(knowledge: &Knowledge, origin: Pos) -> Checked<(Vec<Face>, ComputeCounts)> {
     check_origin(knowledge, origin)?;
     let (width, _) = knowledge.dimensions();
@@ -169,8 +161,6 @@ pub(super) fn faces(knowledge: &Knowledge, origin: Pos) -> Checked<(Vec<Face>, C
 
 /// Returns all reachable known-open approaches in Pos order. In-bounds faces
 /// that are unknown, open, protected or unreachable return an empty list.
-// Staged Task 4 travel to a retained eligible dig face.
-#[allow(dead_code)]
 pub(super) fn face_approaches(
     knowledge: &Knowledge,
     origin: Pos,
@@ -184,8 +174,6 @@ pub(super) fn face_approaches(
     Ok((reachable_approaches(knowledge, face, &distance), counts))
 }
 
-// Staged Task 4 food exploration and unknown-outlet exploration use one rule.
-#[allow(dead_code)]
 pub(super) fn select_frontier(
     knowledge: &Knowledge,
     origin: Pos,
@@ -219,8 +207,6 @@ pub(super) fn select_frontier(
     Ok((choose(&candidates, draws)?, counts))
 }
 
-// Staged Task 4 informed or uninformed excavation after open exploration.
-#[allow(dead_code)]
 pub(super) fn select_face(
     knowledge: &Knowledge,
     origin: Pos,
@@ -280,8 +266,6 @@ fn check_observation(knowledge: &Knowledge, origin: Pos, observation: &Observati
 
 /// Reverse multi-source private BFS keeps nearest goals fixed. Capacity filters
 /// only decreasing-distance immediate steps; blocked routes never take detours.
-// Staged Task 4 food, spoil, frontier and face-approach movement.
-#[allow(dead_code)]
 pub(super) fn route_step(
     knowledge: &Knowledge,
     origin: Pos,
@@ -321,8 +305,6 @@ pub(super) fn route_step(
 /// Requires a complete view validated against actual dimensions by Task 4
 /// before dispatch. Without dimensions this helper checks only the locally
 /// enforceable envelope, identity, origin openness and classification payloads.
-// Staged Task 4 empty-search fallback movement.
-#[allow(dead_code)]
 pub(super) fn wander(
     origin: Pos,
     observation: &Observation,

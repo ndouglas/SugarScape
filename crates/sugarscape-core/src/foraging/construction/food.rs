@@ -24,14 +24,10 @@ pub struct FoodInventory {
     pub carried: u32,
     pub delivered: u32,
 }
-// Staged Task 4 world material transactions.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct FoodLedger {
     records: Vec<FoodView>,
 }
-// Staged Task 4 world material transactions.
-#[allow(dead_code)]
 impl FoodLedger {
     pub(super) fn new(setup: &Setup, terrain: &Terrain) -> Checked<Self> {
         setup.validate()?;

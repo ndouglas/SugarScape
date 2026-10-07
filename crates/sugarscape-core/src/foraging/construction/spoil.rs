@@ -22,16 +22,12 @@ pub struct SpoilInventory {
     pub carried: u32,
     pub disposed: u32,
 }
-// Staged Task 4 world spoil transactions.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct SpoilLedger {
     records: Vec<SpoilView>,
     next_id: u64,
     capacity: u32,
 }
-// Staged Task 4 world spoil transactions.
-#[allow(dead_code)]
 impl SpoilLedger {
     pub(super) fn new(capacity: u32) -> Checked<Self> {
         if capacity > 15_625 {

@@ -5,32 +5,24 @@ use crate::foraging::{
     WaypointThreshold, WAYPOINT_THRESHOLD,
 };
 
-// Staged Task 4 food arrival records.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 struct Record {
     id: u64,
     site: u64,
     created_tick: u32,
 }
-// Staged Task 4 food advice server.
-#[allow(dead_code)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(super) struct Server {
     records: Vec<Record>,
     next_id: u64,
     expired: u64,
 }
-// Staged Task 4 food arrival result.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct Arrival {
     pub(super) departure: Departure,
     pub(super) published: bool,
 }
 /// Read-only advice, including weak records awaiting arrival-time expiry.
-// Staged Task 4 invariant/Task 5 advice view consumers.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq, serde::Serialize)]
 pub(super) struct ServerRecordView {
     pub(super) id: u64,
@@ -38,8 +30,6 @@ pub(super) struct ServerRecordView {
     pub(super) created_tick: u32,
     pub(super) strength: f64,
 }
-// Staged Task 4 food arrival transactions.
-#[allow(dead_code)]
 impl Server {
     pub(super) fn arrive(
         &mut self,

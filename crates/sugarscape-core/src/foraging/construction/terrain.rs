@@ -6,8 +6,6 @@ pub struct TerrainInventory {
     pub open: u32,
     pub excavated: u32,
 }
-// Staged Task 2 navigation and Task 4 world consumers.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct Terrain {
     width: u32,
@@ -18,7 +16,6 @@ pub(super) struct Terrain {
     excavated: u32,
     capacity: u32,
 }
-#[allow(dead_code)]
 impl Terrain {
     pub(super) fn new(setup: &Setup) -> Checked<Self> {
         setup.validate()?;

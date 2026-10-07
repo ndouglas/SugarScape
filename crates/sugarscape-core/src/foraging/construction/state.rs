@@ -11,8 +11,6 @@ pub enum FoodPhase {
     Searching,
     Returning,
 }
-// Staged Task 4 coupled worker state.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct Agent {
     pub(super) id: u32,
@@ -57,8 +55,6 @@ pub struct WorkCounts {
     pub abandoned_targets: u64,
     pub spoil_hauls: u64,
 }
-// Staged Task 4 worker/controller state and physical-accounting consumers.
-#[allow(dead_code)]
 impl WorkCounts {
     pub(super) fn checked_include(&mut self, other: &Self) -> Checked<()> {
         let candidate = Self {
@@ -202,4 +198,26 @@ fn checked_sum(field: &str, left: u64, right: u64) -> Checked<u64> {
             "counter overflow",
         )]
     })
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+pub enum Mode {
+    Departing,
+    Searching,
+    EmptyReturning,
+    FoodReturning,
+    SpoilHauling,
+}
+impl Agent {
+    pub(super) fn mode(&self) -> Mode {
+        match self.cargo {
+            Some(Cargo::Food(_)) => Mode::FoodReturning,
+            Some(Cargo::Spoil(_)) => Mode::SpoilHauling,
+            None => match self.phase {
+                FoodPhase::Departing => Mode::Departing,
+                FoodPhase::Searching => Mode::Searching,
+                FoodPhase::Returning => Mode::EmptyReturning,
+            },
+        }
+    }
 }

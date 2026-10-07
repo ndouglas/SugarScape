@@ -11,15 +11,12 @@ pub struct KnownCell {
     pub pos: Pos,
     pub kind: CellKnowledge,
 }
-// Staged Task 2 navigation and Task 4 private maps.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct Knowledge {
     width: u32,
     height: u32,
     cells: Vec<CellKnowledge>,
 }
-#[allow(dead_code)]
 impl Knowledge {
     pub(super) fn new(width: u32, height: u32) -> Checked<Self> {
         super::setup::dimensions(width, height)?;

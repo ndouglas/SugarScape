@@ -1,8 +1,6 @@
 use super::{setup::neighbors, terrain::Terrain, Checked, Pos};
 use crate::config::FieldError;
 use std::collections::{BTreeMap, BTreeSet};
-// Staged Task 2 navigation and Task 4 opportunity sensing.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct ObservedCell {
     pub(super) pos: Pos,
@@ -11,14 +9,11 @@ pub(super) struct ObservedCell {
     pub(super) occupants: u32,
     pub(super) food: bool,
 }
-// Staged Task 2 navigation and Task 4 opportunity sensing.
-#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct Observation {
     pub(super) origin: Pos,
     pub(super) cells: Vec<ObservedCell>,
 }
-#[allow(dead_code)]
 impl Observation {
     pub(super) fn validate(&self, width: u32, height: u32) -> Checked<()> {
         super::setup::dimensions(width, height)?;
@@ -68,7 +63,6 @@ impl Observation {
         }
     }
 }
-#[allow(dead_code)]
 pub(super) fn observe(
     terrain: &Terrain,
     origin: Pos,

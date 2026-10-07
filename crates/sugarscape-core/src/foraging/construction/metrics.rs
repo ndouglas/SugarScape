@@ -14,8 +14,6 @@ pub(super) struct ComputeCounts {
     pub(super) peak_queue: u64,
     pub(super) frontier_scans: u64,
 }
-// Staged Task 4 cumulative world diagnostics.
-#[allow(dead_code)]
 impl ComputeCounts {
     pub(super) fn checked_include(&mut self, other: &Self) -> Checked<()> {
         fn add(a: u64, b: u64, field: &str) -> Checked<u64> {
