@@ -447,7 +447,7 @@ verdicts. The program's [durable record][minds] preserves superseded rounds and 
 | Minds 7 | Hoarding endpoints/threshold approximately recovered under per-burrow reading; speed/loss and source readings differ | [RR-HOARD-01–06](#rr-hoard-01) |
 | Minds 8 | Second-round hazard/condition/forgoing frequency directions supported; other own hypotheses fail; first-round overclaims withdrawn | [RR-M8-01–06](#rr-m8-01); [RR-FIX-14](#rr-fix-14) |
 | Minds 9 | Complete measured campaign, no formal Holds/Fails or stability judgment; replay/biology checks recovered | [RR-M9-01–03](#rr-m9-01) |
-| Protection/deception | P3 implementation reviewed, scientific campaign unexecuted; P4 and later agency programme prospective | [RR-LEAD-04](#rr-lead-04) |
+| Protection/deception | P3 fixed campaign measured: all 7,680 episodes/208 estimates retained, reporting review pending; P4 prospective | [RR-P3-01–04](#rr-p3-01); [RR-LEAD-04](#rr-lead-04) |
 | Burrow/construction | Selected excavation anchors/design readings; no scientific reproduction results yet | [RR-LEAD-05](#rr-lead-05) |
 | Foraging F1/F2 | CPFA controller rules/variants and fixed-world implementation documented; scientific execution separate | [RR-LEAD-06](#rr-lead-06) |
 
@@ -532,6 +532,19 @@ scientific claim. The next action is retention/regression monitoring, not rerunn
 | <a id="rr-fix-13"></a>RR-FIX-13 | polarity, M36 / Local correction / Resolved / R; [record][eptelemetry] | Direct stock telemetry and strict JSON [export correction][epexport] retain measured same-seed counts/receipts; no period-exposure measurement implied. | Retain telemetry/export amendments with source clock and denominators. |
 | <a id="rr-fix-14"></a>RR-FIX-14 | Minds 8 / Local correction / Superseded / L; [record][minds] | First-design field band/condition/scrounger comparisons inadequate; four interpretation overclaims withdrawn. Second round replaced judges and preserves first-round data. | Use later results without pooling rounds; retain first-round audit/withdrawal. |
 
+## Minds P3 — dated execution update, campaign 2026-10-06
+
+Added on 2026-10-07 UTC (2026-10-06 America/New_York). All entries concern our own bounded
+mechanism experiment; reporting review is pending. They do not change the registered protocol,
+historical Minds comparisons or any source-paper verdict.
+
+| ID | Category / status / evidence | Target and measured scope | Next action |
+|---|---|---|---|
+| <a id="rr-p3-01"></a>RR-P3-01 | Minds P3 / Question / Open / R; [findings][p3] | Private relocation after observed preparation changes Selective−Off by −12 transferred units/+12 free or +9 paid lifetime ticks; renewed observation gives −8 units/0 free or −3 paid ticks, separately in both orientations. Lower theft need not improve lifetime. | Retain all 64 primary estimates and separate tagged consumption/cost/loss; any broader ecology or cost study requires a new registration. |
+| <a id="rr-p3-02"></a>RR-P3-02 | Minds P3 / Question / Open / R; [findings][p3] | Mixed Selective selectivity is programmed (A=1/B=0 withdrawal fractions). Base owner lifetime is 38/37 free/paid versus reflected 44/43; lost tagged stock differs. Gross reburial does not guarantee usable original food. | Preserve both orders/orientations and realized routes/recovery; register any geometry intervention separately rather than pool or tune this archive. |
+| <a id="rr-p3-03"></a>RR-P3-03 | Minds P3 / Provenance / Open / R; [actual gate](../survey/out/minds-protection-2026-10-06/provenance/task-p3-prospective-review.md) | Actual independent native gate preceded one complete campaign and byte-identical reanalysis. Historical WASM/Vitest log and old review ledger unavailable; unchanged source parity/checkpoint blocks and fresh native receipts were accepted for unchanged native execution. | Preserve the receipt limitation and scientific identity; obtain fresh platform verification before a future P3/platform-boundary change. |
+| <a id="rr-p3-04"></a>RR-P3-04 | Minds P3 / Question / Open / R; [findings][p3] | Visible nonwatcher induces unnecessary paid relocation; unseen watcher defeats Selective's cue. Supplied stumble route raises residual transfer while lifetime contrast can be zero; paired draws diverge, endpoints repeat despite unique full frames. | Keep all cue/contact cells, n=40 descriptive intervals and supplied-rule boundary; separately design learning, observer knowledge or field contact before broader claims. |
+
 ## Reading-only leads and unmeasured future studies
 
 These are retrieval or prospective work, with no failure verdict. The catalog queue/wanted list
@@ -543,7 +556,7 @@ not evidence of a failed model.
 | <a id="rr-lead-01"></a>RR-LEAD-01 | Cederman–Rao 2001 / Lead / Not measured / D; [record][dpauthor] | Empirical varying-coefficient dyad-year GLM needs actual data/coding/filtering/bandwidth; not additional 2001 lattice dynamics or current validation. | Retrieve data/estimation protocol and visually verify numerical OCR before empirical reproduction. |
 | <a id="rr-lead-02"></a>RR-LEAD-02 | Cederman–Gleditsch 2004 / Lead / Not measured / D; [record][dpauthor] | Regime-change extension explicitly not directly comparable to 2001; 50×50 /200 states /500+10,000 periods and Moran's I differ from 2001 exposure. | Freeze its own calibration/equations/statistics/protocol; do not fold source-reported .072/.064 into our results. |
 | <a id="rr-lead-03"></a>RR-LEAD-03 | Rousseau 2005 / DomGeoSim / Lead / Blocked on source / D; [primary book][rousseau] and [earlier audit][dpauthor] | Rousseau’s Democracy and War, chapter 7, printed p. 337 notes 2–3, reports reproducing Cederman before extending it, using Cederman-provided code programmed by van der Veen. It reports similar, nonidentical results and minor corrections said to leave substantive findings unchanged. This is a reported reproduction, not our independent exact-2001-code verification; the earlier bounded audit remains unchanged. | Retrieve publication-mapped DomGeoSim/code/corrections/RNG/settings and outputs before docking or adopting a source-equivalence verdict. |
-| <a id="rr-lead-04"></a>RR-LEAD-04 | Minds protection/deception / Lead / Not measured / D; [record][m9] | P3 costly recaching implementation reviewed; scientific execution awaits separate gate. P4/behavior trees/HTN/collective agency prospective. | Complete approved scientific construction/manifest review before any campaign claim. |
+| <a id="rr-lead-04"></a>RR-LEAD-04 | Minds protection/deception / Lead / Superseded for first P3; P4 Not measured / D with later R; [original record][m9], [dated execution][p3] | The 2026-10-06 backfill recorded P3 as implemented but unexecuted. Later actual prospective gate and 7,680-episode campaign close that availability gap; reporting review pending. P4/behavior trees/HTN/collective agency remain prospective. | Use dated P3 evidence without rewriting its registration or historical results; P4 and broader protection need their own designs. |
 | <a id="rr-lead-05"></a>RR-LEAD-05 | Burrow/construction / Lead / Not measured / D; [record][burrow] | Pielström–Roces 2013 selected transport/cue anchor; Green 2017 /Prasath 2023 later alternatives; architecture books research sources, not reproduced models. | Refine approved excavation contract and specify independent validation; no existing failure verdict. |
 | <a id="rr-lead-06"></a>RR-LEAD-06 | Foraging/construction / Lead / Not measured / D; [record][foraging] | Hecker–Moses 2015 CPFA controller reference and Michael 2023 termite comparison; F1/F2 implemented rules are not executed scientific reproductions. | Bind source controller/world/measurement before execution; keep biological shortcut comparison separate. |
 
@@ -594,6 +607,7 @@ and are not redistributed or replaced by this register.
 [m7]: ../README.md#minds-7-the-evolution-of-hoarding
 [m8]: ../README.md#minds-8-watching
 [m9]: studies/2026-09-27-minds.md#minds-9-spatial-hoarding-paid-defense-and-seasonal-inheritance
+[p3]: superpowers/specs/2026-10-06-minds-protection-findings.md
 [eprepair]: superpowers/specs/2026-10-03-emergent-polarity-sequential-amendment.md
 [epdomestic]: superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md
 [eptelemetry]: superpowers/specs/2026-10-03-emergent-polarity-telemetry-amendment.md

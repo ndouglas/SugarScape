@@ -1,0 +1,17 @@
+{
+  "status": "complete measured campaign; publication pending independent reporting and visual review",
+  "generated_utc": "2026-10-07T01:50:08.901072+00:00",
+  "campaign_label_local": "2026-10-06",
+  "local_timezone": "America/New_York",
+  "execution_utc_date": "2026-10-07",
+  "scientific_code_revision": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+  "protocol_revision": "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+  "campaign_root": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989",
+  "raw_paths": "Original index paths are relative to the external full campaign directory; raw is not embedded in public packet.",
+  "raw_bytes": 571055314,
+  "raw_members": 7680,
+  "source_archive": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/complete-tracked-source-e733b989.tar.gz",
+  "external_baseline_archive": "/Users/nathan/.local/share/sugarscape/evidence/minds-protection-2026-10-06-staging-20261007T014345375561Z",
+  "external_archive_status": "Science baseline externally staged and verified; final reports/reviews/publication archival incomplete. Final archive receipt added by controller.",
+  "historical_wasm_limit": "Original Vitest/WASM log and old review ledger unavailable; source parity/checkpoint equivalence plus fresh native checks accepted by actual prospective native-only review; no fresh WASM execution claimed."
+}

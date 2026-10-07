@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/target/release/survey",
+    "--protection",
+    "--run",
+    "--protocol-revision",
+    "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+    "--out",
+    "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989"
+  ],
+  "cwd": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-execution",
+  "started_utc": "2026-10-07T01:37:38.262099+00:00",
+  "prelaunch_binding": "/Users/nathan/.config/superpowers/worktrees/SugarScape/minds-protection-runtime-20261006/campaigns/minds-p3-20261006-e733b989-prelaunch-binding.json",
+  "attempt_number": 1,
+  "automatic_retry_allowed": false
+}

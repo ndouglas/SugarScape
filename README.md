@@ -2977,6 +2977,23 @@ D. L. Kramer and C. A. Chapman, "Producers, scroungers, and group foraging", *Am
 *Animal Behaviour* 52, 833–839. See `docs/superpowers/specs/2026-10-01-minds-8-watching-design.md`
 and `docs/superpowers/specs/2026-10-01-minds-8-second-round-design.md`.
 
+### Minds P3: costly re-caching
+
+Our own bounded mechanism experiment extends watching with local memory of whether a conspecific
+was visible at burial, followed by paid physical relocation. The fixed campaign completed all
+192 conditions × 40 seeds (7,680 episodes), with [208 descriptive estimates and full evidence](survey/out/minds-protection-2026-10-06/README.md);
+the [dated findings and figures](docs/superpowers/specs/2026-10-06-minds-protection-findings.md)
+await independent reporting review.
+
+After initially observed burial, private re-caching changes Selective minus Off by −12 original
+food units transferred and +12 owner ticks free/+9 paid. Renewed observation changes those effects
+to −8 units and 0 ticks free/−3 paid, separately in both orientations. Initially private Selective
+matches Off; unnecessary indiscriminate moves can expose food or charge costs. Mixed histories
+verify the programmed selection rule while showing different recovery/lifetime in reflection.
+Cue-error and supplied contact controls retain failures, costs and uncertainty. No pooled effect,
+overall Holds/Fails, animal cognition or source-paper numerical replication is claimed. This
+campaign preserves Minds 9's separate paid-defense findings; P4 deception remains a future design.
+
 ### Threshold Models (Granovetter 1978; Watts 2002)
 
 **The crowd.** Each person has a threshold: the share of the crowd he must see join before he joins

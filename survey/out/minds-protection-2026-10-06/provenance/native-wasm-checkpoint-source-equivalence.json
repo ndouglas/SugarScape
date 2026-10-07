@@ -1,0 +1,56 @@
+{
+  "closure": "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+  "current_head": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+  "checks": [
+    {
+      "path": "crates/sugarscape-wasm/src/lib.rs",
+      "section": "protection_config_json",
+      "closure_sha256": "2844e0268a18dc79637685f3dbfd986a63277c42bd04870203bd3fe898abadd5",
+      "current_sha256": "2844e0268a18dc79637685f3dbfd986a63277c42bd04870203bd3fe898abadd5",
+      "byte_equal": true
+    },
+    {
+      "path": "crates/sugarscape-wasm/src/lib.rs",
+      "section": "read_protection_config",
+      "closure_sha256": "5b434f3b5c505376ec44f5bad9e733df164f7506afb5f4672ea3ba99c31a3d11",
+      "current_sha256": "5b434f3b5c505376ec44f5bad9e733df164f7506afb5f4672ea3ba99c31a3d11",
+      "byte_equal": true
+    },
+    {
+      "path": "crates/sugarscape-wasm/src/lib.rs",
+      "section": "protection_episode_json",
+      "closure_sha256": "9e0285a5ddd179f634972751631ac2f8d237337e31524339ca50d3ae7b5d628a",
+      "current_sha256": "9e0285a5ddd179f634972751631ac2f8d237337e31524339ca50d3ae7b5d628a",
+      "byte_equal": true
+    },
+    {
+      "path": "crates/sugarscape-wasm/src/lib.rs",
+      "section": "decimal_seed",
+      "closure_sha256": "64d7602276482156beb015bfeddc4a6e0a12e34638c0e7f35c6ada63fa58bd9b",
+      "current_sha256": "64d7602276482156beb015bfeddc4a6e0a12e34638c0e7f35c6ada63fa58bd9b",
+      "byte_equal": true
+    },
+    {
+      "path": "crates/sugarscape-wasm/src/lib.rs",
+      "section": "field_errors",
+      "closure_sha256": "438a5bbd0dc5d281985e8657a4a84e65041e26beb41bf5ac7d15b393646ff5bc",
+      "current_sha256": "438a5bbd0dc5d281985e8657a4a84e65041e26beb41bf5ac7d15b393646ff5bc",
+      "byte_equal": true
+    },
+    {
+      "path": "web/src/determinism.test.ts",
+      "section": "protection checked WASM boundary block including four native/WASM fixture comparisons",
+      "closure_sha256": "275faf1f3bb8b6913b80960491d224e21aca856076af06dd077e6974ae119566",
+      "current_sha256": "275faf1f3bb8b6913b80960491d224e21aca856076af06dd077e6974ae119566",
+      "byte_equal": true
+    },
+    {
+      "path": "crates/sugarscape-core/tests/checkpoint.rs",
+      "section": "protection_checkpoints_cover_prepared_memory_and_every_stage",
+      "closure_sha256": "a139e15944ddd7b53d9839a37f4287e483d74da712311b25fdf1b6001afca1de",
+      "current_sha256": "a139e15944ddd7b53d9839a37f4287e483d74da712311b25fdf1b6001afca1de",
+      "byte_equal": true
+    }
+  ],
+  "historical_evidence_limit": "Committed closure and completed plan state native/WASM verification passed; old Vitest receipt and old independent-review ledger were not located. These comparisons establish source equivalence, not a fresh WASM build/test or reconstruction of missing historical receipts. Current native protection and checkpoint tests are separate fresh evidence."
+}

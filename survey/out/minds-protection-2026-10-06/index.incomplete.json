@@ -1,0 +1,3158 @@
+{
+  "schema": "minds-protection-measured-v1",
+  "code_revision": "e733b989f253daf038f9f90a7030e2cf71ad8435",
+  "protocol_revision": "7b1035161b13b1df7a5cc3934c01c5f2ee81d29c",
+  "manifest": {
+    "schema": "minds-protection-measured-v1",
+    "conditions": [
+      {
+        "id": "cue/p=erased/e=unseen-watcher/c=0.25/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=erased/e=unseen-watcher/c=0.25/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=erased/e=unseen-watcher/c=0/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=erased/e=unseen-watcher/c=0/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=erased/e=visible-nonwatcher/c=0.25/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=erased/e=visible-nonwatcher/c=0.25/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=erased/e=visible-nonwatcher/c=0/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=erased/e=visible-nonwatcher/c=0/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=indiscriminate/e=unseen-watcher/c=0.25/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=indiscriminate/e=unseen-watcher/c=0.25/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=indiscriminate/e=unseen-watcher/c=0/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=indiscriminate/e=unseen-watcher/c=0/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=indiscriminate/e=visible-nonwatcher/c=0.25/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=indiscriminate/e=visible-nonwatcher/c=0.25/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=indiscriminate/e=visible-nonwatcher/c=0/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=indiscriminate/e=visible-nonwatcher/c=0/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=off/e=unseen-watcher/c=0.25/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=off/e=unseen-watcher/c=0.25/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=off/e=unseen-watcher/c=0/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=off/e=unseen-watcher/c=0/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=off/e=visible-nonwatcher/c=0.25/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=off/e=visible-nonwatcher/c=0.25/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=off/e=visible-nonwatcher/c=0/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=off/e=visible-nonwatcher/c=0/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=selective/e=unseen-watcher/c=0.25/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=selective/e=unseen-watcher/c=0.25/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=selective/e=unseen-watcher/c=0/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=selective/e=unseen-watcher/c=0/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=selective/e=visible-nonwatcher/c=0.25/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=selective/e=visible-nonwatcher/c=0.25/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=selective/e=visible-nonwatcher/c=0/m=0",
+        "panel": "cue",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "cue/p=selective/e=visible-nonwatcher/c=0/m=1",
+        "panel": "cue",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=erased/o=a-first/c=0.25/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=erased/o=a-first/c=0.25/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=erased/o=a-first/c=0/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=erased/o=a-first/c=0/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=erased/o=b-first/c=0.25/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=erased/o=b-first/c=0.25/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=erased/o=b-first/c=0/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=erased/o=b-first/c=0/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=indiscriminate/o=a-first/c=0.25/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=indiscriminate/o=a-first/c=0.25/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=indiscriminate/o=a-first/c=0/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=indiscriminate/o=a-first/c=0/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=indiscriminate/o=b-first/c=0.25/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=indiscriminate/o=b-first/c=0.25/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=indiscriminate/o=b-first/c=0/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=indiscriminate/o=b-first/c=0/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=off/o=a-first/c=0.25/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=off/o=a-first/c=0.25/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=off/o=a-first/c=0/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=off/o=a-first/c=0/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=off/o=b-first/c=0.25/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=off/o=b-first/c=0.25/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=off/o=b-first/c=0/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=off/o=b-first/c=0/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=selective/o=a-first/c=0.25/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=selective/o=a-first/c=0.25/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=selective/o=a-first/c=0/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=selective/o=a-first/c=0/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=selective/o=b-first/c=0.25/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=selective/o=b-first/c=0.25/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=selective/o=b-first/c=0/m=0",
+        "panel": "mixed",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "mixed/p=selective/o=b-first/c=0/m=1",
+        "panel": "mixed",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=observed/r=observed/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=observed/r=observed/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=observed/r=observed/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=observed/r=observed/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=observed/r=private/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=observed/r=private/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=observed/r=private/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=observed/r=private/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=private/r=observed/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=private/r=observed/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=private/r=observed/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=private/r=observed/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=private/r=private/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=private/r=private/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=private/r=private/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=erased/i=private/r=private/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=observed/r=observed/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=observed/r=observed/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=observed/r=observed/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=observed/r=observed/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=observed/r=private/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=observed/r=private/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=observed/r=private/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=observed/r=private/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=private/r=observed/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=private/r=observed/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=private/r=observed/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=private/r=observed/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=private/r=private/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=private/r=private/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=private/r=private/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=indiscriminate/i=private/r=private/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=observed/r=observed/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=observed/r=observed/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=observed/r=observed/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=observed/r=observed/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=observed/r=private/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=observed/r=private/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=observed/r=private/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=observed/r=private/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=private/r=observed/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=private/r=observed/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=private/r=observed/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=private/r=observed/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=private/r=private/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=private/r=private/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=private/r=private/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=off/i=private/r=private/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=observed/r=observed/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=observed/r=private/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=private/r=observed/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0.25/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0.25/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0/m=0",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "single/p=selective/i=private/r=private/c=0/m=1",
+        "panel": "single",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0.25/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=observed/f=0/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0.25/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=erased/i=private/f=0/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0.25/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=observed/f=0/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0.25/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=indiscriminate/i=private/f=0/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0.25/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=observed/f=0/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0.25/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=off/i=private/f=0/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0.25/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=observed/f=0/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0.25/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.25,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0/c=0.25/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0/c=0.25/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0/c=0/m=0",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      },
+      {
+        "id": "stumble/p=selective/i=private/f=0/c=0/m=1",
+        "panel": "stumble",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": false
+          },
+          "mirrored": true,
+          "reburial_cost": 0.0,
+          "discovery": 0.0,
+          "exposure_span": 64,
+          "observer_span": 64
+        }
+      }
+    ],
+    "seeds": [
+      10001,
+      10002,
+      10003,
+      10004,
+      10005,
+      10006,
+      10007,
+      10008,
+      10009,
+      10010,
+      10011,
+      10012,
+      10013,
+      10014,
+      10015,
+      10016,
+      10017,
+      10018,
+      10019,
+      10020,
+      10021,
+      10022,
+      10023,
+      10024,
+      10025,
+      10026,
+      10027,
+      10028,
+      10029,
+      10030,
+      10031,
+      10032,
+      10033,
+      10034,
+      10035,
+      10036,
+      10037,
+      10038,
+      10039,
+      10040
+    ]
+  },
+  "completed": false,
+  "runs": []
+}

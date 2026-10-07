@@ -9,6 +9,12 @@ The [reproducibility register](reproducibility.md) maintains claim-level discrep
 identity and measurement gaps, corrected issues and concrete next actions across the completed
 catalog and Minds programme. It keeps conditional mismatches separate from unmeasured leads.
 
+The [2026-10-06 Minds P3 findings](superpowers/specs/2026-10-06-minds-protection-findings.md)
+report the complete registered re-caching mechanism campaign (7,680 episodes), pending independent
+reporting review. Corvid sources motivate its qualitative interventions; this is our own experiment,
+not a numerical reproduction of a source paper. Costs, renewed observation, cue mismatch and
+reflected recovery geometry remain visible in all registered comparisons.
+
 **Where the files are.** Local copies live in `papers/<topic>/`, which is gitignored: they are
 personal copies, never committed or redistributed. File names are
 `<authors>-<year>[-<venue>]-<short-title>.<pdf|html>`. A paper marked *not in `papers/`* was

@@ -8,8 +8,11 @@ their mechanisms, empirical targets and implementation plans require individual 
 **Immediate next step:** Minds 9 is complete and the
 [P3 costly re-caching implementation](../plans/2026-10-02-minds-protection.md) is complete,
 reviewed and merged. Scientific execution of its
-[protocol](2026-10-02-minds-protection-protocol.md) awaits committed manifest/opportunity review;
-deception follows. [Hornvale's repaired asks request](../../studies/prompts/2026-10-03-hornvale-asks-prompt-v2.md)
+[protocol](2026-10-02-minds-protection-protocol.md) is complete: all 7,680 fixed episodes and
+208 descriptive estimates are retained in the [dated P3 findings](2026-10-06-minds-protection-findings.md),
+pending independent empirical/reporting review. Private relocation helps in some single-cache
+strata; renewed observation, costs, cue mismatch and reflected recovery geometry constrain benefit.
+Deception follows as a separate design. [Hornvale's repaired asks request](../../studies/prompts/2026-10-03-hornvale-asks-prompt-v2.md)
 adds an independent exchange-design branch using the existing identity, memory and valuation
 foundation; it does not require finishing P4 or implementing general communication first.
 Behavior trees and HTN retain their place after the pilfering campaign.
