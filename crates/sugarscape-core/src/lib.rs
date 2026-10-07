@@ -49,6 +49,7 @@ pub mod rng;
 pub mod rules;
 pub mod schelling;
 pub mod schema;
+pub mod shared_surface;
 pub mod social;
 pub mod spatial;
 pub mod stats;

@@ -5,6 +5,7 @@
 mod burrow;
 mod burrow_access;
 mod deduction;
+mod shared_surface;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -33,6 +34,8 @@ enum Command {
     Deduction(deduction::DeductionArgs),
     /// List the presets of every model (id, source, name, title).
     Presets,
+    /// Run the frozen finite shared-surface diagnostic.
+    SharedSurface(shared_surface::SharedSurfaceArgs),
     /// Run a checked standalone excavation replay.
     Burrow(burrow::BurrowArgs),
     /// Run a checked structural resource-access replay.
@@ -180,6 +183,7 @@ fn main() -> ExitCode {
 fn run(cli: Cli) -> Result<(), Failure> {
     match cli.command {
         Command::Deduction(args) => deduction::run(args),
+        Command::SharedSurface(args) => shared_surface::run(args),
         Command::Presets => {
             for p in presets::catalog() {
                 println!("{}\t{}\t{}\t{}", p.id, p.source, p.name, p.title());
