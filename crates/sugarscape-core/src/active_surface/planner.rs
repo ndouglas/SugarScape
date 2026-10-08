@@ -78,6 +78,15 @@ impl CompiledPolicy {
     }
     pub fn decide(&self, view: &View) -> Result<Decision, Error> {
         self.validate(&view.prefix)?;
+        if let Checkpoint::Boundary(boundary) = view.prefix.checkpoint {
+            if view.prefix.entries.iter().any(|entry| {
+                matches!(entry, Entry::OwnChoice { boundary: recorded, .. } if *recorded == boundary)
+            }) {
+                return Err(Error::InvalidHistory(
+                    "decision requires an unselected boundary; its choice is already queued".into(),
+                ));
+            }
+        }
         let reconstructed = View::from_prefix(view.prefix.clone(), self.infer(&view.prefix)?)?;
         if *view != reconstructed {
             return Err(Error::InvalidHistory(

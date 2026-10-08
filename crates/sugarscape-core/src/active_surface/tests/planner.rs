@@ -409,3 +409,92 @@ fn target_prediction_rejects_missing_or_invalid_target_probability() {
         assert!(predict_target(&belief).is_err());
     }
 }
+
+// Catches mislabeling an already selected, positively supported boundary as
+// model misspecification. Queuing does not change the public checkpoint.
+#[test]
+fn queued_probe_choices_remain_supported_but_cannot_be_decided_again() {
+    for role in [Role::A, Role::B] {
+        let p = Protocol::new(role, PolicyKind::Known);
+        let prior = OwnPrior::PointMass(Mechanism::Inert);
+        let c = policy(role, PolicyKind::Known, prior);
+        for choice in [Choice::StopProbing, Choice::ContinueProbe] {
+            let mut state = EpisodeState::new(
+                &p,
+                Environment::InFamily(Mechanism::Inert),
+                EpisodeBits::from_index(0).unwrap(),
+                [prior; 2],
+            )
+            .unwrap();
+            select_choice(&mut state, choice).unwrap();
+            p.validate_prefix(state.prefix(role)).unwrap();
+            let belief = c.infer(state.prefix(role)).unwrap();
+            assert_eq!(
+                belief.models[Mechanism::Inert.index()],
+                Probability::new(1, 1).unwrap()
+            );
+            let view = View::from_prefix(state.prefix(role).clone(), belief).unwrap();
+            assert!(
+                matches!(c.decide(&view), Err(Error::InvalidHistory(_))),
+                "role {role:?}, queued {choice:?}"
+            );
+        }
+    }
+}
+
+// Catches the same scheduling error at live choices, while preserving the
+// positive decision opportunity immediately before and after a queued routine.
+#[test]
+fn queued_trial_choices_are_operational_errors_and_unselected_choices_work() {
+    for role in [Role::A, Role::B] {
+        let p = Protocol::new(role, PolicyKind::Known);
+        let prior = OwnPrior::PointMass(Mechanism::Inert);
+        let c = policy(role, PolicyKind::Known, prior);
+        for choice in [Choice::Inspect, Choice::AttemptCommunication] {
+            let mut state = EpisodeState::new(
+                &p,
+                Environment::InFamily(Mechanism::Inert),
+                EpisodeBits::from_index(0).unwrap(),
+                [prior; 2],
+            )
+            .unwrap();
+            let initial = View::from_prefix(
+                state.prefix(role).clone(),
+                c.infer(state.prefix(role)).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(c.decide(&initial).unwrap().choice, Choice::StopProbing);
+            apply_choice(&mut state, Choice::StopProbing).unwrap();
+            let unselected = View::from_prefix(
+                state.prefix(role).clone(),
+                c.infer(state.prefix(role)).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(c.decide(&unselected).unwrap().choice, Choice::Inspect);
+            select_choice(&mut state, choice).unwrap();
+            p.validate_prefix(state.prefix(role)).unwrap();
+            let belief = c.infer(state.prefix(role)).unwrap();
+            assert_eq!(
+                belief.models[Mechanism::Inert.index()],
+                Probability::new(1, 1).unwrap()
+            );
+            let queued = View::from_prefix(state.prefix(role).clone(), belief).unwrap();
+            assert!(
+                matches!(c.decide(&queued), Err(Error::InvalidHistory(_))),
+                "role {role:?}, queued {choice:?}"
+            );
+            loop {
+                let step = advance_one(&mut state).unwrap();
+                if step.next.is_some() {
+                    break;
+                }
+            }
+            let later = View::from_prefix(
+                state.prefix(role).clone(),
+                c.infer(state.prefix(role)).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(c.decide(&later).unwrap().choice, Choice::Inspect);
+        }
+    }
+}
