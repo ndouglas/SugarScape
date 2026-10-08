@@ -92,3 +92,5 @@ Artifacts, exclusive first/repeat stdout and stderr, copied release executable, 
 For manageable extraction, guide aggregate values come from all 220 retained setting proofs, each bound to the same source manifest and independently checked oracle. Their hashes were rechecked; the frozen source matches that manifest, and first-report validation separately replays the full typed payload before exit 0. This extraction does not load the multi-GB report into memory. Bounded report-header/tail checks, streaming SHA256 and exact byte comparison retain first/repeat identity.
 
 All seven previous CLI outputs reproduce their retained bytes with the new frozen binary. All 66 preserved source hashes match, and the original deduction guide remains an unchanged prefix with only a new guide link appended.
+
+For paid probe selection and task-directed stopping, see the [active-surface study](active-surface.md).
