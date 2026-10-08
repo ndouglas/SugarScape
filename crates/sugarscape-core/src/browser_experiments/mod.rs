@@ -2,6 +2,7 @@
 mod catalog;
 mod input;
 mod record;
+pub mod testimony;
 pub mod wink;
 pub mod wire;
 
@@ -35,6 +36,7 @@ pub fn run(input: &Input) -> Result<EpisodeRecord, Vec<FieldError>> {
     let input = normalize_input(&record::bounded_json(input, MAX_INPUT_BYTES, "input")?)?;
     match input {
         Input::Wink { .. } => wink::run(&input),
+        Input::Testimony { .. } | Input::TestimonyGame { .. } => testimony::run(&input),
     }
 }
 pub(crate) fn error(field: &str, message: impl Into<String>) -> Vec<FieldError> {

@@ -160,7 +160,7 @@ Define `push_before`, `push_after` and `action_field_error` locally; only common
 
 **Interfaces:** Consumes Task1 envelope/helpers; existing `diagnose_testimony`, `Belief::new/observe/snapshot`, `testimony_game::{enumerate,evaluate,Listener}`. Produces `testimony::run(&Input)->Result<EpisodeRecord,Vec<FieldError>>` for two study IDs and their real catalog descriptors.
 
-- [ ] **Step 1: Prepare bounded retained definitions and RED cases.** Locate unchanged testimony/game first reports through their ledgers; hash and project named environments and retained evolved listener genomes with exclusive extraction receipts. Do not call searches. Fixture JSON uses original values and records provenance. Test ordered evidence, duplicate-ID idempotence/conflict behavior, copy/invert ambiguity, history31, missing posterior for Passive, invalid named selection, and missing realized private truth in conditional cases.
+- [x] **Step 1: Prepare bounded retained definitions and RED cases.** Locate unchanged testimony/game first reports through their ledgers; hash and project named environments and retained evolved listener genomes with exclusive extraction receipts. Do not call searches. Fixture JSON uses original values and records provenance. Test ordered evidence, duplicate-ID idempotence/conflict behavior, copy/invert ambiguity, history31, missing posterior for Passive, invalid named selection, and missing realized private truth in conditional cases.
 
 ```rust
 #[test]
@@ -173,8 +173,8 @@ fn passive_case_has_no_invented_posterior() {
 ```
 
 Use the exact environment ID extracted from the first report; normalize documented UI aliases once in the retained-definition resolver. `training` is the browser alias for that unchanged environment, not a new setting.
-- [ ] **Step 2: Run RED.** `cargo test -p sugarscape-core browser_experiments::tests::testimony`.
-- [ ] **Step 3: Implement evidence and conditional-case projections.** For noisy testimony, clone fixture model, create `Belief`, add one attributed record at a time, snapshot after successful observation, and terminate a contradictory evidence sequence with actual contextual error/last supported snapshot. For game, enumerate the selected named environment, select matching history row from unchanged `evaluate`, and call existing `Listener::decide` on that row's actual public observation. Use expected payoff/conditional mass terminology; no invented private signal or realized reward.
+- [x] **Step 2: Run RED.** `cargo test -p sugarscape-core browser_experiments::tests::testimony`.
+- [x] **Step 3: Implement evidence and conditional-case projections.** For noisy testimony, clone fixture model, create `Belief`, add one attributed record at a time, snapshot after successful observation, and terminate a contradictory evidence sequence with actual contextual error/last supported snapshot. For game, enumerate the selected named environment, select matching history row from unchanged `evaluate`, and call existing `Listener::decide` on that row's actual public observation. Use expected payoff/conditional mass terminology; no invented private signal or realized reward.
 
 ```rust
 let mut belief = deduction::Belief::new(fixture.model.clone()).map_err(testimony_error)?;
@@ -187,8 +187,8 @@ for evidence in &fixture.records {
 ```
 
 `testimony_error` and `push_evidence_checkpoint` are local functions. Bound fixture/evidence counts before constructing output.
-- [ ] **Step 4: GREEN and independent gate.** Run filter, scoped formatting, core Clippy; compare exact references within existing tolerance for floating testimony models and all32 game history projections for documented listeners. Verify reporter information absent where not available and no future verification in earlier checkpoint. Review source/provenance independently.
-- [ ] **Step 5: Commit.** `feat(experiments): expose testimony evidence and decision cases`; stage only owned files/catalog additions.
+- [x] **Step 4: GREEN and independent gate.** Run filter, scoped formatting, core Clippy; compare exact references within existing tolerance for floating testimony models and all32 game history projections for documented listeners. Verify reporter information absent where not available and no future verification in earlier checkpoint. Review source/provenance independently.
+- [x] **Step 5: Commit.** `feat(experiments): expose testimony evidence and decision cases`; stage only owned files/catalog additions.
 
 ## Task 3: Reporting, strategy inference, audit witnesses, and recorded searches
 

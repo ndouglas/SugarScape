@@ -11,7 +11,9 @@ use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
 pub fn run(input: &Input) -> Result<EpisodeRecord, Vec<FieldError>> {
-    let Input::Wink { seed, policy, mode } = input;
+    let Input::Wink { seed, policy, mode } = input else {
+        return Err(super::error("study", "expected wink"));
+    };
     let seed = seed.value();
     let mut engine = Engine::new(deduction::wink_config(6), seed)?;
     let mut controllers: Vec<Option<Box<dyn Controller>>> = (0..6).map(|_| None).collect();

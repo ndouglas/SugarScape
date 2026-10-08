@@ -23,13 +23,15 @@ pub struct StudyDescriptor {
     pub controls: Value,
 }
 pub fn catalog() -> Vec<StudyDescriptor> {
-    vec![StudyDescriptor {
+    let mut studies = vec![StudyDescriptor {
         id: StudyId::Wink, family: StudyFamily::Game, title: "Wink deduction".into(),
         supplied: "Six Agents, bounded attention and memory, delayed effects, and request-only controllers.".into(),
         question: "When does local evidence support identifying the capability holder?".into(),
         default_input: json!({"study":"wink","seed":"7","policy":"evidence","mode":"ordinary"}),
         controls: json!({"seed":{"type":"decimal_u64"},"policy":{"values":["evidence","random","reckless","passive"]},"mode":{"values":["ordinary","diagnostic"]}}),
-    }]
+    }];
+    studies.extend(super::testimony::descriptors());
+    studies
 }
 pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> {
     match study {
@@ -47,6 +49,7 @@ pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> 
                 deduction::POLICY_VERSION
             ))
         }
+        StudyId::Testimony | StudyId::TestimonyGame => super::testimony::rules_identity(study),
         _ => Err(super::error(
             "study",
             "study adapter is not available in this viewer version",

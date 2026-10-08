@@ -44,11 +44,21 @@ pub enum Input {
         policy: PolicyKind,
         mode: WinkMode,
     },
+    Testimony {
+        fixture: String,
+    },
+    TestimonyGame {
+        environment: String,
+        history: u8,
+        listener: String,
+    },
 }
 impl Input {
     pub fn study(&self) -> StudyId {
         match self {
             Self::Wink { .. } => StudyId::Wink,
+            Self::Testimony { .. } => StudyId::Testimony,
+            Self::TestimonyGame { .. } => StudyId::TestimonyGame,
         }
     }
 }
@@ -60,5 +70,8 @@ pub fn normalize_input(json: &str) -> Result<Input, Vec<FieldError>> {
     let input: Input =
         serde_json::from_str(json).map_err(|e| super::error("input", e.to_string()))?;
     record::serialized_size(&input, MAX_INPUT_BYTES, "input")?;
+    if !matches!(input, Input::Wink { .. }) {
+        super::testimony::validate_input(&input)?;
+    }
     Ok(input)
 }
