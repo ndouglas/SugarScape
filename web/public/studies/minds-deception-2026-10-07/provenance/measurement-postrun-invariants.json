@@ -1,0 +1,39 @@
+{
+  "checked_utc": "2026-10-08T06:55:48.987716+00:00",
+  "source_head": "e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+  "full_git_status": "",
+  "source_files": 2385,
+  "packet_files": 411,
+  "mismatches": [],
+  "cargo_config": {
+    "path": "/tmp/sugarscape-minds-p4-20261007-vb9tv64o/cargo-home/config.toml",
+    "sha256": "d1c0ec173c0342c0fd0cba7ad16b1901325c64220eb6abd8082b99f76811d24c",
+    "bytes": 80,
+    "mode": "100644"
+  },
+  "binary": {
+    "sha256": "38f7137b7b92521b8e5d82c43b883c1f7dc92f9151112c73665913299c54caa4",
+    "bytes": 19118640,
+    "mode": "100755"
+  },
+  "source_inventory_canonical": {
+    "sha256": "29fcabbd65973632740b86ed2a9496f336c5ab489dee87536ede5d960cedaf42",
+    "bytes": 397759,
+    "mode": "100644"
+  },
+  "packet_inventory_file": {
+    "sha256": "0d20a539df5f11947671b82fce57388ca1be216649a6cf5adac795650f2489c8",
+    "bytes": 86926,
+    "mode": "100644"
+  },
+  "protocol": {
+    "sha256": "7e0b9a7fb6973a3ba95fad70ddf911105f753a73b7fe45a8ab5040e3d6901d4d",
+    "bytes": 8893,
+    "mode": "100644"
+  },
+  "manifest_canonical": {
+    "sha256": "cd4996a57ccc216dac634994817796c16a0cc6dc45f48b4e903073b3700ee2be",
+    "bytes": 16913,
+    "mode": "100644"
+  }
+}

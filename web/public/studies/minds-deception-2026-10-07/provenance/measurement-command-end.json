@@ -1,0 +1,18 @@
+{
+  "writer": "/root/p4_registered_measurement_writer",
+  "ended_utc": "2026-10-08T06:51:25.888070+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 1792.0685737077147,
+  "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0,
+    "mode": "100644"
+  },
+  "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0,
+    "mode": "100644"
+  },
+  "retry_performed": false,
+  "scientific_execution_stopped": false
+}

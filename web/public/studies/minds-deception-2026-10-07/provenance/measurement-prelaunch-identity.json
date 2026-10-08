@@ -1,0 +1,63 @@
+{
+  "checked_utc": "2026-10-08T06:21:33.803072+00:00",
+  "writer": "/root/p4_registered_measurement_writer",
+  "source_head": "e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+  "full_git_status": "",
+  "binary": {
+    "sha256": "38f7137b7b92521b8e5d82c43b883c1f7dc92f9151112c73665913299c54caa4",
+    "bytes": 19118640,
+    "mode": "100755"
+  },
+  "source_inventory": {
+    "checked_files": 2385,
+    "mismatches": []
+  },
+  "packet_inventory": {
+    "checked_files": 411,
+    "mismatches": []
+  },
+  "protocol": {
+    "sha256": "7e0b9a7fb6973a3ba95fad70ddf911105f753a73b7fe45a8ab5040e3d6901d4d",
+    "bytes": 8893,
+    "mode": "100644"
+  },
+  "manifest_canonical": {
+    "sha256": "cd4996a57ccc216dac634994817796c16a0cc6dc45f48b4e903073b3700ee2be",
+    "bytes": 16913,
+    "mode": "100644"
+  },
+  "cargo_config": {
+    "path": "/tmp/sugarscape-minds-p4-20261007-vb9tv64o/cargo-home/config.toml",
+    "sha256": "d1c0ec173c0342c0fd0cba7ad16b1901325c64220eb6abd8082b99f76811d24c",
+    "bytes": 80,
+    "mode": "100644"
+  },
+  "source_inventory_canonical": {
+    "sha256": "29fcabbd65973632740b86ed2a9496f336c5ab489dee87536ede5d960cedaf42",
+    "bytes": 397759,
+    "mode": "100644"
+  },
+  "packet_inventory_file": {
+    "sha256": "0d20a539df5f11947671b82fce57388ca1be216649a6cf5adac795650f2489c8",
+    "bytes": 86926,
+    "mode": "100644"
+  },
+  "review_file": {
+    "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/prospective-review.md",
+    "sha256": "800226cf5b23a51c1aaca1282be793ba63cb1de83ff7587cfee88ef4a2523966",
+    "bytes": 15387,
+    "mode": "100644"
+  },
+  "accepted_command_file": {
+    "sha256": "ca8176c922405626c8ed483e2e81c8a3861051e6e360811ff3258d716317d14c",
+    "bytes": 1183,
+    "mode": "100644"
+  },
+  "prospective_acceptance_file": {
+    "sha256": "cd53b87c278db9c58b570b4b4d6e27cdde5fe670a95e72205ddbc916fa68342c",
+    "bytes": 731,
+    "mode": "100644"
+  },
+  "registered_world_invocations_before": 0,
+  "output_absent": true
+}

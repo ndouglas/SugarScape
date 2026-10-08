@@ -1,0 +1,58 @@
+{
+  "classification": "actual_complete_figure_content_QA_pending_independent_empirical_review",
+  "all128_original_native_estimates_preserved": true,
+  "primary": 64,
+  "secondary": 64,
+  "denominator": 40,
+  "originals_bound": true,
+  "json_csv_bytes_unchanged_by_layout": true,
+  "inventory_hashes_match": true,
+  "all_four_PNG_manually_inspected": true,
+  "all_four_SVG_labels_content_geometry_checked": true,
+  "plots": [
+    {
+      "plot": "01-primary-food",
+      "labels": 32,
+      "svg_mean_marks": 32,
+      "svg_interval_segments": 32,
+      "png_dimensions": [
+        2400,
+        1280
+      ],
+      "minimum_blank_top_pixels": 48
+    },
+    {
+      "plot": "02-primary-lifetime",
+      "labels": 32,
+      "svg_mean_marks": 32,
+      "svg_interval_segments": 32,
+      "png_dimensions": [
+        2400,
+        1280
+      ],
+      "minimum_blank_top_pixels": 48
+    },
+    {
+      "plot": "03-secondary-food",
+      "labels": 32,
+      "svg_mean_marks": 32,
+      "svg_interval_segments": 32,
+      "png_dimensions": [
+        2400,
+        1280
+      ],
+      "minimum_blank_top_pixels": 48
+    },
+    {
+      "plot": "04-secondary-lifetime",
+      "labels": 32,
+      "svg_mean_marks": 32,
+      "svg_interval_segments": 32,
+      "png_dimensions": [
+        2400,
+        1280
+      ],
+      "minimum_blank_top_pixels": 48
+    }
+  ]
+}

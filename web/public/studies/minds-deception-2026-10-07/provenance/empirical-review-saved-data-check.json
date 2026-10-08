@@ -1,0 +1,34 @@
+{
+  "utc": "2026-10-08T07:18:14.253827+00:00",
+  "reviewer": "/root/p4_empirical_scientific_reviewer",
+  "source": {
+    "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/scientific-campaign-e10f98d99586d94f5adc8eab1f95b80e5c5b1865/analysis.json",
+    "sha256": "14caedbb8ed105f1b65e3c07dc5aaed3428180b10122531fc4dc54c6ce00cf9b",
+    "bytes": 1052095171,
+    "biological_groups": 1760,
+    "frames": 114400,
+    "top_level_fields": [
+      "biological_groups",
+      "cells",
+      "census",
+      "effective_aliases",
+      "endpoints",
+      "estimates",
+      "repeated_endpoints",
+      "schema"
+    ],
+    "projection_semantics": "complete endpoint/cell/estimate/alias/duplicate fields; all full biological frames retained in immutable hash-bound original"
+  },
+  "projection_exactly_equals_full_native_nonframe_fields": true,
+  "independent_full_group_diagnostic_checks": {
+    "zero_food_paid_display_groups": 1600,
+    "empty_display_memory_correction_groups": 320,
+    "groups": 1760
+  },
+  "all1760_groups_verified": true,
+  "all3840_endpoint_memberships_verified": true,
+  "all96_cells40_seeds_verified": true,
+  "all128_estimates40_denominator_verified": true,
+  "full_saved_group_frames": 114400,
+  "world_rng_native_reanalysis_invocations": 0
+}

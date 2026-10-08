@@ -1,0 +1,17 @@
+{
+  "ended_utc": "2026-10-08T06:57:17.535259+00:00",
+  "exit_code": 0,
+  "elapsed_seconds": 23.329076415859163,
+  "stdout": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0,
+    "mode": "100644"
+  },
+  "stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0,
+    "mode": "100644"
+  },
+  "retry_performed": false,
+  "registered_world_or_rng_invocations": 0
+}

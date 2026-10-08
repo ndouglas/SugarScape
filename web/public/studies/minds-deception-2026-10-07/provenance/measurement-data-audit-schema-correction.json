@@ -1,0 +1,13 @@
+{
+  "recorded_utc": "2026-10-08T06:55:10.846839+00:00",
+  "prior_audit_abort": "measurement-data-audit-abort.json",
+  "error_scope": "read-only writer audit assertion; native registered command exited 0",
+  "incorrect_assertion": "128 estimate id strings must be unique",
+  "actual_schema": "comparison id is shared by two metrics; identity is (id, metric)",
+  "corrected_assertion": "128 unique (id, metric), 64 primary and 64 secondary; all denominator and summary n 40",
+  "source_of_schema": "survey/src/claims/deception_report.rs Estimate { id, metric, primary, denominator, summary, unavailable }",
+  "registered_run_retried": false,
+  "raw_data_or_source_changed": false,
+  "registered_execution_remains_stopped_after_single_successful_launch": true,
+  "remaining_authorized_work": "read-only saved-data audit and single same-native saved-data reanalysis"
+}

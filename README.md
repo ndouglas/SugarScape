@@ -2997,10 +2997,12 @@ campaign preserves Minds 9's separate paid-defense findings.
 ### Minds P4: supplied caching gestures
 
 The [fixed prospective protocol](docs/superpowers/specs/2026-10-07-minds-deception-protocol.md)
-is implemented as a construction candidate; independent implementation review and a separate
-prospective scientific gate remain pending. Registered execution is held. The declaration is
-96 cells × 40 paired seeds (3,840 episodes), with 64 primary Sham-minus-MatchedNeutral estimates
-and 64 separate Sham-minus-Ordinary secondary estimates. All strata and physical aliases remain
+preceded one accepted native campaign: all 96 cells × 40 paired seeds (3,840 episodes),
+64 primary Sham-minus-MatchedNeutral estimates and 64 separate Sham-minus-Ordinary secondary
+estimates are complete and independently empirically Approved. [Dated findings](docs/superpowers/specs/2026-10-07-minds-deception-findings.md)
+and the [complete scientific packet and lossless evidence downloads](survey/out/minds-deception-2026-10-07/README.md)
+retain every zero/adverse result. Final integration review, publication, remote CI/Pages/served
+verification and final archival remain pending. All strata and physical aliases remain
 visible; there is no pooled success verdict.
 
 Supplied Sham gestures move zero food and pay effort before emitting a cue. Ambiguous gestures
@@ -3008,7 +3010,10 @@ can create a false estimate in bounded observer memory; false estimates, actual 
 owner economics are distinct outcomes. Clear and unseen controls, matched routes and costs test
 those assumptions. The model claims no learned intent, theory of mind, animal cognition or numerical
 corvid reproduction. The unresolved 1998 citation trail remains a source lead. Construction
-seeds 7/8 and native/WASM/checkpoint checks do not constitute scientific results.
+seeds 7/8 remain separate from the registered measurement. Seen ambiguous off-route Sham
+reduces transfer and increases lifetime relative to the matched control; on-route false empty
+inspections leave both endpoints unchanged. Paid gestures can cost lifetime against Ordinary.
+Ordinary recovery and temporary source occupancy participate in the supplied off-route race.
 
 ### Threshold Models (Granovetter 1978; Watts 2002)
 

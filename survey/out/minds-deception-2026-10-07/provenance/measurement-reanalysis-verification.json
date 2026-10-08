@@ -1,0 +1,58 @@
+{
+  "verified_utc": "2026-10-08T06:57:28.001177+00:00",
+  "reanalysis_output": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/scientific-reanalysis-e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+  "same_accepted_native_binary": {
+    "sha256": "38f7137b7b92521b8e5d82c43b883c1f7dc92f9151112c73665913299c54caa4",
+    "bytes": 19118640,
+    "mode": "100755"
+  },
+  "parity": {
+    "analysis.json": {
+      "registered": {
+        "sha256": "14caedbb8ed105f1b65e3c07dc5aaed3428180b10122531fc4dc54c6ce00cf9b",
+        "bytes": 1052095171,
+        "mode": "100644"
+      },
+      "reanalysis": {
+        "sha256": "14caedbb8ed105f1b65e3c07dc5aaed3428180b10122531fc4dc54c6ce00cf9b",
+        "bytes": 1052095171,
+        "mode": "100644"
+      },
+      "actual_byte_comparison_equal": true
+    },
+    "results.md": {
+      "registered": {
+        "sha256": "b2ec0bcc72cdd6f2b82e46f26d16cc30f17294be2bab9a8af2a9eeaba0832470",
+        "bytes": 39311,
+        "mode": "100644"
+      },
+      "reanalysis": {
+        "sha256": "b2ec0bcc72cdd6f2b82e46f26d16cc30f17294be2bab9a8af2a9eeaba0832470",
+        "bytes": 39311,
+        "mode": "100644"
+      },
+      "actual_byte_comparison_equal": true
+    }
+  },
+  "registered_raw_files_checked_unchanged": 11525,
+  "source_files_checked_unchanged": 2385,
+  "packet_files_checked_unchanged": 411,
+  "mismatches": [],
+  "source_head": "e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+  "full_git_status": "",
+  "cargo_config": {
+    "path": "/tmp/sugarscape-minds-p4-20261007-vb9tv64o/cargo-home/config.toml",
+    "sha256": "d1c0ec173c0342c0fd0cba7ad16b1901325c64220eb6abd8082b99f76811d24c",
+    "bytes": 80,
+    "mode": "100644"
+  },
+  "reanalysis_output_inventory": {
+    "sha256": "cbacc803af005541bbd61005d9ab48631f3008c9d81435924564e7de3880d7bc",
+    "bytes": 327,
+    "mode": "100644"
+  },
+  "registered_measurement_launches": 1,
+  "saved_data_reanalysis_launches": 1,
+  "additional_registered_world_or_rng_invocations": 0,
+  "no_retry_resume_seed_replacement_or_overwrite": true
+}

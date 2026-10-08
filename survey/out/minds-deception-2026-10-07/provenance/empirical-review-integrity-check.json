@@ -1,0 +1,12 @@
+{
+  "utc": "2026-10-08T07:18:13.421229+00:00",
+  "reviewer": "/root/p4_empirical_scientific_reviewer",
+  "files_rehashed": 11525,
+  "bytes_rehashed": 2556882562,
+  "all_hash_size_mode_matches": true,
+  "full_analysis_and_results_direct_byte_parity": true,
+  "acceptance_precedes_exact_command": true,
+  "actual_binary_sha256": "38f7137b7b92521b8e5d82c43b883c1f7dc92f9151112c73665913299c54caa4",
+  "measurement_raw_inventory_sha256": "cadf7f7f0768e7b50ad6d640a754a808017407bbad674833fe2d1aef390452ff",
+  "native_world_rng_invocations": 0
+}

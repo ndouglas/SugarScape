@@ -1,0 +1,11 @@
+{
+  "classification": "layout_only_rerender",
+  "original_source_sha256": "14caedbb8ed105f1b65e3c07dc5aaed3428180b10122531fc4dc54c6ce00cf9b",
+  "presentation_projection_sha256": "c4743970a2e2df09a7c2a6b4209454eb330d9db6582e2656d8a853c86a89b03b",
+  "chart_json_csv_actual_byte_equal": true,
+  "paired_estimates_recalculated": false,
+  "controller_preview_concern": "primary-lifetime title appeared clipped in preview",
+  "before_pixel_qa": "all four PNG files had26 fully white top rows; no file clipping proved",
+  "change": "all four titles moved from default y=.98 to explicit y=.94",
+  "actual_figures": 4
+}

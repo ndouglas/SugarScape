@@ -1,0 +1,7 @@
+{
+  "utc": "2026-10-08T07:23:17.892619+00:00",
+  "all96_exact_factorial_cells": true,
+  "full40seed_vector_comparison_verifies_effective_alias_groups": 28,
+  "full40seed_vector_comparison_verifies_repeated_endpoint_groups": 4,
+  "ordinary_label_alias_warning_required": true
+}

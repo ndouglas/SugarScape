@@ -1,0 +1,10 @@
+{
+  "utc": "2026-10-08T07:23:32.408828+00:00",
+  "all_files_verified_sha_bytes_mode": {
+    "source-inventory.json": 2385,
+    "packet-inventory.json": 411
+  },
+  "protocol_manifest_source_inventory_binding_valid": true,
+  "scientific_source_revision": "e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+  "separate_from_integration_revision": true
+}

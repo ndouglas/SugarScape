@@ -1,0 +1,42 @@
+{
+  "started_utc": "2026-10-08T06:56:54.193902+00:00",
+  "writer": "/root/p4_registered_measurement_writer",
+  "command": [
+    "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/task5-prospective-packet-e10f98d/native/survey",
+    "--deception",
+    "--analyze",
+    "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/scientific-campaign-e10f98d99586d94f5adc8eab1f95b80e5c5b1865/final-index.json",
+    "--out",
+    "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/scientific-reanalysis-e10f98d99586d94f5adc8eab1f95b80e5c5b1865"
+  ],
+  "cwd": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/task5-scientific-source-e10f98d",
+  "environment_overrides": {
+    "CARGO_HOME": "/tmp/sugarscape-minds-p4-20261007-vb9tv64o/cargo-home",
+    "CARGO_TARGET_DIR": "/tmp/sugarscape-minds-p4-20261007-vb9tv64o/target",
+    "CARGO_NET_OFFLINE": "true"
+  },
+  "login_shell": false,
+  "binary": {
+    "sha256": "38f7137b7b92521b8e5d82c43b883c1f7dc92f9151112c73665913299c54caa4",
+    "bytes": 19118640,
+    "mode": "100755"
+  },
+  "source_head": "e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+  "full_git_status": "",
+  "input_final_index": {
+    "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/scientific-campaign-e10f98d99586d94f5adc8eab1f95b80e5c5b1865/final-index.json",
+    "sha256": "65d69aa4213704022ebb75b170febab0da2b2b4c6d1ba6aadce76fbaf5e95987",
+    "bytes": 1186838,
+    "mode": "100644"
+  },
+  "input_raw_inventory": {
+    "sha256": "cadf7f7f0768e7b50ad6d640a754a808017407bbad674833fe2d1aef390452ff",
+    "bytes": 2055210,
+    "mode": "100644"
+  },
+  "fresh_distinct_output_absent": true,
+  "saved_data_only": true,
+  "launch_count": 1,
+  "registered_world_or_rng_invocations": 0,
+  "retry_authorized": false
+}

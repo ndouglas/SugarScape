@@ -1,0 +1,354 @@
+{
+  "actual_analysis": {
+    "biological_groups": 1760,
+    "bytes": 1052095171,
+    "frames": 114400,
+    "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/scientific-campaign-e10f98d99586d94f5adc8eab1f95b80e5c5b1865/analysis.json",
+    "projection_semantics": "complete endpoint/cell/estimate/alias/duplicate fields; all full biological frames retained in immutable hash-bound original",
+    "sha256": "14caedbb8ed105f1b65e3c07dc5aaed3428180b10122531fc4dc54c6ce00cf9b",
+    "top_level_fields": [
+      "biological_groups",
+      "cells",
+      "census",
+      "effective_aliases",
+      "endpoints",
+      "estimates",
+      "repeated_endpoints",
+      "schema"
+    ]
+  },
+  "actual_effective_alias_groups": 28,
+  "actual_figures_inventory": {
+    "bytes": 3301,
+    "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/figures/plot-inventory.json",
+    "sha256": "f794b4e3810f2963ac7a7db72ead77dfa8f35adff1587b96b83198ad997f4ecc"
+  },
+  "actual_full_biological_groups": 1760,
+  "actual_repeated_endpoint_vector_groups": 4,
+  "actual_results": {
+    "bytes": 39311,
+    "mode": "100644",
+    "sha256": "b2ec0bcc72cdd6f2b82e46f26d16cc30f17294be2bab9a8af2a9eeaba0832470"
+  },
+  "additional_World_RNG_invocations_by_reporting": 0,
+  "byte_identical_reanalysis": {
+    "additional_registered_world_or_rng_invocations": 0,
+    "cargo_config": {
+      "bytes": 80,
+      "mode": "100644",
+      "path": "/tmp/sugarscape-minds-p4-20261007-vb9tv64o/cargo-home/config.toml",
+      "sha256": "d1c0ec173c0342c0fd0cba7ad16b1901325c64220eb6abd8082b99f76811d24c"
+    },
+    "full_git_status": "",
+    "mismatches": [],
+    "no_retry_resume_seed_replacement_or_overwrite": true,
+    "packet_files_checked_unchanged": 411,
+    "parity": {
+      "analysis.json": {
+        "actual_byte_comparison_equal": true,
+        "reanalysis": {
+          "bytes": 1052095171,
+          "mode": "100644",
+          "sha256": "14caedbb8ed105f1b65e3c07dc5aaed3428180b10122531fc4dc54c6ce00cf9b"
+        },
+        "registered": {
+          "bytes": 1052095171,
+          "mode": "100644",
+          "sha256": "14caedbb8ed105f1b65e3c07dc5aaed3428180b10122531fc4dc54c6ce00cf9b"
+        }
+      },
+      "results.md": {
+        "actual_byte_comparison_equal": true,
+        "reanalysis": {
+          "bytes": 39311,
+          "mode": "100644",
+          "sha256": "b2ec0bcc72cdd6f2b82e46f26d16cc30f17294be2bab9a8af2a9eeaba0832470"
+        },
+        "registered": {
+          "bytes": 39311,
+          "mode": "100644",
+          "sha256": "b2ec0bcc72cdd6f2b82e46f26d16cc30f17294be2bab9a8af2a9eeaba0832470"
+        }
+      }
+    },
+    "reanalysis_output": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/scientific-reanalysis-e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+    "reanalysis_output_inventory": {
+      "bytes": 327,
+      "mode": "100644",
+      "sha256": "cbacc803af005541bbd61005d9ab48631f3008c9d81435924564e7de3880d7bc"
+    },
+    "registered_measurement_launches": 1,
+    "registered_raw_files_checked_unchanged": 11525,
+    "same_accepted_native_binary": {
+      "bytes": 19118640,
+      "mode": "100755",
+      "sha256": "38f7137b7b92521b8e5d82c43b883c1f7dc92f9151112c73665913299c54caa4"
+    },
+    "saved_data_reanalysis_launches": 1,
+    "source_files_checked_unchanged": 2385,
+    "source_head": "e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+    "verified_utc": "2026-10-08T06:57:28.001177+00:00"
+  },
+  "destinations": {
+    "deployment": "web/dist/studies/minds-deception-2026-10-07",
+    "findings": "docs/superpowers/specs/2026-10-07-minds-deception-findings.md",
+    "immutable_full_public_archive": "controller must supply verified public immutablearchive URL +fullfileinventory; fulloriginal remains externalto compact Pages packet",
+    "packet": "survey/out/minds-deception-2026-10-07",
+    "pages": "web/public/studies/minds-deception-2026-10-07"
+  },
+  "empirical_reporting_correction": {
+    "actual_all96cell_crosscheck": {
+      "all_seeds_per_cell": 40,
+      "cells_checked": 96,
+      "classification": "corrected_reporting_diagnostics_against_independent_allraw_trace_receipt",
+      "free_departure_frame": 40,
+      "free_per_orientation": 22,
+      "free_physical_frame": 39,
+      "next_frame_successful_departures": 124,
+      "paid_departure_frame": 37,
+      "paid_per_orientation": 40,
+      "paid_physical_frame": 36,
+      "paired_estimates_unchanged": true,
+      "physical_recovery_episodes": 124,
+      "source_owner_occupancy_explicitly_retained": true
+    },
+    "cause": "source_recovered actionflag describes nextturn departure state, not physical source dug; selected-target occupancy doesnotshow suppressed candidates",
+    "complete_original_rescan": {
+      "all1760_groups_and3840_memberships_rechecked": true,
+      "classification": "complete_read_only_reporting_recovery_correction_scan",
+      "correction": "physical recovery from owner positive dug at originalsource; departureflag recorded separately; allphysical recoveryframes retained",
+      "original_data_modified": false,
+      "paired_estimates_recalculated": false,
+      "presentation_analysis_actual_byte_equal": true,
+      "source": {
+        "biological_groups": 1760,
+        "bytes": 1052095171,
+        "frames": 114400,
+        "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/scientific-campaign-e10f98d99586d94f5adc8eab1f95b80e5c5b1865/analysis.json",
+        "projection_semantics": "complete endpoint/cell/estimate/alias/duplicate fields; all full biological frames retained in immutable hash-bound original",
+        "sha256": "14caedbb8ed105f1b65e3c07dc5aaed3428180b10122531fc4dc54c6ce00cf9b",
+        "top_level_fields": [
+          "biological_groups",
+          "cells",
+          "census",
+          "effective_aliases",
+          "endpoints",
+          "estimates",
+          "repeated_endpoints",
+          "schema"
+        ]
+      }
+    },
+    "native_endpoints_paired_summaries_plot_inputs_unchanged": true,
+    "physical_recovery_definition": "owner positive dug at actual originalsource position",
+    "prior_draft_and_diagnostics_preserved": "prior-reporting-recovery-correction/",
+    "rawphysical_frame_records_retained": true,
+    "statistical_recalculation": false,
+    "status": "CORRECTED_PENDING_INDEPENDENT_REVIEW_DISPOSITION"
+  },
+  "estimates": {
+    "denominator": 40,
+    "interval": "paired Student-t descriptive95%",
+    "primary": 64,
+    "recalculated_by_plotting_reporting": false,
+    "secondary": 64,
+    "significance_or_overall_verdict": null
+  },
+  "execution_reporting_utc_date": "2026-10-08",
+  "figures_QA": {
+    "bytes": 1355,
+    "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/actual-figure-qa.json",
+    "sha256": "800894eee156702c3da409ffd2da3bb9dc6cc8527b56164d6438e4a35392eccf"
+  },
+  "later_gates": {
+    "empirical_review": "PENDING_INDEPENDENT_REVIEW",
+    "final_archival": "CONTROLLER_OWNED",
+    "public_staging": "NOT_PERFORMED_BY_REPORTER",
+    "publication": "NOT_PERFORMED_BY_REPORTER",
+    "served_scientific_hash_checks": "REQUIRED_AFTER_PUSH"
+  },
+  "limitations": [
+    "supplied cue/physical schedule; no learning,intent,theory-of-mind,evolutionary or animal-numerical reproduction claim",
+    "finite two-body unreplenished64-tick fixture; allowners die37-52ticks; no population-survival claim",
+    "distinct labels,seed/fingerprint/framegroups do not establish independence; Ordinary effort labels are physical aliases",
+    "false estimate and empty inspection do not imply economic benefit; onroute effectszero",
+    "paid offroute results include changed ownerbalance/recoverytiming; no crosscost optimum inference",
+    "unavailable representation tested synthetically; actualunavailable census0; no survivorseed filter",
+    "unresolved1998citation remains lead; no confirmed numerical animal target",
+    "Zero selected positive-valued source target occupant does not exclude candidate suppression; rawphysical recoveryframe source-owner body and next-frame legal departure are retained. No isolated causal share for diversion,ordinary recovery or transient body occupancy is estimated."
+  ],
+  "manifest_sha256": "cd4996a57ccc216dac634994817796c16a0cc6dc45f48b4e903073b3700ee2be",
+  "measurement_acceptance_receipts": [
+    {
+      "bytes": 11416,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/measurement-report.md",
+      "sha256": "2d73f1340fd0230ed5c7969657e74d20406cf1ec13b92946c8ae1394a886a203"
+    },
+    {
+      "bytes": 2496,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/measurement-data-audit.json",
+      "sha256": "c9cda7975e9a60156737b30f9a316554e0708ad689b154c6a058ace9a5375ca2"
+    },
+    {
+      "bytes": 2055210,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/measurement-raw-inventory.json",
+      "sha256": "cadf7f7f0768e7b50ad6d640a754a808017407bbad674833fe2d1aef390452ff"
+    },
+    {
+      "bytes": 1372803,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/measurement-attempt-registry.json",
+      "sha256": "2f809d08e666f9d2996639a8fcd4a5de5c9bbf54c663177b549cbdaf99df99f5"
+    },
+    {
+      "bytes": 2016,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/measurement-reanalysis-verification.json",
+      "sha256": "81511029bd619b8ea9c99c6dbabc0e6148fc9895e533d86fce6521ec7e94d171"
+    },
+    {
+      "bytes": 15387,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/prospective-review.md",
+      "sha256": "800226cf5b23a51c1aaca1282be793ba63cb1de83ff7587cfee88ef4a2523966"
+    },
+    {
+      "bytes": 731,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/prospective-acceptance.json",
+      "sha256": "cd53b87c278db9c58b570b4b4d6e27cdde5fe670a95e72205ddbc916fa68342c"
+    },
+    {
+      "bytes": 1167,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/measurement-command-start.json",
+      "sha256": "18270205b471e98cc9daf154795507951ff9bdef9bc9e5d90ef1c7ceb421b07c"
+    },
+    {
+      "bytes": 512,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/measurement-command-end.json",
+      "sha256": "a7ebb5dcbe7b5bbfb361b2799fc99da956051551ffa2febb25de657ca3754ada"
+    },
+    {
+      "bytes": 157,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/measurement-process.json",
+      "sha256": "18edfbbe5f4a4436ae9a33f5378269a5abd0601fb4279d2f777a619aef752c15"
+    },
+    {
+      "bytes": 2817,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/measurement-environment.json",
+      "sha256": "ccf990046d13084943a251f3a1db54ced2925a5983fe08cea8809347cbd91ae1"
+    },
+    {
+      "bytes": 261,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/measurement-data-audit-abort.json",
+      "sha256": "d352c3a0ebff133753c9bb1cac8ccf5dd4539cc6cfb6c2df8c9029f6c88021d0"
+    },
+    {
+      "bytes": 865,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/measurement-data-audit-schema-correction.json",
+      "sha256": "3c8388e5cbe28de21b57a3535896e1f7cf00ea19e7f8b7f25cbb880ee9900eb6"
+    },
+    {
+      "bytes": 36545,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/empirical-review-physical-trace-check.json",
+      "scope": "independent empirical trace crosscheck, not an empirical acceptance verdict",
+      "sha256": "cb8881e4994cf9d4bb05b5cda4eb2bf5c9967336b4436ba746d86d5888f4cfd0"
+    },
+    {
+      "bytes": 300,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/empirical-review-matched-control-check.json",
+      "scope": "independent empirical trace crosscheck, not an empirical acceptance verdict",
+      "sha256": "5853fba61e0e13c1f9834860b85578a159baa1f4fcdd3ccc55c4b2f30db21020"
+    }
+  ],
+  "measurement_census": {
+    "attempted": 3840,
+    "complete": 3840,
+    "failed": 0,
+    "invalid": 0,
+    "partial": 0,
+    "pending": 0,
+    "planned": 3840,
+    "unavailable_lineage": 0,
+    "unstarted": 0
+  },
+  "native_binary_sha256": "38f7137b7b92521b8e5d82c43b883c1f7dc92f9151112c73665913299c54caa4",
+  "observed_reporting_checkout_head": "0e24e3fe4fefcbf4d445c93dd004cd8a0a2c859a",
+  "plotting_environment": {
+    "bytes": 626,
+    "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/actual-plotting-environment.json",
+    "sha256": "6ea7c8c7374b4e66445cb811cecea9249fd2d88682398eb12e7a37889b8420a7"
+  },
+  "plotting_requirements": {
+    "bytes": 202,
+    "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/plotting-requirements-lock.txt",
+    "sha256": "73c4f1c8c9454b5c4743aeb253b2b5eb56bfbeae92d21cd8927ab5ac57fe46b0"
+  },
+  "plotting_tool_sources": {
+    "bytes": 3080,
+    "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/plotting-tool-source-inventory.json",
+    "sha256": "cdb20617e7b0e530004d464acb7d845981dcd4f021a90fa2d70fc7afd88a5d43"
+  },
+  "presentation_projection": {
+    "all_biological_groups_scanned": true,
+    "all_estimates_cells_endpoints_aliases_duplicates_preserved": true,
+    "classification": "full_complete_analysis_streaming_presentation_projection",
+    "exact_cells": 96,
+    "exact_endpoint_memberships": 3840,
+    "full_original_immutable_and_retained": true,
+    "group_count": 1760,
+    "logical_episode_frames": 249600,
+    "source": {
+      "biological_groups": 1760,
+      "bytes": 1052095171,
+      "frames": 114400,
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/scientific-campaign-e10f98d99586d94f5adc8eab1f95b80e5c5b1865/analysis.json",
+      "projection_semantics": "complete endpoint/cell/estimate/alias/duplicate fields; all full biological frames retained in immutable hash-bound original",
+      "sha256": "14caedbb8ed105f1b65e3c07dc5aaed3428180b10122531fc4dc54c6ce00cf9b",
+      "top_level_fields": [
+        "biological_groups",
+        "cells",
+        "census",
+        "effective_aliases",
+        "endpoints",
+        "estimates",
+        "repeated_endpoints",
+        "schema"
+      ]
+    },
+    "statistical_estimates_recalculated": false,
+    "stored_group_frames": 114400
+  },
+  "preserved_history": [
+    "Historical Task4 TDD noncompliance remains disclosed; reviewedreplacement/WB1repair doesnoterasehistory",
+    "preexisting source-map-js/buildtooladvisories and browser-only DPNode skip remain disclosed; no general remediation claim",
+    "writer initial read-only audit assertion128 comparisonIDs corrected to64 IDs\u00d72 metrics; no measurement rerun or originaldata repair",
+    "first reporting stream completed but relative audit-path lookup failed; preserved render-attempt1 diagnostics/log, targeted regression/pathfix",
+    "controller preview title concern; actual originalPNG pixelQA26 blanktoprows, no file clipping proved; allfour titles additionalmarginy.94, inputsbyteidentical",
+    "exploratory reporting walkcounter wronglytreated actor2:arrived asfailure; corrected suffixcriterion, retainedcommandhistory, originalrecordunchanged",
+    "Fresh independent empirical review identified recoveryflag/physical-dig offset and postrecovery occupancy overclaim. New raw-shaped static regression failed before fix; corrected physical source dug vsdeparture, rescanned fulloriginal1760groups/3840memberships and refreshed all96\u00d740 distributions. Prior draft/diagnostics/provenance/tools/log preserved; native summaries unchanged."
+  ],
+  "projection_limit": "complete endpoint/cohort,cell,estimate,alias/duplicate fields retained; full unfiltered biological frames remain in immutable original1GB analysis. All1760 groups and3840 memberships scanned; percell diagnostic distributions retain all40.",
+  "prospective_acceptance": {
+    "acceptance_is_separate_from_implementation": true,
+    "actual_verdict": "ACCEPTED",
+    "binary_sha256": "38f7137b7b92521b8e5d82c43b883c1f7dc92f9151112c73665913299c54caa4",
+    "manifest_sha256": "cd4996a57ccc216dac634994817796c16a0cc6dc45f48b4e903073b3700ee2be",
+    "measurement_status": "NOT_STARTED",
+    "protocol_sha256": "7e0b9a7fb6973a3ba95fad70ddf911105f753a73b7fe45a8ab5040e3d6901d4d",
+    "recorded_utc": "2026-10-08T06:19:18.616234+00:00",
+    "retry_resume_seed_replacement_authorized": false,
+    "review_sha256": "800226cf5b23a51c1aaca1282be793ba63cb1de83ff7587cfee88ef4a2523966",
+    "reviewer": "/root/p4_prospective_scientific_reviewer",
+    "source_revision": "e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+    "writer_count": 1
+  },
+  "protocol_sha256": "7e0b9a7fb6973a3ba95fad70ddf911105f753a73b7fe45a8ab5040e3d6901d4d",
+  "raw_episode_frames": 249600,
+  "registered_attempts": 3840,
+  "registered_cells": 96,
+  "registered_measurement_launches": 1,
+  "registration_date": "2026-10-07",
+  "saved_data_reanalysis_launches": 1,
+  "schema": "p4-provenance-draft-v1",
+  "scientific_source_revision": "e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+  "seeds_per_cell": 40,
+  "status": "DRAFT_PENDING_FRESH_INDEPENDENT_EMPIRICAL_REVIEW",
+  "study_slug": "minds-deception-2026-10-07"
+}

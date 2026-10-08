@@ -1,0 +1,44 @@
+# Fixed caching-gesture laboratory: prospective construction protocol
+
+Status: construction candidate. This committed protocol and construction opportunity packet require separate independent prospective acceptance before any registered scientific episodes. A construction pass is not scientific acceptance. The model makes no claim of learned deceptive intent, theory of mind, animal cognition, evolutionary stability or numerical reproduction of a corvid experiment. There is no numerical animal target.
+
+## Fixed matrix and budgets
+
+The matrix has 96 cells: sender Ordinary, MatchedNeutral or Sham × public view Ambiguous or Clear × display seen or unseen × OnRoute or OffRoute layout × effort charge 0 or 3 × base or reflected orientation. `conditions()` returns canonical full-axis identities in lexical order. Canonical receipt labels are `ordinary`/`matched-neutral`/`sham`, `ambiguous`/`clear`, `seen`/`unseen`, `on-route`/`off-route`, `cost0`/`cost3`, and `m0`/`m1`; for example `matched-neutral-ambiguous-seen-on-route-cost3-m0`. Enum serde labels remain snake_case, independently of these canonical receipt labels. Ordinary effort labels are effective physical aliases; they are not additional independent replication. The committed manifest will preserve these aliases and repeated biological trajectories/endpoints, without asserting independence from distinct labels or seeds.
+
+Registered execution, held until separate acceptance, is exactly 96 × 40 paired seeds, 3,840 episodes, seeds 20001–20040. No seed, matrix, axis, food quantity or horizon override is allowed through the survey route. Construction uses only seeds 7/8 and all 48 base conditions; reflected checking transforms geometry only, without reflected outcome pilots. Checked native/WASM construction helpers are separate from measurement. Synthetic static records may carry registered labels without constructing a World or drawing RNG.
+
+Each 9 × 9 world has an opaque border. Owner/observer holdings are 44/96, metabolism 1, capacity 128, reserve 4, vision 2/6. The owner has one original 12-unit cache; finite patches at (2,2) and (2,3) contain 4 each. Owner does not read receiver memory or view. Receiver watches, has bounded seen-cache memory span 64, and does not use map memory. There are no growback, reproduction, replacements, guards, larders, trait evolution, discovery draws, generic communication or extra controller families. Normal surplus burial is suppressed. Nominal gesture amount is 12. Sham moves zero food, creates no physical cache/cohort and records zero gross burial.
+
+## Boundaries and legal actions
+
+Coordinates below are base orientation. Reflect every coordinate by x → 8 − x, including source, patches, waypoints and departure target, then use ordinary movement/path-planner index tie handling. Preserve ordinary shuffled actor turn order; no treatment-specific turn order or teleportation. Frame 0 is before any turn. Frame n+1 records actions taken at tick n.
+
+| Tick boundary | Owner | Observer |
+| --- | --- | --- |
+| 0 | Bury exactly 12 at A=(3,3), with zero initial effort/burial cost | Hold (3,6), actually see the clear positive transfer in both view modes |
+| 1–7 | Hold | Hold |
+| 8–12, neutral/sham | OnRoute: walk (3,4),(3,5), then hold; OffRoute: walk (4,3),(5,3),(5,4),(5,5),(5,6) | Seen: hold (3,6); unseen: walk (4,6),(5,6),(6,6),(7,6),(7,7) |
+| 13, neutral/sham | One neutral/sham bout at B=(3,5) or (5,6), effort 0/3; nominal12 for sham only | Hold final seen/unseen position |
+| 14–19, neutral/sham | OnRoute: walk (2,5),(2,4),(2,3), then hold; OffRoute: walk (5,5),(4,5),(3,5),(2,5),(2,4),(2,3) | Seen: hold; unseen: walk (7,6),(6,6),(5,6),(4,6),(3,6), then hold |
+| 20–31, neutral/sham | Ordinary Book | Hold through tick31 |
+| 8–31, Ordinary | Ordinary Book from8; no display routing/bout/effort charge | Same opportunity-specific scripted walks and holds |
+| From32 | Ordinary, subject to common departure below | Ordinary watching/raid decisions with no forced target |
+
+Preparation holds, designated holds, display and observer scripted walks gather zero and pay ordinary metabolism. Observer walks call `walk_without_gather` directly; they do not raid/harvest and discard the result. Owner outward/return walks use normal legal arrival/gather semantics, including ordinary dig/raid if applicable. Every scripted waypoint checks actual body occupancy and records actual position/WalkOutcome. The off-route return uses row y=5 to avoid the held observer at (3,6). Occupied/unreachable routes cancel the unattempted bout and retain a failure receipt. Owner removal cancels an unattempted nonordinary bout as OwnerDied at the removal boundary. One attempt per episode is final, including unaffordability. Effort is debited before cue emission; unaffordable action consumes its turn, emits no completed cue and still pays metabolism.
+
+After successful owner recovery at A, queue exactly one ordinary legal departure toward (3,2) on its next turn for every treatment. Apply the declared coordinate transform. Record actual occupancy, movement/food/metabolic effects and failure. An occupied departure remains a consumed action with its legal failure; do not mandate success, a different destination or a recovered cache in every episode. Occupancy records explicitly distinguish a blocked arrival after actual recovery. Source/display sites are physically free of bodies at receiver release in construction controls. An on-route decoy can share the first receiver movement step toward the real source; additional travel is not assumed.
+
+## Evidence and diagnostic separation
+
+Clear preparation produces actual positive public transfer. Later matching ambiguous real/sham gestures produce the same public Observation: no sham flag, actual transfer, policy or stock balance. Clear zero leaves earlier positive evidence unchanged. The observer receives only public Observation; research ObservedRecord keeps separate creation-time actual transfer/stock. Choice records are captured at actual candidate selection before movement; inspection, actual stock, raid amount/waste and occupancy are captured at actual arrival, not reconstructed targets from final positions. Private SenderState, physical caches, site food, costs, demand/consumption, restrictions and deaths are retained in frames. Research DTOs, buffers, counters and lineage do not drive either policy or fingerprint.
+
+The runner records initial frame0 and every completed frame, counts a living-owner tick once at tick start, and runs to64 or until both die. Each sink call follows storage of its known frame; returned sink failure preserves initial/completed frames in EpisodeFailure.partial. Sink I/O draws no RNG and changes no biology. Per-tick buffers clear, memories/physical food do not. Diagnostic-disabled or failed lineage has a nonblank unavailability reason and no numerical zero surrogate. Original-food ledger tolerance is `1e-9 * max(1, initial)`; existing callbacks reconcile physical carried/cached food and labelled consumption/cost/theft/death losses.
+
+## Prospective analysis and durable execution contract
+
+Retain exactly64 primary descriptive estimates (Sham minus MatchedNeutral: two endpoints ×32 strata), separately retain64 secondary Sham minus Ordinary estimates. Endpoints are owner lifetime ticks and original-food transfer to thief. Use all40 paired seeds and existing paired Student-t summaries; unavailable original-food lineage makes its estimate explicitly unavailable, never zero. Do not pair surviving subsets, pool favorably, add an overall Holds/Fails verdict, multiplicity inference or unregistered interactions. Valid zero/negative effects remain valid.
+
+Persist an exclusive attempt receipt with full identity before constructing each episode, then persist each completed frame and final outcome/error. Preserve partial, invalid, unavailable, pending and interrupted counts; no overwrite, retry/resume or replacement seed. Timing starts before episode construction and covers construction, stepping, diagnostics and durable frame-sink I/O; it excludes final envelope I/O and analysis. This is a descriptive wall-time boundary, not a claim that frame I/O is absent. CLI provenance flags do not create prospective acceptance.
+
+If candidate construction is invalid, retain its failure receipt, document a prospective revision and correct geometry/scheduling before the independent gate. Changing an accepted design parameter requires a visible amendment. Never inspect registered-seed outcomes or tune budgets/axes to manufacture gains. Development issue handling stops after three failed attempts, documents failures and reassesses with the controller. Retained P3/Democratic Peace source, executables, environments, data, reports and archives remain untouched; shared accounting changes require explicit old-behavior equivalence fixtures.

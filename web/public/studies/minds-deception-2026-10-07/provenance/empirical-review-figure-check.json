@@ -1,0 +1,63 @@
+{
+  "utc": "2026-10-08T07:22:36.608845+00:00",
+  "reviewer": "/root/p4_empirical_scientific_reviewer",
+  "all128_chart_json_csv_rows_exact_native_estimates": true,
+  "all128_native_markdown_rows_exact_saved_summary": true,
+  "all128_svg_means_intervals_geometry_verified_against_native": true,
+  "all_four_png_visually_inspected": true,
+  "all_four_png_2400x1280_and_blank_top48": true,
+  "files": [
+    {
+      "bytes": 165191,
+      "path": "01-primary-food.png",
+      "sha256": "187c07010d5d8c7180c0a9a87902e758f9fccb3c0cd672054e220ff069a97969"
+    },
+    {
+      "bytes": 42267,
+      "path": "01-primary-food.svg",
+      "sha256": "8cd7479160e8e8d5a58690dce14d63ba423768d7b06b115482a268c00f840d62"
+    },
+    {
+      "bytes": 163049,
+      "path": "02-primary-lifetime.png",
+      "sha256": "d997919f3eb0ba6100d8c2836d53cc91e84277b108791bee5573fc97fc974296"
+    },
+    {
+      "bytes": 42180,
+      "path": "02-primary-lifetime.svg",
+      "sha256": "acd1a7f4c53821a94c3342f307fc9c4e007fe3a1b7e8e88a665467e11b1ee7fb"
+    },
+    {
+      "bytes": 165778,
+      "path": "03-secondary-food.png",
+      "sha256": "009a2c9762869775e3ac6a6b365d42b6ff69ff7de576a5b27c549bcc718d3200"
+    },
+    {
+      "bytes": 42262,
+      "path": "03-secondary-food.svg",
+      "sha256": "7093d88073ae7df2ef873e2aaced3c49eceb2883fac83c5814d3be6199c51e62"
+    },
+    {
+      "bytes": 163138,
+      "path": "04-secondary-lifetime.png",
+      "sha256": "3d8029e1761b2413707e7539640df723764adb91fc2e3b29b7182731bda53956"
+    },
+    {
+      "bytes": 40943,
+      "path": "04-secondary-lifetime.svg",
+      "sha256": "dd9e96341f70a88c47d452b3ae40d5ae868b2e1f978c6ef142bf00c629f9a576"
+    },
+    {
+      "bytes": 59292,
+      "path": "chart-inputs.csv",
+      "sha256": "b26ace47b4e3f952b04e8c4d355883e061612e2a76a6eda72c29ac66ffff23eb"
+    },
+    {
+      "bytes": 672070,
+      "path": "chart-inputs.json",
+      "sha256": "b36d7b05780fdfd547eeed5b64a041413b137a4dd14cb1a06cb0a374fb261b84"
+    }
+  ],
+  "plot_inventory_sha256": "f794b4e3810f2963ac7a7db72ead77dfa8f35adff1587b96b83198ad997f4ecc",
+  "native_world_rng_or_new_inference_invocations": 0
+}

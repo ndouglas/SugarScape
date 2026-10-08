@@ -1,0 +1,3 @@
+{"path":"scientific-reanalysis-e10f98d99586d94f5adc8eab1f95b80e5c5b1865","type":"directory","tar_mode":"0755"}
+{"path":"scientific-reanalysis-e10f98d99586d94f5adc8eab1f95b80e5c5b1865/analysis.json","type":"file","tar_mode":"0644","bytes":1052095171,"sha256":"14caedbb8ed105f1b65e3c07dc5aaed3428180b10122531fc4dc54c6ce00cf9b","original_sha256":"14caedbb8ed105f1b65e3c07dc5aaed3428180b10122531fc4dc54c6ce00cf9b"}
+{"path":"scientific-reanalysis-e10f98d99586d94f5adc8eab1f95b80e5c5b1865/results.md","type":"file","tar_mode":"0644","bytes":39311,"sha256":"b2ec0bcc72cdd6f2b82e46f26d16cc30f17294be2bab9a8af2a9eeaba0832470","original_sha256":"b2ec0bcc72cdd6f2b82e46f26d16cc30f17294be2bab9a8af2a9eeaba0832470"}
