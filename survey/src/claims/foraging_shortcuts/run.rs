@@ -18,6 +18,10 @@ use std::{
 };
 use sugarscape_core::foraging::construction as core;
 
+#[path = "../../../build_support/f5_source_identity.rs"]
+pub(super) mod source_identity;
+include!(concat!(env!("OUT_DIR"), "/f5_source_identity.rs"));
+
 pub(super) const MANIFEST_PATH: &str =
     "docs/superpowers/specs/2026-10-07-foraging-5-draft-manifest.json";
 
@@ -25,6 +29,33 @@ pub(super) const MANIFEST_PATH: &str =
 pub(super) struct ExecutionContext {
     pub repo: PathBuf,
     pub executable: PathBuf,
+    #[cfg(test)]
+    fixture_source_identity: Option<String>,
+}
+impl ExecutionContext {
+    pub(super) fn new(repo: PathBuf, executable: PathBuf) -> Self {
+        Self {
+            repo,
+            executable,
+            #[cfg(test)]
+            fixture_source_identity: None,
+        }
+    }
+    #[cfg(test)]
+    pub(super) fn owned_fixture(repo: PathBuf, executable: PathBuf, identity: String) -> Self {
+        Self {
+            repo,
+            executable,
+            fixture_source_identity: Some(identity),
+        }
+    }
+    fn compiled_source_identity(&self) -> &str {
+        #[cfg(test)]
+        if let Some(identity) = &self.fixture_source_identity {
+            return identity;
+        }
+        COMPILED_SOURCE_IDENTITY
+    }
 }
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct RunRequest {
@@ -59,6 +90,20 @@ fn git_text(root: &Path, args: &[&str]) -> Result<String, String> {
         .map(|s| s.trim().to_owned())
         .map_err(|e| format!("git {args:?}: invalid UTF-8: {e}"))
 }
+pub(super) fn committed_source_identity(repo: &Path, revision: &str) -> Result<String, String> {
+    let files = git(repo, &["ls-tree", "-r", "--name-only", "-z", revision])?;
+    let files = std::str::from_utf8(&files).map_err(|e| format!("source paths: {e}"))?;
+    source_identity::fingerprint(
+        files
+            .split('\0')
+            .filter(|path| source_identity::selected(path))
+            .map(|path| {
+                git(repo, &["show", &format!("{revision}:{path}")])
+                    .map(|bytes| (path.to_owned(), bytes))
+            }),
+    )
+}
+
 fn executable_sha256(path: &Path) -> Result<String, String> {
     regular_file(path)?;
     let mut file = fs::File::open(path).map_err(|e| format!("{}: {e}", path.display()))?;
@@ -148,6 +193,9 @@ pub(super) fn preflight(
         )? != bytes
     {
         return Err("candidate manifest differs between factory, checkout, or HEAD bytes".into());
+    }
+    if committed_source_identity(&repo, &code_revision)? != ctx.compiled_source_identity() {
+        return Err("compiled source identity differs from committed HEAD; rebuild the collector from the intended sources".into());
     }
     Ok(Provenance {
         code_revision,

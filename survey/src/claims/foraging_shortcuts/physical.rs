@@ -243,6 +243,17 @@ fn materials(setup: &WireSetup, f: &WireSnapshot, open: &BTreeSet<WirePos>) -> R
             }
         }
     }
+    // Exact retained clocks expose single-slot cargo conflicts even between checkpoints.
+    let mut lifetimes: Vec<_> = f.spoil.iter().collect();
+    lifetimes.sort_by_key(|r| (r.creator, r.born_tick));
+    for pair in lifetimes.windows(2) {
+        if pair[0].creator == pair[1].creator {
+            require(
+                matches!(pair[0].state, WireSpoilState::Disposed { tick } if tick < pair[1].born_tick),
+                "spoil.lifetime.overlap",
+            )?;
+        }
+    }
     for a in &f.agents {
         match a.cargo {
             Some(WireCargo::Food(_)) => {

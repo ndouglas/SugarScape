@@ -68,10 +68,7 @@ fn collector_rejects_draft_scientific_request_before_output() {
         approval_context: "test".into(),
         out: tmp.path().join("new"),
     };
-    let ctx = ExecutionContext {
-        repo: tmp.path().to_owned(),
-        executable: tmp.path().join("collector"),
-    };
+    let ctx = ExecutionContext::new(tmp.path().to_owned(), tmp.path().join("collector"));
     assert!(collect(&ctx, &r).unwrap_err().contains("draft"));
     assert!(!r.out.exists());
 }
@@ -170,10 +167,8 @@ fn preflight_refuses_dangling_output_and_executable_symlinks() {
     fs::remove_file(&r.out).unwrap();
     let linked = ctx.repo.join("linked-executable");
     std::os::unix::fs::symlink(&ctx.executable, &linked).unwrap();
-    let linked_context = ExecutionContext {
-        repo: ctx.repo.clone(),
-        executable: linked,
-    };
+    let mut linked_context = ctx.clone();
+    linked_context.executable = linked;
     assert!(preflight(&linked_context, &candidate().unwrap(), &r).is_err());
 }
 #[test]
@@ -345,4 +340,132 @@ fn pure_output_propagates_write_and_flush_errors() {
                 .contains(if flush { "flush" } else { "write" })
         );
     }
+}
+
+#[test]
+fn preflight_rejects_stale_compiled_source_before_output() {
+    let (_tmp, ctx, r) = owned_git_context();
+    let m = candidate().unwrap();
+    preflight(&ctx, &m, &r).unwrap();
+    fs::write(
+        ctx.repo.join("survey/src/main.rs"),
+        "owned compiled source B",
+    )
+    .unwrap();
+    fixture_commit(&ctx.repo);
+    assert!(fixture_git(
+        &ctx.repo,
+        &["status", "--porcelain", "--untracked-files=no"]
+    )
+    .is_empty());
+    let error = preflight(&ctx, &m, &r).unwrap_err();
+    assert!(
+        error.contains("compiled source identity differs from committed HEAD"),
+        "{error}"
+    );
+    assert!(!r.out.exists());
+}
+#[test]
+fn preflight_accepts_documentation_only_head_with_matching_sources() {
+    let (_tmp, ctx, r) = owned_git_context();
+    let before = preflight(&ctx, &candidate().unwrap(), &r).unwrap();
+    fs::write(ctx.repo.join("README.md"), "owned documentation change").unwrap();
+    let head = fixture_commit(&ctx.repo);
+    let after = preflight(&ctx, &candidate().unwrap(), &r).unwrap();
+    assert_ne!(before.code_revision, after.code_revision);
+    assert_eq!(after.code_revision, head);
+    assert!(!r.out.exists());
+}
+
+#[test]
+fn preflight_rejects_restored_uncommitted_build_edits_and_additions() {
+    use super::super::run::source_identity::fingerprint;
+    for added in [false, true] {
+        let (_tmp, ctx, r) = owned_git_context();
+        let source = ctx.repo.join("survey/src/main.rs");
+        let original = fs::read(&source).unwrap();
+        let mut inputs = vec![Ok(("survey/src/main.rs".into(), original.clone()))];
+        if added {
+            let extra = ctx.repo.join("survey/src/temporary.rs");
+            fs::write(&extra, "temporary compiled source").unwrap();
+            inputs.push(Ok((
+                "survey/src/temporary.rs".into(),
+                fs::read(&extra).unwrap(),
+            )));
+            fs::remove_file(extra).unwrap();
+        } else {
+            fs::write(&source, "temporary compiled edit").unwrap();
+            inputs[0] = Ok(("survey/src/main.rs".into(), fs::read(&source).unwrap()));
+            fs::write(&source, &original).unwrap();
+        }
+        let stale = ExecutionContext::owned_fixture(
+            ctx.repo.clone(),
+            ctx.executable.clone(),
+            fingerprint(inputs).unwrap(),
+        );
+        preflight(&ctx, &candidate().unwrap(), &r).unwrap();
+        assert!(fixture_git(
+            &ctx.repo,
+            &["status", "--porcelain", "--untracked-files=no"]
+        )
+        .is_empty());
+        let error = preflight(&stale, &candidate().unwrap(), &r).unwrap_err();
+        assert!(
+            error.contains("compiled source identity differs from committed HEAD"),
+            "{error}"
+        );
+        assert!(!r.out.exists());
+    }
+}
+#[test]
+fn source_identity_excludes_generated_output_and_includes_compiled_inputs() {
+    use super::super::run::source_identity::{fingerprint, selected};
+    let original = vec![("survey/src/main.rs".to_owned(), b"source".to_vec())];
+    let baseline = fingerprint(original.clone().into_iter().map(Ok)).unwrap();
+    let mut with_output = original.clone();
+    for path in [
+        "data/generated/report.json",
+        "sweeps/generated.json",
+        ".cargo/credentials.toml",
+        "survey/out/archive/index.json",
+        "survey/src/scratch.log",
+    ] {
+        assert!(!selected(path), "{path}");
+        with_output.push((path.to_owned(), b"untracked output".to_vec()));
+    }
+    assert_eq!(
+        baseline,
+        fingerprint(
+            with_output
+                .into_iter()
+                .filter(|(path, _)| selected(path))
+                .map(Ok)
+        )
+        .unwrap()
+    );
+    for path in [
+        "survey/src/ignored.rs",
+        "crates/sugarscape-core/src/new.rs",
+        "data/anasazi/Map.txt",
+        "sweeps/fig-ii-5.json",
+        ".cargo/config.toml",
+        "survey/build.rs",
+    ] {
+        assert!(selected(path), "{path}");
+        let mut changed = original.clone();
+        changed.push((path.to_owned(), b"compiled input".to_vec()));
+        assert_ne!(baseline, fingerprint(changed.into_iter().map(Ok)).unwrap());
+    }
+}
+
+#[test]
+fn preflight_native_context_has_no_fixture_identity_override() {
+    let (_tmp, ctx, r) = owned_git_context();
+    let native = ExecutionContext::new(ctx.repo.clone(), ctx.executable.clone());
+    let error = preflight(&native, &candidate().unwrap(), &r).unwrap_err();
+    assert!(
+        error.contains("compiled source identity differs from committed HEAD"),
+        "{error}"
+    );
+    assert!(!r.out.exists());
 }

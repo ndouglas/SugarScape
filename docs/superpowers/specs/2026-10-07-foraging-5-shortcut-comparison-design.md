@@ -150,3 +150,12 @@ separate scientific execution/registration gate above remain unchanged. The
 Task 5 implementation report and frozen gate logs are held under
 `.superpowers/sdd/2026-10-07-foraging-5-shortcut-comparison/`; fresh task and whole
 branch reviews remain controller-owned acceptance gates.
+
+Whole-review engineering corrections bind the collector's compiled source fingerprint
+to the selected committed HEAD inputs before collection creates output. The existing
+four-field provenance schema remains unchanged; documentation-only revisions with
+identical compiled inputs remain usable. The survey-local build support lists the
+source/configuration/embedded-data scope explicitly and excludes generated outputs.
+Saved analysis remains independent of a live checkout. Exact retained spoil clocks
+also reject per-creator lifetime overlap, including unfinished carried spoil, without
+reconstructing unobserved food histories or private controller state.

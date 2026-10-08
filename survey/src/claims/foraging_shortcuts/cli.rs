@@ -94,11 +94,10 @@ pub(crate) fn cli(args: &[String]) -> Result<(), String> {
         Command::Manifest => stdout(&manifest_bytes()?),
         Command::Help => stdout(HELP.as_bytes()),
         Command::Run(request) => {
-            let context = ExecutionContext {
-                repo: PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/..")),
-                executable: std::env::current_exe()
-                    .map_err(|e| format!("shortcut executable: {e}"))?,
-            };
+            let context = ExecutionContext::new(
+                PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/..")),
+                std::env::current_exe().map_err(|e| format!("shortcut executable: {e}"))?,
+            );
             collect(&context, &request).map(|_| ())
         }
         Command::Analyze { index, out } => super::report::analyze(&index, &out).map(|_| ()),

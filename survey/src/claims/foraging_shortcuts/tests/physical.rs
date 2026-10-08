@@ -190,3 +190,51 @@ fn corrected_review_carried_spoil_must_have_time_to_reach_its_carrier_position()
     f.agents[0].pos = e.setup.waste;
     assert!(validate_frames(&e.setup, &e.snapshots).is_err());
 }
+
+#[test]
+fn retained_spoil_lifetimes_cannot_overlap_within_a_checkpoint() {
+    use super::super::{
+        manifest::{candidate, condition},
+        validate::validate_episode,
+        wire_state::WireSpoilState,
+    };
+    let mut envelope = decode_fixture("route.straight.paid", 7).unwrap();
+    let m = candidate().unwrap();
+    let c = condition(&m, &envelope.key.condition).unwrap();
+    validate_episode(c, &envelope.key, &envelope.episode).unwrap();
+    let e = &mut envelope.episode;
+    let frame = &e.snapshots[2];
+    assert_eq!((frame.spoil[1].creator, frame.spoil[1].born_tick), (3, 151));
+    assert_eq!(frame.spoil[1].state, WireSpoilState::Disposed { tick: 163 });
+    assert_eq!(
+        (frame.spoil[10].creator, frame.spoil[10].born_tick),
+        (3, 195)
+    );
+    for frame in &mut e.snapshots[2..] {
+        frame.spoil[1].state = WireSpoilState::Disposed { tick: 196 };
+    }
+    e.summary = e.snapshots.last().unwrap().summary.clone();
+    e.snapshot_bytes = e
+        .snapshots
+        .iter()
+        .map(|f| serde_json::to_vec(f).unwrap().len() as u64)
+        .sum();
+    let error = validate_episode(c, &envelope.key, e).unwrap_err();
+    assert!(error.contains("spoil.lifetime.overlap"), "{error}");
+}
+
+#[test]
+fn retained_spoil_lifetimes_include_terminal_carried_records() {
+    use super::super::wire_state::WireSpoilState;
+    // Component validation permits a coarser initial/final pair; no new simulation.
+    let mut e = decode_fixture("route.straight.paid", 7).unwrap().episode;
+    e.snapshots = vec![e.snapshots[0].clone(), e.snapshots.last().unwrap().clone()];
+    validate_frames(&e.setup, &e.snapshots).unwrap();
+    let last = e.snapshots.last_mut().unwrap();
+    assert_eq!((last.spoil[19].creator, last.spoil[19].born_tick), (0, 295));
+    assert_eq!((last.spoil[30].creator, last.spoil[30].born_tick), (0, 507));
+    assert_eq!(last.spoil[30].state, WireSpoilState::Carried { agent: 0 });
+    last.spoil[19].state = WireSpoilState::Disposed { tick: 508 };
+    let error = validate_frames(&e.setup, &e.snapshots).unwrap_err();
+    assert!(error.contains("spoil.lifetime.overlap"), "{error}");
+}

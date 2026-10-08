@@ -222,13 +222,17 @@ pub(super) fn owned_git_context() -> (
     )
     .unwrap();
     std::fs::write(tmp.path().join(MANIFEST_PATH), manifest_bytes().unwrap()).unwrap();
+    std::fs::create_dir_all(tmp.path().join("survey/src")).unwrap();
+    std::fs::write(
+        tmp.path().join("survey/src/main.rs"),
+        "owned compiled source A",
+    )
+    .unwrap();
     let revision = fixture_commit(tmp.path());
     let executable = tmp.path().join("fixture-collector");
     std::fs::write(&executable, b"owned executable identity fixture").unwrap();
-    let context = ExecutionContext {
-        repo: tmp.path().to_owned(),
-        executable,
-    };
+    let identity = super::super::run::committed_source_identity(tmp.path(), &revision).unwrap();
+    let context = ExecutionContext::owned_fixture(tmp.path().to_owned(), executable, identity);
     let request = RunRequest {
         mode: CollectionMode::Construction,
         protocol_revision: revision,
