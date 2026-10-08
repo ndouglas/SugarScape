@@ -997,6 +997,42 @@ fn audit_ordinary(
     Ok(())
 }
 
+fn audit_scheduled_walk(
+    before: &RoleRecord,
+    positions: &BTreeMap<u64, Pos>,
+    action: &ActionRecord,
+    target: Pos,
+    recovered: bool,
+    after: Pos,
+) -> Result<(), String> {
+    // Departures may be blocked, but their speed-one step must still be the
+    // deterministic ordinary walk through the saved occupancy.
+    if action.action == "departure" && ordinary_step(before, positions, target) != after {
+        return Err("departure movement differs from deterministic path step".into());
+    }
+    let occupant = positions
+        .iter()
+        .find(|(id, p)| **id != action.actor && **p == target)
+        .map(|(&id, _)| id);
+    let outcome = if after == target {
+        "arrived"
+    } else if after != before.pos {
+        "advanced"
+    } else if occupant.is_some() {
+        "blocked"
+    } else {
+        "unreachable"
+    };
+    if action.target_occupant != occupant
+        || action.walk_outcome.as_deref() != Some(outcome)
+        || action.source_recovered != recovered
+        || (action.action != "departure" && after != target)
+    {
+        return Err("walk outcome/target occupancy/recovery mismatch".into());
+    }
+    Ok(())
+}
+
 fn validate_episode(r: &EpisodeRecord) -> Result<(), String> {
     let fail = |s: &str| Err(s.to_string());
     if r.schema != SCHEMA
@@ -1183,26 +1219,7 @@ fn validate_episode(r: &EpisodeRecord) -> Result<(), String> {
                 pending = false;
             }
             if let Some(target) = target {
-                let occupant = positions
-                    .iter()
-                    .find(|(id, p)| **id != a.actor && **p == target)
-                    .map(|(&id, _)| id);
-                let outcome = if after == target {
-                    "arrived"
-                } else if after != before.pos {
-                    "advanced"
-                } else if occupant.is_some() {
-                    "blocked"
-                } else {
-                    "unreachable"
-                };
-                if a.target_occupant != occupant
-                    || a.walk_outcome.as_deref() != Some(outcome)
-                    || a.source_recovered != recovered
-                    || (action != "departure" && after != target)
-                {
-                    return fail("walk outcome/target occupancy/recovery mismatch");
-                }
+                audit_scheduled_walk(before, &positions, a, target, recovered, after)?;
             } else if a.walk_outcome.is_some() || a.target_occupant.is_some() || a.source_recovered
             {
                 return fail("unexpected walk diagnostics");
@@ -1953,6 +1970,141 @@ pub(super) mod tests {
             "A* chooses north before west at equal f/h"
         );
     }
+    fn departure_fixture(replacement: Option<(Pos, &str)>) -> EpisodeRecord {
+        static_record_with_departure(
+            LabConfig {
+                sender: SenderPolicy::Sham,
+                view: View::Ambiguous,
+                display_seen: true,
+                layout: Layout::OffRoute,
+                effort_cost: 3.0,
+                mirrored: false,
+            },
+            20001,
+            replacement,
+        )
+    }
+    #[test]
+    fn deception_wb1_departure_rejects_wrong_direction_with_consistent_future() {
+        let record = departure_fixture(Some((Pos::new(2, 3), "advanced")));
+        let error = validate_episode(&record).unwrap_err();
+        assert!(error.contains("departure movement"), "{error}");
+    }
+    #[test]
+    fn deception_wb1_departure_rejects_unjustified_stay_with_consistent_future() {
+        let record = departure_fixture(Some((Pos::new(3, 3), "unreachable")));
+        let error = validate_episode(&record).unwrap_err();
+        assert!(error.contains("departure movement"), "{error}");
+    }
+    #[test]
+    fn deception_wb1_departure_accepts_vacant_target_and_charges_metabolism() {
+        let record = departure_fixture(None);
+        let (index, action) = record
+            .frames
+            .iter()
+            .enumerate()
+            .find_map(|(i, f)| {
+                f.actions
+                    .iter()
+                    .find(|a| a.action == "departure")
+                    .map(|a| (i, a))
+            })
+            .expect("the static owner recovers the original cache and departs");
+        let before = role(&record.frames[index - 1], 1).unwrap();
+        let after = role(&record.frames[index], 1).unwrap();
+        assert_eq!(
+            (
+                before.pos,
+                action.target,
+                action.pos,
+                action.walk_outcome.as_deref(),
+                action.target_occupant
+            ),
+            (
+                Pos::new(3, 3),
+                Some(Pos::new(3, 2)),
+                Some(Pos::new(3, 2)),
+                Some("arrived"),
+                None
+            )
+        );
+        assert_eq!(
+            (
+                action.harvest,
+                action.dug,
+                action.effort,
+                action.metabolic_demand,
+                action.metabolic_consumed,
+                after.holdings
+            ),
+            (0.0, 0.0, 0.0, 1.0, 1.0, before.holdings - 1.0)
+        );
+        validate_episode(&record).unwrap();
+        let mut free = record;
+        free.frames[index]
+            .actions
+            .iter_mut()
+            .find(|a| a.actor == 1)
+            .unwrap()
+            .metabolic_consumed = 0.0;
+        assert!(
+            validate_episode(&free).is_err(),
+            "departure still pays ordinary metabolism"
+        );
+    }
+    #[test]
+    fn deception_wb1_departure_accepts_genuinely_occupied_target() {
+        let before = RoleRecord {
+            id: 1,
+            pos: Pos::new(3, 3),
+            holdings: 13.0,
+            caches: BTreeMap::new(),
+            sender: Some(SenderState {
+                pending_departure: true,
+                ..Default::default()
+            }),
+            seen: vec![],
+        };
+        let target = Pos::new(3, 2);
+        let positions = BTreeMap::from([(1, before.pos), (2, target)]);
+        let action = ActionRecord {
+            actor: 1,
+            phase: "departure".into(),
+            action: "departure".into(),
+            target: Some(target),
+            pos: Some(before.pos),
+            walk_outcome: Some("blocked".into()),
+            target_occupant: Some(2),
+            source_recovered: true,
+            metabolic_demand: 1.0,
+            metabolic_consumed: 1.0,
+            ..Default::default()
+        };
+        audit_scheduled_walk(&before, &positions, &action, target, true, before.pos).unwrap();
+        validate_food_operation(&action, before.holdings, 0.0, 0.0, 0.0).unwrap();
+        let mut false_outcome = action.clone();
+        false_outcome.walk_outcome = Some("unreachable".into());
+        assert!(audit_scheduled_walk(
+            &before,
+            &positions,
+            &false_outcome,
+            target,
+            true,
+            before.pos
+        )
+        .is_err());
+        let mut false_occupant = action;
+        false_occupant.target_occupant = None;
+        assert!(audit_scheduled_walk(
+            &before,
+            &positions,
+            &false_occupant,
+            target,
+            true,
+            before.pos
+        )
+        .is_err());
+    }
     #[test]
     fn deception_fix2_start_only_interruption_is_valid_empty_pending_prefix() {
         let dir = Temp::new();
@@ -2468,6 +2620,13 @@ pub(super) mod tests {
     }
     // Hand-written arithmetic and DTO construction only; never constructs World or RNG.
     pub fn static_record(lab: LabConfig, seed: u64) -> EpisodeRecord {
+        static_record_with_departure(lab, seed, None)
+    }
+    fn static_record_with_departure(
+        lab: LabConfig,
+        seed: u64,
+        departure_replacement: Option<(Pos, &str)>,
+    ) -> EpisodeRecord {
         let p = |x, y| Pos::new(if lab.mirrored { 8 - x } else { x }, y);
         let source = p(3, 3).y * 9 + p(3, 3).x;
         let mut roles = vec![
@@ -2544,6 +2703,12 @@ pub(super) mod tests {
                     role.pos = target;
                     a.walk_outcome = Some("arrived".into());
                     a.source_recovered = recovered;
+                    if action == "departure" {
+                        if let Some((replacement, outcome)) = departure_replacement {
+                            role.pos = replacement;
+                            a.walk_outcome = Some(outcome.into());
+                        }
+                    }
                 }
                 if action == "ordinary" {
                     let candidates =
