@@ -6,7 +6,7 @@ Spec/plan approved2026-10-07; subagent-driven execution. Detailed plan: docs/sup
 **Goal**: Literal normalized geometry and immutable declared keys
 **Success Criteria**: 15cases, exact controls/geometry, draft scientific gate
 **Tests**: `foraging_shortcuts::tests::scenario`
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 2: Strict evidence validation
 **Goal**: Own wire schema and observed physics/access checks
