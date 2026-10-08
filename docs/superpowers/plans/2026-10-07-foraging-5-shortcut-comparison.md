@@ -727,3 +727,12 @@ Runtime `778eadb`. Frozen focused69/full survey338 passed,0 failed,0 ignored; fo
 ### Task 4 verification and review
 
 Runtime `2e6512d`. Frozen full survey358 passed,0 failed,0 ignored; formatting/all-targetClippy clean. Parent matched all86 frozen source/test/Cargo/manifest hashes across final gates. The generated330578-byte draft manifest matches Task1’s reviewed golden exactly. Independent spec/quality review approved with no findings, including focused pure-printing, authorization/key order and archive dependency checks. Construction integration used owned Git/executable fixtures and public F4 episodes; no actual scientific campaign was run. Task5 completes saved analysis, removes staged allowances and runs final core gates.
+
+
+Task 5 implementation evidence is recorded in the controller's SDD task report
+and per-command logs, including compilation/scaffold RED chronology and
+supplemental behavioral probes. Runtime sources, tests, Cargo files and candidate
+bytes are frozen before the final survey/workspace regression gates. Independent
+Task 5 and whole-branch review, tracker removal and evidence archival remain the
+controller's responsibility. Candidate scientific status, inputs and approval
+gates are unchanged; no scientific episode or campaign was executed.

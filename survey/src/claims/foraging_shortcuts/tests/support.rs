@@ -237,3 +237,71 @@ pub(super) fn owned_git_context() -> (
     };
     (tmp, context, request)
 }
+
+pub(super) struct TestArchiveFixture {
+    pub(super) temp: OwnedTempdir,
+    pub(super) index: std::path::PathBuf,
+}
+/// Pure byte-writing tests reuse core episode cache, but use real owned provenance.
+fn construction_archive_bytes() -> Vec<(std::path::PathBuf, Vec<u8>)> {
+    use super::super::{
+        archive::{limits, ArchiveWriter},
+        manifest::expected_keys,
+        run::preflight,
+    };
+    let (temp, context, request) = owned_git_context();
+    let manifest = candidate().unwrap();
+    let provenance = preflight(&context, &manifest, &request).unwrap();
+    let mut writer = ArchiveWriter::create(
+        &request.out,
+        &manifest,
+        request.mode,
+        &provenance,
+        &request.approval_context,
+        limits(&manifest),
+    )
+    .unwrap();
+    for key in expected_keys(&manifest, request.mode) {
+        let episode = cached_candidate_episode(&key.condition, key.seed).unwrap();
+        let bytes = encode_envelope(
+            &key,
+            request.mode,
+            &provenance,
+            &episode,
+            manifest.raw_record_limit,
+        )
+        .unwrap();
+        writer.put(&key, &bytes).unwrap();
+    }
+    let index = writer.finish().unwrap();
+    let mut files = vec![(
+        std::path::PathBuf::from("index.json"),
+        std::fs::read(request.out.join("index.json")).unwrap(),
+    )];
+    for reference in index.runs {
+        files.push((
+            std::path::PathBuf::from(&reference.path),
+            std::fs::read(request.out.join(reference.path)).unwrap(),
+        ));
+    }
+    drop(temp);
+    files
+}
+
+/// Each mutation owns a fresh copy of immutable evidence validated once at creation.
+pub(super) fn complete_construction_archive() -> TestArchiveFixture {
+    type SavedFiles = Vec<(std::path::PathBuf, Vec<u8>)>;
+    static CACHE: OnceLock<SavedFiles> = OnceLock::new();
+    let files = CACHE.get_or_init(construction_archive_bytes);
+    let temp = owned_tempdir();
+    let root = temp.path().join("saved");
+    for (relative, bytes) in files {
+        let path = root.join(relative);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, bytes).unwrap();
+    }
+    TestArchiveFixture {
+        index: root.join("index.json"),
+        temp,
+    }
+}

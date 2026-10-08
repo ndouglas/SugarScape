@@ -1,21 +1,17 @@
 //! Fixed F5 shortcut comparison inputs; manifest construction never runs workers.
 mod access;
 mod agents;
-#[allow(
-    dead_code,
-    reason = "Task 5 analyzer consumes the streaming archive reader"
-)]
 mod archive;
 mod cli;
 pub(crate) use cli::cli;
 mod io;
 mod manifest;
 mod physical;
+mod report;
+mod report_rows;
 mod run;
 mod scenario;
-#[allow(dead_code, reason = "Task 3 archive consumes episode validation")]
 mod validate;
-#[allow(dead_code, reason = "Task 3 archive consumes the strict wire schemas")]
 mod wire;
 mod wire_state;
 mod wire_view;
@@ -23,10 +19,6 @@ mod wire_view;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-#[allow(
-    dead_code,
-    reason = "Panel is consumed by the Task 2 wire validator and Task 4 collector"
-)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(super) enum Panel {
@@ -34,10 +26,6 @@ pub(super) enum Panel {
     Access,
 }
 
-#[allow(
-    dead_code,
-    reason = "Geometry is consumed by the Task 2 wire validator and Task 4 collector"
-)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(super) enum Geometry {
@@ -46,10 +34,6 @@ pub(super) enum Geometry {
     Twisting,
 }
 
-#[allow(
-    dead_code,
-    reason = "Regime is consumed by the Task 2 wire validator and Task 4 collector"
-)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(super) enum Regime {
@@ -58,10 +42,6 @@ pub(super) enum Regime {
     AlreadyOpen,
 }
 
-#[allow(
-    dead_code,
-    reason = "CollectionMode is consumed by the Task 3 archive and Task 4 collector"
-)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(super) enum CollectionMode {
@@ -69,7 +49,6 @@ pub(super) enum CollectionMode {
     Scientific,
 }
 
-#[allow(dead_code, reason = "RunKey is consumed by the Task 3 archive")]
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct RunKey {
@@ -77,10 +56,6 @@ pub(super) struct RunKey {
     pub seed: u64,
 }
 
-#[allow(
-    dead_code,
-    reason = "Provenance is consumed by the Task 3 archive and Task 4 collector"
-)]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Provenance {
@@ -90,10 +65,6 @@ pub(super) struct Provenance {
     pub collector_sha256: String,
 }
 
-#[allow(
-    dead_code,
-    reason = "sha256 is consumed by the Task 3 archive and Task 4 collector"
-)]
 pub(super) fn sha256(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }

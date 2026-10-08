@@ -3,10 +3,6 @@ use super::{scenario, CollectionMode, Geometry, Panel, Regime, RunKey};
 use serde::Serialize;
 use sugarscape_core::foraging::construction as core;
 
-#[allow(
-    dead_code,
-    reason = "Condition is consumed by the Task 2 validator and Task 4 collector"
-)]
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub(super) struct Condition {
     pub id: String,
@@ -17,10 +13,6 @@ pub(super) struct Condition {
     pub options: core::RunOptions,
 }
 
-#[allow(
-    dead_code,
-    reason = "Manifest is consumed by the Task 3 archive and Task 4 collector"
-)]
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub(super) struct Manifest {
     pub schema: String,
@@ -36,10 +28,6 @@ pub(super) struct Manifest {
     pub metadata_limit: u64,
 }
 
-#[allow(
-    dead_code,
-    reason = "candidate is consumed by the Task 2 validator and Task 4 collector"
-)]
 pub(super) fn candidate() -> Result<Manifest, String> {
     let mut conditions = Vec::new();
     for (panel, panel_name) in [(Panel::Route, "route"), (Panel::Access, "access")] {
@@ -87,10 +75,6 @@ pub(super) fn candidate() -> Result<Manifest, String> {
     })
 }
 
-#[allow(
-    dead_code,
-    reason = "manifest_bytes is consumed by the Task 4 manifest CLI"
-)]
 pub(super) fn manifest_bytes() -> Result<Vec<u8>, String> {
     let mut bytes = serde_json::to_vec_pretty(&candidate()?)
         .map_err(|e| format!("serialize shortcut manifest: {e}"))?;
@@ -98,10 +82,6 @@ pub(super) fn manifest_bytes() -> Result<Vec<u8>, String> {
     Ok(bytes)
 }
 
-#[allow(
-    dead_code,
-    reason = "condition is consumed by the Task 2 validator and Task 3 archive"
-)]
 pub(super) fn condition<'a>(manifest: &'a Manifest, id: &str) -> Result<&'a Condition, String> {
     manifest
         .conditions
@@ -110,10 +90,6 @@ pub(super) fn condition<'a>(manifest: &'a Manifest, id: &str) -> Result<&'a Cond
         .ok_or_else(|| format!("unknown shortcut condition: {id}"))
 }
 
-#[allow(
-    dead_code,
-    reason = "expected_keys is consumed by the Task 3 archive and Task 4 collector"
-)]
 pub(super) fn expected_keys(manifest: &Manifest, mode: CollectionMode) -> Vec<RunKey> {
     let seeds = match mode {
         CollectionMode::Construction => &manifest.construction_seeds,
@@ -131,7 +107,6 @@ pub(super) fn expected_keys(manifest: &Manifest, mode: CollectionMode) -> Vec<Ru
         .collect()
 }
 
-#[allow(dead_code, reason = "authorize is consumed by the Task 4 collector")]
 pub(super) fn authorize(manifest: &Manifest, mode: CollectionMode) -> Result<(), String> {
     if mode == CollectionMode::Scientific
         && (!manifest.execution_authorized || manifest.status != "registered")

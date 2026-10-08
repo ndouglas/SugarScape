@@ -101,9 +101,6 @@ pub(crate) fn cli(args: &[String]) -> Result<(), String> {
             };
             collect(&context, &request).map(|_| ())
         }
-        // Task 5 replaces only this saved-analysis dispatch arm.
-        Command::Analyze { .. } => {
-            Err("shortcut saved analysis is not yet supported (Task 5)".into())
-        }
+        Command::Analyze { index, out } => super::report::analyze(&index, &out).map(|_| ()),
     }
 }

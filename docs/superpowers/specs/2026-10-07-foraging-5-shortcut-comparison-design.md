@@ -127,3 +127,26 @@ Engineering fixtures, harness integration, executable scientific manifest regist
 Spec self-review checked literal geometry/capacity, primary versus secondary roles, intervention confounds, null route baselines, clock/censoring definitions, serialization-only core boundaries, coarse-frame validation limits, prospective seed/parameter choices and existing survey archive/statistics conventions. Independent geometry checks passed after the disclosed hand-count correction. Source access gaps remain explicit; no worker simulation was used to select these inputs. Local documentation links and whitespace are checked before the documentation commit.
 
 Planning clarifications preserve the approved contract: survey-owned wire types retain finite numeric JSON tokens through the existing serde_json raw_value feature, avoiding core deserialization and global float-parser changes. A separate 4 MiB metadata bound covers index/progress inputs; it does not change raw-envelope or snapshot budget definitions. Spoil birth/creator records permit deterministic terrain/access validation without replaying worker decisions. Final index publication uses a fully synced pending receipt and no-overwrite link, so an interrupted write is not presented as a completed archive.
+
+
+## Engineering implementation evidence (Task 5)
+
+The native selector now implements explicit construction collection and complete
+saved-only JSON/Markdown analysis; the resolved candidate remains draft and
+unregistered. Scientific collection has not run. Engineering tests use only
+construction seeds 7/8; future descriptive statistics are exercised with synthetic
+forty-seed rows. All original resource routes, full final summaries, censored
+milestones and completed-checkpoint shortening windows survive projection.
+Construction reports omit condition means and scientific contrasts. Relative raw
+references are interpreted against the archive index, and optional operational
+metadata does not enter the comparative payload. Output failures return an error
+and may preserve incomplete new files; neither artifact is claimed complete.
+
+The analysis digest is explicitly a sampled physical projection. Saved validation
+checks observed constraints and deterministic terrain/access replay, not full
+intervening actions, private maps, decisions or RNG/controller fidelity. Byte
+budgets are serialized-output limits, not a memory guarantee. The source gaps and
+separate scientific execution/registration gate above remain unchanged. The
+Task 5 implementation report and frozen gate logs are held under
+`.superpowers/sdd/2026-10-07-foraging-5-shortcut-comparison/`; fresh task and whole
+branch reviews remain controller-owned acceptance gates.

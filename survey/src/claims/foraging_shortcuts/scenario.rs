@@ -51,10 +51,6 @@ fn route(geometry: Geometry, open: &mut BTreeSet<core::Pos>) -> Result<(), Strin
     Ok(())
 }
 
-#[allow(
-    dead_code,
-    reason = "build is consumed by the Task 2 wire validator and Task 4 collector"
-)]
 pub(super) fn build(
     panel: Panel,
     geometry: Geometry,
@@ -143,10 +139,6 @@ fn neighbors(p: core::Pos, width: u32, height: u32) -> impl Iterator<Item = core
     .flatten()
 }
 
-#[allow(
-    dead_code,
-    reason = "patch_distances is consumed by the Task 2 validator and Task 5 analysis"
-)]
 pub(super) fn patch_distances(setup: &core::Setup) -> Result<Vec<(u64, Option<u32>)>, String> {
     setup
         .validate()

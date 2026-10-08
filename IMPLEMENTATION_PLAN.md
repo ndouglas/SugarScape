@@ -30,5 +30,5 @@ Spec/plan approved2026-10-07; subagent-driven execution. Detailed plan: docs/sup
 **Goal**: Deterministic full saved-only reports
 **Success Criteria**: All rows/nulls, paired synthetic stats, final reviews and regression gates
 **Tests**: `cargo test --manifest-path survey/Cargo.toml; cargo test --workspace`
-**Status**: Not Started
+**Status**: In Progress
 
