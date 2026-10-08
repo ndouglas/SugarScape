@@ -168,3 +168,72 @@ pub(in crate::claims::foraging_shortcuts) fn owned_tempdir() -> OwnedTempdir {
         }
     }
 }
+
+pub(super) fn fixture_git(root: &std::path::Path, args: &[&str]) -> String {
+    let output = std::process::Command::new("git")
+        .current_dir(root)
+        .args(args)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "git {args:?}: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8(output.stdout).unwrap().trim().to_owned()
+}
+pub(super) fn fixture_commit(root: &std::path::Path) -> String {
+    fixture_git(root, &["add", "."]);
+    fixture_git(
+        root,
+        &[
+            "-c",
+            "user.name=F5 Test",
+            "-c",
+            "user.email=f5-test@example.invalid",
+            "commit",
+            "--quiet",
+            "-m",
+            "owned construction fixture",
+        ],
+    );
+    fixture_git(root, &["rev-parse", "HEAD"])
+}
+pub(super) fn owned_git_context() -> (
+    OwnedTempdir,
+    super::super::run::ExecutionContext,
+    super::super::run::RunRequest,
+) {
+    use super::super::{
+        manifest::manifest_bytes,
+        run::{ExecutionContext, RunRequest, MANIFEST_PATH},
+    };
+    let tmp = owned_tempdir();
+    let m = candidate().unwrap();
+    fixture_git(tmp.path(), &["init", "--quiet"]);
+    let protocol = tmp.path().join(&m.protocol);
+    std::fs::create_dir_all(protocol.parent().unwrap()).unwrap();
+    std::fs::write(
+        &protocol,
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../docs/superpowers/specs/2026-10-07-foraging-5-shortcut-comparison-design.md"
+        )),
+    )
+    .unwrap();
+    std::fs::write(tmp.path().join(MANIFEST_PATH), manifest_bytes().unwrap()).unwrap();
+    let revision = fixture_commit(tmp.path());
+    let executable = tmp.path().join("fixture-collector");
+    std::fs::write(&executable, b"owned executable identity fixture").unwrap();
+    let context = ExecutionContext {
+        repo: tmp.path().to_owned(),
+        executable,
+    };
+    let request = RunRequest {
+        mode: CollectionMode::Construction,
+        protocol_revision: revision,
+        approval_context: "approved engineering construction fixture".into(),
+        out: tmp.path().join("new-archive"),
+    };
+    (tmp, context, request)
+}

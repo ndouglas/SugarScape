@@ -3,12 +3,15 @@ mod access;
 mod agents;
 #[allow(
     dead_code,
-    reason = "Task 4 collector and Task 5 analyzer consume the archive API"
+    reason = "Task 5 analyzer consumes the streaming archive reader"
 )]
 mod archive;
+mod cli;
+pub(crate) use cli::cli;
 mod io;
 mod manifest;
 mod physical;
+mod run;
 mod scenario;
 #[allow(dead_code, reason = "Task 3 archive consumes episode validation")]
 mod validate;
