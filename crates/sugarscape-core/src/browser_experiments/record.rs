@@ -134,7 +134,7 @@ pub fn validate_episode(json: &str) -> Result<EpisodeRecord, Vec<FieldError>> {
         return Err(super::error("study", "input study does not match record"));
     }
     let fresh = run(&input)?;
-    if fresh != saved {
+    if !super::equivalence::records_equivalent(&fresh, &saved) {
         return Err(super::error(
             "episode",
             "saved episode differs from reconstructed episode",

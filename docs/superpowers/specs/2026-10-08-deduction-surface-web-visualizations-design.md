@@ -182,6 +182,17 @@ raw evidence, a 250 MB surface report or a multi-GB shared report into the web
 bundle. New adapter identities are distinct from the original frozen measurement
 source manifest; original artifacts and their manifests are never rewritten.
 
+## Approved portability exception
+
+The [October 8 portability amendment](2026-10-08-deduction-surface-web-portability-amendment.md)
+authorizes five runtime index draws in three deduction files to use fixed64-bit
+sampling while preserving original native outcomes and reports. All other frozen
+engine/settings constraints remain. Complete record equivalence uses the original
+1e-12 tolerance only at named computed legacy probability/regret paths, with exact
+structure/actions/integer/rational/parameter comparison and fresh reconstruction.
+Original measurement source identities remain immutable and separate from the
+corrected viewer source identity.
+
 ## Verification and acceptance
 
 Before implementation, the staged plan must identify exact per-study inputs,

@@ -57,7 +57,7 @@ impl BuiltinController {
         } else {
             Some(
                 choices[if random {
-                    self.rng.gen_range(0..choices.len())
+                    self.rng.gen_range(0..choices.len() as u64) as usize
                 } else {
                     0
                 }]
@@ -77,7 +77,7 @@ impl Controller for BuiltinController {
                         && !r.legal.targets.is_empty() =>
                 {
                     let index = if self.kind == PolicyKind::Random {
-                        self.rng.gen_range(0..r.legal.targets.len())
+                        self.rng.gen_range(0..r.legal.targets.len() as u64) as usize
                     } else {
                         (r.round as usize + usize::from(r.actor)) % r.legal.targets.len()
                     };
@@ -120,8 +120,10 @@ impl Controller for BuiltinController {
                             PolicyKind::Random => {
                                 if self.rng.gen_range(0..2) == 0 {
                                     Some(
-                                        r.legal.targets
-                                            [self.rng.gen_range(0..r.legal.targets.len())],
+                                        r.legal.targets[self
+                                            .rng
+                                            .gen_range(0..r.legal.targets.len() as u64)
+                                            as usize],
                                     )
                                 } else {
                                     None

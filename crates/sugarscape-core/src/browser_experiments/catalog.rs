@@ -44,8 +44,17 @@ pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> 
             let digest = receipts["wink"]["source_sha256"]
                 .as_str()
                 .ok_or_else(|| super::error("rules_identity", "missing retained source receipt"))?;
+            let correction: Value =
+                serde_json::from_str(include_str!("fixtures/wink-portability.json"))
+                    .map_err(|e| super::error("rules_identity", e.to_string()))?;
+            let viewer_digest = correction["viewer_source_sha256"].as_str().ok_or_else(|| {
+                super::error(
+                    "rules_identity",
+                    "missing viewer portability source receipt",
+                )
+            })?;
             Ok(format!(
-                "wink:protocol-{}:rules-{}:policy-{}:source-sha256:{digest}",
+                "wink:protocol-{}:rules-{}:policy-{}:measurement-source-sha256:{digest}:portability-runtime-u64-index-v1:viewer-source-sha256:{viewer_digest}",
                 deduction::PROTOCOL_VERSION,
                 deduction::RULES_VERSION,
                 deduction::POLICY_VERSION

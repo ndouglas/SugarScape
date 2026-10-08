@@ -45,7 +45,8 @@ impl Controller for ExperimentThreatController {
         {
             Action::Use {
                 capability: r.observation.objectives.capability,
-                target: r.legal.targets[self.rng.gen_range(0..r.legal.targets.len())],
+                target: r.legal.targets
+                    [self.rng.gen_range(0..r.legal.targets.len() as u64) as usize],
             }
         } else {
             Action::Pass

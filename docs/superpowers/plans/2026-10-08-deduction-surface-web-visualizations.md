@@ -15,7 +15,7 @@
 ## Global Constraints
 
 - Batch includes Wink; noisy testimony; testimony decision game; strategic reporting; strategy-aware listeners; adversarial audit; shared surface; active surface. The two testimony selections are separate catalog entries, giving eight working entries across the spec's seven study selections.
-- Existing measured engine namespaces, scientific settings, policies, and first reports remain unchanged. Only additive adapters/exports/CLI dispatch and presentation are permitted.
+- Existing measured engine namespaces, scientific settings, policies, and first reports remain unchanged except the separately user-approved [portability amendment](../specs/2026-10-08-deduction-surface-web-portability-amendment.md): five runtime index draws in three deduction files use fixed64-bit sampling, preserving original native outputs. Other changes remain additive adapters/exports/CLI dispatch/presentation. Computed legacy floats use original1e-12 tolerance only at explicit paths; all other structural/value comparisons remain exact.
 - Accept at most **64 KiB** of normalized input and **4,096 display checkpoints**; cap a complete episode export at **16 MiB** of compact JSON. Bound raw input bytes before parsing as well, preventing oversized whitespace from bypassing the limit.
 - **One worker runs one requested episode at a time**, with **one retained compiled engine** and a **60-second wall-clock timeout** terminating an incomplete request. Keep **at most two successful episode records** for matched comparison. Release compiled engines and replaced records; terminating a worker releases all WASM state.
 - Native adapters enforce input/checkpoint/serialized-byte limits. Browser timeout is a worker lifecycle limit, not a change to any scientific clock or planner objective.
@@ -277,7 +277,7 @@ interface EpisodeClient {
 }
 ```
 
-- [ ] **Step 1: Write RED boundary/parity/client tests.** Native/WASM malformed input, max seed, u64 overflow, forged record with true arbitrary flag, zero denominator, unknown version/field, raw>64KiB and record>16MiB. All8 study default records must compare completely between CLI and actual WASM. Use worker fakes with stale reply/load failure/cancel/timeout scenarios and Vitest fake timers.
+- [x] **Step 1: Write RED boundary/parity/client tests.** Native/WASM malformed input, max seed, u64 overflow, forged record with true arbitrary flag, zero denominator, unknown version/field, raw>64KiB and record>16MiB. All8 study default records must compare completely between CLI and actual WASM. Use worker fakes with stale reply/load failure/cancel/timeout scenarios and Vitest fake timers.
 
 ```typescript
 it('late replies cannot replace a canceled request', async () => {
@@ -291,8 +291,8 @@ it('late replies cannot replace a canceled request', async () => {
 ```
 
 `clientFixture`, `defaultInputText` and `winkFixture` are local test helpers/data built from core catalog/fixtures, not production simulator doubles.
-- [ ] **Step 2: RED commands.** `cargo test -p sugarscape-cli --test experiment_view`; `npx vitest run src/episodes/client.test.ts` in web. Boundary tests compile before running actual WASM.
-- [ ] **Step 3: Implement checked bridges and worker lifecycle.** Map errors with existing `FieldError` JSON shape; validate raw bytes before calls. Native JSON writer adds newline and explicitly flushes, exits1 on write/flush failure. Worker imports WASM and awaits initialization inside try; monotonically assigned IDs and a60s page-side timer reject/terminate on all end states. No successful partial record; no synchronous WASM on page. Serial requests permit at most one engine; termination clears all compiled state.
+- [x] **Step 2: RED commands.** `cargo test -p sugarscape-cli --test experiment_view`; `npx vitest run src/episodes/client.test.ts` in web. Boundary tests compile before running actual WASM.
+- [x] **Step 3: Implement checked bridges and worker lifecycle.** Map errors with existing `FieldError` JSON shape; validate raw bytes before calls. Native JSON writer adds newline and explicitly flushes, exits1 on write/flush failure. Worker imports WASM and awaits initialization inside try; monotonically assigned IDs and a60s page-side timer reject/terminate on all end states. No successful partial record; no synchronous WASM on page. Serial requests permit at most one engine; termination clears all compiled state.
 
 ```typescript
 const ready = init();
@@ -307,8 +307,8 @@ addEventListener('message', async ({data}: MessageEvent<WorkerRequest>) => {
 });
 ```
 
-- [ ] **Step 4: GREEN and feasibility gate.** Build release CLI, web WASM, then native/WASM parity, client tests, TypeScript and Node WASM tests. Measure cold WASM generation separately from playback for all8 defaults and slow representative active controls on actual browser worker. Verify no>60s default,>4096 checkpoints or>16MiB export. If a bound fails, stop/reassess and request a concrete spec limit revision; never truncate or silently tune experiment settings. Fresh boundary/worker reviewer checks complete records and memory lifecycle.
-- [ ] **Step 5: Commit.** `feat(wasm): expose bounded experiment episodes and cancellable workers`.
+- [x] **Step 4: GREEN and feasibility gate.** Build release CLI, web WASM, then native/WASM parity, client tests, TypeScript and Node WASM tests. Measure cold WASM generation separately from playback for all8 defaults and slow representative active controls on actual browser worker. Verify no>60s default,>4096 checkpoints or>16MiB export. If a bound fails, stop/reassess and request a concrete spec limit revision; never truncate or silently tune experiment settings. Fresh boundary/worker reviewer checks complete records and memory lifecycle.
+- [x] **Step 5: Commit.** `feat(wasm): expose bounded experiment episodes and cancellable workers`.
 
 ## Task 6: Episode shell, selection, playback, game/testimony renderers, and recorded results
 

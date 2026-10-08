@@ -1,5 +1,6 @@
 //! Bounded, reproducible display adapters for retained experiment engines.
 mod catalog;
+mod equivalence;
 mod input;
 mod record;
 mod recorded;
