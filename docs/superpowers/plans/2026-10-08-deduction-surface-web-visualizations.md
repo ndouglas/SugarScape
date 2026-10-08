@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-08-deduction-surface-web-visualizations-design.md` (approved October 8, 2026: LGTM!).
 
-**Status:** Written plan awaiting user review. No runtime implementation authorized by this document until that review.
+**Status:** Approved October 8, 2026 (LGTM); implementation in progress using subagents and independent reviews.
 
 ## Global Constraints
 
@@ -118,7 +118,7 @@ Rust uses corresponding serde types with unknown-field rejection, including `Sem
 
 **Interfaces:** Consumes existing `Engine::new/request/submit/archive/outcome/fingerprint`, `Controller::respond`, `policy_seed`, `ExperimentThreatController`, `wink_config`. Produces common functions/types above, `wink::run(&Input)->Result<EpisodeRecord,Vec<FieldError>>`, and catalog's normalization/dispatch infrastructure.
 
-- [ ] **Step 1: Preserve baseline and write contract/Wink RED tests.** Create only this plan's ignored evidence directory and ledger; bind the approved spec/plan hashes and execution base. Inspect/fetch remote and merge current committed main into crowd only when no active Git operation blocks it; preserve the unrelated deferred draft. Record prior first-report read provenance and protected engine module hashes. Write tests for strict seed syntax, byte/checkpoint/output limits, forged saved record, deterministic play and ordinary-versus-diagnostic distinction.
+- [x] **Step 1: Preserve baseline and write contract/Wink RED tests.** Create only this plan's ignored evidence directory and ledger; bind the approved spec/plan hashes and execution base. Inspect/fetch remote and merge current committed main into crowd only when no active Git operation blocks it; preserve the unrelated deferred draft. Record prior first-report read provenance and protected engine module hashes. Write tests for strict seed syntax, byte/checkpoint/output limits, forged saved record, deterministic play and ordinary-versus-diagnostic distinction.
 
 ```rust
 #[test]
@@ -136,8 +136,8 @@ fn max_seed_stays_decimal_text() {
 }
 ```
 
-- [ ] **Step 2: Run genuine RED.** `cargo test -p sugarscape-core browser_experiments::tests::record` and `...::wink`; retain completed exit/output before runtime code.
-- [ ] **Step 3: Implement bounded contracts and request-based Wink runner.** Create controllers using unchanged derivation; ordinary uses selected policy for all Agents, diagnostic assigns `ExperimentThreatController` only to the actual holder according to its own `TurnRequest.observation.objective`. Store each before-request and after-submission checkpoint. Buffered submitted actions are labeled pending until the public phase commits. Public changes use actual request/engine outcomes, never a guessed delayed-effect simulation. Use archive/replay to bind terminal fingerprints. Researcher state contains only available current requests/committed host records, not guessed hidden values.
+- [x] **Step 2: Run genuine RED.** `cargo test -p sugarscape-core browser_experiments::tests::record` and `...::wink`; retain completed exit/output before runtime code.
+- [x] **Step 3: Implement bounded contracts and request-based Wink runner.** Create controllers using unchanged derivation; ordinary uses selected policy for all Agents, diagnostic assigns `ExperimentThreatController` only to the actual holder according to its own `TurnRequest.observation.objective`. Store each before-request and after-submission checkpoint. Buffered submitted actions are labeled pending until the public phase commits. Public changes use actual request/engine outcomes, never a guessed delayed-effect simulation. Use archive/replay to bind terminal fingerprints. Researcher state contains only available current requests/committed host records, not guessed hidden values.
 
 ```rust
 while let Some(request) = engine.request() {
@@ -151,8 +151,8 @@ while let Some(request) = engine.request() {
 ```
 
 Define `push_before`, `push_after` and `action_field_error` locally; only common record APIs are exported. Do not edit `deduction/engine.rs` to add viewer state.
-- [ ] **Step 4: GREEN and review.** Run both filters, edited-file rustfmt and core Clippy. Check seed7 ordinary Evidence fingerprint against CLI's existing `2685439217561942331`; compare diagnostic seed cases with retained per-game results. Test absence of invented model beliefs, phase-buffering clocks, replay identity and view switches via record comparisons. Fresh independent spec/quality reviewer checks actual source and preserved engines; resolve findings through producer and rereview.
-- [ ] **Step 5: Commit reviewed working task.** Explicitly stage common/Wink files and additive lib line; message `feat(experiments): add checked bounded Wink episode records`. Update owned tracker/ledger.
+- [x] **Step 4: GREEN and review.** Run both filters, edited-file rustfmt and core Clippy. Check seed7 ordinary Evidence fingerprint against CLI's existing `2685439217561942331`; compare diagnostic seed cases with retained per-game results. Test absence of invented model beliefs, phase-buffering clocks, replay identity and view switches via record comparisons. Fresh independent spec/quality reviewer checks actual source and preserved engines; resolve findings through producer and rereview.
+- [x] **Step 5: Commit reviewed working task.** Explicitly stage common/Wink files and additive lib line; message `feat(experiments): add checked bounded Wink episode records`. Update owned tracker/ledger.
 
 ## Task 2: Noisy testimony and finite testimony decision cases
 
