@@ -448,11 +448,13 @@ mod tests {
             .estimates
             .iter()
             .all(|e| e.denominator == 40 && e.summary.as_ref().unwrap().n == 40));
-        assert!(analysis
-            .estimates
-            .iter()
-            .filter(|e| e.metric == "thief_transferred")
-            .all(|e| e.summary.as_ref().unwrap().ci95 == Some((0.0, 0.0))));
+        // Each condition repeats the same static trajectory across all40 labels.
+        // Its paired differences are constant, but policy-valid conditions can
+        // have different endpoints. The zero-difference control is separate.
+        assert!(analysis.estimates.iter().all(|e| {
+            let summary = e.summary.as_ref().unwrap();
+            summary.ci95 == Some((summary.mean, summary.mean))
+        }));
         assert!(
             !analysis.biological_groups.is_empty()
                 && !analysis.repeated_endpoints.is_empty()

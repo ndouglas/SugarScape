@@ -136,85 +136,76 @@ pub fn hash(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
 fn json<T: Serialize>(value: &T) -> Result<Vec<u8>, String> {
-    serde_json::to_vec_pretty(value).map_err(|e| e.to_string())
+    serde_json::to_vec(value).map_err(|e| format!("serialize JSON: {e}"))
 }
 pub fn validate_revision(value: &str) -> Result<(), String> {
-    if value.len() != 40
-        || !value
-            .bytes()
-            .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
-    {
-        return Err("revision must be a full lowercase 40-hex commit".into());
+    if value.len() == 40 && value.bytes().all(|c| c.is_ascii_hexdigit()) {
+        Ok(())
+    } else {
+        Err("revision must be full 40 hexadecimal characters".into())
     }
-    Ok(())
 }
 pub fn new_directory(path: &Path) -> Result<(), String> {
     reject_symlink_ancestors(path)?;
-    fs::create_dir(path).map_err(|e| format!("new directory {}: {e}", path.display()))?;
+    fs::create_dir(path).map_err(|e| format!("create directory {}: {e}", path.display()))?;
     sync_parent(path)
 }
 fn sync_parent(path: &Path) -> Result<(), String> {
-    fs::File::open(
-        path.parent()
-            .filter(|p| !p.as_os_str().is_empty())
-            .unwrap_or(Path::new(".")),
-    )
-    .and_then(|f| f.sync_all())
-    .map_err(|e| format!("sync parent {}: {e}", path.display()))
+    let parent = path
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    fs::File::open(parent)
+        .and_then(|f| f.sync_all())
+        .map_err(|e| format!("sync directory {}: {e}", parent.display()))
 }
 pub fn write_new(path: &Path, bytes: &[u8]) -> Result<(), String> {
     reject_symlink_ancestors(path)?;
-    let mut f = fs::OpenOptions::new()
+    let mut file = fs::OpenOptions::new()
         .write(true)
         .create_new(true)
         .open(path)
         .map_err(|e| format!("create {}: {e}", path.display()))?;
-    f.write_all(bytes)
-        .and_then(|_| f.sync_all())
-        .map_err(|e| format!("write {}: {e}", path.display()))?;
+    file.write_all(bytes)
+        .and_then(|_| file.sync_all())
+        .map_err(|e| format!("write/sync {}: {e}", path.display()))?;
     sync_parent(path)
 }
 fn reject_symlink_ancestors(path: &Path) -> Result<(), String> {
-    let mut current = PathBuf::new();
-    for component in path.components() {
-        current.push(component);
-        match fs::symlink_metadata(&current) {
-            Ok(m) if m.file_type().is_symlink() => {
-                return Err(format!("symlink path {}", current.display()))
+    for ancestor in path.ancestors().filter(|p| !p.as_os_str().is_empty()) {
+        match fs::symlink_metadata(ancestor) {
+            Ok(meta) if meta.file_type().is_symlink() => {
+                return Err(format!("symlink forbidden: {}", ancestor.display()))
             }
             Ok(_) => {}
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
-            Err(e) => return Err(e.to_string()),
+            Err(e) => return Err(format!("inspect {}: {e}", ancestor.display())),
         }
     }
     Ok(())
 }
 fn confined(root: &Path, relative: &str) -> Result<PathBuf, String> {
-    if relative.is_empty()
-        || Path::new(relative)
+    let relative = Path::new(relative);
+    if relative.as_os_str().is_empty()
+        || relative
             .components()
             .any(|c| !matches!(c, Component::Normal(_)))
     {
-        return Err("archive reference must be relative without traversal".into());
+        return Err("reference must be a nonempty confined relative path".into());
     }
-    let p = root.join(relative);
-    reject_symlink_ancestors(&p)?;
-    Ok(p)
+    let path = root.join(relative);
+    reject_symlink_ancestors(&path)?;
+    Ok(path)
 }
 fn read<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T, String> {
-    serde_json::from_slice(&fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?)
-        .map_err(|e| format!("{}: {e}", path.display()))
+    let bytes = fs::read(path).map_err(|e| format!("read {}: {e}", path.display()))?;
+    serde_json::from_slice(&bytes).map_err(|e| format!("decode {}: {e}", path.display()))
 }
 fn exists(path: &Path) -> Result<bool, String> {
     match fs::symlink_metadata(path) {
-        Ok(m) => {
-            if !m.is_file() {
-                return Err(format!("expected regular file {}", path.display()));
-            }
-            Ok(true)
-        }
+        Ok(_) => Ok(true),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(false),
-        Err(e) => Err(e.to_string()),
+        Err(e) => Err(format!("inspect {}: {e}", path.display())),
     }
 }
 fn refs(m: &Manifest) -> Vec<AttemptRef> {
@@ -223,40 +214,41 @@ fn refs(m: &Manifest) -> Vec<AttemptRef> {
         .enumerate()
         .flat_map(|(ordinal, c)| {
             m.seeds.iter().map(move |&seed| {
-                let p = format!("attempts/{ordinal:03}-{seed}");
+                let dir = format!("attempts/{ordinal:03}-{seed}");
                 AttemptRef {
                     condition: c.id.clone(),
                     seed,
-                    start: format!("{p}/start.json"),
-                    frames: format!("{p}/frames.jsonl"),
-                    outcome: format!("{p}/outcome.json"),
+                    start: format!("{dir}/start.json"),
+                    frames: format!("{dir}/frames.jsonl"),
+                    outcome: format!("{dir}/outcome.json"),
                 }
             })
         })
         .collect()
 }
 fn git(root: &Path, args: &[&str]) -> Result<Vec<u8>, String> {
-    let r = Command::new("git")
+    let result = Command::new("git")
+        .arg("-C")
+        .arg(root)
         .args(args)
-        .current_dir(root)
         .output()
-        .map_err(|e| e.to_string())?;
-    if !r.status.success() {
+        .map_err(|e| format!("git {args:?}: {e}"))?;
+    if !result.status.success() {
         return Err(format!(
-            "git {args:?}: {}: {}",
-            r.status,
-            String::from_utf8_lossy(&r.stderr)
+            "git {args:?} exited {}: {}",
+            result.status,
+            String::from_utf8_lossy(&result.stderr)
         ));
     }
-    Ok(r.stdout)
+    Ok(result.stdout)
 }
 fn git_text(root: &Path, args: &[&str]) -> Result<String, String> {
     String::from_utf8(git(root, args)?)
-        .map(|s| s.trim().into())
-        .map_err(|e| e.to_string())
+        .map(|s| s.trim_end_matches(['\r', '\n']).to_string())
+        .map_err(|e| format!("git text: {e}"))
 }
 fn file_identity(path: &Path, name: String, mode: String) -> Result<FileIdentity, String> {
-    let bytes = fs::read(path).map_err(|e| e.to_string())?;
+    let bytes = fs::read(path).map_err(|e| format!("inventory {}: {e}", path.display()))?;
     Ok(FileIdentity {
         path: name,
         sha256: hash(&bytes),
@@ -266,65 +258,63 @@ fn file_identity(path: &Path, name: String, mode: String) -> Result<FileIdentity
 }
 fn preflight(root: &Path, revision: &str, out: &Path) -> Result<Provenance, String> {
     validate_revision(revision)?;
-    if git_text(
+    let resolved = git_text(
         root,
         &["rev-parse", "--verify", &format!("{revision}^{{commit}}")],
-    )? != revision
-    {
-        return Err("protocol revision does not name exact commit".into());
+    )?;
+    if !resolved.eq_ignore_ascii_case(revision) {
+        return Err("protocol revision does not resolve to the exact commit".into());
     }
     let committed = git(root, &["show", &format!("{revision}:{PROTOCOL}")])?;
-    let current = fs::read(root.join(PROTOCOL)).map_err(|e| e.to_string())?;
+    let current = fs::read(root.join(PROTOCOL)).map_err(|e| format!("current protocol: {e}"))?;
     if committed != current {
         return Err("raw committed/current protocol bytes differ".into());
     }
     if !git(root, &["status", "--porcelain", "--untracked-files=no"])?.is_empty() {
-        return Err("execution requires clean tracked tree".into());
+        return Err("tracked source tree must be clean".into());
     }
     reject_symlink_ancestors(out)?;
-    if fs::symlink_metadata(out).is_ok() {
-        return Err("output destination exists".into());
+    if exists(out)? {
+        return Err("output destination already exists".into());
     }
-    let source_revision = git_text(root, &["rev-parse", "HEAD"])?;
-    let tree = git(root, &["ls-tree", "-r", "-z", "HEAD"])?;
     let mut source_inventory = vec![];
-    for entry in tree.split(|b| *b == 0).filter(|s| !s.is_empty()) {
-        let e = std::str::from_utf8(entry).map_err(|e| e.to_string())?;
-        let (meta, path) = e.split_once('\t').ok_or("invalid git tree")?;
-        let mode = meta.split_whitespace().next().ok_or("missing tree mode")?;
-        if mode != "100644" && mode != "100755" {
-            return Err(format!("unsupported tracked entry {path} mode {mode}"));
-        }
-        let identity = file_identity(&root.join(path), path.into(), mode.into())?;
-        if hash(&git(root, &["show", &format!("HEAD:{path}")])?) != identity.sha256 {
-            return Err(format!("source bytes differ at {path}"));
-        }
-        source_inventory.push(identity);
+    for entry in git(root, &["ls-files", "--stage", "-z"])?
+        .split(|b| *b == 0)
+        .filter(|e| !e.is_empty())
+    {
+        let entry = std::str::from_utf8(entry).map_err(|e| e.to_string())?;
+        let (meta, name) = entry.split_once('\t').ok_or("malformed git inventory")?;
+        let mode = meta
+            .split_whitespace()
+            .next()
+            .ok_or("missing git file mode")?;
+        let path = confined(root, name)?;
+        source_inventory.push(file_identity(&path, name.into(), mode.into())?);
     }
+    source_inventory.sort_by(|a, b| a.path.cmp(&b.path));
     let protocol = source_inventory
         .iter()
-        .find(|f| f.path == PROTOCOL)
-        .cloned()
-        .ok_or("protocol missing from source inventory")?;
-    let binary_path = std::env::current_exe().map_err(|e| e.to_string())?;
-    #[cfg(unix)]
-    let binary_mode = {
-        use std::os::unix::fs::PermissionsExt;
-        format!(
-            "{:06o}",
-            fs::metadata(&binary_path)
+        .find(|i| i.path == PROTOCOL)
+        .ok_or("protocol is not tracked")?
+        .clone();
+    let exe = std::env::current_exe()
+        .map_err(|e| e.to_string())?
+        .canonicalize()
+        .map_err(|e| e.to_string())?;
+    use std::os::unix::fs::PermissionsExt;
+    let mode = format!(
+        "{:06o}",
+        0o100000
+            | (fs::metadata(&exe)
                 .map_err(|e| e.to_string())?
                 .permissions()
                 .mode()
-        )
-    };
-    #[cfg(not(unix))]
-    let binary_mode = "100755".to_string();
-    let binary = file_identity(&binary_path, binary_path.display().to_string(), binary_mode)?;
+                & 0o777)
+    );
     Ok(Provenance {
-        source_revision,
-        protocol_revision: revision.into(),
-        binary,
+        source_revision: git_text(root, &["rev-parse", "HEAD"])?,
+        protocol_revision: resolved,
+        binary: file_identity(&exe, exe.to_string_lossy().into_owned(), mode)?,
         protocol,
         protocol_bytes: String::from_utf8(current).map_err(|e| e.to_string())?,
         source_sha256: hash(&json(&source_inventory)?),
@@ -335,135 +325,113 @@ fn preflight(root: &Path, revision: &str, out: &Path) -> Result<Provenance, Stri
 fn validate_provenance(p: &Provenance) -> Result<(), String> {
     validate_revision(&p.source_revision)?;
     validate_revision(&p.protocol_revision)?;
-    let valid_hash = |s: &str| {
-        s.len() == 64
-            && s.bytes()
-                .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
-    };
-    let mut names = BTreeSet::new();
-    if p.source_inventory.is_empty()
-        || p.source_inventory.iter().any(|f| {
-            !names.insert(&f.path)
-                || !valid_hash(&f.sha256)
-                || !["100644", "100755"].contains(&f.mode.as_str())
-        })
-        || !valid_hash(&p.binary.sha256)
+    let valid_hash = |h: &str| h.len() == 64 && h.bytes().all(|b| b.is_ascii_hexdigit());
+    if p.binary.path.is_empty()
         || p.binary.bytes == 0
-        || u32::from_str_radix(&p.binary.mode, 8).map_or(true, |mode| {
-            mode & 0o170000 != 0o100000 || mode & 0o111 == 0
-        })
-        || p.source_sha256 != hash(&json(&p.source_inventory)?)
-        || p.manifest_sha256 != hash(&json(&manifest())?)
+        || !valid_hash(&p.binary.sha256)
         || p.protocol.path != PROTOCOL
-        || p.protocol.sha256 != hash(p.protocol_bytes.as_bytes())
         || p.protocol.bytes != p.protocol_bytes.len() as u64
+        || p.protocol.sha256 != hash(p.protocol_bytes.as_bytes())
+        || p.manifest_sha256 != hash(&json(&manifest())?)
+        || p.source_sha256 != hash(&json(&p.source_inventory)?)
         || !p.source_inventory.contains(&p.protocol)
     {
-        return Err("invalid source/protocol/binary/manifest identity".into());
+        return Err("provenance identity/hash mismatch".into());
+    }
+    let mut names = BTreeSet::new();
+    for f in &p.source_inventory {
+        if !names.insert(&f.path)
+            || !valid_hash(&f.sha256)
+            || !["100644", "100755"].contains(&f.mode.as_str())
+            || Path::new(&f.path)
+                .components()
+                .any(|c| !matches!(c, Component::Normal(_)))
+            || f.path.is_empty()
+        {
+            return Err("invalid source inventory".into());
+        }
     }
     Ok(())
 }
 fn validate_index(index: &Index) -> Result<(), String> {
-    if index.schema != SCHEMA || index.manifest != manifest() || index.attempts != refs(&manifest())
+    if index.schema != SCHEMA
+        || index.manifest != manifest()
+        || index.attempts != refs(&index.manifest)
     {
-        return Err("index differs from canonical 96 × 40 matrix/config/budget".into());
+        return Err("noncanonical schema/manifest/budget/attempt references".into());
     }
     validate_provenance(&index.provenance)
 }
 pub fn census(a: &Archive) -> Census {
-    let mut c = Census {
+    let mut counts = Census {
         planned: a.index.attempts.len(),
-        unstarted: a.index.attempts.len().saturating_sub(a.attempts.len()),
         attempted: a.attempts.len(),
+        unstarted: a.index.attempts.len().saturating_sub(a.attempts.len()),
         ..Default::default()
     };
     for attempt in &a.attempts {
-        match attempt.outcome.as_ref().map(|r| &r.outcome) {
-            None => c.pending += 1,
-            Some(AttemptOutcome::Failed(f)) => {
-                c.failed += 1;
-                c.partial += usize::from(f.partial.is_some());
-                c.invalid += usize::from(f.partial.as_ref().is_some_and(|r| {
-                    r.completed_ticks == r.requested_ticks && validate_episode(r).is_err()
-                }));
-            }
-            Some(AttemptOutcome::Complete(r)) => {
-                c.complete += 1;
-                c.invalid += usize::from(validate_episode(r).is_err());
-                c.unavailable_lineage += usize::from(r.thief_transferred.is_none());
-            }
-        }
+        count_outcome(&mut counts, attempt.outcome.as_ref());
+        let structural = validate_attempt(&a.index, attempt).is_err();
+        let biological = attempt.outcome.as_ref().is_some_and(|o| match &o.outcome {
+            AttemptOutcome::Complete(r) => validate_episode(r).is_err(),
+            _ => false,
+        });
+        counts.invalid += usize::from(structural || biological);
     }
-    c
+    counts
 }
 pub fn load(path: &Path) -> Result<Archive, String> {
-    load_inner(path).map_err(|error| {
-        let diagnostic = receipt_census(path)
-            .map_or_else(|e| format!("unavailable ({e})"), |c| format!("{c:?}"));
-        format!("{error}; execution census (receipt states): {diagnostic}")
+    load_inner(path).map_err(|error| match receipt_census(path) {
+        Ok(counts) => format!("{error}; execution census: {counts:?}"),
+        Err(census_error) => format!("{error}; execution census unavailable: {census_error}"),
     })
 }
 fn receipt_census(path: &Path) -> Result<Census, String> {
     reject_symlink_ancestors(path)?;
     let index: Index = read(path)?;
-    if index.attempts != refs(&manifest()) {
-        return Err("invalid canonical reference matrix".into());
-    }
     let root = path.parent().unwrap_or(Path::new("."));
-    let mut c = Census {
-        planned: 3840,
+    let mut counts = Census {
+        planned: index.attempts.len(),
         ..Default::default()
     };
-    for r in &index.attempts {
-        let start_path = confined(root, &r.start)?;
-        if !exists(&start_path)? {
-            c.unstarted += 1;
+    for reference in &index.attempts {
+        let start_path = confined(root, &reference.start)?;
+        let frame_path = confined(root, &reference.frames)?;
+        let outcome_path = confined(root, &reference.outcome)?;
+        if !exists(&start_path)? && !exists(&frame_path)? && !exists(&outcome_path)? {
+            counts.unstarted += 1;
             continue;
         }
-        c.attempted += 1;
-        let mut invalid = read::<AttemptStart>(&start_path).map_or(true, |s| {
-            s.schema != SCHEMA
-                || s.condition != r.condition
-                || s.seed != r.seed
-                || s.provenance != index.provenance.identity()
-        });
-        let outcome = confined(root, &r.outcome)?;
-        if !exists(&outcome)? {
-            c.pending += 1;
+        counts.attempted += 1;
+        let start = read::<AttemptStart>(&start_path);
+        let outcome = if exists(&outcome_path)? {
+            read::<OutcomeReceipt>(&outcome_path).map(Some)
         } else {
-            match read::<OutcomeReceipt>(&outcome) {
-                Err(_) => {
-                    c.pending += 1;
-                    invalid = true;
-                }
-                Ok(o) => {
-                    invalid |= o.condition != r.condition
-                        || o.seed != r.seed
-                        || !o.elapsed_seconds.is_finite()
-                        || o.elapsed_seconds < 0.0
-                        || o.timing_boundary != TIMING;
-                    match o.outcome {
-                        AttemptOutcome::Complete(record) => {
-                            c.complete += 1;
-                            invalid |= validate_episode(&record).is_err();
-                            c.unavailable_lineage +=
-                                usize::from(record.thief_transferred.is_none());
-                        }
-                        AttemptOutcome::Failed(f) => {
-                            c.failed += 1;
-                            c.partial += usize::from(f.partial.is_some());
-                            invalid |= f.partial.as_ref().is_some_and(|r| {
-                                r.completed_ticks == r.requested_ticks
-                                    && validate_episode(r).is_err()
-                            });
-                        }
-                    }
-                }
+            Ok(None)
+        };
+        count_outcome(&mut counts, outcome.as_ref().ok().and_then(|o| o.as_ref()));
+        let frames = read_frames(&frame_path);
+        let invalid = match (start, outcome, frames) {
+            (Ok(start), Ok(outcome), Ok((frames, interrupted_tail))) => {
+                let attempt = Attempt {
+                    start,
+                    frames,
+                    outcome,
+                    interrupted_tail,
+                };
+                attempt.start.condition != reference.condition
+                    || attempt.start.seed != reference.seed
+                    || validate_attempt(&index, &attempt).is_err()
+                    || attempt.outcome.as_ref().is_some_and(|o| match &o.outcome {
+                        AttemptOutcome::Complete(r) => validate_episode(r).is_err(),
+                        _ => false,
+                    })
             }
-        }
-        c.invalid += usize::from(invalid);
+            _ => true,
+        };
+        counts.invalid += usize::from(invalid);
     }
-    Ok(c)
+    Ok(counts)
 }
 fn load_inner(path: &Path) -> Result<Archive, String> {
     reject_symlink_ancestors(path)?;
@@ -471,55 +439,31 @@ fn load_inner(path: &Path) -> Result<Archive, String> {
     validate_index(&index)?;
     let root = path.parent().unwrap_or(Path::new("."));
     let mut attempts = vec![];
-    for r in &index.attempts {
-        let start = confined(root, &r.start)?;
-        let frames = confined(root, &r.frames)?;
-        let outcome = confined(root, &r.outcome)?;
-        if !exists(&start)? {
-            if exists(&frames)? || exists(&outcome)? {
-                return Err("attempt data without durable start".into());
+    for reference in &index.attempts {
+        let start_path = confined(root, &reference.start)?;
+        let frame_path = confined(root, &reference.frames)?;
+        let outcome_path = confined(root, &reference.outcome)?;
+        if !exists(&start_path)? {
+            if exists(&frame_path)? || exists(&outcome_path)? {
+                return Err("orphan frames/outcome without attempt start".into());
             }
             continue;
         }
-        let start: AttemptStart = read(&start)?;
-        if start.condition != r.condition || start.seed != r.seed {
-            return Err(format!("attempt slot identity mismatch at {}", r.start));
+        let start: AttemptStart = read(&start_path)?;
+        if start.condition != reference.condition || start.seed != reference.seed {
+            return Err("canonical slot identity mismatch".into());
         }
-        let outcome = if exists(&outcome)? {
-            Some(read::<OutcomeReceipt>(&outcome)?)
+        let outcome = if exists(&outcome_path)? {
+            Some(read(&outcome_path)?)
         } else {
             None
         };
-        let mut saved = vec![];
-        let mut tail = None;
-        if exists(&frames)? {
-            let bytes = fs::read(&frames).map_err(|e| e.to_string())?;
-            let mut lines = bytes.split_inclusive(|b| *b == b'\n').peekable();
-            while let Some(line) = lines.next() {
-                if !line.ends_with(b"\n") {
-                    if lines.peek().is_some()
-                        || outcome
-                            .as_ref()
-                            .is_some_and(|o| matches!(o.outcome, AttemptOutcome::Complete(_)))
-                    {
-                        return Err("truncated finalized frame stream".into());
-                    }
-                    tail = Some(String::from_utf8_lossy(line).into());
-                    break;
-                }
-                saved.push(
-                    serde_json::from_slice::<FrameRecord>(line)
-                        .map_err(|e| format!("invalid durable frame: {e}"))?,
-                );
-            }
-        } else if outcome.is_some() {
-            return Err("outcome without frame stream".into());
-        }
+        let (frames, interrupted_tail) = read_frames(&frame_path)?;
         attempts.push(Attempt {
             start,
-            frames: saved,
+            frames,
             outcome,
-            interrupted_tail: tail,
+            interrupted_tail,
         });
     }
     let archive = Archive { index, attempts };
@@ -530,99 +474,45 @@ fn validate_structure(a: &Archive) -> Result<(), String> {
     validate_index(&a.index)?;
     let mut keys = BTreeSet::new();
     for attempt in &a.attempts {
-        let s = &attempt.start;
-        if s.schema != SCHEMA
-            || s.provenance != a.index.provenance.identity()
-            || !keys.insert((&s.condition, s.seed))
-            || !a
-                .index
-                .attempts
-                .iter()
-                .any(|r| r.condition == s.condition && r.seed == s.seed)
-        {
-            return Err("duplicate/mismatched attempt identity or provenance".into());
+        if !keys.insert((&attempt.start.condition, attempt.start.seed)) {
+            return Err("duplicate attempt identity".into());
         }
-        if attempt
-            .frames
-            .iter()
-            .enumerate()
-            .any(|(i, f)| f.tick != i as u64)
-        {
-            return Err("noncontiguous durable frames".into());
-        }
-        if let Some(o) = &attempt.outcome {
-            if o.condition != s.condition
-                || o.seed != s.seed
-                || !o.elapsed_seconds.is_finite()
-                || o.elapsed_seconds < 0.0
-                || o.timing_boundary != TIMING
-                || (attempt.interrupted_tail.is_some()
-                    && matches!(o.outcome, AttemptOutcome::Complete(_)))
-            {
-                return Err("outcome identity/timing mismatch".into());
-            }
-            let record = match &o.outcome {
-                AttemptOutcome::Complete(r) => Some(r),
-                AttemptOutcome::Failed(f) => {
-                    if f.message.trim().is_empty() {
-                        return Err("empty failure reason".into());
-                    }
-                    f.partial.as_ref()
-                }
-            };
-            if let Some(r) = record {
-                if r.seed != s.seed
-                    || sugarscape_core::minds::deception::condition_id(&r.lab) != s.condition
-                    || r.schema != SCHEMA
-                    || !r.frames.starts_with(&attempt.frames)
-                {
-                    return Err("outcome does not match saved identity/frame prefix".into());
-                }
-                if matches!(o.outcome, AttemptOutcome::Complete(_)) && r.frames != attempt.frames {
-                    return Err("complete outcome lacks durable frames".into());
-                }
-            }
-        }
+        validate_attempt(&a.index, attempt)?;
     }
-    let c = census(a);
-    if a.index.census.as_ref().is_some_and(|saved| saved != &c)
-        || a.index.completed && (c.unstarted > 0 || c.pending > 0)
+    if a.index.completed
+        && (a.attempts.len() != a.index.attempts.len()
+            || a.attempts.iter().any(|a| a.outcome.is_none()))
     {
-        return Err(format!("inaccurate final execution census: {c:?}"));
+        return Err("completed index lacks finalized attempts".into());
+    }
+    if a.index
+        .census
+        .as_ref()
+        .is_some_and(|saved| *saved != census(a))
+    {
+        return Err("saved census mismatch".into());
     }
     Ok(())
 }
 pub fn validate_archive(a: &Archive) -> Result<(), String> {
-    let c = census(a);
-    let result = (|| {
+    let check = || -> Result<(), String> {
         validate_structure(a)?;
-        if !a.index.completed
-            || c.complete != 3840
-            || c.attempted != 3840
-            || c.failed != 0
-            || c.pending != 0
-        {
-            return Err(
-                "analysis requires all 3,840 complete attempts; no survivor pairing".into(),
-            );
+        if !a.index.completed || a.attempts.len() != 3840 {
+            return Err("analysis requires the complete canonical matrix".into());
         }
         for attempt in &a.attempts {
-            if let Some(OutcomeReceipt {
-                outcome: AttemptOutcome::Complete(r),
+            let Some(OutcomeReceipt {
+                outcome: AttemptOutcome::Complete(record),
                 ..
             }) = &attempt.outcome
-            {
-                validate_episode(r).map_err(|e| {
-                    format!(
-                        "{} seed {}: {e}",
-                        attempt.start.condition, attempt.start.seed
-                    )
-                })?;
-            }
+            else {
+                return Err("analysis requires every attempt complete".into());
+            };
+            validate_episode(record)?;
         }
         Ok(())
-    })();
-    result.map_err(|e: String| format!("{e}; execution census: {c:?}"))
+    };
+    check().map_err(|e| format!("{e}; execution census: {:?}", census(a)))
 }
 // Private injection seam. The public run route always supplies the fixed manifest.
 #[allow(clippy::type_complexity)]
@@ -643,7 +533,7 @@ where
     execute_attempt_with_writer(root, r, p, c, runner, |file, bytes| {
         file.write_all(bytes)
             .and_then(|_| file.sync_all())
-            .map_err(|e| e.to_string())
+            .map_err(|e| format!("durable frame write: {e}"))
     })
 }
 fn execute_attempt_with_writer<F, W>(
@@ -663,7 +553,7 @@ where
     W: FnMut(&mut fs::File, &[u8]) -> Result<(), String>,
 {
     let start_path = confined(root, &r.start)?;
-    new_directory(start_path.parent().ok_or("attempt parent")?)?;
+    new_directory(start_path.parent().ok_or("attempt directory missing")?)?;
     let start = AttemptStart {
         schema: SCHEMA.into(),
         condition: r.condition.clone(),
@@ -675,38 +565,37 @@ where
             .as_millis(),
     };
     write_new(&start_path, &json(&start)?)?;
-    let frames_path = confined(root, &r.frames)?;
+    let frame_path = confined(root, &r.frames)?;
     let mut file = fs::OpenOptions::new()
         .write(true)
         .create_new(true)
-        .open(&frames_path)
+        .open(&frame_path)
         .map_err(|e| e.to_string())?;
     file.sync_all().map_err(|e| e.to_string())?;
-    sync_parent(&frames_path)?;
-    let begin = Instant::now();
-    let mut io_error = None;
+    sync_parent(&frame_path)?;
+    let began = Instant::now();
+    let mut io_error: Option<String> = None;
     let result = runner(condition.lab.clone(), r.seed, &mut |frame| {
-        let result = (|| {
-            let mut bytes = serde_json::to_vec(frame).map_err(|e| e.to_string())?;
+        if let Some(error) = &io_error {
+            return Err(error.clone());
+        }
+        let result = json(frame).and_then(|mut bytes| {
             bytes.push(b'\n');
             writer(&mut file, &bytes)
-                .map_err(|e| format!("durable frame I/O {}: {e}", frames_path.display()))
-        })();
-        if let Err(e) = &result {
-            io_error = Some(e.clone());
+        });
+        if let Err(error) = &result {
+            io_error = Some(error.clone());
         }
         result
     });
-    let elapsed_seconds = begin.elapsed().as_secs_f64();
+    let elapsed_seconds = began.elapsed().as_secs_f64();
     let outcome = match result {
-        Ok(record) => match validate_episode(&record) {
-            Ok(()) => AttemptOutcome::Complete(record),
-            Err(message) => AttemptOutcome::Failed(EpisodeFailure {
-                message,
-                partial: Some(record),
-            }),
-        },
-        Err(f) => AttemptOutcome::Failed(f),
+        Ok(record) if io_error.is_none() => AttemptOutcome::Complete(record),
+        Ok(record) => AttemptOutcome::Failed(EpisodeFailure {
+            message: io_error.clone().unwrap(),
+            partial: Some(record),
+        }),
+        Err(failure) => AttemptOutcome::Failed(failure),
     };
     let receipt = OutcomeReceipt {
         condition: r.condition.clone(),
@@ -715,62 +604,158 @@ where
         timing_boundary: TIMING.into(),
         outcome,
     };
-    let saved = write_new(&confined(root, &r.outcome)?, &json(&receipt)?);
-    match (io_error, saved) {
-        (Some(e), Ok(())) => Err(e),
-        (Some(e), Err(s)) => Err(format!("{e}; saving failure receipt also failed: {s}")),
-        (None, s) => s,
+    write_new(&confined(root, &r.outcome)?, &json(&receipt)?)?;
+    if let Some(error) = io_error {
+        return Err(error);
     }
+    Ok(())
 }
 // The approved core failure DTO deliberately owns its known partial record.
 #[allow(clippy::result_large_err)]
 pub fn run(revision: &str, out: &Path) -> Result<(), String> {
-    let p = preflight(
-        Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/..")),
-        revision,
-        out,
-    )?;
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .ok_or("missing source root")?;
+    let provenance = preflight(root, revision, out)?;
     new_directory(out)?;
-    new_directory(&out.join("attempts"))?;
     let m = manifest();
-    let mut index = Index {
+    let index = Index {
         schema: SCHEMA.into(),
-        provenance: p,
+        provenance,
         attempts: refs(&m),
         manifest: m,
         completed: false,
         census: None,
     };
-    write_new(&out.join("index.incomplete.json"), &json(&index)?)?;
+    execute_campaign(out, index, |lab, seed, sink| {
+        sugarscape_core::minds::deception::run_episode_with_sink(lab, seed, true, sink)
+    })?;
+    let archive = load(&out.join("final-index.json"))?;
+    let analysis = super::deception_report::analyze(&archive)?;
+    super::deception_report::save_files(&analysis, out)
+}
+
+#[allow(clippy::result_large_err)]
+fn execute_campaign<F>(root: &Path, mut index: Index, mut runner: F) -> Result<Index, String>
+where
+    F: FnMut(
+        LabConfig,
+        u64,
+        &mut dyn FnMut(&FrameRecord) -> Result<(), String>,
+    ) -> Result<EpisodeRecord, EpisodeFailure>,
+{
+    write_new(&root.join("index.json"), &json(&index)?)?;
+    new_directory(&root.join("attempts"))?;
     for r in &index.attempts {
-        let c = index
+        let condition = index
             .manifest
             .conditions
             .iter()
             .find(|c| c.id == r.condition)
-            .ok_or("missing canonical condition")?;
-        if let Err(e) = execute_attempt(out, r, &index.provenance, c, |lab, seed, sink| {
-            sugarscape_core::minds::deception::run_episode_with_sink(lab, seed, true, sink)
-        }) {
-            let recovery = (|| {
-                let a = load(&out.join("index.incomplete.json"))?;
-                index.census = Some(census(&a));
-                write_new(&out.join("index.error.json"), &json(&index)?)?;
-                write_new(&out.join("execution-error.txt"), e.as_bytes())
-            })();
-            return Err(match recovery {
-                Ok(()) => e,
-                Err(other) => format!("{e}; error census persistence failed: {other}"),
-            });
+            .ok_or("unknown campaign condition")?;
+        execute_attempt(root, r, &index.provenance, condition, &mut runner)?;
+    }
+    let mut attempts = vec![];
+    for r in &index.attempts {
+        let (frames, interrupted_tail) = read_frames(&confined(root, &r.frames)?)?;
+        attempts.push(Attempt {
+            start: read(&confined(root, &r.start)?)?,
+            frames,
+            interrupted_tail,
+            outcome: Some(read(&confined(root, &r.outcome)?)?),
+        });
+    }
+    index.completed = true;
+    index.census = Some(census(&Archive {
+        index: index.clone(),
+        attempts,
+    }));
+    write_new(&root.join("final-index.json"), &json(&index)?)?;
+    write_new(&root.join("census.json"), &json(&index.census)?)?;
+    Ok(index)
+}
+
+fn count_outcome(counts: &mut Census, outcome: Option<&OutcomeReceipt>) {
+    match outcome.map(|o| &o.outcome) {
+        None => counts.pending += 1,
+        Some(AttemptOutcome::Complete(r)) => {
+            counts.complete += 1;
+            counts.unavailable_lineage += usize::from(r.lineage_unavailable_reason.is_some());
+        }
+        Some(AttemptOutcome::Failed(f)) => {
+            counts.failed += 1;
+            counts.partial += usize::from(f.partial.is_some());
         }
     }
-    let mut archive = load(&out.join("index.incomplete.json"))?;
-    index.completed = true;
-    index.census = Some(census(&archive));
-    archive.index = index.clone();
-    write_new(&out.join("index.json"), &json(&index)?)?;
-    let analysis = super::deception_report::analyze(&archive)?;
-    super::deception_report::save_files(&analysis, out)
+}
+fn read_frames(path: &Path) -> Result<(Vec<FrameRecord>, Option<String>), String> {
+    let bytes = fs::read(path).map_err(|e| format!("frame stream {}: {e}", path.display()))?;
+    let split = bytes.iter().rposition(|b| *b == b'\n').map_or(0, |i| i + 1);
+    let mut frames = vec![];
+    for line in bytes[..split].split_inclusive(|b| *b == b'\n') {
+        frames.push(
+            serde_json::from_slice(line).map_err(|e| format!("malformed durable frame: {e}"))?,
+        );
+    }
+    let tail = (split < bytes.len()).then(|| String::from_utf8_lossy(&bytes[split..]).into_owned());
+    Ok((frames, tail))
+}
+fn validate_attempt(index: &Index, attempt: &Attempt) -> Result<(), String> {
+    let start = &attempt.start;
+    if start.schema != SCHEMA
+        || start.provenance != index.provenance.identity()
+        || !index
+            .attempts
+            .iter()
+            .any(|r| r.condition == start.condition && r.seed == start.seed)
+    {
+        return Err("attempt identity/provenance mismatch".into());
+    }
+    if attempt
+        .frames
+        .iter()
+        .enumerate()
+        .any(|(i, f)| f.tick != i as u64)
+    {
+        return Err("invalid frame prefix ticks".into());
+    }
+    let Some(outcome) = &attempt.outcome else {
+        return Ok(());
+    };
+    if outcome.condition != start.condition
+        || outcome.seed != start.seed
+        || !outcome.elapsed_seconds.is_finite()
+        || outcome.elapsed_seconds < 0.0
+        || outcome.timing_boundary != TIMING
+    {
+        return Err("outcome identity/timing mismatch".into());
+    }
+    let (record, complete) = match &outcome.outcome {
+        AttemptOutcome::Complete(r) => (Some(r), true),
+        AttemptOutcome::Failed(f) => (f.partial.as_ref(), false),
+    };
+    if let Some(record) = record {
+        let condition = index
+            .manifest
+            .conditions
+            .iter()
+            .find(|c| c.id == start.condition)
+            .ok_or("unknown condition")?;
+        if record.schema != SCHEMA
+            || record.seed != start.seed
+            || record.lab != condition.lab
+            || record.requested_ticks != 64
+            || record.completed_ticks > 64
+        {
+            return Err("episode identity/budget mismatch".into());
+        }
+        if !record.frames.starts_with(&attempt.frames)
+            || complete && (record.frames != attempt.frames || attempt.interrupted_tail.is_some())
+        {
+            return Err("durable frame stream conflicts with outcome".into());
+        }
+    }
+    Ok(())
 }
 
 fn near(a: f64, b: f64) -> bool {
@@ -887,6 +872,125 @@ fn compare_ledger(a: &Ledger, b: &Ledger) -> Result<(), String> {
     }
     Ok(())
 }
+// P4-only saved-state reconstruction: no World, policy dispatch, or random draws.
+fn ordinary_candidates(
+    before: &RoleRecord,
+    positions: &BTreeMap<u64, Pos>,
+    stocks: &[StockRecord],
+    caches: &BTreeMap<u32, f64>,
+    memory: &[SeenRecord],
+) -> Vec<(Pos, u32, f64)> {
+    let occupied = |p: Pos| positions.iter().any(|(&id, &q)| id != before.id && p == q);
+    let vision = if before.id == 1 { 2 } else { 6 };
+    let mut values = BTreeMap::<u32, (u32, f64)>::new();
+    for stock in stocks {
+        let p = Pos::new(stock.site % 9, stock.site / 9);
+        let distance = before.pos.x.abs_diff(p.x) + before.pos.y.abs_diff(p.y);
+        if legal(p)
+            && !occupied(p)
+            && (p.x == before.pos.x || p.y == before.pos.y)
+            && distance <= vision
+        {
+            values.insert(stock.site, (distance, stock.amount));
+        }
+    }
+    let additions = if before.id == 1 && before.holdings < 4.0 {
+        caches.clone()
+    } else if before.id == 2 {
+        let mut seen = BTreeMap::<u32, f64>::new();
+        for e in memory {
+            *seen.entry(e.site).or_default() += e.amount;
+        }
+        for value in seen.values_mut() {
+            *value = value.min(128.0 - before.holdings);
+        }
+        seen
+    } else {
+        BTreeMap::new()
+    };
+    for (index, amount) in additions {
+        let p = Pos::new(index % 9, index / 9);
+        if legal(p) && !occupied(p) {
+            let dx = before.pos.x.abs_diff(p.x);
+            let dy = before.pos.y.abs_diff(p.y);
+            values
+                .entry(index)
+                .and_modify(|(_, value)| *value = value.max(amount))
+                .or_insert((dx.min(9 - dx) + dy.min(9 - dy), amount));
+        }
+    }
+    values
+        .into_iter()
+        .map(|(index, (distance, value))| (Pos::new(index % 9, index / 9), distance, value))
+        .collect()
+}
+fn ordinary_steps(before: &RoleRecord, positions: &BTreeMap<u64, Pos>, target: Pos) -> Vec<Pos> {
+    if target == before.pos {
+        return vec![before.pos];
+    }
+    let mut distance = [u32::MAX; 81];
+    let mut queue = std::collections::VecDeque::from([target]);
+    distance[site(target) as usize] = 0;
+    while let Some(p) = queue.pop_front() {
+        for (dx, dy) in [(0, -1), (-1, 0), (1, 0), (0, 1)] {
+            let q = Pos::new((p.x as i32 + dx) as u32, (p.y as i32 + dy) as u32);
+            if !legal(q)
+                || positions
+                    .iter()
+                    .any(|(&id, &other)| id != before.id && other == q)
+            {
+                continue;
+            }
+            if distance[site(q) as usize] == u32::MAX {
+                distance[site(q) as usize] = distance[site(p) as usize] + 1;
+                queue.push_back(q);
+            }
+        }
+    }
+    let d = distance[site(before.pos) as usize];
+    if d == u32::MAX {
+        return vec![before.pos];
+    }
+    [(0, -1), (-1, 0), (1, 0), (0, 1)]
+        .into_iter()
+        .filter_map(|(dx, dy)| {
+            let q = Pos::new(
+                (before.pos.x as i32 + dx) as u32,
+                (before.pos.y as i32 + dy) as u32,
+            );
+            (legal(q)
+                && distance[site(q) as usize] == d - 1
+                && !positions.iter().any(|(&id, &p)| id != before.id && p == q))
+            .then_some(q)
+        })
+        .collect()
+}
+fn audit_ordinary(
+    before: &RoleRecord,
+    positions: &BTreeMap<u64, Pos>,
+    stocks: &[StockRecord],
+    caches: &BTreeMap<u32, f64>,
+    memory: &[SeenRecord],
+    target: Pos,
+    after: Pos,
+) -> Result<(), String> {
+    let candidates = ordinary_candidates(before, positions, stocks, caches, memory);
+    let chosen = candidates
+        .iter()
+        .find(|c| c.0 == target)
+        .ok_or("ordinary target is not a candidate")?;
+    if candidates
+        .iter()
+        .any(|c| c.2 > chosen.2 || c.2 == chosen.2 && c.1 < chosen.1)
+    {
+        return Err("ordinary target violates maximum value / nearest tie policy".into());
+    }
+    if !ordinary_steps(before, positions, target).contains(&after) {
+        return Err("ordinary movement is not a legal shortest step toward selected target".into());
+    }
+    Ok(())
+}
+
 fn validate_episode(r: &EpisodeRecord) -> Result<(), String> {
     let fail = |s: &str| Err(s.to_string());
     if r.schema != SCHEMA
@@ -1134,6 +1238,9 @@ fn validate_episode(r: &EpisodeRecord) -> Result<(), String> {
             if action == "ordinary" {
                 let c = choice.ok_or("ordinary action lacks choice/inspection")?;
                 choices.insert(a.actor);
+                audit_ordinary(
+                    before, &positions, &stocks, &caches, &memory, c.target, after,
+                )?;
                 if a.target != Some(c.target)
                     || !legal(c.target)
                     || [c.remembered_value, c.actual_value, c.raid_amount]
@@ -1445,12 +1552,11 @@ pub(super) mod tests {
     pub struct Temp(pub PathBuf);
     impl Temp {
         pub fn new() -> Self {
-            let p =
-                PathBuf::from("/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o").join(format!(
-                    "task4-test-{}-{}",
-                    std::process::id(),
-                    NEXT.fetch_add(1, Ordering::SeqCst)
-                ));
+            let p = std::env::temp_dir().canonicalize().unwrap().join(format!(
+                "task4-test-{}-{}",
+                std::process::id(),
+                NEXT.fetch_add(1, Ordering::SeqCst)
+            ));
             fs::create_dir(&p).unwrap();
             Self(p)
         }
@@ -1504,6 +1610,298 @@ pub(super) mod tests {
             provenance: i.provenance.identity(),
             started_unix_ms: 1,
         }
+    }
+    #[test]
+    fn deception_fix1_primitives_and_portable_temp() {
+        let dir = Temp::new();
+        assert!(dir
+            .0
+            .starts_with(std::env::temp_dir().canonicalize().unwrap()));
+        assert_eq!(
+            hash(b"abc"),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+        assert_eq!(json(&vec![1, 2]).unwrap(), b"[1,2]");
+        let path = dir.0.join("value.json");
+        assert!(!exists(&path).unwrap());
+        write_new(&path, b"[1,2]").unwrap();
+        assert_eq!(read::<Vec<u32>>(&path).unwrap(), vec![1, 2]);
+        assert!(exists(&path).unwrap());
+        let child = dir.0.join("child");
+        new_directory(&child).unwrap();
+        assert_eq!(
+            confined(&dir.0, "child/value").unwrap(),
+            child.join("value")
+        );
+    }
+    #[test]
+    fn deception_fix1_revision_format() {
+        assert!(validate_revision(&"a".repeat(40)).is_ok());
+        for invalid in ["HEAD".to_string(), "g".repeat(40), "a".repeat(39)] {
+            assert!(validate_revision(&invalid).is_err());
+        }
+    }
+    #[test]
+    fn deception_fix1_run_preflight_cannot_start_on_abbreviation() {
+        let dir = Temp::new();
+        assert!(run("HEAD", &dir.0.join("denied")).is_err());
+        assert!(!dir.0.join("denied").exists());
+    }
+    #[test]
+    #[allow(clippy::result_large_err)]
+    fn deception_fix1_attempt_start_precedes_runner_and_complete_matches_stream() {
+        let dir = Temp::new();
+        fs::create_dir(dir.0.join("attempts")).unwrap();
+        let i = index();
+        let r = &i.attempts[0];
+        let c = &i.manifest.conditions[0];
+        execute_attempt(&dir.0, r, &i.provenance, c, |_, seed, sink| {
+            let saved: AttemptStart = read(&dir.0.join(&r.start)).unwrap();
+            assert_eq!(saved.seed, seed);
+            assert!(dir.0.join(&r.frames).exists());
+            assert!(!dir.0.join(&r.outcome).exists());
+            let record = static_record(c.lab.clone(), seed);
+            for f in &record.frames {
+                sink(f).unwrap();
+            }
+            Ok(record)
+        })
+        .unwrap();
+        let receipt: OutcomeReceipt = read(&dir.0.join(&r.outcome)).unwrap();
+        let AttemptOutcome::Complete(record) = receipt.outcome else {
+            panic!("complete expected")
+        };
+        assert_eq!(
+            fs::read_to_string(dir.0.join(&r.frames))
+                .unwrap()
+                .lines()
+                .count(),
+            record.frames.len()
+        );
+    }
+    #[test]
+    fn deception_fix1_complete_bad_stream_census_retains_complete_and_invalid() {
+        for mode in ["malformed", "missing", "conflicting"] {
+            let dir = Temp::new();
+            let i = index();
+            let r = &i.attempts[0];
+            write_new(&dir.0.join("index.json"), &json(&i).unwrap()).unwrap();
+            fs::create_dir_all(dir.0.join(&r.start).parent().unwrap()).unwrap();
+            write_new(&dir.0.join(&r.start), &json(&start(&i, r)).unwrap()).unwrap();
+            let record = static_record(i.manifest.conditions[0].lab.clone(), r.seed);
+            let outcome = OutcomeReceipt {
+                condition: r.condition.clone(),
+                seed: r.seed,
+                elapsed_seconds: 0.0,
+                timing_boundary: TIMING.into(),
+                outcome: AttemptOutcome::Complete(record),
+            };
+            write_new(&dir.0.join(&r.outcome), &json(&outcome).unwrap()).unwrap();
+            if mode != "missing" {
+                write_new(
+                    &dir.0.join(&r.frames),
+                    if mode == "malformed" { b"{bad}\n" } else { b"" },
+                )
+                .unwrap();
+            }
+            let error = load(&dir.0.join("index.json")).unwrap_err();
+            assert!(
+                error.contains("attempted: 1")
+                    && error.contains("complete: 1")
+                    && error.contains("invalid: 1"),
+                "{mode}: {error}"
+            );
+        }
+    }
+    #[test]
+    fn deception_fix1_balanced_but_impossible_old_ordinary_fixture_is_rejected() {
+        let mut record = static_record(
+            LabConfig {
+                sender: SenderPolicy::Ordinary,
+                ..Default::default()
+            },
+            20001,
+        );
+        let frame = &mut record.frames[9];
+        let after = Pos::new(3, 2);
+        frame.roles.iter_mut().find(|r| r.id == 1).unwrap().pos = after;
+        let action = frame.actions.iter_mut().find(|a| a.actor == 1).unwrap();
+        action.pos = Some(after);
+        action.target = Some(after);
+        let choice = frame.choices.iter_mut().find(|c| c.actor == 1).unwrap();
+        choice.target = after;
+        choice.inspection = Some(after);
+        choice.remembered_value = 0.0;
+        choice.actual_value = 0.0;
+        assert!(
+            validate_episode(&record)
+                .unwrap_err()
+                .contains("ordinary target"),
+            "tick 8 ignores visible value-four patch"
+        );
+    }
+    #[test]
+    fn deception_fix1_ordinary_candidate_value_distance_and_direction_mutations() {
+        let before = RoleRecord {
+            id: 1,
+            pos: Pos::new(3, 3),
+            holdings: 20.0,
+            caches: BTreeMap::new(),
+            sender: Some(SenderState::default()),
+            seen: vec![],
+        };
+        let positions = BTreeMap::from([(1, before.pos), (2, Pos::new(3, 6))]);
+        let stocks = (0..81)
+            .map(|site| StockRecord {
+                site,
+                amount: if site == 29 || site == 28 { 4.0 } else { 0.0 },
+            })
+            .collect::<Vec<_>>();
+        let cache = BTreeMap::new();
+        let mut rejected = vec![];
+        for (target, after, why) in [
+            (Pos::new(4, 4), Pos::new(4, 3), "noncandidate diagonal"),
+            (Pos::new(3, 2), Pos::new(3, 2), "lower value"),
+            (Pos::new(1, 3), Pos::new(2, 3), "farther equal value"),
+            (
+                Pos::new(2, 3),
+                Pos::new(3, 2),
+                "step away from chosen target",
+            ),
+            (Pos::new(2, 3), Pos::new(3, 3), "unjustified stay"),
+        ] {
+            rejected.push((
+                why,
+                audit_ordinary(&before, &positions, &stocks, &cache, &[], target, after).is_err(),
+            ));
+        }
+        assert!(
+            rejected.iter().all(|(_, rejected)| *rejected),
+            "{rejected:?}"
+        );
+        audit_ordinary(
+            &before,
+            &positions,
+            &stocks,
+            &cache,
+            &[],
+            Pos::new(2, 3),
+            Pos::new(2, 3),
+        )
+        .unwrap();
+    }
+    #[test]
+    #[allow(clippy::result_large_err)]
+    fn deception_fix1_campaign_records_failures_continues_once_and_finalizes_census() {
+        let dir = Temp::new();
+        let mut i = index();
+        i.attempts.truncate(2);
+        let mut calls = 0;
+        let done = execute_campaign(&dir.0, i, |_, _, _| {
+            calls += 1;
+            Err(EpisodeFailure {
+                message: "static biological failure".into(),
+                partial: None,
+            })
+        })
+        .unwrap();
+        assert_eq!(calls, 2);
+        assert!(done.completed);
+        let counts = done.census.unwrap();
+        assert_eq!((counts.attempted, counts.failed, counts.pending), (2, 2, 0));
+        assert!(dir.0.join("index.json").exists());
+        assert!(dir.0.join("final-index.json").exists());
+    }
+    #[test]
+    fn deception_fix1_all_static_cells_follow_fixed_policy() {
+        for condition in manifest().conditions {
+            let record = static_record(condition.lab, 20001);
+            validate_episode(&record).unwrap_or_else(|e| panic!("{}: {e}", condition.id));
+        }
+    }
+    #[test]
+    fn deception_fix1_blank_durable_line_is_invalid_pending() {
+        let dir = Temp::new();
+        let i = index();
+        let r = &i.attempts[0];
+        write_new(&dir.0.join("index.json"), &json(&i).unwrap()).unwrap();
+        fs::create_dir_all(dir.0.join(&r.start).parent().unwrap()).unwrap();
+        write_new(&dir.0.join(&r.start), &json(&start(&i, r)).unwrap()).unwrap();
+        let mut bytes = json(&minimal_frame()).unwrap();
+        bytes.extend_from_slice(b"\n\n");
+        write_new(&dir.0.join(&r.frames), &bytes).unwrap();
+        let error = load(&dir.0.join("index.json")).unwrap_err();
+        assert!(
+            error.contains("invalid: 1") && error.contains("pending: 1"),
+            "{error}"
+        );
+    }
+    #[test]
+    fn deception_fix1_invalid_failed_frame_prefix_keeps_failed_partial_state() {
+        let dir = Temp::new();
+        let i = index();
+        let r = &i.attempts[0];
+        write_new(&dir.0.join("index.json"), &json(&i).unwrap()).unwrap();
+        fs::create_dir_all(dir.0.join(&r.start).parent().unwrap()).unwrap();
+        write_new(&dir.0.join(&r.start), &json(&start(&i, r)).unwrap()).unwrap();
+        write_new(&dir.0.join(&r.frames), b"{malformed}\n").unwrap();
+        let record = static_record(i.manifest.conditions[0].lab.clone(), r.seed);
+        let receipt = OutcomeReceipt {
+            condition: r.condition.clone(),
+            seed: r.seed,
+            elapsed_seconds: 0.0,
+            timing_boundary: TIMING.into(),
+            outcome: AttemptOutcome::Failed(EpisodeFailure {
+                message: "known failed attempt".into(),
+                partial: Some(record),
+            }),
+        };
+        write_new(&dir.0.join(&r.outcome), &json(&receipt).unwrap()).unwrap();
+        let error = load(&dir.0.join("index.json")).unwrap_err();
+        assert!(
+            error.contains("invalid: 1")
+                && error.contains("failed: 1")
+                && error.contains("partial: 1"),
+            "{error}"
+        );
+    }
+    #[test]
+    fn deception_fix1_visible_distance_does_not_wrap_through_opaque_border() {
+        let observer = RoleRecord {
+            id: 2,
+            pos: Pos::new(1, 3),
+            holdings: 40.0,
+            caches: BTreeMap::new(),
+            sender: None,
+            seen: vec![],
+        };
+        let positions = BTreeMap::from([(2, observer.pos), (1, Pos::new(4, 4))]);
+        let stocks = (0..81)
+            .map(|site| StockRecord {
+                site,
+                amount: if site == 34 || site == 31 { 4.0 } else { 0.0 },
+            })
+            .collect::<Vec<_>>();
+        assert!(
+            audit_ordinary(
+                &observer,
+                &positions,
+                &stocks,
+                &BTreeMap::new(),
+                &[],
+                Pos::new(7, 3),
+                Pos::new(2, 3)
+            )
+            .is_err(),
+            "six visible steps must lose to three; wall forbids wrapped sight"
+        );
+    }
+    #[test]
+    fn deception_fix1_census_rejects_symlink_index_before_reading_it() {
+        let dir = Temp::new();
+        write_new(&dir.0.join("actual.json"), &json(&index()).unwrap()).unwrap();
+        std::os::unix::fs::symlink(dir.0.join("actual.json"), dir.0.join("linked.json")).unwrap();
+        assert!(receipt_census(&dir.0.join("linked.json")).is_err());
     }
     fn minimal_frame() -> FrameRecord {
         FrameRecord {
@@ -1674,7 +2072,8 @@ pub(super) mod tests {
         assert!(
             e.contains("execution census")
                 && e.contains("attempted: 1")
-                && e.contains("pending: 1"),
+                && e.contains("pending: 1")
+                && e.contains("invalid: 1"),
             "{e}"
         );
     }
@@ -1801,6 +2200,7 @@ pub(super) mod tests {
         git(root, &["init", "-q"]).unwrap();
         fs::create_dir_all(root.join(PROTOCOL).parent().unwrap()).unwrap();
         fs::write(root.join(PROTOCOL), b"candidate protocol\n").unwrap();
+        fs::write(root.join("tracked.txt"), b"original").unwrap();
         git(root, &["add", "."]).unwrap();
         git(
             root,
@@ -1818,6 +2218,11 @@ pub(super) mod tests {
         let revision = git_text(root, &["rev-parse", "HEAD"]).unwrap();
         let p = preflight(root, &revision, &root.join("fresh")).unwrap();
         assert_eq!(p.protocol.sha256, hash(b"candidate protocol\n"));
+        fs::write(root.join("tracked.txt"), b"dirty").unwrap();
+        assert!(preflight(root, &revision, &root.join("fresh"))
+            .unwrap_err()
+            .contains("tracked source tree must be clean"));
+        fs::write(root.join("tracked.txt"), b"original").unwrap();
         assert!(preflight(root, "HEAD", &root.join("fresh")).is_err());
         fs::write(root.join(PROTOCOL), b"candidate protocol\n\n").unwrap();
         assert!(preflight(root, &revision, &root.join("fresh"))
@@ -1902,15 +2307,25 @@ pub(super) mod tests {
         let mut ledger = Ledger::new(1, 44.0);
         let mut restrictions = BTreeMap::new();
         let mut alive = 0;
+        let mut recovered = false;
+        let mut cache = BTreeMap::<u32, f64>::new();
         for tick in 0..64 {
             let mut actions = vec![];
             let mut observations = vec![];
             let mut choices = vec![];
             let mut deaths = vec![];
+            let mut positions = roles
+                .iter()
+                .map(|r| (r.id, r.pos))
+                .collect::<BTreeMap<_, _>>();
             for role in &mut roles {
                 let owner = role.id == 1;
                 alive += u64::from(owner);
-                let (phase, action, target) = scheduled(&lab, tick, role.id, false);
+                let departure = role.sender.as_ref().is_some_and(|s| s.pending_departure);
+                let (phase, action, target) = scheduled(&lab, tick, role.id, departure);
+                if let Some(state) = &mut role.sender {
+                    state.pending_departure = false;
+                }
                 let mut a = ActionRecord {
                     actor: role.id,
                     phase: phase.into(),
@@ -1923,14 +2338,75 @@ pub(super) mod tests {
                 if let Some(target) = target {
                     role.pos = target;
                     a.walk_outcome = Some("arrived".into());
+                    a.source_recovered = recovered;
                 }
-                if owner && lab.sender == SenderPolicy::Ordinary && tick == 8 {
-                    role.pos = p(3, 2);
+                if action == "ordinary" {
+                    let candidates =
+                        ordinary_candidates(role, &positions, &stocks, &cache, &role.seen);
+                    let chosen = candidates
+                        .iter()
+                        .max_by(|a, b| {
+                            a.2.total_cmp(&b.2)
+                                .then_with(|| b.1.cmp(&a.1))
+                                .then_with(|| site(b.0).cmp(&site(a.0)))
+                        })
+                        .unwrap();
+                    let target = chosen.0;
+                    let remembered_value = chosen.2;
+                    let environment = stocks[site(target) as usize].amount;
+                    let own = if owner && role.holdings < 4.0 {
+                        *cache.get(&site(target)).unwrap_or(&0.0)
+                    } else {
+                        0.0
+                    };
+                    let seen = if !owner && role.seen.iter().any(|e| e.site == site(target)) {
+                        cache
+                            .get(&site(target))
+                            .copied()
+                            .unwrap_or(0.0)
+                            .min(128.0 - role.holdings)
+                    } else {
+                        0.0
+                    };
+                    let after = ordinary_steps(role, &positions, target)[0];
+                    let inspected = cache.get(&site(after)).copied().unwrap_or(0.0);
+                    let saw = !owner && role.seen.iter().any(|e| e.site == site(after));
+                    let raid = if saw {
+                        inspected.min(128.0 - role.holdings)
+                    } else {
+                        0.0
+                    };
+                    choices.push(ChoiceRecord {
+                        actor: role.id,
+                        target,
+                        remembered_value,
+                        actual_value: environment.max(own).max(seen),
+                        arrived: after == target,
+                        raid_amount: raid,
+                        wasted: saw && inspected == 0.0,
+                        inspection: Some(after),
+                        inspected_stock: Some(inspected),
+                        target_occupant: positions
+                            .iter()
+                            .find(|(id, q)| **id != role.id && **q == target)
+                            .map(|(&id, _)| id),
+                        source_recovered: recovered,
+                    });
+                    role.pos = after;
+                    a.target = Some(target);
+                    if !owner {
+                        role.seen.retain(|e| e.site != site(after));
+                    }
+                    if raid > 0.0 {
+                        ledger.pilfer(site(after), raid).unwrap();
+                        *cache.get_mut(&site(after)).unwrap() -= raid;
+                        role.holdings += raid;
+                    }
                 }
                 a.pos = Some(role.pos);
                 if owner && tick == 0 {
                     a.buried = 12.0;
-                    role.caches.insert(source, 12.0);
+                    cache.insert(source, 12.0);
                     role.holdings -= 12.0;
                     ledger.prepare(source, 12.0).unwrap();
                     observations.push(ObservedRecord {
@@ -1969,43 +2445,28 @@ pub(super) mod tests {
                         });
                     }
                 }
-                if a.action == "walk_and_gather" || a.action == "ordinary" {
-                    let stock = &mut stocks[(role.pos.y * 9 + role.pos.x) as usize];
-                    a.harvest = stock.amount;
-                    stock.amount = 0.0;
-                    role.holdings += a.harvest;
-                    if owner {
-                        ledger.harvest(a.harvest).unwrap();
+                if matches!(action, "walk_and_gather" | "ordinary" | "departure") {
+                    let stock = &mut stocks[site(role.pos) as usize];
+                    let cached = cache.get(&site(role.pos)).copied().unwrap_or(0.0);
+                    let raid = choices
+                        .last()
+                        .filter(|c| c.actor == role.id)
+                        .map_or(0.0, |c| c.raid_amount);
+                    if owner && role.holdings < 4.0 && cached > 0.0 && cached >= stock.amount {
+                        a.dug = cached.min(128.0 - role.holdings);
+                        role.holdings += a.dug;
+                        ledger.withdraw(site(role.pos), a.dug).unwrap();
+                        *cache.get_mut(&site(role.pos)).unwrap() -= a.dug;
+                        recovered = true;
+                        role.sender.as_mut().unwrap().pending_departure = true;
+                    } else if raid == 0.0 {
+                        a.harvest = stock.amount.min(128.0 - role.holdings);
+                        stock.amount -= a.harvest;
+                        role.holdings += a.harvest;
+                        if owner {
+                            ledger.harvest(a.harvest).unwrap();
+                        }
                     }
-                }
-                if a.action == "ordinary" {
-                    a.target = Some(role.pos);
-                    let value = a.harvest.max(if owner && role.holdings - a.harvest < 4.0 {
-                        *role
-                            .caches
-                            .get(&(role.pos.y * 9 + role.pos.x))
-                            .unwrap_or(&0.0)
-                    } else {
-                        0.0
-                    });
-                    choices.push(ChoiceRecord {
-                        actor: role.id,
-                        target: role.pos,
-                        remembered_value: value,
-                        actual_value: value,
-                        arrived: true,
-                        raid_amount: 0.0,
-                        wasted: false,
-                        inspection: Some(role.pos),
-                        inspected_stock: Some(
-                            *role
-                                .caches
-                                .get(&(role.pos.y * 9 + role.pos.x))
-                                .unwrap_or(&0.0),
-                        ),
-                        target_occupant: None,
-                        source_recovered: false,
-                    });
                 }
                 if owner {
                     role.sender.as_mut().unwrap().stage = match phase {
@@ -2013,6 +2474,7 @@ pub(super) mod tests {
                         "todisplay" => Stage::ToDisplay,
                         "display" => Stage::Display,
                         "return" => Stage::Return,
+                        "departure" => Stage::Departure,
                         _ => Stage::Ordinary,
                     };
                     ledger
@@ -2040,11 +2502,18 @@ pub(super) mod tests {
                     });
                     if owner {
                         ledger.lose_owner();
+                        cache.clear();
                     }
+                    positions.remove(&role.id);
+                } else {
+                    positions.insert(role.id, role.pos);
                 }
                 actions.push(a);
             }
             roles.retain(|r| r.holdings > 0.0);
+            if let Some(owner) = roles.iter_mut().find(|r| r.id == 1) {
+                owner.caches = cache.clone();
+            }
             for obs in &observations {
                 let amount = match obs.public.signal {
                     Signal::Cue { nominal_amount } => nominal_amount,
@@ -2084,8 +2553,8 @@ pub(super) mod tests {
             frames,
             fixture_errors: vec![],
             ledger_errors: vec![],
+            thief_transferred: Some(ledger.cohorts.values().map(|c| c.transferred).sum()),
             cohorts: Some(ledger),
-            thief_transferred: Some(0.0),
             diagnostics_enabled: true,
             lineage_unavailable_reason: None,
         }
