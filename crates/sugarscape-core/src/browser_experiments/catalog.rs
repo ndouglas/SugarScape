@@ -31,6 +31,7 @@ pub fn catalog() -> Vec<StudyDescriptor> {
         controls: json!({"seed":{"type":"decimal_u64"},"policy":{"values":["evidence","random","reckless","passive"]},"mode":{"values":["ordinary","diagnostic"]}}),
     }];
     studies.extend(super::testimony::descriptors());
+    studies.extend(super::reporting::descriptors());
     studies
 }
 pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> {
@@ -50,6 +51,9 @@ pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> 
             ))
         }
         StudyId::Testimony | StudyId::TestimonyGame => super::testimony::rules_identity(study),
+        StudyId::StrategicReporting | StudyId::StrategyInference | StudyId::AdversarialAudit => {
+            super::reporting::rules_identity(study)
+        }
         _ => Err(super::error(
             "study",
             "study adapter is not available in this viewer version",

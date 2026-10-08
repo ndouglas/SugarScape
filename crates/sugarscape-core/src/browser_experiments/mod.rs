@@ -2,6 +2,9 @@
 mod catalog;
 mod input;
 mod record;
+mod recorded;
+pub use recorded::recorded_results_json;
+pub mod reporting;
 pub mod testimony;
 pub mod wink;
 pub mod wire;
@@ -37,6 +40,7 @@ pub fn run(input: &Input) -> Result<EpisodeRecord, Vec<FieldError>> {
     match input {
         Input::Wink { .. } => wink::run(&input),
         Input::Testimony { .. } | Input::TestimonyGame { .. } => testimony::run(&input),
+        _ => reporting::run(&input),
     }
 }
 pub(crate) fn error(field: &str, message: impl Into<String>) -> Vec<FieldError> {

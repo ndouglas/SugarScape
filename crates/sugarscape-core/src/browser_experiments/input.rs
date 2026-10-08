@@ -47,6 +47,23 @@ pub enum Input {
     Testimony {
         fixture: String,
     },
+    StrategicReporting {
+        environment: String,
+        history: u8,
+        policy: String,
+        listener: String,
+    },
+    StrategyInference {
+        environment: String,
+        history: u8,
+        catalog: String,
+    },
+    AdversarialAudit {
+        environment: String,
+        history: u8,
+        controller: String,
+        witness: String,
+    },
     TestimonyGame {
         environment: String,
         history: u8,
@@ -59,6 +76,9 @@ impl Input {
             Self::Wink { .. } => StudyId::Wink,
             Self::Testimony { .. } => StudyId::Testimony,
             Self::TestimonyGame { .. } => StudyId::TestimonyGame,
+            Self::StrategicReporting { .. } => StudyId::StrategicReporting,
+            Self::StrategyInference { .. } => StudyId::StrategyInference,
+            Self::AdversarialAudit { .. } => StudyId::AdversarialAudit,
         }
     }
 }
@@ -70,8 +90,12 @@ pub fn normalize_input(json: &str) -> Result<Input, Vec<FieldError>> {
     let input: Input =
         serde_json::from_str(json).map_err(|e| super::error("input", e.to_string()))?;
     record::serialized_size(&input, MAX_INPUT_BYTES, "input")?;
-    if !matches!(input, Input::Wink { .. }) {
-        super::testimony::validate_input(&input)?;
+    match &input {
+        Input::Wink { .. } => {}
+        Input::Testimony { .. } | Input::TestimonyGame { .. } => {
+            super::testimony::validate_input(&input)?
+        }
+        _ => super::reporting::validate_input(&input)?,
     }
     Ok(input)
 }

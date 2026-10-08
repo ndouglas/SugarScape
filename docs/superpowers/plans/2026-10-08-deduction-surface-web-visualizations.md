@@ -196,7 +196,7 @@ for evidence in &fixture.records {
 
 **Interfaces:** Consumes Tasks1-2 and unchanged reporting `enumerate/histories/evaluate/Policy::report/FrozenListener::decide`, strategy `Model::new/calibration/decide`, audit `history_view/FrozenActions::freeze/rows`, public diagnostic record types. Produces `reporting::run(&Input)`, `recorded_results_json`, name resolvers for exact policies/listeners/environment configs, and three descriptors.
 
-- [ ] **Step 1: Extract first-report definitions and write RED.** Read owned prior ledgers to locate their immutable first files. Bounded extraction retains all20 seeds per GA/random method, best policies, training and every declared holdout, summaries, paired differences, exact config/listener assumptions, policy catalogs and six audit control identities/witnesses. Include source report SHA and transformation version in each compact asset. Fixtures must parse to existing public DTOs; never use a fresh diagnose/search as the recorded source.
+- [x] **Step 1: Extract first-report definitions and write RED.** Read owned prior ledgers to locate their immutable first files. Bounded extraction retains all20 seeds per GA/random method, best policies, training and every declared holdout, summaries, paired differences, exact config/listener assumptions, policy catalogs and six audit control identities/witnesses. Include source report SHA and transformation version in each compact asset. Fixtures must parse to existing public DTOs; never use a fresh diagnose/search as the recorded source.
 
 ```rust
 #[test]
@@ -208,8 +208,8 @@ fn identical_calibration_likelihood_does_not_reveal_actual_policy() {
 ```
 
 Add separate numeric equality checks for honest-copy and calibration-copy/live-invert likelihoods using original model outputs, and unequal catalog prior odds under explicitly informed prior. Test zero-mass history, missing Passive posterior, actual-policy versus listener posterior distinction, all six control resolutions, and complete20-seed paired asset census.
-- [ ] **Step 2: Run RED.** `cargo test -p sugarscape-core browser_experiments::tests::reporting` and `...::recorded`.
-- [ ] **Step 3: Implement public-history adapters.** Build `DecisionObservation` with original history index encoding, named original rules, and selected policy/listener. Strategic evaluation uses existing `histories/evaluate` for actual-policy conditional mass and reference payoff; frozen listener assumptions stay separate. Strategy calibration uses `CalibrationView` before the live result; actual policy never enters either Model API. Audit obtains original controls/witness evaluations from compact original DTOs and certifies public rows through existing frozen actions. Unsupported/zero-mass cases are explicitly unavailable, not made into a successful realization.
+- [x] **Step 2: Run RED.** `cargo test -p sugarscape-core browser_experiments::tests::reporting` and `...::recorded`.
+- [x] **Step 3: Implement public-history adapters.** Build `DecisionObservation` with original history index encoding, named original rules, and selected policy/listener. Strategic evaluation uses existing `histories/evaluate` for actual-policy conditional mass and reference payoff; frozen listener assumptions stay separate. Strategy calibration uses `CalibrationView` before the live result; actual policy never enters either Model API. Audit obtains original controls/witness evaluations from compact original DTOs and certifies public rows through existing frozen actions. Unsupported/zero-mass cases are explicitly unavailable, not made into a successful realization.
 
 ```rust
 let model = strategy_inference::Model::new(&rules, &catalog).map_err(inference_error)?;
@@ -222,8 +222,8 @@ let decision = model.decide(&view).map_err(inference_error)?;
 ```
 
 Match inspected `CalibrationView` fields exactly; `inference_error` is a local contextual mapper. No copied likelihood implementation. Study stages exposing data before a complete decision are labeled observation reveal, not new posterior updates.
-- [ ] **Step 4: GREEN and review.** Validate all32 histories per selected named control with original exact reference fixtures; compare retained aggregate/search rows without filtering seeds. Test reference truth probabilities cannot appear as listener knowledge. Run filter, scoped fmt/Clippy; independent reviewer checks definitions, unavailable cases, all controls, prior interpretation and extraction provenance.
-- [ ] **Step 5: Commit.** `feat(experiments): expose reporting and listener audit cases`.
+- [x] **Step 4: GREEN and review.** Validate all32 histories per selected named control with original exact reference fixtures; compare retained aggregate/search rows without filtering seeds. Test reference truth probabilities cannot appear as listener knowledge. Run filter, scoped fmt/Clippy; independent reviewer checks definitions, unavailable cases, all controls, prior interpretation and extraction provenance.
+- [x] **Step 5: Commit.** `feat(experiments): expose reporting and listener audit cases`.
 
 ## Task 4: Chronological shared and active surface adapters
 
