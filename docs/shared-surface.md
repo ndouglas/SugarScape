@@ -94,3 +94,5 @@ For manageable extraction, guide aggregate values come from all 220 retained set
 All seven previous CLI outputs reproduce their retained bytes with the new frozen binary. All 66 preserved source hashes match, and the original deduction guide remains an unchanged prefix with only a new guide link appended.
 
 For paid probe selection and task-directed stopping, see the [active-surface study](active-surface.md).
+
+See the [experiment viewer guide](experiment-viewer.md) for browser episodes, checkpoint perspectives, and recorded results.

@@ -1,0 +1,266 @@
+{
+  "revision": "runtime-u64-index-v1",
+  "purpose": "After-measurement viewer portability; original native64 draws and results preserved.",
+  "original_measurement_source_sha256": "c5af2cf7baea872bcef4628a37efdf5a3b7c47b05405752232c3096c8e812c09",
+  "original_retained_report": {
+    "path": ".superpowers/sdd/2026-10-04-deduction-capabilities/first-diagnostics.json",
+    "bytes": 149997,
+    "sha256": "e6c02b0a25885dbc1c33e2a7066e3c97d9bbee4ec1865449c4cc77b77338ec5d"
+  },
+  "viewer_source_sha256": "305ca775b5f13b5d0e1752f61069745ce867440439c1d098f5e40ba99aa57303",
+  "viewer_source_files": {
+    "crates/sugarscape-core/src/deduction/mod.rs": "92207d7ec246524a99fb40a7991f4ccf0846d2cceaf6eba8a31106332bc6f500",
+    "crates/sugarscape-core/src/deduction/config.rs": "ee165d8a5720c7856a2204cca3b422c591631ab480cfdd2fed9df135f9dc6397",
+    "crates/sugarscape-core/src/deduction/engine.rs": "733b35e80766ff03e93d0869308a3646ad8b8cd66b008cb32cac65c7450781ae",
+    "crates/sugarscape-core/src/deduction/observation.rs": "63ef38daac5973cad8f8295405234da5ae351ca6f78afde2fed15600aa06e391",
+    "crates/sugarscape-core/src/deduction/replay.rs": "be72300ede2ff84d28433d1183c9948f5f05416c01eb94043a2187d31169747e",
+    "crates/sugarscape-core/src/deduction/scenario.rs": "6806268da55665db6d544fa9a12bbbc2f63624392692c3d45f0795b732ec23c3",
+    "crates/sugarscape-core/src/deduction/types.rs": "406755718612f9809b3149eeac2d2ee08e00184093b7761a60201fa3b3a6602d",
+    "crates/sugarscape-core/src/deduction/policy.rs": "6891a9febdb3b347211be68e0618552fa83682950ada68efadd6bb360cad66c7",
+    "crates/sugarscape-core/src/deduction/diagnostics.rs": "492d9d334582e4a35ade293a42bf5c405618876e8754bcc828a12f43eabc6bc4",
+    "crates/sugarscape-core/src/rng.rs": "af425707764621e3e11eed48574498671d3ba52927ab266a660295b51b9e2d1d",
+    "Cargo.lock": "7217929fea10793e589d820bcdf4555ad6aa3f57fb9af9d5cfce5473310bde5f"
+  },
+  "native_reference_cases": [
+    {
+      "input": {
+        "study": "wink",
+        "seed": "0",
+        "policy": "evidence",
+        "mode": "ordinary"
+      },
+      "fingerprint": "f9e3207bae645af4",
+      "checkpoints": 100
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "0",
+        "policy": "evidence",
+        "mode": "diagnostic"
+      },
+      "fingerprint": "69f9899cd03de656",
+      "checkpoints": 98
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "0",
+        "policy": "random",
+        "mode": "ordinary"
+      },
+      "fingerprint": "c022cb8f2e871059",
+      "checkpoints": 36
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "0",
+        "policy": "random",
+        "mode": "diagnostic"
+      },
+      "fingerprint": "7038f35add512fe6",
+      "checkpoints": 64
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "0",
+        "policy": "reckless",
+        "mode": "ordinary"
+      },
+      "fingerprint": "07e4ca94f1dc4f33",
+      "checkpoints": 36
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "0",
+        "policy": "reckless",
+        "mode": "diagnostic"
+      },
+      "fingerprint": "caaad0b38ee5618d",
+      "checkpoints": 36
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "0",
+        "policy": "passive",
+        "mode": "ordinary"
+      },
+      "fingerprint": "e6c63b554d863f36",
+      "checkpoints": 432
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "0",
+        "policy": "passive",
+        "mode": "diagnostic"
+      },
+      "fingerprint": "8d30e95eee2759e1",
+      "checkpoints": 136
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "7",
+        "policy": "evidence",
+        "mode": "ordinary"
+      },
+      "fingerprint": "254498bd84aeb93b",
+      "checkpoints": 36
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "7",
+        "policy": "evidence",
+        "mode": "diagnostic"
+      },
+      "fingerprint": "27e78cfc1dfae83f",
+      "checkpoints": 36
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "7",
+        "policy": "random",
+        "mode": "ordinary"
+      },
+      "fingerprint": "1143ba716c721587",
+      "checkpoints": 36
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "7",
+        "policy": "random",
+        "mode": "diagnostic"
+      },
+      "fingerprint": "e2d691724aa46429",
+      "checkpoints": 36
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "7",
+        "policy": "reckless",
+        "mode": "ordinary"
+      },
+      "fingerprint": "0125ad426b49b89a",
+      "checkpoints": 36
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "7",
+        "policy": "reckless",
+        "mode": "diagnostic"
+      },
+      "fingerprint": "8b9aaf9f9f053623",
+      "checkpoints": 36
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "7",
+        "policy": "passive",
+        "mode": "ordinary"
+      },
+      "fingerprint": "2a109af8f83c9c0c",
+      "checkpoints": 432
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "7",
+        "policy": "passive",
+        "mode": "diagnostic"
+      },
+      "fingerprint": "ca37074481580829",
+      "checkpoints": 166
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "18446744073709551615",
+        "policy": "evidence",
+        "mode": "ordinary"
+      },
+      "fingerprint": "749b5d24e990c891",
+      "checkpoints": 100
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "18446744073709551615",
+        "policy": "evidence",
+        "mode": "diagnostic"
+      },
+      "fingerprint": "cb12871e23bf332b",
+      "checkpoints": 98
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "18446744073709551615",
+        "policy": "random",
+        "mode": "ordinary"
+      },
+      "fingerprint": "267d1be809f4c75f",
+      "checkpoints": 36
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "18446744073709551615",
+        "policy": "random",
+        "mode": "diagnostic"
+      },
+      "fingerprint": "567aabfc18b1a64d",
+      "checkpoints": 64
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "18446744073709551615",
+        "policy": "reckless",
+        "mode": "ordinary"
+      },
+      "fingerprint": "af80181b1f33baba",
+      "checkpoints": 36
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "18446744073709551615",
+        "policy": "reckless",
+        "mode": "diagnostic"
+      },
+      "fingerprint": "f2101dcef4e6fe94",
+      "checkpoints": 36
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "18446744073709551615",
+        "policy": "passive",
+        "mode": "ordinary"
+      },
+      "fingerprint": "c83feacbee5db407",
+      "checkpoints": 432
+    },
+    {
+      "input": {
+        "study": "wink",
+        "seed": "18446744073709551615",
+        "policy": "passive",
+        "mode": "diagnostic"
+      },
+      "fingerprint": "2cc3146284caa491",
+      "checkpoints": 160
+    }
+  ]
+}

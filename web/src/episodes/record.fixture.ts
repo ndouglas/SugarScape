@@ -1,0 +1,2 @@
+import type { EpisodeRecord } from './types';
+export const record = { kind:'experiment_episode',version:1,study:'wink',rules_identity:'test',input:{study:'wink',seed:'7'},semantics:'trajectory',payload:{outcome:'future'},checkpoints:[0,1,2].map(index=>({index,clock:{round:String(index)},kind:'step',public:{},local:{'0':{seen:index},'1':{seen:10+index}},researcher:{secret:index}})) } as EpisodeRecord;

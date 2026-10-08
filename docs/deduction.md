@@ -540,3 +540,5 @@ The first 3,466,627-byte JSON and byte-identical repeat have SHA256 `213f9e14028
 ## Shared surface learning
 
 See [Learning a shared surface](shared-surface.md) for the frozen paid-calibration, delayed communication, restart and DataFlip diagnostic.
+
+See the [experiment viewer guide](experiment-viewer.md) for browser episodes, checkpoint perspectives, and recorded results.

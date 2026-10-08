@@ -30,7 +30,7 @@ export function base64UrlToBytes(text: string): Uint8Array {
   return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 }
 
-async function deflate(bytes: Uint8Array): Promise<Uint8Array> {
+export async function deflate(bytes: Uint8Array): Promise<Uint8Array> {
   const out = new Blob([new Uint8Array(bytes)]).stream().pipeThrough(new CompressionStream('deflate-raw'));
   return new Uint8Array(await new Response(out).arrayBuffer());
 }
@@ -41,7 +41,7 @@ async function deflate(bytes: Uint8Array): Promise<Uint8Array> {
  */
 const MAX_DECODED_BYTES = 16 * 1024 * 1024;
 
-async function inflateCapped(bytes: Uint8Array): Promise<Uint8Array> {
+export async function inflateCapped(bytes: Uint8Array, maxBytes = MAX_DECODED_BYTES): Promise<Uint8Array> {
   const reader = new Blob([new Uint8Array(bytes)])
     .stream()
     .pipeThrough(new DecompressionStream('deflate-raw'))
@@ -52,7 +52,7 @@ async function inflateCapped(bytes: Uint8Array): Promise<Uint8Array> {
     const { done, value } = await reader.read();
     if (done) break;
     total += value.byteLength;
-    if (total > MAX_DECODED_BYTES) {
+    if (total > maxBytes) {
       await reader.cancel();
       throw new Error('share payload too large');
     }
