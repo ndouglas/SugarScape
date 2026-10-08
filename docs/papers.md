@@ -214,8 +214,8 @@ Earlier:
 P4's [supplied caching-gesture protocol](superpowers/specs/2026-10-07-minds-deception-protocol.md)
 has one complete accepted native campaign and byte-identical saved-data reanalysis, independently
 empirically Approved in the [dated findings](superpowers/specs/2026-10-07-minds-deception-findings.md).
-All 96×40 episodes, 64 primary and 64 separate secondary estimates remain; final integration review,
-publication, remote verification and final archival are pending. False
+All 96×40 episodes, 64 primary and 64 separate secondary estimates remain; integration,
+publication, remote verification and archival are [complete](studies/2026-10-08-minds-p4-publication-closure.md). False
 observer estimates, diversion and owner economics remain distinct. Supplied ambiguous cues do not
 expose hidden stock or sender policy, and Sham moves zero food. The unresolved 1998 citation trail
 is a reading lead, not a confirmed reproduction failure or numerical animal target.

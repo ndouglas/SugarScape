@@ -3001,8 +3001,8 @@ preceded one accepted native campaign: all 96 cells × 40 paired seeds (3,840 ep
 64 primary Sham-minus-MatchedNeutral estimates and 64 separate Sham-minus-Ordinary secondary
 estimates are complete and independently empirically Approved. [Dated findings](docs/superpowers/specs/2026-10-07-minds-deception-findings.md)
 and the [complete scientific packet and lossless evidence downloads](survey/out/minds-deception-2026-10-07/README.md)
-retain every zero/adverse result. Final integration review, publication, remote CI/Pages/served
-verification and final archival remain pending. All strata and physical aliases remain
+retain every zero/adverse result. Final integration review, normal main push, matching CI/Pages,
+all 102 served-file hash checks and durable archival are [complete](docs/studies/2026-10-08-minds-p4-publication-closure.md). All strata and physical aliases remain
 visible; there is no pooled success verdict.
 
 Supplied Sham gestures move zero food and pay effort before emitting a cue. Ambiguous gestures
