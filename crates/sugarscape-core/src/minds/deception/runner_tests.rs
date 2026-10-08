@@ -25,6 +25,49 @@ fn fixed_conditions_have_complete_unique_identities() {
     }
 }
 #[test]
+fn canonical_condition_labels_match_the_approved_identity_contract() {
+    for (sender, sender_label) in [
+        (SenderPolicy::Ordinary, "ordinary"),
+        (SenderPolicy::MatchedNeutral, "matched-neutral"),
+        (SenderPolicy::Sham, "sham"),
+    ] {
+        for (view, view_label) in [(View::Ambiguous, "ambiguous"), (View::Clear, "clear")] {
+            for (display_seen, seen_label) in [(false, "unseen"), (true, "seen")] {
+                for (layout, layout_label) in [
+                    (Layout::OnRoute, "on-route"),
+                    (Layout::OffRoute, "off-route"),
+                ] {
+                    for (effort_cost, cost_label) in [(0.0, "cost0"), (3.0, "cost3")] {
+                        for (mirrored, mirror_label) in [(false, "m0"), (true, "m1")] {
+                            let c = LabConfig {
+                                sender,
+                                view,
+                                display_seen,
+                                layout,
+                                effort_cost,
+                                mirrored,
+                            };
+                            let expected=format!("{sender_label}-{view_label}-{seen_label}-{layout_label}-{cost_label}-{mirror_label}");
+                            assert_eq!(condition_id(&c), expected);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    assert_eq!(
+        condition_id(&LabConfig {
+            sender: SenderPolicy::MatchedNeutral,
+            view: View::Ambiguous,
+            display_seen: true,
+            layout: Layout::OnRoute,
+            effort_cost: 3.0,
+            mirrored: false
+        }),
+        "matched-neutral-ambiguous-seen-on-route-cost3-m0"
+    );
+}
+#[test]
 fn reflection_is_pure_and_involutive_for_every_declared_waypoint() {
     let c = LabConfig {
         mirrored: true,

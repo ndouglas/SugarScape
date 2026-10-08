@@ -169,7 +169,7 @@ pub fn condition_id(c: &LabConfig) -> String {
         "{}-{}-{}-{}-cost{}-{}",
         match c.sender {
             SenderPolicy::Ordinary => "ordinary",
-            SenderPolicy::MatchedNeutral => "matched_neutral",
+            SenderPolicy::MatchedNeutral => "matched-neutral",
             SenderPolicy::Sham => "sham",
         },
         match c.view {
@@ -178,11 +178,11 @@ pub fn condition_id(c: &LabConfig) -> String {
         },
         if c.display_seen { "seen" } else { "unseen" },
         match c.layout {
-            Layout::OnRoute => "on_route",
-            Layout::OffRoute => "off_route",
+            Layout::OnRoute => "on-route",
+            Layout::OffRoute => "off-route",
         },
         c.effort_cost,
-        if c.mirrored { "reflected" } else { "base" }
+        if c.mirrored { "m1" } else { "m0" }
     )
 }
 /// Declared owner waypoints; no RNG or world construction occurs here.
