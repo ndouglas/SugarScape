@@ -32,6 +32,7 @@ pub fn catalog() -> Vec<StudyDescriptor> {
     }];
     studies.extend(super::testimony::descriptors());
     studies.extend(super::reporting::descriptors());
+    studies.extend(super::surfaces::descriptors());
     studies
 }
 pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> {
@@ -54,9 +55,6 @@ pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> 
         StudyId::StrategicReporting | StudyId::StrategyInference | StudyId::AdversarialAudit => {
             super::reporting::rules_identity(study)
         }
-        _ => Err(super::error(
-            "study",
-            "study adapter is not available in this viewer version",
-        )),
+        StudyId::SharedSurface | StudyId::ActiveSurface => super::surfaces::rules_identity(study),
     }
 }

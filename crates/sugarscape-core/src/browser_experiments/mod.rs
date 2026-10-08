@@ -5,6 +5,7 @@ mod record;
 mod recorded;
 pub use recorded::recorded_results_json;
 pub mod reporting;
+pub mod surfaces;
 pub mod testimony;
 pub mod wink;
 pub mod wire;
@@ -39,6 +40,7 @@ pub fn run(input: &Input) -> Result<EpisodeRecord, Vec<FieldError>> {
     let input = normalize_input(&record::bounded_json(input, MAX_INPUT_BYTES, "input")?)?;
     match input {
         Input::Wink { .. } => wink::run(&input),
+        Input::SharedSurface { .. } | Input::ActiveSurface { .. } => surfaces::run(&input),
         Input::Testimony { .. } | Input::TestimonyGame { .. } => testimony::run(&input),
         _ => reporting::run(&input),
     }

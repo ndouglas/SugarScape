@@ -231,7 +231,7 @@ Match inspected `CalibrationView` fields exactly; `inference_error` is a local c
 
 **Interfaces:** Consumes envelope/wire helper; existing shared `Ensemble::build/run_episode` and active `CompiledPolicy::build/Replay::build/run_episode`, protocol/types, physical `World::apply/reset/finish_round/read_lineage`. Produces `surfaces::run(&Input)` and two descriptors; complete records contain the original per-episode typed result plus ordered local/privileged display checkpoints.
 
-- [ ] **Step 1: RED for real timing and failure.** Write in-family examples at both investigator roles, sequence0/255, private/inert writes, shared resets, and DataFlip supported-wrong/unsupported cases. Assert B InspectOnly DataFlip terminates at Live0R3S1 with original costs A5/B7, no terminal net; roleB TrialChoice excludes private routine from helperA view. Test before/after-slot belief ordering, free zero-probe stop, supplied certainty versus observed certainty and actual-policy continuation labels.
+- [x] **Step 1: RED for real timing and failure.** Write in-family examples at both investigator roles, sequence0/255, private/inert writes, shared resets, and DataFlip supported-wrong/unsupported cases. Assert B InspectOnly DataFlip terminates at Live0R3S1 with original costs A5/B7, no terminal net; roleB TrialChoice excludes private routine from helperA view. Test before/after-slot belief ordering, free zero-probe stop, supplied certainty versus observed certainty and actual-policy continuation labels.
 
 ```rust
 #[test]
@@ -245,8 +245,8 @@ fn failed_dataflip_record_has_costs_but_no_terminal_net() {
 ```
 
 Define `active_example` as an owned test helper creating the original protocol/IDs; selected case is one of the declared46.
-- [ ] **Step 2: Run RED.** `cargo test -p sugarscape-core browser_experiments::tests::surfaces`.
-- [ ] **Step 3: Implement via frozen evaluators and full-prefix inference.** Compile exactly one appropriate engine/replay per run, query each actual own prefix, and preserve complete partial failure histories. Construct display clock order from original prefixes/events/decision checkpoints, not local array position alone. Preserve simultaneous public information and private actor choices separately. For active per-slot beliefs, query `Replay::infer` on its complete prefix, not just model marginals.
+- [x] **Step 2: Run RED.** `cargo test -p sugarscape-core browser_experiments::tests::surfaces`.
+- [x] **Step 3: Implement via frozen evaluators and full-prefix inference.** Compile exactly one appropriate engine/replay per run, query each actual own prefix, and preserve complete partial failure histories. Construct display clock order from original prefixes/events/decision checkpoints, not local array position alone. Preserve simultaneous public information and private actor choices separately. For active per-slot beliefs, query `Replay::infer` on its complete prefix, not just model marginals.
 
 ```rust
 let policy = active_surface::CompiledPolicy::build(&protocol, own_prior)?;
@@ -255,8 +255,8 @@ let episode = active_surface::run_episode(&protocol, environment, sequence, &pol
 ```
 
 Resolve Known priors only from caller's valid declared original control; reject undeclared Known/DataFlip. Project actual field visibility from existing privileged records/World replay; do not reconstruct physics in TypeScript. If obtaining a field symbol requires an observation probe, use a cloned evaluator World with existing `apply(Read)` and throw away its cost/outcome from controller histories. These display-only probes consume no RNG and cannot alter original episode results. Never show original write-lineage symbol as the inverted stored symbol without checking actual World behavior.
-- [ ] **Step 4: GREEN/reference/independent gate.** Compare complete native episode payloads against retained first-report/proof projections for all46 active settings on sequences0/255 and bounded shared settings including restart/stale controls; use streaming extraction for large originals. No new full measurement series. Verify perspectives and ID renaming cannot change behavior. Run filter/fmt/Clippy and independent timing/privacy review. Record one-engine native time/memory without claiming browser performance.
-- [ ] **Step 5: Commit.** `feat(experiments): expose chronological surface episode records`.
+- [x] **Step 4: GREEN/reference/independent gate.** Compare complete native episode payloads against retained first-report/proof projections for all46 active settings on sequences0/255 and bounded shared settings including restart/stale controls; use streaming extraction for large originals. No new full measurement series. Verify perspectives and ID renaming cannot change behavior. Run filter/fmt/Clippy and independent timing/privacy review. Record one-engine native time/memory without claiming browser performance.
+- [x] **Step 5: Commit.** `feat(experiments): expose chronological surface episode records`.
 
 ## Task 5: Native command, checked WASM exports, and cancellable worker
 

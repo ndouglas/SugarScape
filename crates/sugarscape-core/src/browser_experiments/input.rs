@@ -39,6 +39,16 @@ pub enum WinkMode {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "study", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Input {
+    SharedSurface {
+        protocol: crate::shared_surface::Protocol,
+        environment: crate::shared_surface::Environment,
+        sequence: u16,
+    },
+    ActiveSurface {
+        protocol: crate::active_surface::Protocol,
+        environment: crate::shared_surface::Environment,
+        sequence: u16,
+    },
     Wink {
         seed: SeedText,
         policy: PolicyKind,
@@ -73,6 +83,8 @@ pub enum Input {
 impl Input {
     pub fn study(&self) -> StudyId {
         match self {
+            Self::SharedSurface { .. } => StudyId::SharedSurface,
+            Self::ActiveSurface { .. } => StudyId::ActiveSurface,
             Self::Wink { .. } => StudyId::Wink,
             Self::Testimony { .. } => StudyId::Testimony,
             Self::TestimonyGame { .. } => StudyId::TestimonyGame,
@@ -92,6 +104,9 @@ pub fn normalize_input(json: &str) -> Result<Input, Vec<FieldError>> {
     record::serialized_size(&input, MAX_INPUT_BYTES, "input")?;
     match &input {
         Input::Wink { .. } => {}
+        Input::SharedSurface { .. } | Input::ActiveSurface { .. } => {
+            super::surfaces::validate_input(&input)?
+        }
         Input::Testimony { .. } | Input::TestimonyGame { .. } => {
             super::testimony::validate_input(&input)?
         }
