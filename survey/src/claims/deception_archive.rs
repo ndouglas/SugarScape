@@ -326,7 +326,12 @@ fn validate_provenance(p: &Provenance) -> Result<(), String> {
     validate_revision(&p.source_revision)?;
     validate_revision(&p.protocol_revision)?;
     let valid_hash = |h: &str| h.len() == 64 && h.bytes().all(|b| b.is_ascii_hexdigit());
-    if p.binary.path.is_empty()
+    let binary_mode = u32::from_str_radix(&p.binary.mode, 8).ok();
+    let executable_regular = p.binary.mode.len() == 6
+        && p.binary.mode.bytes().all(|b| (b'0'..=b'7').contains(&b))
+        && binary_mode.is_some_and(|mode| mode & 0o170000 == 0o100000 && mode & 0o111 != 0);
+    if !executable_regular
+        || p.binary.path.is_empty()
         || p.binary.bytes == 0
         || !valid_hash(&p.binary.sha256)
         || p.protocol.path != PROTOCOL
@@ -374,6 +379,9 @@ pub fn census(a: &Archive) -> Census {
         let structural = validate_attempt(&a.index, attempt).is_err();
         let biological = attempt.outcome.as_ref().is_some_and(|o| match &o.outcome {
             AttemptOutcome::Complete(r) => validate_episode(r).is_err(),
+            AttemptOutcome::Failed(EpisodeFailure {
+                partial: Some(r), ..
+            }) if r.completed_ticks == r.requested_ticks => validate_episode(r).is_err(),
             _ => false,
         });
         counts.invalid += usize::from(structural || biological);
@@ -410,7 +418,11 @@ fn receipt_census(path: &Path) -> Result<Census, String> {
             Ok(None)
         };
         count_outcome(&mut counts, outcome.as_ref().ok().and_then(|o| o.as_ref()));
-        let frames = read_frames(&frame_path);
+        let frames = if matches!(&outcome, Ok(None)) && !exists(&frame_path)? {
+            Ok((vec![], None))
+        } else {
+            read_frames(&frame_path)
+        };
         let invalid = match (start, outcome, frames) {
             (Ok(start), Ok(outcome), Ok((frames, interrupted_tail))) => {
                 let attempt = Attempt {
@@ -424,6 +436,11 @@ fn receipt_census(path: &Path) -> Result<Census, String> {
                     || validate_attempt(&index, &attempt).is_err()
                     || attempt.outcome.as_ref().is_some_and(|o| match &o.outcome {
                         AttemptOutcome::Complete(r) => validate_episode(r).is_err(),
+                        AttemptOutcome::Failed(EpisodeFailure {
+                            partial: Some(r), ..
+                        }) if r.completed_ticks == r.requested_ticks => {
+                            validate_episode(r).is_err()
+                        }
                         _ => false,
                     })
             }
@@ -458,7 +475,11 @@ fn load_inner(path: &Path) -> Result<Archive, String> {
         } else {
             None
         };
-        let (frames, interrupted_tail) = read_frames(&frame_path)?;
+        let (frames, interrupted_tail) = if outcome.is_none() && !exists(&frame_path)? {
+            (vec![], None)
+        } else {
+            read_frames(&frame_path)?
+        };
         attempts.push(Attempt {
             start,
             frames,
@@ -924,47 +945,32 @@ fn ordinary_candidates(
         .map(|(index, (distance, value))| (Pos::new(index % 9, index / 9), distance, value))
         .collect()
 }
-fn ordinary_steps(before: &RoleRecord, positions: &BTreeMap<u64, Pos>, target: Pos) -> Vec<Pos> {
-    if target == before.pos {
-        return vec![before.pos];
+fn ordinary_step(before: &RoleRecord, positions: &BTreeMap<u64, Pos>, target: Pos) -> Pos {
+    // Reuse the engine's pure deterministic A* ordering, not a set of equally
+    // short paths. Only the saved P4 interior and current occupancy are needed.
+    let torus = sugarscape_core::geometry::Torus::new(9, 9);
+    let occupied = |q: Pos| positions.iter().any(|(&id, &p)| id != before.id && p == q);
+    let grid = sugarscape_core::minds::grid::TorusGrid::new(torus, |q| {
+        q == target || legal(q) && !occupied(q)
+    });
+    // The fixed room has only 49 traversable sites; the engine's 4096-node
+    // expansion limit cannot bind, but preserve it exactly here.
+    let found = sugarscape_core::minds::astar::astar(
+        &grid,
+        torus.index(before.pos),
+        torus.index(target),
+        4096,
+    );
+    let next = found
+        .and_then(|search| search.path.get(1).copied())
+        .map_or(before.pos, |index| torus.pos(index));
+    if occupied(next) {
+        before.pos
+    } else {
+        next
     }
-    let mut distance = [u32::MAX; 81];
-    let mut queue = std::collections::VecDeque::from([target]);
-    distance[site(target) as usize] = 0;
-    while let Some(p) = queue.pop_front() {
-        for (dx, dy) in [(0, -1), (-1, 0), (1, 0), (0, 1)] {
-            let q = Pos::new((p.x as i32 + dx) as u32, (p.y as i32 + dy) as u32);
-            if !legal(q)
-                || positions
-                    .iter()
-                    .any(|(&id, &other)| id != before.id && other == q)
-            {
-                continue;
-            }
-            if distance[site(q) as usize] == u32::MAX {
-                distance[site(q) as usize] = distance[site(p) as usize] + 1;
-                queue.push_back(q);
-            }
-        }
-    }
-    let d = distance[site(before.pos) as usize];
-    if d == u32::MAX {
-        return vec![before.pos];
-    }
-    [(0, -1), (-1, 0), (1, 0), (0, 1)]
-        .into_iter()
-        .filter_map(|(dx, dy)| {
-            let q = Pos::new(
-                (before.pos.x as i32 + dx) as u32,
-                (before.pos.y as i32 + dy) as u32,
-            );
-            (legal(q)
-                && distance[site(q) as usize] == d - 1
-                && !positions.iter().any(|(&id, &p)| id != before.id && p == q))
-            .then_some(q)
-        })
-        .collect()
 }
+
 fn audit_ordinary(
     before: &RoleRecord,
     positions: &BTreeMap<u64, Pos>,
@@ -985,8 +991,8 @@ fn audit_ordinary(
     {
         return Err("ordinary target violates maximum value / nearest tie policy".into());
     }
-    if !ordinary_steps(before, positions, target).contains(&after) {
-        return Err("ordinary movement is not a legal shortest step toward selected target".into());
+    if ordinary_step(before, positions, target) != after {
+        return Err("ordinary movement differs from deterministic path step".into());
     }
     Ok(())
 }
@@ -1903,6 +1909,205 @@ pub(super) mod tests {
         std::os::unix::fs::symlink(dir.0.join("actual.json"), dir.0.join("linked.json")).unwrap();
         assert!(receipt_census(&dir.0.join("linked.json")).is_err());
     }
+    #[test]
+    fn deception_fix2_deterministic_path_rejects_alternate_shortest_step() {
+        let before = RoleRecord {
+            id: 2,
+            pos: Pos::new(4, 4),
+            holdings: 40.0,
+            caches: BTreeMap::new(),
+            sender: None,
+            seen: vec![],
+        };
+        let positions = BTreeMap::from([(2, before.pos), (1, Pos::new(3, 2))]);
+        let stocks = (0..81)
+            .map(|site| StockRecord { site, amount: 0.0 })
+            .collect::<Vec<_>>();
+        let memory = vec![SeenRecord {
+            site: 30,
+            owner: 1,
+            amount: 12.0,
+            tick: 0,
+        }];
+        audit_ordinary(
+            &before,
+            &positions,
+            &stocks,
+            &BTreeMap::new(),
+            &memory,
+            Pos::new(3, 3),
+            Pos::new(4, 3),
+        )
+        .unwrap();
+        assert!(
+            audit_ordinary(
+                &before,
+                &positions,
+                &stocks,
+                &BTreeMap::new(),
+                &memory,
+                Pos::new(3, 3),
+                Pos::new(3, 4)
+            )
+            .is_err(),
+            "A* chooses north before west at equal f/h"
+        );
+    }
+    #[test]
+    fn deception_fix2_start_only_interruption_is_valid_empty_pending_prefix() {
+        let dir = Temp::new();
+        let i = index();
+        let r = &i.attempts[0];
+        write_new(&dir.0.join("index.json"), &json(&i).unwrap()).unwrap();
+        fs::create_dir_all(dir.0.join(&r.start).parent().unwrap()).unwrap();
+        write_new(&dir.0.join(&r.start), &json(&start(&i, r)).unwrap()).unwrap();
+        let loaded = load(&dir.0.join("index.json"))
+            .unwrap_or_else(|e| panic!("valid start-only interruption rejected: {e}"));
+        assert!(loaded.attempts[0].frames.is_empty() && loaded.attempts[0].outcome.is_none());
+        let actual = census(&loaded);
+        assert_eq!(
+            (
+                actual.attempted,
+                actual.pending,
+                actual.invalid,
+                actual.unstarted
+            ),
+            (1, 1, 0, 3839)
+        );
+        assert_eq!(receipt_census(&dir.0.join("index.json")).unwrap(), actual);
+        assert!(validate_archive(&loaded).is_err());
+    }
+    #[test]
+    fn deception_fix2_full_horizon_failed_biology_is_invalid_once() {
+        let i = index();
+        let r = &i.attempts[0];
+        let template = static_record(i.manifest.conditions[0].lab.clone(), r.seed);
+        let mut results = vec![];
+        for mutation in [
+            "fixture",
+            "ledger",
+            "physical",
+            "multiple",
+            "incomplete",
+            "valid",
+        ] {
+            let mut record = template.clone();
+            match mutation {
+                "fixture" => record.fixture_errors.push("known fixture error".into()),
+                "ledger" => record.cohorts.as_mut().unwrap().unlabelled_carried += 1.0,
+                "physical" => record.frames[0].roles[0].holdings += 1.0,
+                "multiple" => {
+                    record.fixture_errors.push("known fixture error".into());
+                    record.cohorts.as_mut().unwrap().unlabelled_carried += 1.0;
+                }
+                "incomplete" => {
+                    record.completed_ticks = 0;
+                    record.frames.truncate(1);
+                }
+                _ => {}
+            }
+            let attempt = Attempt {
+                start: start(&i, r),
+                frames: record.frames.clone(),
+                interrupted_tail: None,
+                outcome: Some(OutcomeReceipt {
+                    condition: r.condition.clone(),
+                    seed: r.seed,
+                    elapsed_seconds: 0.0,
+                    timing_boundary: TIMING.into(),
+                    outcome: AttemptOutcome::Failed(EpisodeFailure {
+                        message: "retained failure".into(),
+                        partial: Some(record),
+                    }),
+                }),
+            };
+            let archive = Archive {
+                index: i.clone(),
+                attempts: vec![attempt.clone()],
+            };
+            let typed = census(&archive);
+            let dir = Temp::new();
+            write_new(&dir.0.join("index.json"), &json(&i).unwrap()).unwrap();
+            fs::create_dir_all(dir.0.join(&r.start).parent().unwrap()).unwrap();
+            write_new(&dir.0.join(&r.start), &json(&attempt.start).unwrap()).unwrap();
+            write_new(
+                &dir.0.join(&r.outcome),
+                &json(attempt.outcome.as_ref().unwrap()).unwrap(),
+            )
+            .unwrap();
+            let mut bytes = vec![];
+            for frame in &attempt.frames {
+                bytes.extend(json(frame).unwrap());
+                bytes.push(b'\n');
+            }
+            write_new(&dir.0.join(&r.frames), &bytes).unwrap();
+            let saved = receipt_census(&dir.0.join("index.json")).unwrap();
+            results.push((mutation, typed.invalid, saved.invalid));
+            assert_eq!((typed.failed, typed.partial, typed.complete), (1, 1, 0));
+            assert_eq!((saved.failed, saved.partial, saved.complete), (1, 1, 0));
+        }
+        assert_eq!(
+            results,
+            vec![
+                ("fixture", 1, 1),
+                ("ledger", 1, 1),
+                ("physical", 1, 1),
+                ("multiple", 1, 1),
+                ("incomplete", 0, 0),
+                ("valid", 0, 0)
+            ]
+        );
+    }
+    #[test]
+    fn deception_fix2_binary_mode_requires_regular_executable_file() {
+        let mut p = provenance();
+        let mut rejected = vec![];
+        for mode in ["garbage", "100644", "040755", "120777", "100888", "755"] {
+            p.binary.mode = mode.into();
+            rejected.push((mode, validate_provenance(&p).is_err()));
+        }
+        assert!(rejected.iter().all(|(_, bad)| *bad), "{rejected:?}");
+        for mode in ["100755", "100700", "100711"] {
+            p.binary.mode = mode.into();
+            validate_provenance(&p).unwrap();
+        }
+    }
+    #[test]
+    fn deception_fix2_final_outcomes_still_require_frame_stream() {
+        let i = index();
+        let r = &i.attempts[0];
+        for outcome in [
+            AttemptOutcome::Complete(static_record(i.manifest.conditions[0].lab.clone(), r.seed)),
+            AttemptOutcome::Failed(EpisodeFailure {
+                message: "failure before first frame".into(),
+                partial: None,
+            }),
+        ] {
+            let dir = Temp::new();
+            write_new(&dir.0.join("index.json"), &json(&i).unwrap()).unwrap();
+            fs::create_dir_all(dir.0.join(&r.start).parent().unwrap()).unwrap();
+            write_new(&dir.0.join(&r.start), &json(&start(&i, r)).unwrap()).unwrap();
+            let receipt = OutcomeReceipt {
+                condition: r.condition.clone(),
+                seed: r.seed,
+                elapsed_seconds: 0.0,
+                timing_boundary: TIMING.into(),
+                outcome,
+            };
+            write_new(&dir.0.join(&r.outcome), &json(&receipt).unwrap()).unwrap();
+            assert!(load(&dir.0.join("index.json")).is_err());
+            let counts = receipt_census(&dir.0.join("index.json")).unwrap();
+            assert_eq!(
+                (
+                    counts.attempted,
+                    counts.complete + counts.failed,
+                    counts.pending,
+                    counts.invalid
+                ),
+                (1, 1, 0, 1)
+            );
+        }
+    }
     fn minimal_frame() -> FrameRecord {
         FrameRecord {
             tick: 0,
@@ -2368,7 +2573,7 @@ pub(super) mod tests {
                     } else {
                         0.0
                     };
-                    let after = ordinary_steps(role, &positions, target)[0];
+                    let after = ordinary_step(role, &positions, target);
                     let inspected = cache.get(&site(after)).copied().unwrap_or(0.0);
                     let saw = !owner && role.seen.iter().any(|e| e.site == site(after));
                     let raid = if saw {
