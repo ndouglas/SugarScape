@@ -740,3 +740,12 @@ gates are unchanged; no scientific episode or campaign was executed.
 ### Task 5 runtime verification and task review
 
 Runtime `b4ed59a`. Frozen survey375 passed/0 failed/0 ignored; workspace2919 passed/0 failed/103 ignored. Both formatting checks, survey/core all-targetClippy with warnings denied and diff check passed. Parent matched589 source/config/manifest/spec hashes across all seven gates and current files. Independent Task5 review approved spec and quality with no findings. All staged allowances are removed; default/help remain pure, actual simulations use construction7/8, reports validate complete saved evidence before output and synthetic statistics never run scientific seeds. Whole-branch review, prior MinorM1 triage and parent archival remain pending; Stage5 stays In Progress through those final acceptance steps.
+
+### Whole-branch review correction
+
+Review of `0d2bc3b..b97a294` found two Important gaps: exact spoil lifetimes could overlap for one creator, and runtime checkout HEAD was not bound to compiled collector source. Both require one consolidated correction and scoped re-review. Survey-local build/source-identity support may extend the original file ownership without changing core behavior or adding dependency packages. M1 cumulative-guard test isolation is explicitly nonblocking and deferred.
+
+- [ ] I1: reject overlapping recorded spoil lifetimes with counter-consistent regression.
+- [ ] I2: bind compiled collector source to claimed code revision before output.
+- [ ] Corrected frozen verification and one scoped re-review.
+- [ ] Parent evidence/ruling archival and completed tracker removal.
