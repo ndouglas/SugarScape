@@ -1,7 +1,7 @@
 # Deduction and surface experiments in the browser
 
 **Date:** 2026-10-08
-**Status:** proposed first-batch design, awaiting user scope/design review.
+**Status:** approved October 8, 2026 (LGTM!). Written implementation plan awaits separate review.
 **Execution:** subagent-driven implementation with independent reviews after
 written-spec and implementation-plan approval.
 
@@ -220,6 +220,5 @@ using the same browser shell. Their existing WASM exports and core snapshots are
 starting points, not claims that a viewer already exists. Active concurrent F5
 work is excluded until its producer delivers a stable reviewed interface.
 
-This document is a proposed design. Written-spec approval permits preparation
-of the implementation plan; runtime/UI implementation waits for that plan's
-review. Raw experiment discovery remains deferred and its draft is preserved.
+This design is approved. The written implementation plan now awaits review;
+runtime/UI implementation starts after that review. Raw experiment discovery remains deferred and its draft is preserved.
