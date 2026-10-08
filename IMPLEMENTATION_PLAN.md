@@ -24,7 +24,7 @@ Spec/plan approved2026-10-07; subagent-driven execution. Detailed plan: docs/sup
 **Goal**: Explicit provenance-bound construction collection
 **Success Criteria**: Default no World, draft denied, canonical30case/seed matrix
 **Tests**: `foraging_shortcuts::tests::run`
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 5: Saved analysis and acceptance
 **Goal**: Deterministic full saved-only reports

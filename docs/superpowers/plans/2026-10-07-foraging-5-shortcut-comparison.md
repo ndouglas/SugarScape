@@ -334,7 +334,7 @@ Final index receipt is written/synced completely before hard_link to the final n
 **Consumes:** Task1 factory/keys/status; Task2 encoder; Task3 writer; known public F4 `run(Setup,u64,RunOptions)->Result<Episode,Vec<FieldError>>`.
 **Produces:** ExecutionContext/RunRequest/preflight/collect/Command/parse/cli contracts. Task5 fills only Analyze dispatch after its own tests; Task4 Analyze returns a clear unsupported-yet error, with narrow temporary allowance removed by5.
 
-- [ ] Write parser/denial/provenance REDs first. Example:
+- [x] Write parser/denial/provenance REDs first. Example:
 
 ```rust
 #[test]
@@ -352,9 +352,9 @@ fn collector_rejects_draft_scientific_request_before_output() {
 }
 ```
 
-- [ ] Await run filter RED and `cargo test --manifest-path survey/Cargo.toml --test foraging_shortcuts_cli` RED. Implement strict args: default manifest, --help, --run with optional --construction and required protocol-revision/approval-context/out, or --analyze INDEX with out. Reject unknown/repeated/incompatible flags, missing/empty values, tuning overrides and mixtures of the new selector with existing study selectors before dispatch. Do not modify behavior when the new selector is absent; do not add to generic claims::all(). Exit2 contextual error, no hidden run on help/printing.
-- [ ] Native preflight authorizes mode first, validates full40-hex revisions and resolves to canonical lowercase Git commit, tracked-clean repo, exact committed protocol bytes, exact candidate JSON matching factory+HEAD bytes, nonempty approval context, new output (including symlink refusal), executable SHA and manifest SHA. Production context uses manifest's repo root and current executable. Private tests define owned_git_context()->(OwnedTempdir,ExecutionContext,RunRequest), supplying owned temporary Git repos and a fixture executable file; no public repo/provenance override flags. Do not bypass hooks; fixture commits use local test identity only.
-- [ ] Collector creates writer after preflight; loops canonical condition then ascending construction seeds; executes full F4 run, encodes original Episode, saves validated bytes, stops with preserved failure evidence on error. Run collection/failure ordering skeleton:
+- [x] Await run filter RED and `cargo test --manifest-path survey/Cargo.toml --test foraging_shortcuts_cli` RED. Implement strict args: default manifest, --help, --run with optional --construction and required protocol-revision/approval-context/out, or --analyze INDEX with out. Reject unknown/repeated/incompatible flags, missing/empty values, tuning overrides and mixtures of the new selector with existing study selectors before dispatch. Do not modify behavior when the new selector is absent; do not add to generic claims::all(). Exit2 contextual error, no hidden run on help/printing.
+- [x] Native preflight authorizes mode first, validates full40-hex revisions and resolves to canonical lowercase Git commit, tracked-clean repo, exact committed protocol bytes, exact candidate JSON matching factory+HEAD bytes, nonempty approval context, new output (including symlink refusal), executable SHA and manifest SHA. Production context uses manifest's repo root and current executable. Private tests define owned_git_context()->(OwnedTempdir,ExecutionContext,RunRequest), supplying owned temporary Git repos and a fixture executable file; no public repo/provenance override flags. Do not bypass hooks; fixture commits use local test identity only.
+- [x] Collector creates writer after preflight; loops canonical condition then ascending construction seeds; executes full F4 run, encodes original Episode, saves validated bytes, stops with preserved failure evidence on error. Run collection/failure ordering skeleton:
 
 ```rust
 let m=candidate()?;let p=preflight(ctx,&m,r)?;
@@ -376,7 +376,7 @@ writer.finish()
 ```
 
 Preserve primary error if fail-evidence writing also fails. Optional operational timing is outside deterministic raw comparative payload. No scientific collection branch may pass current draft authorization.
-- [ ] Generate candidate JSON using the pure default printer, before final freeze, and test byte identity with manifest_bytes. Tests check canonical input/config/seed/options all30 core episodes, full horizons/conservation/identity/null controls without guaranteed positive outcomes; construction/scientific separation; clean/dirty/nonexistent/wrong protocol commit, wrong checkout/committed/factory candidate, malformed revision, existing output and executable errors. External binary tests cover default/help no files/world work, draft --run rejection and selector collision. Owned Git fixture permits in-process genuine collection despite the implementer worktree being uncommitted during tests; the real production preflight retains clean-tree enforcement.
+- [x] Generate candidate JSON using the pure default printer, before final freeze, and test byte identity with manifest_bytes. Tests check canonical input/config/seed/options all30 core episodes, full horizons/conservation/identity/null controls without guaranteed positive outcomes; construction/scientific separation; clean/dirty/nonexistent/wrong protocol commit, wrong checkout/committed/factory candidate, malformed revision, existing output and executable errors. External binary tests cover default/help no files/world work, draft --run rejection and selector collision. Owned Git fixture permits in-process genuine collection despite the implementer worktree being uncommitted during tests; the real production preflight retains clean-tree enforcement.
 External default-print test uses the existing binary test facility, not a new test dependency:
 
 ```rust
@@ -394,7 +394,7 @@ fn default_shortcut_command_prints_draft_manifest() {
 
 Use write_all/flush error propagation for stdout instead of panic on a broken pipe. Test parse/dispatch boundaries structurally and inspect the manifest path's call graph: it must not invoke collection or construct World.
 
-- [ ] GREEN/fmt/Clippy/full survey final freeze including manifest artifact; fresh review; commit `feat(foraging): collect explicit shortcut construction evidence`.
+- [x] GREEN/fmt/Clippy/full survey final freeze including manifest artifact; fresh review; commit `feat(foraging): collect explicit shortcut construction evidence`.
 
 ### Task 5: Saved-only rows, paired reports and acceptance
 
@@ -723,3 +723,7 @@ Runtime `14079bb`; scoped timing correction `aab51bf`. Corrected-tree survey:313
 ### Task 3 verification and review
 
 Runtime `778eadb`. Frozen focused69/full survey338 passed,0 failed,0 ignored; formatting/all-targetClippy clean. Parent matched all573 Rust/Cargo source hashes across the four final gates. Independent task review approved spec and quality with no findings. Initial compilation-only RED, supplemental shared-validator mutation RED, and an intermediate skip-filter omission are disclosed; final focused/full runs used no skip. Prior Task1/2 producer checks remain reviewed; actual provenance acquisition is Task4, terminal saved analysis and allowance removal are Task5.
+
+### Task 4 verification and review
+
+Runtime `2e6512d`. Frozen full survey358 passed,0 failed,0 ignored; formatting/all-targetClippy clean. Parent matched all86 frozen source/test/Cargo/manifest hashes across final gates. The generated330578-byte draft manifest matches Task1’s reviewed golden exactly. Independent spec/quality review approved with no findings, including focused pure-printing, authorization/key order and archive dependency checks. Construction integration used owned Git/executable fixtures and public F4 episodes; no actual scientific campaign was run. Task5 completes saved analysis, removes staged allowances and runs final core gates.
