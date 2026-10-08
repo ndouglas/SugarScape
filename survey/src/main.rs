@@ -85,6 +85,15 @@ fn run_claim(c: &Claim, seeds: &[u64]) -> Outcome {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    if args.iter().any(|a| a == "--deception") {
+        let mut route = args[1..].to_vec();
+        route.remove(route.iter().position(|a| a == "--deception").unwrap());
+        if let Err(e) = claims::deception::cli(&route) {
+            eprintln!("{e}");
+            std::process::exit(2);
+        }
+        return;
+    }
     if args.iter().any(|a| a == "--burrow") {
         let mut route = args[1..].to_vec();
         let position = route.iter().position(|a| a == "--burrow").unwrap();
