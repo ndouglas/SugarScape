@@ -1,7 +1,7 @@
 {
   "study": "minds-deception-2026-10-07",
   "public_manifest": "../../../web/public/studies/minds-deception-2026-10-07/evidence-manifest.json",
-  "public_manifest_sha256": "35e15e38e5de29112c00ea42e08e6954f2e82a9e2ef4c2e3707585a877367fd5",
+  "public_manifest_sha256": "fdf2ddc329bb27122ac5fb8295af05d6b00da5a22eb68ae4c71b8cfa1b3b0bd5",
   "self_hash_excluded": true,
   "members": [
     {
@@ -12,8 +12,8 @@
     },
     {
       "path": "REPRODUCING.md",
-      "sha256": "d241dc2b7258d0ef6dce61defd4b66e0d9c06802f9cca1b293974e4df5d4f6de",
-      "bytes": 3095,
+      "sha256": "fe5978360c75cd134b08c6607fc74085c27398b162da30a462d5960bb7648ea4",
+      "bytes": 4052,
       "mode": "0o644"
     },
     {
