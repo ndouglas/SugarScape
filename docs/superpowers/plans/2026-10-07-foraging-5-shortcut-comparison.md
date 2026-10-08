@@ -185,7 +185,7 @@ Private ArchiveWriter state is explicitly: out PathBuf, manifest Manifest, mode 
 **Consumes:** Public core Setup/Parameters/Pos/Resource/RunOptions; binding geometry/control tables.
 **Produces:** Shared root types, exact scene builder/independent BFS, Manifest/Condition/candidate/bytes/condition/keys/authorize contracts above.
 
-- [ ] Write scene/manifest REDs with independently specified assertions. Example:
+- [x] Write scene/manifest REDs with independently specified assertions. Example:
 
 ```rust
 #[test]
@@ -205,8 +205,8 @@ fn scientific_keys_are_declared_but_draft_run_is_denied() {
 }
 ```
 
-- [ ] Await `cargo test --manifest-path survey/Cargo.toml foraging_shortcuts::tests::scenario` RED before production implementation. Missing API compilation is disclosed; where a signature scaffold is used, await its assertion/error RED before replacing it.
-- [ ] Implement inclusive cardinal route expansion with the literal vertices from spec. Minimal independent segment builder:
+- [x] Await `cargo test --manifest-path survey/Cargo.toml foraging_shortcuts::tests::scenario` RED before production implementation. Missing API compilation is disclosed; where a signature scaffold is used, await its assertion/error RED before replacing it.
+- [x] Implement inclusive cardinal route expansion with the literal vertices from spec. Minimal independent segment builder:
 
 ```rust
 fn segment(a:core::Pos,b:core::Pos,out:&mut BTreeSet<core::Pos>) -> Result<(),String> {
@@ -219,8 +219,8 @@ fn segment(a:core::Pos,b:core::Pos,out:&mut BTreeSet<core::Pos>) -> Result<(),St
 ```
 
 Build all nine nest cells, outlet and sixteen food cells first; expand segments; remove only the declared gate for Access, or union Straight for AlreadyOpen. Reject Access+AlreadyOpen. Assign IDs by y then x, preserve exact spawn order, set all five parameters/options explicitly, apply mask by regime and call Setup::normalized. Private helper `vertices(Geometry)->Vec<core::Pos>` contains every literal vertex, never inferred shortest paths. BFS marks on enqueue and visits each open cell once, starting all nest cells; return all food IDs with Some/None shortest distances. No calls to core World or run.
-- [ ] Build candidate in canonical panel/geometry/regime order with exact statuses/seeds/limits/protocol path. manifest_bytes renders pretty JSON plus newline; sha256 uses existing sha2. Test fifteen unique IDs, exact ordering/keys/seeds/full config, stable bytes/digest, 40/73/85 open counts, 15/48/60 distances, all references15, sealed0-access, masks489/456/444 solid capacities (+1 sealed), food identities, same nest/spawns/outlet, protected border and Straight Protected==AlreadyOpen. Test unsupported combination and malformed segment errors. No scientific episode is run to obtain expectations.
-- [ ] Focused GREEN, survey fmt/Clippy/full survey on frozen final task; fresh review; commit `feat(foraging): define immutable shortcut comparison scenarios`.
+- [x] Build candidate in canonical panel/geometry/regime order with exact statuses/seeds/limits/protocol path. manifest_bytes renders pretty JSON plus newline; sha256 uses existing sha2. Test fifteen unique IDs, exact ordering/keys/seeds/full config, stable bytes/digest, 40/73/85 open counts, 15/48/60 distances, all references15, sealed0-access, masks489/456/444 solid capacities (+1 sealed), food identities, same nest/spawns/outlet, protected border and Straight Protected==AlreadyOpen. Test unsupported combination and malformed segment errors. No scientific episode is run to obtain expectations.
+- [x] Focused GREEN, survey fmt/Clippy/full survey on frozen final task; fresh review; commit `feat(foraging): define immutable shortcut comparison scenarios`.
 
 ### Task 2: Strict wire decoding and observed-state validation
 
@@ -711,3 +711,5 @@ Final plan self-review: all five stages have their own RED/GREEN/review/commit b
 Spec and plan approved; worktree and branch verified clean at `937ba9c`. Parent scanned all ten shared task pairs plus each task internally, preserving the five-stage/source-contract boundaries. One internal archive helper is added: `validate_record(root,index,manifest,reference)->WireEpisode` is shared by Writer.finish and Reader.next, since final-only Reader.open cannot validate an unpublished pending index and duplicating its logic would be fragile. If wrong, rework this small internal interface; no schema, core policy or public surface changes. Detailed baseline/implementation/review evidence belongs to the plan-specific ignored SDD workspace and `/tmp/sugarscape-f5-evidence-20261007/`. No scientific collection or implementation task has completed.
 
 Baseline verification: survey269 passed/0 failed/0 ignored; workspace2,919 passed/0 failed/103 existing ignored. Survey/core formatting and all-target Clippy passed. Full logs, exits, timings and starting source hashes are preserved at `/tmp/sugarscape-f5-evidence-20261007/`. No runtime source changed during preflight.
+
+Task1 runtime `7f1f290`: focused9/survey278 passed,0 failed,0 ignored; survey fmt/all-target Clippy clean on frozen hashes. Independent task review approved with no findings; parent hash audit matched. API-compilation RED and supplemental timing are disclosed. Collector/identity controls belong to4/5, wire/cache/archive validation to2/3 and allowance removal/core workspace regression to5.
