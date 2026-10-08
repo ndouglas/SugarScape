@@ -67,3 +67,6 @@ pub(crate) mod testkit;
 
 pub mod democratic_peace;
 pub mod geosim;
+
+/// Paid active experiments on the frozen shared surface.
+pub mod active_surface;
