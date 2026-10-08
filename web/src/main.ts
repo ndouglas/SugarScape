@@ -127,7 +127,7 @@ async function main(): Promise<void> {
 
   window.addEventListener('beforeunload', () => experiments.dispose());
   const episodeToken = readEpisodeHash();
-  if (episodeToken) {
+  if (episodeToken !== null) {
     try { experiments.openInput(await decodeEpisode(episodeToken)); showView('experiments'); }
     catch (e) { showBanner(`That episode link could not be loaded (${errorMessage(e)}).`); }
   }

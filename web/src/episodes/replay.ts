@@ -11,6 +11,7 @@ export class ReplayController {
   step(delta = 1): void { this.seek(this.index + delta); }
   reset(): void { this.seek(0); }
   pause(): void { if (this.timer !== null) clearInterval(this.timer); this.timer = null; this.playing = false; }
+  dispose(): void { this.pause(); this.record = null; this.index = 0; }
   play(): void {
     if (this.reduced() || !this.record || this.playing || this.index >= this.record.checkpoints.length - 1) return;
     this.playing = true;

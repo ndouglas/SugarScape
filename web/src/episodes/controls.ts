@@ -44,12 +44,24 @@ export class EpisodeControls {
       } else {
         const perEnvironment = list(spec.by_environment).find(row => obj(row).environment === this.draft.environment);
         const values = list(perEnvironment ? obj(perEnvironment).values : spec.values);
-        if (!values.includes(this.draft[key])) this.draft[key] = values[0] ?? '';
         input = h('select', { 'aria-label': label(key) }, ...values.map(value => h('option', { value, selected: value === this.draft[key] }, obj(spec.labels)[String(value)] ? valueText(obj(spec.labels)[String(value)]) : label(String(value)))));
+        if (!values.includes(this.draft[key])) {
+          input.prepend(h('option', { value: '', selected: true, disabled: true }, `Opened ${label(key)}: ${key in this.draft ? valueText(this.draft[key]) : 'missing'} · validation on run`));
+          input.setAttribute('aria-invalid', 'true');
+        }
       }
       input.addEventListener('change', () => {
         this.draft[key] = key === 'history' ? Number(input.value) : input.value;
-        if (key === 'environment') this.render();
+        if (key === 'environment') {
+          // Only an intentional environment edit may reset its dependent choices.
+          // Rendering an opened input must preserve every value for native validation.
+          for (const [dependent, control] of Object.entries(controls)) {
+            const row = list(obj(control).by_environment).find(row => obj(row).environment === this.draft.environment);
+            const values = list(obj(row).values);
+            if (row && values.length && !values.includes(this.draft[dependent])) this.draft[dependent] = values[0];
+          }
+          this.render();
+        } else input.removeAttribute('aria-invalid');
         this.changed(this.input());
       });
       this.el.append(h('label', {}, key === 'history' ? 'Public history' : label(key), input));

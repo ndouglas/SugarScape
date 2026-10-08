@@ -22,4 +22,4 @@ export async function decodeEpisode(token: string): Promise<Json> {
   checkedInput(value.input);
   return value.input;
 }
-export function readEpisodeHash(hash = location.hash): string | null { return /^#e=([A-Za-z0-9_-]+)$/.exec(hash)?.[1] ?? null; }
+export function readEpisodeHash(hash = location.hash): string | null { return hash.startsWith('#e=') ? hash.slice(3) : null; }

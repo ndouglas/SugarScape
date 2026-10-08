@@ -221,5 +221,14 @@ export class EpisodeView {
     if (payload !== null) this.comparisonBody.append(h('h3', {}, this.perspective.kind === 'researcher' ? 'Researcher · comparison complete result' : 'Comparison final result'), renderSurfaceResult(payload));
   }
   pause(): void { this.replay.pause(); this.draw(); }
-  dispose(): void { this.disposed = true; this.replay.pause(); this.session.dispose(); this.recordedSlot.replaceChildren(); }
+  dispose(): void {
+    this.disposed = true;
+    this.replay.dispose(); this.session.dispose();
+    this.comparisonIndex = null; this.comparisonCandidates = []; this.comparisonOptionsKey = '';
+    this.pendingInput = undefined; this.editor = null;
+    this.stage.replaceChildren(); this.comparisonBody.replaceChildren();
+    this.comparisonCounts.textContent = ''; this.comparisonName.textContent = '';
+    this.comparisonPicker.replaceChildren(); this.comparisonSlot.hidden = true;
+    this.recordedSlot.replaceChildren();
+  }
 }
