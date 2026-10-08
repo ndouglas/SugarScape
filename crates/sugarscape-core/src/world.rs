@@ -220,6 +220,7 @@ pub struct TickEvents {
 
 #[derive(Clone)]
 pub struct World {
+    pub deception: Option<crate::minds::deception::state::Runtime>,
     pub config: Config,
     pub torus: Torus,
     /// Completed ticks.
@@ -483,6 +484,7 @@ impl World {
             next_id: 1,
             relocation_events: config.protection_lab.as_ref().map(|_| Default::default()),
             protection_ledger: None,
+            deception: None,
             protection_ledger_errors: Vec::new(),
             protection_actions: Vec::new(),
             protection_deaths: Vec::new(),
@@ -508,6 +510,8 @@ impl World {
         }
         if world.config.protection_lab.is_some() {
             crate::minds::protection::lab::initialize(&mut world);
+        } else if world.config.deception_lab.is_some() {
+            crate::minds::deception::lab::initialize(&mut world);
         } else {
             world.populate();
         }
@@ -1008,6 +1012,48 @@ impl World {
                     eat(owner);
                     eat(seen.amount.to_bits());
                     eat(seen.tick);
+                }
+            }
+        }
+        if self.config.deception_lab.is_some() {
+            eat(u64::from_le_bytes(*b"deceptP4"));
+            let config =
+                serde_json::to_vec(&self.config).expect("serializable deception configuration");
+            eat(config.len() as u64);
+            for byte in config {
+                eat(u64::from(byte));
+            }
+            eat(u64::from(self.deception.is_some()));
+            if let Some(runtime) = &self.deception {
+                eat(u64::from(runtime.source));
+                eat(u64::from(runtime.display));
+                eat(u64::from(runtime.prepared));
+            }
+            for a in self.agents.values() {
+                eat(a.id);
+                eat(u64::from(a.cheater));
+                eat(u64::from(a.watches));
+                eat(u64::from(a.remembers));
+                eat(a.rate.to_bits());
+                eat(u64::from(a.foresight));
+                eat(u64::from(a.vision));
+                eat(u64::from(a.metabolism[0]));
+                let state = serde_json::to_vec(&a.deception).expect("serializable deception state");
+                eat(state.len() as u64);
+                for byte in state {
+                    eat(u64::from(byte));
+                }
+                eat(a.cache_since.len() as u64);
+                for (&site, &tick) in &a.cache_since {
+                    eat(u64::from(site));
+                    eat(tick);
+                }
+                eat(a.seen.len() as u64);
+                for (&(site, actor), entry) in &a.seen {
+                    eat(u64::from(site));
+                    eat(actor);
+                    eat(entry.amount.to_bits());
+                    eat(entry.tick);
                 }
             }
         }

@@ -6,6 +6,7 @@
 pub mod astar;
 pub mod caching;
 pub mod central;
+pub mod deception;
 pub mod goap;
 pub mod grid;
 pub mod memory;

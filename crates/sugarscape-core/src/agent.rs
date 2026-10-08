@@ -170,6 +170,7 @@ impl Tags {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Agent {
+    pub deception: Option<crate::minds::deception::state::SenderState>,
     pub protection: Option<crate::minds::protection::state::ProtectionState>,
     pub id: AgentId,
     pub pos: Pos,
@@ -387,6 +388,7 @@ impl Agent {
             home: None,
             spatial: None,
             protection: None,
+            deception: None,
             load_trip: 0.0,
             delivery_rate: 0.0,
             last_load: 0.0,

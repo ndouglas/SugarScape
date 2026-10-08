@@ -1196,6 +1196,7 @@ fn reset_only(path: &str) -> bool {
             | ["culture", "groups", _, "zeros", ..]
             | ["lab", ..]
             | ["protection_lab", ..]
+            | ["deception_lab", ..]
             | ["spatial_hoarding", ..]
             | ["walls", ..]
     ) || RESET_ONLY_PATHS.contains(&path)
@@ -1281,6 +1282,8 @@ pub struct Config {
     pub lab: Option<Lab>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub protection_lab: Option<crate::minds::protection::state::LabConfig>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub deception_lab: Option<crate::minds::deception::state::LabConfig>,
     pub schedule: Vec<ScheduledChange>,
 }
 
@@ -1369,6 +1372,7 @@ impl Default for Config {
             spatial_hoarding: SpatialHoarding::default(),
             lab: None,
             protection_lab: None,
+            deception_lab: None,
             schedule: Vec::new(),
         }
     }
@@ -1893,7 +1897,8 @@ impl Config {
         e.check(
             self.growback.rate.is_finite()
                 && (self.growback.rate > 0.0
-                    || (self.protection_lab.is_some() && self.growback.rate == 0.0)),
+                    || ((self.protection_lab.is_some() || self.deception_lab.is_some())
+                        && self.growback.rate == 0.0)),
             "growback.rate",
             "must be a number > 0",
         );
@@ -2287,6 +2292,7 @@ impl Config {
             "an outbreak's length override must be 1 ≤ min ≤ max < immune_length",
         );
         e.0.extend(crate::minds::protection::lab::validation_errors(self));
+        e.0.extend(crate::minds::deception::lab::validation_errors(self));
         e.finish()
     }
 
@@ -2499,6 +2505,9 @@ impl Config {
             if changed {
                 out.push(FieldError::new(format!("spatial_hoarding.{path}"), msg));
             }
+        }
+        if self.deception_lab != next.deception_lab {
+            out.push(FieldError::new("deception_lab", msg));
         }
         if self.protection_lab != next.protection_lab {
             out.push(FieldError::new("protection_lab", msg));
