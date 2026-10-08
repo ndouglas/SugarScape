@@ -85,6 +85,19 @@ fn run_claim(c: &Claim, seeds: &[u64]) -> Outcome {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    if args[1..].iter().any(|a| a == "--foraging-shortcuts") {
+        let mut route = args[1..].to_vec();
+        let position = route
+            .iter()
+            .position(|a| a == "--foraging-shortcuts")
+            .unwrap();
+        route.remove(position);
+        if let Err(e) = claims::foraging_shortcuts::cli(&route) {
+            eprintln!("foraging-shortcuts: {e}");
+            std::process::exit(2);
+        }
+        return;
+    }
     if let Some(result) = claims::deception::route(&args[1..]) {
         if let Err(error) = result {
             eprintln!("{error}");
@@ -125,7 +138,7 @@ fn main() {
         return;
     }
     if args.iter().any(|a| a == "--help") {
-        println!("survey [--only PREFIX] [--seeds N]\nsurvey --burrow --help (candidate manifest; no implicit execution)\nsurvey --minds9 --help (declared measured campaign)\nsurvey --protection --help (registered protection campaign)");
+        println!("survey [--only PREFIX] [--seeds N]\nsurvey --burrow --help (candidate manifest; no implicit execution)\nsurvey --minds9 --help (declared measured campaign)\nsurvey --protection --help (registered protection campaign)\nsurvey --foraging-shortcuts --help (draft shortcut manifest; explicit construction collection)");
         return;
     }
     let flag = |name: &str| {

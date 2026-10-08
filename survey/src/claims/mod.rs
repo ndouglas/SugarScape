@@ -21,6 +21,7 @@ mod dpd;
 mod ethno;
 mod farol;
 mod firms;
+pub(crate) mod foraging_shortcuts;
 mod image;
 mod minds1;
 mod minds2;
