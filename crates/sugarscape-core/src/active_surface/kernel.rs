@@ -84,6 +84,12 @@ impl EpisodeState {
         self.credits[role.index()]
     }
 
+    /// Privileged diagnostic snapshot, never a local controller input. A Read
+    /// leaves the field unchanged, so its AfterSlot still has its read lineage.
+    pub fn read_lineage(&self, role: Role) -> Option<physical::Lineage> {
+        self.world.read_lineage(role)
+    }
+
     fn checkpoint(&mut self, checkpoint: Checkpoint) {
         for h in &mut self.histories {
             h.checkpoint = checkpoint;

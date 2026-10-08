@@ -105,6 +105,13 @@ impl CompiledPolicy {
                 prefix: view.prefix.clone(),
             })
     }
+    /// Declared configuration only; contains no actual environment or peer history.
+    pub fn protocol(&self) -> &Protocol {
+        &self.protocol
+    }
+    pub fn own_prior(&self) -> OwnPrior {
+        self.prior
+    }
     pub fn stats(&self) -> &SearchStats {
         &self.stats
     }
