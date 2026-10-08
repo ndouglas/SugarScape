@@ -12,7 +12,7 @@ Spec/plan approved2026-10-07; subagent-driven execution. Detailed plan: docs/sup
 **Goal**: Own wire schema and observed physics/access checks
 **Success Criteria**: No restoration; exact bytes, clocks/tags/cache/censoring
 **Tests**: `foraging_shortcuts::tests::wire`
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 3: Immutable archives
 **Goal**: Bounded exclusive writer and streaming reader
