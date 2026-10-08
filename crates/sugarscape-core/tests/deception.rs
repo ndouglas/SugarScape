@@ -368,3 +368,23 @@ fn fingerprint_covers_each_seen_and_cache_age_field() {
         assert_ne!(base.fingerprint(), altered.fingerprint(), "{name}");
     }
 }
+
+#[test]
+fn fingerprint_covers_each_active_role_decision_field() {
+    let base = World::new(rig_config(LabConfig::default()), 7).unwrap();
+    type Mutation = (&'static str, fn(&mut World));
+    let changes: &[Mutation] = &[
+        ("cheater", |w| w.agent_mut(2).unwrap().cheater = false),
+        ("watches", |w| w.agent_mut(2).unwrap().watches = false),
+        ("remembers", |w| w.agent_mut(2).unwrap().remembers = true),
+        ("rate", |w| w.agent_mut(2).unwrap().rate = 0.5),
+        ("foresight", |w| w.agent_mut(2).unwrap().foresight += 1),
+        ("vision", |w| w.agent_mut(2).unwrap().vision -= 1),
+        ("metabolism", |w| w.agent_mut(2).unwrap().metabolism[0] += 1),
+    ];
+    for (name, mutation) in changes {
+        let mut altered = base.clone();
+        mutation(&mut altered);
+        assert_ne!(base.fingerprint(), altered.fingerprint(), "{name}");
+    }
+}

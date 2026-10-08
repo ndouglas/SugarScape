@@ -88,6 +88,36 @@ pub fn protection_episode_json(lab_json: &str, seed: &str) -> Result<String, JsV
     Ok(serde_json::to_string(&record).expect("episode serializes"))
 }
 
+/// Checked P4 construction configuration, sharing the native fixed rig and validation.
+#[wasm_bindgen]
+pub fn deception_config_json(lab_json: &str) -> Result<String, JsValue> {
+    let config = read_deception_config(lab_json)?;
+    Ok(serde_json::to_string(&config).expect("config serializes"))
+}
+
+fn read_deception_config(lab_json: &str) -> Result<Config, JsValue> {
+    let lab = serde_json::from_str(lab_json)
+        .map_err(|error| field_errors(vec![FieldError::new("deception_lab", error.to_string())]))?;
+    let config = sugarscape_core::minds::deception::lab::rig_config(lab);
+    config.validate().map_err(field_errors)?;
+    Ok(config)
+}
+
+/// Research-only P4 episode DTO; never a new sender or receiver policy input.
+#[wasm_bindgen]
+pub fn deception_episode_json(lab_json: &str, seed: &str) -> Result<String, JsValue> {
+    let config = read_deception_config(lab_json)?;
+    let seed = decimal_seed(seed)
+        .map_err(|message| field_errors(vec![FieldError::new("seed", message)]))?;
+    let record = sugarscape_core::minds::deception::run_episode(
+        config.deception_lab.expect("checked lab"),
+        seed,
+        true,
+    )
+    .map_err(|failure| field_errors(vec![FieldError::new("episode", failure.message)]))?;
+    Ok(serde_json::to_string(&record).expect("episode serializes"))
+}
+
 /// Checked standalone excavation replay; serializes the same core record as the native CLI.
 #[wasm_bindgen]
 pub fn burrow_replay_json(
@@ -845,5 +875,54 @@ mod protection_boundary_tests {
         for seed in ["", "-1", "+7", "7.0", " 7", "7\n", "18446744073709551616"] {
             assert!(super::decimal_seed(seed).is_err(), "{seed:?}");
         }
+    }
+}
+
+#[cfg(all(test, target_arch = "wasm32"))]
+mod deception_boundary_tests {
+    use super::*;
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    const LAB: &str = r#"{"sender":"sham","view":"ambiguous","display_seen":true,"layout":"off_route","effort_cost":3,"mirrored":false}"#;
+
+    #[wasm_bindgen_test]
+    fn deception_construction_serializes_the_complete_research_dto() {
+        let config: Config = serde_json::from_str(&deception_config_json(LAB).unwrap()).unwrap();
+        assert_eq!(config.deception_lab.as_ref().unwrap().effort_cost, 3.0);
+        let episode: sugarscape_core::minds::deception::EpisodeRecord =
+            serde_json::from_str(&deception_episode_json(LAB, "7").unwrap()).unwrap();
+        assert_eq!(
+            episode.frames.iter().map(|f| f.tick).collect::<Vec<_>>(),
+            (0..=64).collect::<Vec<_>>()
+        );
+        assert!(episode.fixture_errors.is_empty() && episode.ledger_errors.is_empty());
+    }
+
+    #[wasm_bindgen_test]
+    fn deception_boundary_errors_preserve_field_context() {
+        for seed in ["", "-1", "+7", "7.0", " 7", "18446744073709551616"] {
+            let error = deception_episode_json(LAB, seed)
+                .unwrap_err()
+                .as_string()
+                .unwrap();
+            let errors: Vec<serde_json::Value> = serde_json::from_str(&error).unwrap();
+            assert_eq!(errors[0]["field"], "seed");
+        }
+        for input in ["{", r#"{"private_stock":12}"#] {
+            let error = deception_config_json(input)
+                .unwrap_err()
+                .as_string()
+                .unwrap();
+            let errors: Vec<serde_json::Value> = serde_json::from_str(&error).unwrap();
+            assert_eq!(errors[0]["field"], "deception_lab");
+        }
+        let error = deception_config_json(&LAB.replace("\"effort_cost\":3", "\"effort_cost\":1"))
+            .unwrap_err()
+            .as_string()
+            .unwrap();
+        let errors: Vec<serde_json::Value> = serde_json::from_str(&error).unwrap();
+        assert!(errors
+            .iter()
+            .any(|e| e["field"] == "deception_lab.effort_cost"));
     }
 }

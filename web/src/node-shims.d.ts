@@ -23,3 +23,12 @@ declare module 'node:child_process' {
 declare module 'node:url' {
   export function fileURLToPath(url: URL): string;
 }
+
+
+declare module 'node:path' {
+  export function resolve(...paths: string[]): string;
+}
+
+declare module 'node:process' {
+  export const env: Record<string, string | undefined>;
+}

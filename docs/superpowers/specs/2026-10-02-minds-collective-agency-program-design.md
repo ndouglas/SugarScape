@@ -12,7 +12,7 @@ reviewed and merged. Scientific execution of its
 208 descriptive estimates are retained in the [dated P3 findings](2026-10-06-minds-protection-findings.md),
 independently reviewed; publication pending. Private relocation helps in some single-cache
 strata; renewed observation, costs, cue mismatch and reflected recovery geometry constrain benefit.
-Deception follows as a separate design. [Hornvale's repaired asks request](../../studies/prompts/2026-10-03-hornvale-asks-prompt-v2.md)
+The separate [P4 supplied-gesture protocol](2026-10-07-minds-deception-protocol.md) is a construction implementation awaiting independent implementation and prospective scientific reviews; registered execution remains held. Its fixed 96×40 declaration separates 64 primary and 64 secondary estimates, false observer estimates, diversion and economics. Supplied gestures establish no learned intent or theory of mind; the unresolved 1998 citation trail remains a lead. [Hornvale's repaired asks request](../../studies/prompts/2026-10-03-hornvale-asks-prompt-v2.md)
 adds an independent exchange-design branch using the existing identity, memory and valuation
 foundation; it does not require finishing P4 or implementing general communication first.
 Behavior trees and HTN retain their place after the pilfering campaign.

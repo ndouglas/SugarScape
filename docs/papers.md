@@ -209,3 +209,11 @@ Earlier:
 - For the completed milestones' records: Epstein 2002 (civil violence), Janssen 2009 (Anasazi),
   Edmonds & Hales 2003 and Roberts & Sherratt 2002 (tags), Axtell, Axelrod, Epstein & Cohen 1996
   (docking), Lorenz 2006 (bounded confidence).
+
+
+P4's [supplied caching-gesture construction protocol](superpowers/specs/2026-10-07-minds-deception-protocol.md)
+is implemented, with registered scientific execution held pending separate independent prospective
+acceptance. Its 96×40 declaration reports 64 primary and 64 separate secondary estimates; false
+observer estimates, diversion and owner economics remain distinct. Supplied ambiguous cues do not
+expose hidden stock or sender policy, and Sham moves zero food. The unresolved 1998 citation trail
+is a reading lead, not a confirmed reproduction failure or numerical animal target.
