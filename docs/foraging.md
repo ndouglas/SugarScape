@@ -393,3 +393,92 @@ F3 per-step food/worker projections and cloned PCG continuation, including an
 initially open mask entry. Extra construction diagnostics need not match F3 bytes.
 Dedicated roles, relay/drop/pile transport and F5 scientific comparisons remain
 separately deferred and require their own approved design/protocol.
+
+## F5 saved shortcut comparison harness
+
+The user approved a mechanism-first comparison and collection/analysis architecture around unchanged F4. The [approved F5 specification](superpowers/specs/2026-10-07-foraging-5-shortcut-comparison-design.md) defines supplied straight/detour/twisting geometries, paid/protected/already-open regimes, a separate sealed-access panel, fixed candidate inputs, complete censoring and saved-only native survey analysis. The user approved its complete written geometry/workload/measurement specification on 2026-10-07; the [implementation plan](superpowers/plans/2026-10-07-foraging-5-shortcut-comparison.md) is also approved. The native harness now has construction collection and saved-only reporting; final independent review remains separate. Scientific collection has not begun.
+
+The [source audit](studies/2026-10-07-foraging-shortcut-reading.md) distinguishes inspected material from inaccessible workbook/figure content. This is a computational mechanism design, not a source-calibrated biological reproduction. Dedicated roles and relay transport remain deferred.
+
+
+The study is a dedicated native `survey` selector, outside the default claims run.
+Printing the factory-resolved manifest or help creates no Worlds:
+
+```sh
+cargo run --manifest-path survey/Cargo.toml -- --foraging-shortcuts
+cargo run --manifest-path survey/Cargo.toml -- --foraging-shortcuts --help
+```
+
+The [resolved manifest](superpowers/specs/2026-10-07-foraging-5-draft-manifest.json)
+remains `draft`, with `execution_authorized=false`. The only collection allowed
+by this candidate is the explicit engineering matrix: fifteen conditions, seeds
+7 and 8, thirty complete episodes and 122,880 worker opportunities. All options
+are fixed (512 ticks, checkpoints 0/128/256/384/512). No tuning or seed override is
+accepted. Scientific seeds 10001..10040 are prospective metadata; synthetic
+statistics tests use those labels without executing those episodes.
+
+From a clean tracked checkout whose committed protocol and candidate match the
+factory, construction collection requires a full protocol commit and a recorded
+approval context. `NEW_ARCHIVE` must not exist:
+
+```sh
+cargo run --manifest-path survey/Cargo.toml -- --foraging-shortcuts --run --construction --protocol-revision FULL_40_HEX_COMMIT --approval-context 'approved engineering acceptance' --out NEW_ARCHIVE
+cargo run --manifest-path survey/Cargo.toml -- --foraging-shortcuts --analyze NEW_ARCHIVE/index.json --out NEW_ANALYSIS
+```
+
+Saved analysis requires the entire canonical archive and reaches the reader's
+terminal byte-total check before creating `NEW_ANALYSIS`. It never constructs a
+World, invokes the core runner, or queries a current repository/executable to
+replace saved provenance. Draft scientific collection and saved scientific
+archives remain refused. Missing, duplicate or extra keys, unsafe paths,
+metadata/raw byte excess, mismatched hashes/identities and inconsistent observed
+state cannot become a reduced-denominator report.
+
+The episode/archive/analysis schemas are respectively
+`foraging-shortcut-episode-v1`, `foraging-shortcut-archive-v1` and
+`foraging-shortcut-analysis-v1`. Every analysis row retains its condition/seed,
+panel/geometry/regime, full final F4 summary (inventories, disjoint work categories,
+per-worker work and computation, researcher access computation, publications,
+expiry and censored milestones), and all five route checkpoints. Each route
+checkpoint retains every original resource ID and nullable distance, including
+delivered resources. Initial/final minimum patch distance and nonnegative gain
+preserve zero versus null. Sealed initial gain and first shortening stay null,
+even after later access. A first shorter checkpoint is bounded by the previous
+and current completed-tick checkpoints; it is not an action timestamp. Processing
+tick and opportunity clocks in original milestones remain unchanged.
+
+`sampled_physical_sha256` hashes saved clock/open/worker
+ID-position-phase-mode-cargo-work/food/spoil states, excluding condition, input,
+worker/researcher computation, private beliefs and advice records. It identifies
+a sampled physical projection, not a complete trajectory. Reports do not infer
+controller/RNG fidelity or intermediate actions from equal coarse projections.
+Saved validators replay terrain openings and verify sampled material, work,
+clock, cargo and access constraints; verified collection and immutable provenance
+support the remaining implementation boundary.
+
+The limits are 4 MiB per raw envelope and 1 GiB cumulative raw-envelope JSON;
+metadata has a separate 4 MiB parser limit. Raw totals exclude indexes, progress
+and operational records. F4 independently limits summed compact Snapshot JSON
+to 64 MiB. These are serialized-byte bounds, not RSS guarantees. Analysis streams
+one raw episode and retains bounded projected rows (30 construction, 600 for a
+future registered scientific matrix), without Worlds or complete raw histories.
+
+`analysis.json` and `results.md` use canonical manifest/seed order, stable numeric
+formatting and relative raw references interpreted against the archive index.
+Identical saved evidence reproduces both files byte-for-byte in another new
+directory. Output paths, approval text and separate optional operational timing
+do not enter comparative payloads. Output files are created exclusively; any
+write failure returns an incomplete-output error and may leave a partial new
+directory, which cannot be overwritten or treated as a completed report.
+
+Construction reports retain every programmed control and censored row and emit
+no condition means or scientific contrasts. The pure future scientific reporting
+path is covered with synthetic forty-seed rows: three primary Paid-minus-Protected
+route delivery differences, six secondary already-open references, and six
+secondary sealed delivery/access differences. It requires exact matched seed
+sets and reports signed means, existing paired Student-t descriptive 95%
+intervals and positive/zero/negative counts. It produces no pooled efficacy,
+energy conversion, significance-selected verdict or animal uncertainty claim.
+The inaccessible workbook/README and source figure remain prerequisites for a
+source-data or quantitative biological comparison; this harness supplies no
+hidden calibration and scientific execution remains a separate approval.
