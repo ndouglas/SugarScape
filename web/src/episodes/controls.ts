@@ -1,3 +1,4 @@
+import { surfaceSettingLabel } from './comparison';
 import { h } from '../ui/dom';
 import { obj, list, label, valueText } from './presentation';
 import type { Json, StudyDescriptor } from './types';
@@ -9,9 +10,27 @@ export class EpisodeControls {
     this.draft = structuredClone(obj(input)); this.render();
   }
   input(): Json { return structuredClone(this.draft); }
+  private renderSurfaceControls(): void {
+    const rows = list(obj(this.descriptor.controls).settings).map(obj);
+    const selected = rows.findIndex(row => {
+      const protocol = { ...obj(row.protocol), ids: obj(this.draft.protocol).ids };
+      return JSON.stringify(protocol) === JSON.stringify(this.draft.protocol) && JSON.stringify(row.environment) === JSON.stringify(this.draft.environment);
+    });
+    const picker = h('select', { 'aria-label': 'Surface setting' }, ...rows.map((row, index) => h('option', { value: index, selected: index === selected }, `${index + 1}: ${surfaceSettingLabel(row)}`)));
+    if (selected < 0) picker.prepend(h('option', { value: '', selected: true }, 'Opened input · validation on run'));
+    picker.addEventListener('change', () => {
+      const row = rows[Number(picker.value)];
+      this.draft.environment = structuredClone(row.environment);
+      this.draft.protocol = { ...structuredClone(obj(row.protocol)), ids: structuredClone(obj(this.draft.protocol).ids) };
+      this.changed(this.input());
+    });
+    const sequence = h('input', { type: 'number', min: 0, max: 255, step: 1, value: this.draft.sequence, 'aria-label': 'Complete bit sequence (0–255)' });
+    sequence.addEventListener('change', () => { this.draft.sequence = Number(sequence.value); this.changed(this.input()); });
+    this.el.append(h('label', {}, 'Original surface setting', picker), h('label', {}, 'Complete bit sequence (0–255)', sequence), h('p', { class: 'hint' }, 'Ordered original settings. RestartUniform and Stale describe externally supplied priors; each episode starts fresh with blank fields.'));
+  }
   private render(): void {
     this.el.replaceChildren();
-    if (this.descriptor.family === 'surface') { this.el.append(h('p', { class: 'hint' }, 'Surface visualization unavailable in this intermediate build.')); return; }
+    if (this.descriptor.family === 'surface') { this.renderSurfaceControls(); return; }
     const controls = obj(this.descriptor.controls);
     const keys = this.descriptor.id === 'wink' ? ['seed', 'policy', 'mode'] : this.descriptor.id === 'testimony' ? ['fixture'] : ['environment', 'listener', 'policy', 'controller', 'witness', 'catalog', 'history'];
     for (const key of keys) {

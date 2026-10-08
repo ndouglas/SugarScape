@@ -351,7 +351,7 @@ The renderer receives only this projected checkpoint plus nonprivileged descript
 
 **Interfaces:** Consumes full surface records and checkpoint projections; produces `renderSurface(root:HTMLElement,at:Checkpoint,descriptor:StudyDescriptor):void`, `comparisonKey(input:EpisodeInput):string`, `withActivePolicy(input:SurfaceInput,policy:string):SurfaceInput`, and shell matched-record controls. Canonical comparison key preserves study, mechanism, role, complete bit sequence and scientific settings while excluding only policy/control selector. Same-history reporting comparisons can use a separate family key; never compare trajectories by timeline array index as if their clocks matched.
 
-- [ ] **Step 1: RED tests.** Accepted write is not a received message; private fields stay private, round resets remove the visible field at exact clock, stop has no invented paid waits, B's unobserved A action stays hidden, and inverted stored symbol differs from write origin. Test supported wrong DataFlip completion versus unsupportedB InspectOnly with A5/B7 costs and unavailable terminal fields. Check two compared policies have identical actual mechanism/role/sequence and display differing timeline lengths honestly.
+- [x] **Step 1: RED tests.** Accepted write is not a received message; private fields stay private, round resets remove the visible field at exact clock, stop has no invented paid waits, B's unobserved A action stays hidden, and inverted stored symbol differs from write origin. Test supported wrong DataFlip completion versus unsupportedB InspectOnly with A5/B7 costs and unavailable terminal fields. Check two compared policies have identical actual mechanism/role/sequence and display differing timeline lengths honestly.
 
 ```typescript
 it('failed completion remains unavailable rather than zero', () => {
@@ -362,8 +362,8 @@ it('failed completion remains unavailable rather than zero', () => {
 });
 ```
 
-- [ ] **Step 2: Run RED.** `npx vitest run src/episodes/surface-projection.test.ts src/episodes/comparison.test.ts`.
-- [ ] **Step 3: Implement interaction visual and event strip.** Use actual checked clock/field projections. Render two labeled Agents, surface ownership, observed symbol/read/write/wait/inspect/prediction, credit expenditure and existing alternate values. Use the selected Agent projection only; Researcher toggle adds explicit truth/lineage. Matched comparison holds at most2 successful records, sequential worker requests, independent timelines joined by public clocks where available, and a clear unavailable marker when one run terminates.
+- [x] **Step 2: Run RED.** `npx vitest run src/episodes/surface-projection.test.ts src/episodes/comparison.test.ts`.
+- [x] **Step 3: Implement interaction visual and event strip.** Use actual checked clock/field projections. Render two labeled Agents, surface ownership, observed symbol/read/write/wait/inspect/prediction, credit expenditure and existing alternate values. Use the selected Agent projection only; Researcher toggle adds explicit truth/lineage. Matched comparison holds at most2 successful records, sequential worker requests, independent timelines joined by public clocks where available, and a clear unavailable marker when one run terminates.
 
 ```typescript
 const matched = withActivePolicy(currentInput, selectedComparisonPolicy);
@@ -373,8 +373,8 @@ const next = await client.request('run', JSON.stringify(matched));
 ```
 
 `withActivePolicy` clones `input.protocol` and changes only its nested policy field; validate its existing enum spelling against catalog controls. `comparisonKey` must test nested policy exclusion and retain all other settings. Shared-surface comparisons may change only the declared pair/control choice and preserve the same calibration count, actual mechanism and sequence; refuse controls with incompatible scientific setup instead of silently adjusting the world.
-- [ ] **Step 4: GREEN/browser/independent gate.** Run focused tests, TypeScript, actual WASM parity. Review all8 catalog entries now working. In browser inspect primary shared/private/reset/inert, A one-probe and B zero-probe active behavior, supported wrong inversion and unsupported termination. Check keyboard/reduced-motion/narrow layout and controls, with retained screenshots. Reviewer verifies no display physics duplication and no privilege leak through alternative/result panes.
-- [ ] **Step 5: Commit.** `feat(web): visualize surface learning and paid experiment choices`.
+- [x] **Step 4: GREEN/browser/independent gate.** Run focused tests, TypeScript, actual WASM parity. Review all8 catalog entries now working. In browser inspect primary shared/private/reset/inert, A one-probe and B zero-probe active behavior, supported wrong inversion and unsupported termination. Check keyboard/reduced-motion/narrow layout and controls, with retained screenshots. Reviewer verifies no display physics duplication and no privilege leak through alternative/result panes.
+- [x] **Step 5: Commit.** `feat(web): visualize surface learning and paid experiment choices`.
 
 ## Task 8: Complete provenance, preservation, docs, whole-branch QA, and exact delivery
 

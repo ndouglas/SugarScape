@@ -342,3 +342,28 @@ dialog.keep .row { display: flex; gap: 8px; justify-content: flex-end; }
 .episode-setup .row > label { display: flex; align-items: center; gap: .5rem; min-width: 0; max-width: 100%; }
 .episode-view select { min-width: 0; max-width: 100%; }
 @media (max-width: 740px) { .episode-setup .row > label { display: grid; width: 100%; } }
+/* Surface episodes: the opaque field is the visual center; histories retain their delivered clocks. */
+.surface-diagram { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr) minmax(0, 1fr); gap: .7rem; align-items: center; }
+.surface-agent { border: 2px solid var(--border); border-radius: 50% 50% 12px 12px; padding: .8rem; text-align: center; min-width: 0; }
+.surface-agent.selected { border-color: var(--accent); }
+.surface-agent h3 { font-size: 1rem; overflow-wrap: anywhere; }
+.surface-object { background: var(--surface); border: 3px double var(--accent); padding: 1rem; min-width: 0; text-align: center; }
+.surface-object h3 { margin-top: 0; overflow-wrap: anywhere; }
+.surface-symbol { display: block; font-size: 1.35rem; font-weight: 600; overflow-wrap: anywhere; }
+.surface-field + .surface-field { border-top: 2px dashed var(--border); }
+.surface-clock { padding: .3rem .8rem; border-left: 3px solid var(--accent); margin-bottom: 1rem; }
+.surface-clock p { margin: .3rem 0; }
+.surface-events { border-top: 1px solid var(--border); margin-top: 1rem; }
+.surface-events ol { max-height: 18rem; overflow: auto; padding-right: .7rem; }
+.surface-events li { border-left: 2px solid var(--border); padding: .3rem .6rem; overflow-wrap: anywhere; }
+.surface-result { display: flex; flex-wrap: wrap; gap: 1rem; }
+.surface-result > section { flex: 1; min-width: 12rem; }
+.surface-result > p, .surface-result > details { flex-basis: 100%; }
+.episode-comparison { min-width: 0; border-top: 2px solid var(--border); }
+.episode-comparison:empty { display: none; }
+.episode-comparison .row { margin: .8rem 0; }
+.episode-comparison .row input[type=range] { flex: 1; min-width: 6rem; }
+@media (max-width: 1000px) { .surface-view .episode-stage { grid-template-columns: 1fr; } }
+@media (max-width: 540px) { .surface-diagram { grid-template-columns: 1fr; } .surface-agent { border-radius: 12px; } }
+
+.episode-comparison > fieldset.row { border: 0; padding: 0; min-width: 0; }
