@@ -52,7 +52,7 @@ New namespace: `survey/src/claims/foraging_shortcuts/`. Root claims/mod.rs expor
 | --- | --- | --- |
 | mod.rs, scenario.rs, manifest.rs | Namespace/shared identities; literal geometry; immutable candidate | 1 |
 | wire.rs, wire_state.rs, wire_view.rs | Strict episode/input DTOs; material/metric DTOs; view/access DTOs | 2 |
-| validate.rs, physical.rs, access.rs | Episode orchestration; sampled physical checks; deterministic terrain/access replay | 2 |
+| validate.rs, agents.rs, physical.rs, access.rs | Episode orchestration; agents/counter checks; sampled materials/history; deterministic terrain/access replay | 2 |
 | archive.rs, io.rs | Exclusive writer/bounded reader/index; path/byte/fs helpers | 3 |
 | run.rs, cli.rs | Provenance/preflight/F4 collection; pure command parser and dispatch | 4 |
 | report.rs, report_rows.rs | Saved dataset analysis/contrasts/Markdown; route-row projections | 5 |
@@ -224,7 +224,7 @@ Build all nine nest cells, outlet and sixteen food cells first; expand segments;
 
 ### Task 2: Strict wire decoding and observed-state validation
 
-**Files:** Create wire.rs, wire_state.rs, wire_view.rs, validate.rs, physical.rs, access.rs, tests/support.rs, tests/wire.rs, tests/physical.rs, tests/access.rs; module/test registrations. Modify only survey/Cargo.toml's existing serde_json declaration to enable raw_value. No core or other-study code changes.
+**Files:** Create wire.rs, wire_state.rs, wire_view.rs, validate.rs, agents.rs, physical.rs, access.rs, tests/support.rs, tests/wire.rs, tests/physical.rs, tests/access.rs; module/test registrations. Modify only survey/Cargo.toml's existing serde_json declaration to enable raw_value. No core or other-study code changes.
 **Consumes:** Task1 identities/scenes/manifest/sha256 and public core Episode serialization/F1 waypoint_strength.
 **Produces:** All Appendix A wire DTOs; bounded encoder/strict decoder; validate_episode, validate_frames, validate_access/AccessPoint. Tests/support.rs exports cached_candidate_episode(id:&str,seed:u64)->Result<core::Episode,String>, test_provenance()->Provenance, encoded_fixture(id:&str,seed:u64)->Result<Vec<u8>,String>, decode_fixture(id:&str,seed:u64)->Result<WireEnvelope,String>. Cache exact construction-only case/seed values via a test-local Mutex map; reject any seed outside7/8 before invoking core run. No cache or test hook in production.
 
@@ -713,3 +713,5 @@ Spec and plan approved; worktree and branch verified clean at `937ba9c`. Parent 
 Baseline verification: survey269 passed/0 failed/0 ignored; workspace2,919 passed/0 failed/103 existing ignored. Survey/core formatting and all-target Clippy passed. Full logs, exits, timings and starting source hashes are preserved at `/tmp/sugarscape-f5-evidence-20261007/`. No runtime source changed during preflight.
 
 Task1 runtime `7f1f290`: focused9/survey278 passed,0 failed,0 ignored; survey fmt/all-target Clippy clean on frozen hashes. Independent task review approved with no findings; parent hash audit matched. API-compilation RED and supplemental timing are disclosed. Collector/identity controls belong to4/5, wire/cache/archive validation to2/3 and allowance removal/core workspace regression to5.
+
+Task2 file-boundary ruling: agents.rs owns the existing work/initial_agent/agents logic, with validate_agents(setup:&WireSetup,frame:&WireSnapshot,open:&BTreeSet<WirePos>)->Result<(),String>. physical.rs keeps setup/material/cumulative/frame orchestration and its require/sum/in_bounds/birth helpers; its public internal validate_frames contract is unchanged. Register agents module; existing physical tests cover the extraction. No schema/core/report behavior changes. If wrong, small internal module rework. Strict DTO Option fields require presence (explicit null is valid); deserialize_with avoids serde omission defaults, with observed missing-cargo RED coverage.

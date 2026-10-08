@@ -1,6 +1,15 @@
 //! Fixed F5 shortcut comparison inputs; manifest construction never runs workers.
+mod access;
+mod agents;
 mod manifest;
+mod physical;
 mod scenario;
+#[allow(dead_code, reason = "Task 3 archive consumes episode validation")]
+mod validate;
+#[allow(dead_code, reason = "Task 3 archive consumes the strict wire schemas")]
+mod wire;
+mod wire_state;
+mod wire_view;
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
