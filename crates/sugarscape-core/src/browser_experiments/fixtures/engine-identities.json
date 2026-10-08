@@ -1,0 +1,24 @@
+{
+  "wink": {
+    "source_sha256": "c5af2cf7baea872bcef4628a37efdf5a3b7c47b05405752232c3096c8e812c09",
+    "source_digest_format": "SHA256 of sorted path + NUL + lowercase file SHA256 + newline entries",
+    "source_files": {
+      "crates/sugarscape-core/src/deduction/mod.rs": "92207d7ec246524a99fb40a7991f4ccf0846d2cceaf6eba8a31106332bc6f500",
+      "crates/sugarscape-core/src/deduction/config.rs": "ee165d8a5720c7856a2204cca3b422c591631ab480cfdd2fed9df135f9dc6397",
+      "crates/sugarscape-core/src/deduction/engine.rs": "ed523ec08efb7ff802fd32ee3b897ac59067904f8dc2ade2c12a4d62752db3b3",
+      "crates/sugarscape-core/src/deduction/observation.rs": "63ef38daac5973cad8f8295405234da5ae351ca6f78afde2fed15600aa06e391",
+      "crates/sugarscape-core/src/deduction/replay.rs": "be72300ede2ff84d28433d1183c9948f5f05416c01eb94043a2187d31169747e",
+      "crates/sugarscape-core/src/deduction/scenario.rs": "6806268da55665db6d544fa9a12bbbc2f63624392692c3d45f0795b732ec23c3",
+      "crates/sugarscape-core/src/deduction/types.rs": "406755718612f9809b3149eeac2d2ee08e00184093b7761a60201fa3b3a6602d",
+      "crates/sugarscape-core/src/deduction/policy.rs": "5e9b1e41fbd849a16ea1474c3364ce24d237644b2f45bc7ad38158e557904419",
+      "crates/sugarscape-core/src/deduction/diagnostics.rs": "63e79664b084c8b3d91c74985c126a502a8d6d6b0c258ebb62229262b4088910",
+      "crates/sugarscape-core/src/rng.rs": "af425707764621e3e11eed48574498671d3ba52927ab266a660295b51b9e2d1d",
+      "Cargo.lock": "7217929fea10793e589d820bcdf4555ad6aa3f57fb9af9d5cfce5473310bde5f"
+    },
+    "retained_report": {
+      "path": ".superpowers/sdd/2026-10-04-deduction-capabilities/first-diagnostics.json",
+      "bytes": 149997,
+      "sha256": "e6c02b0a25885dbc1c33e2a7066e3c97d9bbee4ec1865449c4cc77b77338ec5d"
+    }
+  }
+}
