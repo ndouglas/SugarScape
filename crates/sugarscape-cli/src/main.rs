@@ -2,6 +2,7 @@
 //! line (milestone 5). Exit codes: 0 success, 1 I/O error, 2 usage or
 //! validation error (printed as `field: message`, one per line).
 
+mod active_surface;
 mod burrow;
 mod burrow_access;
 mod deduction;
@@ -34,6 +35,8 @@ enum Command {
     Deduction(deduction::DeductionArgs),
     /// List the presets of every model (id, source, name, title).
     Presets,
+    /// Run the frozen finite active-surface diagnostic.
+    ActiveSurface(active_surface::ActiveSurfaceArgs),
     /// Run the frozen finite shared-surface diagnostic.
     SharedSurface(shared_surface::SharedSurfaceArgs),
     /// Run a checked standalone excavation replay.
@@ -183,6 +186,7 @@ fn main() -> ExitCode {
 fn run(cli: Cli) -> Result<(), Failure> {
     match cli.command {
         Command::Deduction(args) => deduction::run(args),
+        Command::ActiveSurface(args) => active_surface::run(args),
         Command::SharedSurface(args) => shared_surface::run(args),
         Command::Presets => {
             for p in presets::catalog() {

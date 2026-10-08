@@ -1,0 +1,3456 @@
+{
+  "version": "independent-active-portable-projection-v1",
+  "source_sha256": "500f065f63527c0f5575788ff8a76fc7a9c53d10715e08ca32c44a8a5baf1a0e",
+  "output_sha256": "ceae2b00b39836687ec6d75278e18b0971dbe3d8cdcbf9bce2b194e4beaa4748",
+  "initial": [
+    {
+      "experimenter": "A",
+      "policy": "Adaptive",
+      "known": null,
+      "chosen": "Continue",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 49,
+          "denominator": 4
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "A",
+      "policy": "FixedThree",
+      "known": null,
+      "chosen": "Continue",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 9,
+          "denominator": 1
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "FixedThree"
+    },
+    {
+      "experimenter": "A",
+      "policy": "NoProbe",
+      "known": null,
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 49,
+          "denominator": 4
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "NoProbe"
+    },
+    {
+      "experimenter": "A",
+      "policy": "InspectOnly",
+      "known": null,
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 10,
+          "denominator": 1
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "InspectOnly"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Known",
+      "known": "SP",
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 24,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 22,
+          "denominator": 1
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": null,
+        "mass": 256
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "Known"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Known",
+      "known": "SR",
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 10,
+          "denominator": 1
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 1,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": null,
+        "mass": 256
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "Known"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Known",
+      "known": "PP",
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 10,
+          "denominator": 1
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 1,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": null,
+        "mass": 256
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "Known"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Known",
+      "known": "I",
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 10,
+          "denominator": 1
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 1,
+            "denominator": 1
+          }
+        ],
+        "target": null,
+        "mass": 256
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "Known"
+    },
+    {
+      "experimenter": "B",
+      "policy": "Adaptive",
+      "known": null,
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 51,
+          "denominator": 4
+        },
+        "Continue": {
+          "numerator": 49,
+          "denominator": 4
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "B",
+      "policy": "FixedThree",
+      "known": null,
+      "chosen": "Continue",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 9,
+          "denominator": 1
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "FixedThree"
+    },
+    {
+      "experimenter": "B",
+      "policy": "NoProbe",
+      "known": null,
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 51,
+          "denominator": 4
+        },
+        "Continue": {
+          "numerator": 49,
+          "denominator": 4
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "NoProbe"
+    },
+    {
+      "experimenter": "B",
+      "policy": "InspectOnly",
+      "known": null,
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 10,
+          "denominator": 1
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "InspectOnly"
+    },
+    {
+      "experimenter": "B",
+      "policy": "Known",
+      "known": "SP",
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 24,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 22,
+          "denominator": 1
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": null,
+        "mass": 256
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "Known"
+    },
+    {
+      "experimenter": "B",
+      "policy": "Known",
+      "known": "SR",
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 10,
+          "denominator": 1
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 1,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": null,
+        "mass": 256
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "Known"
+    },
+    {
+      "experimenter": "B",
+      "policy": "Known",
+      "known": "PP",
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 10,
+          "denominator": 1
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 1,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": null,
+        "mass": 256
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "Known"
+    },
+    {
+      "experimenter": "B",
+      "policy": "Known",
+      "known": "I",
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 10,
+          "denominator": 1
+        }
+      },
+      "belief": {
+        "models": [
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 1,
+            "denominator": 1
+          }
+        ],
+        "target": null,
+        "mass": 256
+      },
+      "stage": [
+        "probe",
+        0
+      ],
+      "continuation_policy": "Known"
+    }
+  ],
+  "selected": [
+    {
+      "experimenter": "A",
+      "policy": "Adaptive",
+      "environment": "SP",
+      "sequence": 0,
+      "id": "46e1fe3cec3068c291e97531c3b0503453908907cfdfbf8eaf950ab5c31e1fb3",
+      "prefix": [],
+      "stage": [
+        "probe",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "chosen": "Continue",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 49,
+          "denominator": 4
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Adaptive",
+      "environment": "SP",
+      "sequence": 0,
+      "id": "e2496868f96937ebdb6dc62e95aba3b32d8233889e3d6434e92f4f050b9429ae",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Continue"
+        ],
+        [
+          "Reset",
+          -1
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          1,
+          [
+            "Write",
+            "Probe0"
+          ],
+          [
+            "Accepted"
+          ],
+          47
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          4,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Ack0"
+          ],
+          46
+        ]
+      ],
+      "stage": [
+        "probe",
+        1
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 2
+          },
+          {
+            "numerator": 1,
+            "denominator": 2
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": null,
+        "mass": 512
+      },
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 33,
+          "denominator": 2
+        },
+        "Continue": {
+          "numerator": 16,
+          "denominator": 1
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Adaptive",
+      "environment": "SP",
+      "sequence": 0,
+      "id": "835cb5502fbf149cafd53639b402f33c9f8188adf105a4d180049a2eb0513582",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Continue"
+        ],
+        [
+          "Reset",
+          -1
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          1,
+          [
+            "Write",
+            "Probe0"
+          ],
+          [
+            "Accepted"
+          ],
+          47
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          4,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Ack0"
+          ],
+          46
+        ],
+        [
+          "Choice",
+          "probe",
+          1,
+          "Stop"
+        ],
+        [
+          "Stop",
+          1
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 2
+          },
+          {
+            "numerator": 1,
+            "denominator": 2
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 256
+      },
+      "chosen": "Attempt",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 15,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 33,
+          "denominator": 2
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Adaptive",
+      "environment": "SP",
+      "sequence": 0,
+      "id": "badb75db5fd56467b8ed1072926ba2c70dc2397eedc2b38de500bcbcf989a696",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Continue"
+        ],
+        [
+          "Reset",
+          -1
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          1,
+          [
+            "Write",
+            "Probe0"
+          ],
+          [
+            "Accepted"
+          ],
+          47
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          4,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Ack0"
+          ],
+          46
+        ],
+        [
+          "Choice",
+          "probe",
+          1,
+          "Stop"
+        ],
+        [
+          "Stop",
+          1
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ],
+        [
+          "Choice",
+          "trial",
+          0,
+          "Attempt"
+        ],
+        [
+          "Act",
+          0,
+          1,
+          1,
+          [
+            "Write",
+            "Data0"
+          ],
+          [
+            "Accepted"
+          ],
+          45
+        ],
+        [
+          "Act",
+          0,
+          1,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          44
+        ],
+        [
+          "Act",
+          0,
+          2,
+          1,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          43
+        ],
+        [
+          "Act",
+          0,
+          2,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          42
+        ],
+        [
+          "Act",
+          0,
+          3,
+          1,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Data0"
+          ],
+          41
+        ],
+        [
+          "Act",
+          0,
+          3,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          40
+        ],
+        [
+          "Reset",
+          1
+        ],
+        [
+          "Bit",
+          1,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        1
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 32
+      },
+      "chosen": "Attempt",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 15,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 18,
+          "denominator": 1
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Adaptive",
+      "environment": "SR",
+      "sequence": 0,
+      "id": "46e1fe3cec3068c291e97531c3b0503453908907cfdfbf8eaf950ab5c31e1fb3",
+      "prefix": [],
+      "stage": [
+        "probe",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "chosen": "Continue",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 49,
+          "denominator": 4
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Adaptive",
+      "environment": "SR",
+      "sequence": 0,
+      "id": "e2496868f96937ebdb6dc62e95aba3b32d8233889e3d6434e92f4f050b9429ae",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Continue"
+        ],
+        [
+          "Reset",
+          -1
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          1,
+          [
+            "Write",
+            "Probe0"
+          ],
+          [
+            "Accepted"
+          ],
+          47
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          4,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Ack0"
+          ],
+          46
+        ]
+      ],
+      "stage": [
+        "probe",
+        1
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 2
+          },
+          {
+            "numerator": 1,
+            "denominator": 2
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": null,
+        "mass": 512
+      },
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 33,
+          "denominator": 2
+        },
+        "Continue": {
+          "numerator": 16,
+          "denominator": 1
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Adaptive",
+      "environment": "SR",
+      "sequence": 0,
+      "id": "835cb5502fbf149cafd53639b402f33c9f8188adf105a4d180049a2eb0513582",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Continue"
+        ],
+        [
+          "Reset",
+          -1
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          1,
+          [
+            "Write",
+            "Probe0"
+          ],
+          [
+            "Accepted"
+          ],
+          47
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          4,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Ack0"
+          ],
+          46
+        ],
+        [
+          "Choice",
+          "probe",
+          1,
+          "Stop"
+        ],
+        [
+          "Stop",
+          1
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 2
+          },
+          {
+            "numerator": 1,
+            "denominator": 2
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 256
+      },
+      "chosen": "Attempt",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 15,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 33,
+          "denominator": 2
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Adaptive",
+      "environment": "SR",
+      "sequence": 0,
+      "id": "23785ed32d77b8f78a917cc3c4e9ef9630a5a43824e99b98d49a1911e5b8ff2e",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Continue"
+        ],
+        [
+          "Reset",
+          -1
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          1,
+          [
+            "Write",
+            "Probe0"
+          ],
+          [
+            "Accepted"
+          ],
+          47
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          4,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Ack0"
+          ],
+          46
+        ],
+        [
+          "Choice",
+          "probe",
+          1,
+          "Stop"
+        ],
+        [
+          "Stop",
+          1
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ],
+        [
+          "Choice",
+          "trial",
+          0,
+          "Attempt"
+        ],
+        [
+          "Act",
+          0,
+          1,
+          1,
+          [
+            "Write",
+            "Data0"
+          ],
+          [
+            "Accepted"
+          ],
+          45
+        ],
+        [
+          "Act",
+          0,
+          1,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          44
+        ],
+        [
+          "Act",
+          0,
+          2,
+          1,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          43
+        ],
+        [
+          "Act",
+          0,
+          2,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          42
+        ],
+        [
+          "Act",
+          0,
+          3,
+          1,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Blank"
+          ],
+          41
+        ],
+        [
+          "Act",
+          0,
+          3,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          40
+        ],
+        [
+          "Reset",
+          1
+        ],
+        [
+          "Bit",
+          1,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        1
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 1,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 64
+      },
+      "chosen": "Inspect",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 9,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 6,
+          "denominator": 1
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Adaptive",
+      "environment": "PP",
+      "sequence": 0,
+      "id": "46e1fe3cec3068c291e97531c3b0503453908907cfdfbf8eaf950ab5c31e1fb3",
+      "prefix": [],
+      "stage": [
+        "probe",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "chosen": "Continue",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 49,
+          "denominator": 4
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Adaptive",
+      "environment": "PP",
+      "sequence": 0,
+      "id": "82ecf2ad2c47ca9cc6aa784a382af915b928f75a3f2b63ef2d02dde8704d1487",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Continue"
+        ],
+        [
+          "Reset",
+          -1
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          1,
+          [
+            "Write",
+            "Probe0"
+          ],
+          [
+            "Accepted"
+          ],
+          47
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          4,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Probe0"
+          ],
+          46
+        ]
+      ],
+      "stage": [
+        "probe",
+        1
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 1,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": null,
+        "mass": 256
+      },
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 10,
+          "denominator": 1
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Adaptive",
+      "environment": "PP",
+      "sequence": 0,
+      "id": "2fd6ccf51b6bdcceac7b98672eb0c9f94eed217c1bf7aa86dabf0a96569a1680",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Continue"
+        ],
+        [
+          "Reset",
+          -1
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          1,
+          [
+            "Write",
+            "Probe0"
+          ],
+          [
+            "Accepted"
+          ],
+          47
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          4,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Probe0"
+          ],
+          46
+        ],
+        [
+          "Choice",
+          "probe",
+          1,
+          "Stop"
+        ],
+        [
+          "Stop",
+          1
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 1,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 128
+      },
+      "chosen": "Inspect",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 9,
+          "denominator": 1
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "A",
+      "policy": "Adaptive",
+      "environment": "PP",
+      "sequence": 0,
+      "id": "5e375a2d4f4ba15de232a18f10a2f49695a70ba04f6ac08ca458a622e4b0cf2e",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Continue"
+        ],
+        [
+          "Reset",
+          -1
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          1,
+          [
+            "Write",
+            "Probe0"
+          ],
+          [
+            "Accepted"
+          ],
+          47
+        ],
+        [
+          "Act",
+          -1,
+          1,
+          4,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Probe0"
+          ],
+          46
+        ],
+        [
+          "Choice",
+          "probe",
+          1,
+          "Stop"
+        ],
+        [
+          "Stop",
+          1
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ],
+        [
+          "Choice",
+          "trial",
+          0,
+          "Inspect"
+        ],
+        [
+          "Act",
+          0,
+          1,
+          1,
+          [
+            "Inspect"
+          ],
+          [
+            "Inspected",
+            0
+          ],
+          42
+        ],
+        [
+          "Act",
+          0,
+          1,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          41
+        ],
+        [
+          "Act",
+          0,
+          2,
+          1,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          40
+        ],
+        [
+          "Act",
+          0,
+          2,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          39
+        ],
+        [
+          "Act",
+          0,
+          3,
+          1,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          38
+        ],
+        [
+          "Act",
+          0,
+          3,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          37
+        ],
+        [
+          "Reset",
+          1
+        ],
+        [
+          "Bit",
+          1,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        1
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 1,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 32
+      },
+      "chosen": "Inspect",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 9,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 6,
+          "denominator": 1
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "B",
+      "policy": "Adaptive",
+      "environment": "SP",
+      "sequence": 0,
+      "id": "1249c97d21fbe7324eb52bdb5c8166b87df44367af8f874b01f0a9ae25bfbae2",
+      "prefix": [],
+      "stage": [
+        "probe",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 51,
+          "denominator": 4
+        },
+        "Continue": {
+          "numerator": 49,
+          "denominator": 4
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "B",
+      "policy": "Adaptive",
+      "environment": "SP",
+      "sequence": 0,
+      "id": "f2b037c321abaf631369648e9c0ee5cb56ec039a3b74492c782eb2d8d8e2d779",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Stop"
+        ],
+        [
+          "Stop",
+          0
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 512
+      },
+      "chosen": "Attempt",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 51,
+          "denominator": 4
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "B",
+      "policy": "Adaptive",
+      "environment": "SP",
+      "sequence": 0,
+      "id": "ce5dbf9a4a29e05454aae5d1f8c134ddc109a9a0b4ff2b1394d9eb61055a2327",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Stop"
+        ],
+        [
+          "Stop",
+          0
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ],
+        [
+          "Choice",
+          "trial",
+          0,
+          "Attempt"
+        ],
+        [
+          "Act",
+          0,
+          1,
+          2,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          47
+        ],
+        [
+          "Act",
+          0,
+          1,
+          3,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          46
+        ],
+        [
+          "Act",
+          0,
+          2,
+          2,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Data0"
+          ],
+          45
+        ],
+        [
+          "Act",
+          0,
+          2,
+          3,
+          [
+            "Write",
+            "Data0"
+          ],
+          [
+            "Accepted"
+          ],
+          44
+        ],
+        [
+          "Act",
+          0,
+          3,
+          2,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          43
+        ],
+        [
+          "Act",
+          0,
+          3,
+          3,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          42
+        ],
+        [
+          "Reset",
+          1
+        ],
+        [
+          "Bit",
+          1,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        1
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 32
+      },
+      "chosen": "Attempt",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 15,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 18,
+          "denominator": 1
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "B",
+      "policy": "Adaptive",
+      "environment": "SR",
+      "sequence": 0,
+      "id": "1249c97d21fbe7324eb52bdb5c8166b87df44367af8f874b01f0a9ae25bfbae2",
+      "prefix": [],
+      "stage": [
+        "probe",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 51,
+          "denominator": 4
+        },
+        "Continue": {
+          "numerator": 49,
+          "denominator": 4
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "B",
+      "policy": "Adaptive",
+      "environment": "SR",
+      "sequence": 0,
+      "id": "f2b037c321abaf631369648e9c0ee5cb56ec039a3b74492c782eb2d8d8e2d779",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Stop"
+        ],
+        [
+          "Stop",
+          0
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 512
+      },
+      "chosen": "Attempt",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 51,
+          "denominator": 4
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "B",
+      "policy": "Adaptive",
+      "environment": "SR",
+      "sequence": 0,
+      "id": "021135e797e96da46fea5fd0ab87211d2687c0aafe8d49858d9de1718a1906fb",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Stop"
+        ],
+        [
+          "Stop",
+          0
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ],
+        [
+          "Choice",
+          "trial",
+          0,
+          "Attempt"
+        ],
+        [
+          "Act",
+          0,
+          1,
+          2,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          47
+        ],
+        [
+          "Act",
+          0,
+          1,
+          3,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          46
+        ],
+        [
+          "Act",
+          0,
+          2,
+          2,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Blank"
+          ],
+          45
+        ],
+        [
+          "Act",
+          0,
+          2,
+          3,
+          [
+            "Write",
+            "Data0"
+          ],
+          [
+            "Accepted"
+          ],
+          44
+        ],
+        [
+          "Act",
+          0,
+          3,
+          2,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          43
+        ],
+        [
+          "Act",
+          0,
+          3,
+          3,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          42
+        ],
+        [
+          "Reset",
+          1
+        ],
+        [
+          "Bit",
+          1,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        1
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 1,
+            "denominator": 3
+          },
+          {
+            "numerator": 1,
+            "denominator": 3
+          },
+          {
+            "numerator": 1,
+            "denominator": 3
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 192
+      },
+      "chosen": "Inspect",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 9,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 6,
+          "denominator": 1
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "A",
+      "policy": "NoProbe",
+      "environment": "SP",
+      "sequence": 0,
+      "id": "29045c32b65a261f8a0e7b5395751b06b070f0a39eefa6e5f47df0e443a785db",
+      "prefix": [],
+      "stage": [
+        "probe",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 49,
+          "denominator": 4
+        }
+      },
+      "continuation_policy": "NoProbe"
+    },
+    {
+      "experimenter": "A",
+      "policy": "NoProbe",
+      "environment": "SP",
+      "sequence": 0,
+      "id": "a847408981a9a17b76d8bfab2ab492993776108c8e3618df6995d399a8037c0c",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Stop"
+        ],
+        [
+          "Stop",
+          0
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 512
+      },
+      "chosen": "Inspect",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 93,
+          "denominator": 8
+        }
+      },
+      "continuation_policy": "NoProbe"
+    },
+    {
+      "experimenter": "A",
+      "policy": "NoProbe",
+      "environment": "SP",
+      "sequence": 0,
+      "id": "648c69dbaa57b5f316f3402ac548a53376279a675330d717c4f4c9a776b415e4",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Stop"
+        ],
+        [
+          "Stop",
+          0
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ],
+        [
+          "Choice",
+          "trial",
+          0,
+          "Inspect"
+        ],
+        [
+          "Act",
+          0,
+          1,
+          1,
+          [
+            "Inspect"
+          ],
+          [
+            "Inspected",
+            0
+          ],
+          44
+        ],
+        [
+          "Act",
+          0,
+          1,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          43
+        ],
+        [
+          "Act",
+          0,
+          2,
+          1,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          42
+        ],
+        [
+          "Act",
+          0,
+          2,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          41
+        ],
+        [
+          "Act",
+          0,
+          3,
+          1,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          40
+        ],
+        [
+          "Act",
+          0,
+          3,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          39
+        ],
+        [
+          "Reset",
+          1
+        ],
+        [
+          "Bit",
+          1,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        1
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 128
+      },
+      "chosen": "Inspect",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 9,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 33,
+          "denominator": 4
+        }
+      },
+      "continuation_policy": "NoProbe"
+    },
+    {
+      "experimenter": "B",
+      "policy": "InspectOnly",
+      "environment": "SP",
+      "sequence": 0,
+      "id": "8374f62c6c79f8d459bc6cf8e6e46e6c1842b5cd72fcf34ad324c759a92dc297",
+      "prefix": [],
+      "stage": [
+        "probe",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": null,
+        "mass": 1024
+      },
+      "chosen": "Stop",
+      "alternatives": {
+        "Stop": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Continue": {
+          "numerator": 10,
+          "denominator": 1
+        }
+      },
+      "continuation_policy": "InspectOnly"
+    },
+    {
+      "experimenter": "B",
+      "policy": "InspectOnly",
+      "environment": "SP",
+      "sequence": 0,
+      "id": "7c7a29cc347f8d8663f2aeacb46404963dad594bf04bfba8540a4cd19ec7a553",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Stop"
+        ],
+        [
+          "Stop",
+          0
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        0
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 512
+      },
+      "chosen": "Inspect",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 12,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 21,
+          "denominator": 2
+        }
+      },
+      "continuation_policy": "InspectOnly"
+    },
+    {
+      "experimenter": "B",
+      "policy": "InspectOnly",
+      "environment": "SP",
+      "sequence": 0,
+      "id": "0d9030cb1b849a49b123db4484a080a725c79397fe40055b19abca40811dd81e",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Stop"
+        ],
+        [
+          "Stop",
+          0
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ],
+        [
+          "Choice",
+          "trial",
+          0,
+          "Inspect"
+        ],
+        [
+          "Act",
+          0,
+          1,
+          2,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          47
+        ],
+        [
+          "Act",
+          0,
+          1,
+          3,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          46
+        ],
+        [
+          "Act",
+          0,
+          2,
+          2,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          45
+        ],
+        [
+          "Act",
+          0,
+          2,
+          3,
+          [
+            "Inspect"
+          ],
+          [
+            "Inspected",
+            0
+          ],
+          41
+        ],
+        [
+          "Act",
+          0,
+          3,
+          2,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          40
+        ],
+        [
+          "Act",
+          0,
+          3,
+          3,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          39
+        ],
+        [
+          "Reset",
+          1
+        ],
+        [
+          "Bit",
+          1,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        1
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 128
+      },
+      "chosen": "Inspect",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 9,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 15,
+          "denominator": 2
+        }
+      },
+      "continuation_policy": "InspectOnly"
+    }
+  ],
+  "live_ties": [
+    {
+      "experimenter": "A",
+      "id": "ebe5951c3b5146a5619aaa0e2b13bc82e58b436bad0df1727a297776c3fcf2e6",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Stop"
+        ],
+        [
+          "Stop",
+          0
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ],
+        [
+          "Choice",
+          "trial",
+          0,
+          "Attempt"
+        ],
+        [
+          "Act",
+          0,
+          1,
+          1,
+          [
+            "Write",
+            "Data0"
+          ],
+          [
+            "Accepted"
+          ],
+          47
+        ],
+        [
+          "Act",
+          0,
+          1,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          46
+        ],
+        [
+          "Act",
+          0,
+          2,
+          1,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          45
+        ],
+        [
+          "Act",
+          0,
+          2,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          44
+        ],
+        [
+          "Act",
+          0,
+          3,
+          1,
+          [
+            "Read"
+          ],
+          [
+            "Read",
+            "Data0"
+          ],
+          43
+        ],
+        [
+          "Act",
+          0,
+          3,
+          4,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          42
+        ],
+        [
+          "Reset",
+          1
+        ],
+        [
+          "Bit",
+          1,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        1
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 3
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          },
+          {
+            "numerator": 2,
+            "denominator": 3
+          },
+          {
+            "numerator": 0,
+            "denominator": 1
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 96
+      },
+      "chosen": "Inspect",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 9,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 9,
+          "denominator": 1
+        }
+      },
+      "continuation_policy": "Adaptive"
+    },
+    {
+      "experimenter": "B",
+      "id": "8e00f8ca8c243e8b92d1b2908297e80881fe300647da0dafbb079a4a5e3fcc15",
+      "prefix": [
+        [
+          "Choice",
+          "probe",
+          0,
+          "Stop"
+        ],
+        [
+          "Stop",
+          0
+        ],
+        [
+          "Reset",
+          0
+        ],
+        [
+          "Bit",
+          0,
+          0
+        ],
+        [
+          "Choice",
+          "trial",
+          0,
+          "Inspect"
+        ],
+        [
+          "Act",
+          0,
+          1,
+          2,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          47
+        ],
+        [
+          "Act",
+          0,
+          1,
+          3,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          46
+        ],
+        [
+          "Act",
+          0,
+          2,
+          2,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          45
+        ],
+        [
+          "Act",
+          0,
+          2,
+          3,
+          [
+            "Inspect"
+          ],
+          [
+            "Inspected",
+            0
+          ],
+          41
+        ],
+        [
+          "Act",
+          0,
+          3,
+          2,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          40
+        ],
+        [
+          "Act",
+          0,
+          3,
+          3,
+          [
+            "Wait"
+          ],
+          [
+            "Waited"
+          ],
+          39
+        ],
+        [
+          "Reset",
+          1
+        ],
+        [
+          "Bit",
+          1,
+          0
+        ]
+      ],
+      "stage": [
+        "trial",
+        1
+      ],
+      "belief": {
+        "models": [
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          },
+          {
+            "numerator": 1,
+            "denominator": 4
+          }
+        ],
+        "target": {
+          "numerator": 1,
+          "denominator": 2
+        },
+        "mass": 128
+      },
+      "chosen": "Inspect",
+      "alternatives": {
+        "Inspect": {
+          "numerator": 9,
+          "denominator": 1
+        },
+        "Attempt": {
+          "numerator": 9,
+          "denominator": 1
+        }
+      },
+      "continuation_policy": "Adaptive"
+    }
+  ],
+  "canonical_v2_source_sha256": "6eafbad345a3e23e312929e54ff5c9aac1538496bc1c1a73a26cd769f3300675",
+  "canonical_v2_output_sha256": "e39b6bb0f76a626892223343f7c41a9843a8622363bb421fa54d0aedfe2e9f83",
+  "provenance": "Extracted numeric/full-own-prefix projection from independently reviewed reference-report.md; v1 numeric records unchanged by v2 target trace correction."
+}
