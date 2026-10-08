@@ -4,3 +4,5 @@ mod planner;
 
 mod evaluation;
 mod replay;
+
+mod diagnostics;
