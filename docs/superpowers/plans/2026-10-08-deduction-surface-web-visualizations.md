@@ -316,7 +316,7 @@ addEventListener('message', async ({data}: MessageEvent<WorkerRequest>) => {
 
 **Interfaces:** Consumes Task5 client and typed envelope/catalog. Produces `EpisodeView.el`, `EpisodeView.openInput(input:Json):void`, `EpisodeView.dispose():void`; `ReplayController` with record/index/playing and `load/step/seek/reset/pause`; `projectCheckpoint(record,index,perspective)`; renderer `renderGame`/`renderTestimony`. `Perspective` is `{kind:'agent';agent:string}|{kind:'researcher'}`. Surface renderer is connected in Task7; until then its catalog selection must say unavailable in this unshipped intermediate branch, never fake a trace.
 
-- [ ] **Step 1: RED pure lifecycle/privacy/share tests.** Check editing inputs keeps shown inputs, failed replacement/import preserves prior record, reset/seek does not run worker, no future outcome at earlier checkpoint, different Agent gets own local projection, reduced motion disables autoplay, invalid/incompatible/compression-bomb input fails before worker. Define new `#e=` input format with version1 and a64KiB decompressed cap; existing `#c=`, `#x=` and ordinary Playground links keep routing unchanged. Export imported records is always worker-validated.
+- [x] **Step 1: RED pure lifecycle/privacy/share tests.** Check editing inputs keeps shown inputs, failed replacement/import preserves prior record, reset/seek does not run worker, no future outcome at earlier checkpoint, different Agent gets own local projection, reduced motion disables autoplay, invalid/incompatible/compression-bomb input fails before worker. Define new `#e=` input format with version1 and a64KiB decompressed cap; existing `#c=`, `#x=` and ordinary Playground links keep routing unchanged. Export imported records is always worker-validated.
 
 ```typescript
 it('agent perspective excludes researcher truth at every index', () => {
@@ -328,8 +328,8 @@ it('agent perspective excludes researcher truth at every index', () => {
 });
 ```
 
-- [ ] **Step 2: Run RED.** `npx vitest run src/episodes/replay.test.ts src/episodes/projection.test.ts src/episodes/share.test.ts src/episodes/file.test.ts`.
-- [ ] **Step 3: Implement existing-style shell and real renderers.** Outer Experiments shell owns Sweep/Episode switch; leaving episode view pauses playback without discarding shown successful records. Game diagram shows phase/status, watches, submitted versus committed actions and actual observations. Testimony diagram labels observed reports, supplied assumptions, existing available beliefs, action, and conditional expected payoff; no invented reporter truth or intermediate Bayesian updates. Display recorded aggregate/search results in a separate panel using the full Task3 compact asset and its source metadata. Use textContent/DOM h for untrusted labels, never innerHTML.
+- [x] **Step 2: Run RED.** `npx vitest run src/episodes/replay.test.ts src/episodes/projection.test.ts src/episodes/share.test.ts src/episodes/file.test.ts`.
+- [x] **Step 3: Implement existing-style shell and real renderers.** Outer Experiments shell owns Sweep/Episode switch; leaving episode view pauses playback without discarding shown successful records. Game diagram shows phase/status, watches, submitted versus committed actions and actual observations. Testimony diagram labels observed reports, supplied assumptions, existing available beliefs, action, and conditional expected payoff; no invented reporter truth or intermediate Bayesian updates. Display recorded aggregate/search results in a separate panel using the full Task3 compact asset and its source metadata. Use textContent/DOM h for untrusted labels, never innerHTML.
 
 ```typescript
 export function projectCheckpoint(record: EpisodeRecord, index: number, perspective: Perspective): Checkpoint {
@@ -342,8 +342,8 @@ export function projectCheckpoint(record: EpisodeRecord, index: number, perspect
 ```
 
 The renderer receives only this projected checkpoint plus nonprivileged descriptor metadata, never full future payload. Terminal payload is available to its labeled result pane only at final checkpoint/Researcher view, with checkpoint-local behavior retained.
-- [ ] **Step 4: GREEN and visual gate.** Run focused tests/TypeScript; reviewer inspects navigation, precision, stale results, provenance and code. Perform actual browser keyboard stepping, Agent/researcher toggle, narrow layout and game/testimony screenshots before closing task. Main beforeunload/dispose and legacy links remain functional.
-- [ ] **Step 5: Commit.** `feat(web): visualize deduction games and testimony decisions`.
+- [x] **Step 4: GREEN and visual gate.** Run focused tests/TypeScript; reviewer inspects navigation, precision, stale results, provenance and code. Perform actual browser keyboard stepping, Agent/researcher toggle, narrow layout and game/testimony screenshots before closing task. Main beforeunload/dispose and legacy links remain functional.
+- [x] **Step 5: Commit.** `feat(web): visualize deduction games and testimony decisions`.
 
 ## Task 7: Surface visualization and matched comparison
 
