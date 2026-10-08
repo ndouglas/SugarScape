@@ -129,3 +129,21 @@ fn access_points_serialize_for_saved_reporting() {
         serde_json::json!({"completed_ticks":16,"distance":1,"per_food":[[0,1]]})
     );
 }
+#[test]
+fn delivery_requires_return_moves_and_a_separate_action_after_first_pickup() {
+    let mut e = component();
+    let route = validate_access(&e.setup, &e.snapshots).unwrap();
+    assert_eq!(route.last().unwrap().distance, Some(1));
+    assert_eq!(e.summary.milestones.first_pickup_tick, Some(10));
+    assert_eq!(e.summary.milestones.first_delivery_tick, Some(12));
+    assert_eq!(e.summary.milestones.all_food_delivered_tick, Some(12));
+    for frame in &mut e.snapshots {
+        if frame.summary.milestones.first_pickup_tick.is_some() {
+            frame.summary.milestones.first_pickup_tick = Some(11);
+        }
+    }
+    e.summary = e.snapshots.last().unwrap().summary.clone();
+    assert!(validate_access(&e.setup, &e.snapshots)
+        .unwrap_err()
+        .contains("first_delivery_tick.return_interval"));
+}

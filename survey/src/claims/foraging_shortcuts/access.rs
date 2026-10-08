@@ -438,6 +438,21 @@ pub(super) fn validate_access(
                     .ok_or("handling distance overflow")?
             };
             require(u64::from(t) >= minimum, &format!("{field}.geometry_bound"))?;
+            if delivery {
+                let pickup = last
+                    .summary
+                    .milestones
+                    .first_pickup_tick
+                    .ok_or("first_delivery_tick.return_interval: missing first pickup")?;
+                let earliest = u64::from(pickup)
+                    .checked_add(u64::from(distance))
+                    .and_then(|tick| tick.checked_add(1))
+                    .ok_or("first_delivery_tick.return_interval overflow")?;
+                require(
+                    u64::from(t) >= earliest,
+                    "first_delivery_tick.return_interval",
+                )?;
+            }
         }
     }
     Ok(result)
