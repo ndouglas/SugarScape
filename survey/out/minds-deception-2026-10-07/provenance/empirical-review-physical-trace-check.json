@@ -1,0 +1,1103 @@
+{
+  "utc": "2026-10-08T07:20:30.497507+00:00",
+  "reviewer": "/root/p4_empirical_scientific_reviewer",
+  "read_only_raw_outcomes": 3840,
+  "frames_verified": 249600,
+  "all_endpoints_cohorts_fingerprints_match": true,
+  "all_fake_sites_absent_from_physical_caches": true,
+  "all_original_cohort_only": true,
+  "all_physical_recoveries_followed_next_frame_successful_departure": true,
+  "cells": {
+    "matched-neutral-ambiguous-seen-off-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-seen-off-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-seen-off-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-seen-off-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-seen-on-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-seen-on-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-seen-on-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-seen-on-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-unseen-off-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-unseen-off-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-unseen-off-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-unseen-off-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-unseen-on-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-unseen-on-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-unseen-on-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-ambiguous-unseen-on-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-seen-off-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-seen-off-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-seen-off-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-seen-off-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-seen-on-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-seen-on-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-seen-on-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-seen-on-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-unseen-off-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-unseen-off-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-unseen-off-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-unseen-off-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-unseen-on-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-unseen-on-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-unseen-on-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "matched-neutral-clear-unseen-on-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-seen-off-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-seen-off-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-seen-off-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-seen-off-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-seen-on-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-seen-on-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-seen-on-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-seen-on-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-unseen-off-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-unseen-off-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-unseen-off-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-unseen-off-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-unseen-on-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-unseen-on-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-unseen-on-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-ambiguous-unseen-on-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-seen-off-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-seen-off-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-seen-off-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-seen-off-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-seen-on-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-seen-on-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-seen-on-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-seen-on-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-unseen-off-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-unseen-off-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-unseen-off-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-unseen-off-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-unseen-on-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-unseen-on-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-unseen-on-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "ordinary-clear-unseen-on-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-ambiguous-seen-off-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 22,
+      "departure_episodes": 22,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_39": 18,
+      "receiver_distance_release_to_source_7": 40,
+      "source_occupied_by_owner_after_release": 22,
+      "physical_recovery_frame_39": 22,
+      "departure_frame_40": 22,
+      "first_source_arrival_frame_40": 13,
+      "first_source_arrival_frame_41": 9
+    },
+    "sham-ambiguous-seen-off-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 22,
+      "departure_episodes": 22,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_39": 18,
+      "receiver_distance_release_to_source_7": 40,
+      "source_occupied_by_owner_after_release": 22,
+      "physical_recovery_frame_39": 22,
+      "departure_frame_40": 22,
+      "first_source_arrival_frame_40": 13,
+      "first_source_arrival_frame_41": 9
+    },
+    "sham-ambiguous-seen-off-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 40,
+      "departure_episodes": 40,
+      "physical_recovery_frame_36": 40,
+      "departure_frame_37": 40,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_41": 12,
+      "receiver_distance_release_to_source_7": 40,
+      "source_occupied_by_owner_after_release": 40,
+      "first_source_arrival_frame_40": 16,
+      "first_source_arrival_frame_39": 12
+    },
+    "sham-ambiguous-seen-off-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 40,
+      "departure_episodes": 40,
+      "physical_recovery_frame_36": 40,
+      "departure_frame_37": 40,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_41": 12,
+      "receiver_distance_release_to_source_7": 40,
+      "source_occupied_by_owner_after_release": 40,
+      "first_source_arrival_frame_40": 16,
+      "first_source_arrival_frame_39": 12
+    },
+    "sham-ambiguous-seen-on-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-ambiguous-seen-on-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-ambiguous-seen-on-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-ambiguous-seen-on-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-ambiguous-unseen-off-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-ambiguous-unseen-off-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-ambiguous-unseen-off-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-ambiguous-unseen-off-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-ambiguous-unseen-on-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-ambiguous-unseen-on-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-ambiguous-unseen-on-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-ambiguous-unseen-on-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-seen-off-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-seen-off-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-seen-off-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-seen-off-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-seen-on-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-seen-on-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-seen-on-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-seen-on-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-unseen-off-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-unseen-off-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-unseen-off-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-unseen-off-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-unseen-on-route-cost0-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-unseen-on-route-cost0-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-unseen-on-route-cost3-m0": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    },
+    "sham-clear-unseen-on-route-cost3-m1": {
+      "n": 40,
+      "physical_recovery_episodes": 0,
+      "departure_episodes": 0,
+      "owner_harvest_8.0": 40,
+      "first_source_arrival_frame_35": 40,
+      "receiver_distance_release_to_source_3": 40,
+      "source_occupied_by_owner_after_release": 0
+    }
+  },
+  "examples": [
+    {
+      "condition": "sham-ambiguous-seen-off-route-cost0-m0",
+      "seed": 20002,
+      "recovery_frame": 39,
+      "recovery_action": {
+        "actor": 1,
+        "phase": "ordinary",
+        "action": "ordinary",
+        "target": {
+          "x": 3,
+          "y": 3
+        },
+        "harvest": 0.0,
+        "dug": 12.0,
+        "buried": 0.0,
+        "effort": 0.0,
+        "metabolic_demand": 1.0,
+        "metabolic_consumed": 1.0,
+        "cancellation": null,
+        "pos": {
+          "x": 3,
+          "y": 3
+        },
+        "walk_outcome": null,
+        "target_occupant": null,
+        "source_recovered": false
+      },
+      "departure_frame": 40,
+      "departure_action": {
+        "actor": 1,
+        "phase": "departure",
+        "action": "departure",
+        "target": {
+          "x": 3,
+          "y": 2
+        },
+        "harvest": 0.0,
+        "dug": 0.0,
+        "buried": 0.0,
+        "effort": 0.0,
+        "metabolic_demand": 1.0,
+        "metabolic_consumed": 1.0,
+        "cancellation": null,
+        "pos": {
+          "x": 3,
+          "y": 2
+        },
+        "walk_outcome": "arrived",
+        "target_occupant": null,
+        "source_recovered": true
+      }
+    },
+    {
+      "condition": "sham-ambiguous-seen-off-route-cost0-m0",
+      "seed": 20003,
+      "recovery_frame": 39,
+      "recovery_action": {
+        "actor": 1,
+        "phase": "ordinary",
+        "action": "ordinary",
+        "target": {
+          "x": 3,
+          "y": 3
+        },
+        "harvest": 0.0,
+        "dug": 12.0,
+        "buried": 0.0,
+        "effort": 0.0,
+        "metabolic_demand": 1.0,
+        "metabolic_consumed": 1.0,
+        "cancellation": null,
+        "pos": {
+          "x": 3,
+          "y": 3
+        },
+        "walk_outcome": null,
+        "target_occupant": null,
+        "source_recovered": false
+      },
+      "departure_frame": 40,
+      "departure_action": {
+        "actor": 1,
+        "phase": "departure",
+        "action": "departure",
+        "target": {
+          "x": 3,
+          "y": 2
+        },
+        "harvest": 0.0,
+        "dug": 0.0,
+        "buried": 0.0,
+        "effort": 0.0,
+        "metabolic_demand": 1.0,
+        "metabolic_consumed": 1.0,
+        "cancellation": null,
+        "pos": {
+          "x": 3,
+          "y": 2
+        },
+        "walk_outcome": "arrived",
+        "target_occupant": null,
+        "source_recovered": true
+      }
+    },
+    {
+      "condition": "sham-ambiguous-seen-off-route-cost0-m0",
+      "seed": 20005,
+      "recovery_frame": 39,
+      "recovery_action": {
+        "actor": 1,
+        "phase": "ordinary",
+        "action": "ordinary",
+        "target": {
+          "x": 3,
+          "y": 3
+        },
+        "harvest": 0.0,
+        "dug": 12.0,
+        "buried": 0.0,
+        "effort": 0.0,
+        "metabolic_demand": 1.0,
+        "metabolic_consumed": 1.0,
+        "cancellation": null,
+        "pos": {
+          "x": 3,
+          "y": 3
+        },
+        "walk_outcome": null,
+        "target_occupant": null,
+        "source_recovered": false
+      },
+      "departure_frame": 40,
+      "departure_action": {
+        "actor": 1,
+        "phase": "departure",
+        "action": "departure",
+        "target": {
+          "x": 3,
+          "y": 2
+        },
+        "harvest": 0.0,
+        "dug": 0.0,
+        "buried": 0.0,
+        "effort": 0.0,
+        "metabolic_demand": 1.0,
+        "metabolic_consumed": 1.0,
+        "cancellation": null,
+        "pos": {
+          "x": 3,
+          "y": 2
+        },
+        "walk_outcome": "arrived",
+        "target_occupant": null,
+        "source_recovered": true
+      }
+    },
+    {
+      "condition": "sham-ambiguous-seen-off-route-cost0-m0",
+      "seed": 20006,
+      "recovery_frame": 39,
+      "recovery_action": {
+        "actor": 1,
+        "phase": "ordinary",
+        "action": "ordinary",
+        "target": {
+          "x": 3,
+          "y": 3
+        },
+        "harvest": 0.0,
+        "dug": 12.0,
+        "buried": 0.0,
+        "effort": 0.0,
+        "metabolic_demand": 1.0,
+        "metabolic_consumed": 1.0,
+        "cancellation": null,
+        "pos": {
+          "x": 3,
+          "y": 3
+        },
+        "walk_outcome": null,
+        "target_occupant": null,
+        "source_recovered": false
+      },
+      "departure_frame": 40,
+      "departure_action": {
+        "actor": 1,
+        "phase": "departure",
+        "action": "departure",
+        "target": {
+          "x": 3,
+          "y": 2
+        },
+        "harvest": 0.0,
+        "dug": 0.0,
+        "buried": 0.0,
+        "effort": 0.0,
+        "metabolic_demand": 1.0,
+        "metabolic_consumed": 1.0,
+        "cancellation": null,
+        "pos": {
+          "x": 3,
+          "y": 2
+        },
+        "walk_outcome": "arrived",
+        "target_occupant": null,
+        "source_recovered": true
+      }
+    }
+  ],
+  "native_world_rng_invocations": 0
+}

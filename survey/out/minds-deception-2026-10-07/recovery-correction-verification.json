@@ -1,0 +1,15 @@
+{
+  "classification": "corrected_reporting_diagnostics_against_independent_allraw_trace_receipt",
+  "cells_checked": 96,
+  "all_seeds_per_cell": 40,
+  "physical_recovery_episodes": 124,
+  "next_frame_successful_departures": 124,
+  "free_per_orientation": 22,
+  "free_physical_frame": 39,
+  "free_departure_frame": 40,
+  "paid_per_orientation": 40,
+  "paid_physical_frame": 36,
+  "paid_departure_frame": 37,
+  "source_owner_occupancy_explicitly_retained": true,
+  "paired_estimates_unchanged": true
+}

@@ -1,0 +1,13 @@
+{
+  "utc": "2026-10-08T07:29:53.712160+00:00",
+  "all1760_corrected_groups_against_raw_representatives": true,
+  "unchanged_original_other_diagnostic_fields": true,
+  "full_original_recovery_frames_actions_roles_choices_match": true,
+  "all96_cells40seed_recovery_departure_distributions_match_independent_allraw_scan": true,
+  "physical_recovery_episodes": 124,
+  "important_finding_physical_recovery_vs_departure_flag_addressed": true,
+  "transient_source_occupancy_retained": true,
+  "findings_draft_sha256": "63b3fec098b1909744d62176f55da7efa3b5bd56c2bb731467bbdb8385ca4667",
+  "group_diagnostics_sha256": "59a17bf8c456039a438c27adb03e23c08bcf8748f5e4a42d09f8cbb337156807",
+  "cell_diagnostics_sha256": "612830cdb6c7c5a6d85c97dd5949cd2a04e8708381bc9838bf8fabf878067790"
+}

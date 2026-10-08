@@ -1,0 +1,7 @@
+{
+  "recorded_utc": "2026-10-08T06:53:30.502748+00:00",
+  "error": "AssertionError()",
+  "traceback": "Traceback (most recent call last):\n  File \"<stdin>\", line 47, in <module>\nAssertionError\n",
+  "scientific_execution_stopped": true,
+  "no_retry": true
+}

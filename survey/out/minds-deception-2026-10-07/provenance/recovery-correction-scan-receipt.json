@@ -1,0 +1,26 @@
+{
+  "all1760_groups_and3840_memberships_rechecked": true,
+  "classification": "complete_read_only_reporting_recovery_correction_scan",
+  "correction": "physical recovery from owner positive dug at originalsource; departureflag recorded separately; allphysical recoveryframes retained",
+  "original_data_modified": false,
+  "paired_estimates_recalculated": false,
+  "presentation_analysis_actual_byte_equal": true,
+  "source": {
+    "biological_groups": 1760,
+    "bytes": 1052095171,
+    "frames": 114400,
+    "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/scientific-campaign-e10f98d99586d94f5adc8eab1f95b80e5c5b1865/analysis.json",
+    "projection_semantics": "complete endpoint/cell/estimate/alias/duplicate fields; all full biological frames retained in immutable hash-bound original",
+    "sha256": "14caedbb8ed105f1b65e3c07dc5aaed3428180b10122531fc4dc54c6ce00cf9b",
+    "top_level_fields": [
+      "biological_groups",
+      "cells",
+      "census",
+      "effective_aliases",
+      "endpoints",
+      "estimates",
+      "repeated_endpoints",
+      "schema"
+    ]
+  }
+}

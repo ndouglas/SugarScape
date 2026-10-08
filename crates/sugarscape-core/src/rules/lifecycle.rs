@@ -38,12 +38,23 @@ pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
         *have -= burn;
     }
     let pos = agent.pos;
+    crate::minds::deception::runner::action(world, id, |a| {
+        a.metabolic_demand = burned[0];
+        a.metabolic_consumed = consumed;
+    });
     crate::minds::protection::ledger::update(world, id, |l| {
         l.outflow(
             consumed,
             crate::minds::protection::ledger::Outflow::Consumption,
         )
     });
+    crate::minds::deception::accounting::update(world, id, |l| {
+        l.outflow(
+            consumed,
+            crate::minds::protection::ledger::Outflow::Consumption,
+        )
+    });
+    crate::minds::deception::accounting::reconcile_world(world);
     if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
         a.metabolic_demand += burned[0];
         a.metabolic_consumed += consumed;

@@ -1,0 +1,14 @@
+{
+  "recorded_utc": "2026-10-08T06:19:18.616234+00:00",
+  "actual_verdict": "ACCEPTED",
+  "reviewer": "/root/p4_prospective_scientific_reviewer",
+  "review_sha256": "800226cf5b23a51c1aaca1282be793ba63cb1de83ff7587cfee88ef4a2523966",
+  "source_revision": "e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+  "binary_sha256": "38f7137b7b92521b8e5d82c43b883c1f7dc92f9151112c73665913299c54caa4",
+  "protocol_sha256": "7e0b9a7fb6973a3ba95fad70ddf911105f753a73b7fe45a8ab5040e3d6901d4d",
+  "manifest_sha256": "cd4996a57ccc216dac634994817796c16a0cc6dc45f48b4e903073b3700ee2be",
+  "acceptance_is_separate_from_implementation": true,
+  "measurement_status": "NOT_STARTED",
+  "writer_count": 1,
+  "retry_resume_seed_replacement_authorized": false
+}

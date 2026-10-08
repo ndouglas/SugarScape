@@ -1,0 +1,25 @@
+{
+  "recorded_utc": "2026-10-08T06:59:20.741055+00:00",
+  "status": "REGISTERED_MEASUREMENT_AND_DETERMINISTIC_REANALYSIS_VERIFIED",
+  "writer": "/root/p4_registered_measurement_writer",
+  "measurement_report": {
+    "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/measurement-report.md",
+    "sha256": "2d73f1340fd0230ed5c7969657e74d20406cf1ec13b92946c8ae1394a886a203"
+  },
+  "census": {
+    "planned": 3840,
+    "unstarted": 0,
+    "attempted": 3840,
+    "complete": 3840,
+    "failed": 0,
+    "invalid": 0,
+    "partial": 0,
+    "pending": 0,
+    "unavailable_lineage": 0
+  },
+  "measurement_launches": 1,
+  "saved_data_reanalysis_launches": 1,
+  "additional_registered_world_or_rng_invocations": 0,
+  "empirical_review_and_integration": "OUTSTANDING_CONTROLLER_OWNED",
+  "writer_audit_assertion_error_preserved": true
+}

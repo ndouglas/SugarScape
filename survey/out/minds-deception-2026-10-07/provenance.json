@@ -1,0 +1,76 @@
+{
+  "status": "actual empirical Approved; publication packaging prepared; final integration/remote verification/archive pending",
+  "scientific_source_commit": "e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+  "publication_base_commit": "0e24e3fe4fefcbf4d445c93dd004cd8a0a2c859a",
+  "publication_commit": "recorded externally after normal commit to avoid self-reference",
+  "logical_public_url": "https://ndouglas.github.io/SugarScape/studies/minds-deception-2026-10-07/",
+  "actual_empirical_review": {
+    "path": "provenance/empirical-review.md",
+    "sha256": "ea32299a1c923bf1150fac62fb9d3ace774c16662c82cb10f088ba1e15308d95",
+    "bytes": 16178,
+    "mode": "0o644"
+  },
+  "original_reviewed_findings": {
+    "path": "provenance/findings-draft.md",
+    "sha256": "63b3fec098b1909744d62176f55da7efa3b5bd56c2bb731467bbdb8385ca4667",
+    "bytes": 16088,
+    "mode": "0o644"
+  },
+  "original_reviewed_provenance": {
+    "path": "provenance/provenance-draft.json",
+    "sha256": "87b325b9aed6ca195580882e87e1eea3462a4cd79fa5052ec55fd48bfb2ed450",
+    "bytes": 18428,
+    "mode": "0o644"
+  },
+  "original_reviewed_manifest": {
+    "path": "provenance/evidence-manifest-draft.json",
+    "sha256": "ee09eb5a190a05fb5f2b2aa9987fa858f62c8467f4bc440b6a2d37c366b18191",
+    "bytes": 14644,
+    "mode": "0o644"
+  },
+  "archives": [
+    {
+      "path": "archive/p4-e10f98d-registered-campaign.tar.gz",
+      "url": "https://ndouglas.github.io/SugarScape/studies/minds-deception-2026-10-07/archive/p4-e10f98d-registered-campaign.tar.gz",
+      "sha256": "e7a60344613b348ca44e1f47beb1d5acc3668c24f4062e0ec44ce36c0b3ceb77",
+      "bytes": 49295835,
+      "mode": "0o644"
+    },
+    {
+      "path": "archive/p4-e10f98d-saved-reanalysis.tar.gz",
+      "url": "https://ndouglas.github.io/SugarScape/studies/minds-deception-2026-10-07/archive/p4-e10f98d-saved-reanalysis.tar.gz",
+      "sha256": "1f2a5432b1aa318807c9e731be3bae424c9a214f6f8c1e2ee70de8269ea0d714",
+      "bytes": 17680810,
+      "mode": "0o644"
+    },
+    {
+      "path": "archive/p4-e10f98d-accepted-evidence.tar.gz",
+      "url": "https://ndouglas.github.io/SugarScape/studies/minds-deception-2026-10-07/archive/p4-e10f98d-accepted-evidence.tar.gz",
+      "sha256": "a25af12174fb47858916b2a7b2ca60e65dfa501211d6f1154cd19061f44d8a1d",
+      "bytes": 48777544,
+      "mode": "0o644"
+    },
+    {
+      "path": "archive/p4-e10f98d-reporting-empirical-supplement.tar.gz",
+      "url": "https://ndouglas.github.io/SugarScape/studies/minds-deception-2026-10-07/archive/p4-e10f98d-reporting-empirical-supplement.tar.gz",
+      "sha256": "3e2e23f13816093768e9583d5ad63d4e297ff6694eed00b1094beee6445ad9dd",
+      "bytes": 7722833,
+      "mode": "0o644"
+    }
+  ],
+  "full_analysis": {
+    "archive": "archive/p4-e10f98d-registered-campaign.tar.gz",
+    "member": "scientific-campaign-e10f98d99586d94f5adc8eab1f95b80e5c5b1865/analysis.json",
+    "bytes": 1052095171,
+    "sha256": "14caedbb8ed105f1b65e3c07dc5aaed3428180b10122531fc4dc54c6ce00cf9b"
+  },
+  "inventory_rule": "evidence-manifest.json hashes every served scientific file except itself; external verification receipt binds manifest and index",
+  "scientific_content_changes": "none; findings edits limited to status, evidence-link relocation, and replacement of future empirical gate with actual review/pending integration workflow",
+  "reporting_supplement_manifest": {
+    "path": "archive/REPORTING-EMPIRICAL-SUPPLEMENT-MANIFEST.json",
+    "sha256": "9538fac231d72ad55efd5b2e7f0151e9fe5a550881e3173449871b8fe5082f30",
+    "bytes": 2078,
+    "mode": "0o644"
+  },
+  "archive_access_note": "Archive paths resolve in the served packet; survey packet links the public directory once. Original manifest statuses are immutable historical handoffs. Final integration/publication/archive supplements are not claimed complete."
+}

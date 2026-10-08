@@ -1,0 +1,44 @@
+{
+  "frozen_source": "e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+  "compression": "GNU tar sorted names, GNU format, mtime0 owner0 group0; gzip mtime0 level6",
+  "part_max_bytes": 95000000,
+  "status": "actual-empirical-Approved-reporting-supplement-prepared-locally; publication/final-supplement-pending",
+  "classification_file": "CLASSIFICATION.json",
+  "infrastructure_exclusions": [
+    "scientific-execution/actual-artifacts/plot-env",
+    "scientific-execution/actual-artifacts/pip-cache",
+    "scientific-execution/figure-prep/matplotlib-cache"
+  ],
+  "infrastructure_preserved_local": "/Users/nathan/.local/share/sugarscape/evidence/minds-deception-2026-10-07/supplements/phase2-reporting-empirical-20261008T0740Z/environment",
+  "synthetic_history": "scientific-execution/figure-prep/synthetic-* retained as static historical previews only",
+  "bundles": [
+    {
+      "name": "p4-e10f98d-reporting-empirical-supplement",
+      "members": [
+        "scientific-execution",
+        "CLASSIFICATION.json",
+        "metadata/phase2-reviewed-identities.json",
+        "metadata/plotting-package-closure.json",
+        "metadata/general-python-environment-map.json",
+        "metadata/clone-commands.json",
+        "metadata/phase2-scientific-execution-inventory.jsonl",
+        "metadata/phase2-scientific-execution-summary.json"
+      ],
+      "compressed_bytes": 7722833,
+      "concatenated_gzip_sha256": "3e2e23f13816093768e9583d5ad63d4e297ff6694eed00b1094beee6445ad9dd",
+      "parts": [
+        {
+          "path": "p4-e10f98d-reporting-empirical-supplement.tar.gz",
+          "bytes": 7722833,
+          "sha256": "3e2e23f13816093768e9583d5ad63d4e297ff6694eed00b1094beee6445ad9dd",
+          "mode": "100644"
+        }
+      ],
+      "extracted_regular_files": 202,
+      "extracted_regular_bytes": 50642637,
+      "extraction_inventory": "p4-e10f98d-reporting-empirical-supplement-extraction-inventory.jsonl",
+      "extraction_inventory_sha256": "59af6a590373fda7c4305f8e992812ed503edafad02bf133cdfe21dd4fcafef3",
+      "verification_differences": []
+    }
+  ]
+}

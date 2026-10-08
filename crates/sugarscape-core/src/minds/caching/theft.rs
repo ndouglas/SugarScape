@@ -277,6 +277,8 @@ pub(crate) fn pilfer(
     }
     crate::minds::protection::ledger::update(world, owner, |l| l.pilfer(site, take));
     crate::minds::protection::ledger::reconcile_world(world);
+    crate::minds::deception::accounting::update(world, owner, |l| l.pilfer(site, take));
+    crate::minds::deception::accounting::reconcile_world(world);
     // The fate log reads `cache_since` (for a backfill), so it goes after.
     super::fates::close_pilfered(world, owner, site, take, thief);
     if emptied {

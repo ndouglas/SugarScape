@@ -102,6 +102,7 @@ pub fn agent_at(world: &World, x: u32, y: u32) -> Agent {
         home: None,
         spatial: None,
         protection: None,
+        deception: None,
         load_trip: 0.0,
         delivery_rate: 0.0,
         last_load: 0.0,

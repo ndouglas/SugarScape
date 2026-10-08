@@ -137,6 +137,9 @@ pub(crate) fn see(world: &mut World, owner: AgentId, site: u32, q: f64) {
     if !world.config.watching.on {
         return;
     }
+    if crate::minds::deception::observation::on_real_burial(world, owner, site, q) {
+        return;
+    }
     let watchers = watchers_of(world, owner, site);
     if let Some(a) = world
         .protection_actions

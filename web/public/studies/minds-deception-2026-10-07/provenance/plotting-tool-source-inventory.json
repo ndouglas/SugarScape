@@ -1,0 +1,64 @@
+{
+  "classification": "owned_reporting_tools_not_scientific_source",
+  "versions": {
+    "ijson": "3.5.1",
+    "matplotlib": "3.10.9",
+    "numpy": "2.4.6",
+    "Pillow": "12.2.0",
+    "contourpy": "1.3.3",
+    "cycler": "0.12.1",
+    "fonttools": "4.63.0",
+    "kiwisolver": "1.5.0",
+    "packaging": "26.2",
+    "pyparsing": "3.3.2",
+    "python-dateutil": "2.9.0.post0",
+    "six": "1.17.0"
+  },
+  "files": [
+    {
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/plot_p4.py",
+      "bytes": 16521,
+      "sha256": "3bc97790cd2814b24cd47dc5565213ae788df7dcd9020df9d010a660681310b2"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/stream_p4.py",
+      "bytes": 3239,
+      "sha256": "cd1527afd12bf63396de060726c23955f27278b60e24fdcc06428c20e4609f9a"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/diagnostics_p4.py",
+      "bytes": 4931,
+      "sha256": "c2ef6e2496bdb43cac4cab684658fe2fe7a39a728c048be15190ae1f31642849"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/render_actual.py",
+      "bytes": 3278,
+      "sha256": "4e15aa99a9b5fe5a78997bb1832126d39d85b812155739738eb1eb329ffa82dd"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/summarize_complete.py",
+      "bytes": 5591,
+      "sha256": "dcd1f11eb9a04d62f8fb623f9b86d53a1702f04d0ef1dea3c97453ef0fc9385c"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/supplement_diagnostics.py",
+      "bytes": 1855,
+      "sha256": "a6ac3c15483a7bd07aa6967d807a478813a3342752f5c9f1f7cb73ec48037364"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/rerender_figures.py",
+      "bytes": 1679,
+      "sha256": "db7098dca56a9431790afeeeef3d41f46ef3396233e57f3b2e721537850de9cf"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/qa_actual_figures.py",
+      "bytes": 3641,
+      "sha256": "2b298082655023b6e13298871201913a41bea548c54fd7da4541212c8d676c66"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/rescan_recovery_correction.py",
+      "bytes": 1651,
+      "sha256": "05889d74edd09df564b6d88aa3c5b50ac0657b114936e26466b34f59098c0828"
+    }
+  ]
+}

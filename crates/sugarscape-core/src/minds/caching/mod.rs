@@ -174,6 +174,11 @@ pub(crate) fn bury(world: &mut World, id: AgentId, q: f64) -> f64 {
         }
     }
     super::protection::ledger::reconcile_world(world);
+    super::deception::accounting::on_deposit(world, id, site, q);
+    super::deception::accounting::update(world, id, |l| {
+        l.outflow(cost, super::protection::ledger::Outflow::BurialCost)
+    });
+    super::deception::accounting::reconcile_world(world);
     q
 }
 
@@ -212,6 +217,7 @@ pub(crate) fn dig(world: &mut World, id: AgentId, site: u32, room: f64) -> f64 {
         e.digs += 1;
     }
     super::protection::ledger::update(world, id, |l| l.withdraw(site, take));
+    super::deception::accounting::update(world, id, |l| l.withdraw(site, take));
     if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
         a.gross_dug += take;
     }

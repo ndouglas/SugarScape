@@ -297,6 +297,10 @@ pub(crate) fn record_choice(
     start: usize,
     target: Pos,
 ) {
+    if world.config.deception_lab.is_some() {
+        let truth = true_value(world, id, target);
+        crate::minds::deception::runner::choice(world, id, candidates, target, truth);
+    }
     if !world.agent(id).expect("live agent").remembers || world.config.memory.span == 0 {
         return;
     }
@@ -553,6 +557,8 @@ pub(crate) fn gather_site(
         *have += got;
     }
     crate::minds::protection::ledger::update(world, id, |l| l.harvest(harvest.gathered[0]));
+    crate::minds::deception::accounting::update(world, id, |l| l.harvest(harvest.gathered[0]));
+    crate::minds::deception::accounting::reconcile_world(world);
     if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
         a.harvest += harvest.gathered[0];
     }
@@ -646,7 +652,30 @@ pub(crate) fn arrive(world: &mut World, id: AgentId, target: Pos) -> Harvest {
     }
     let torus = world.torus;
     let (stop, unreachable) = walking_stop(world, id, target);
+    crate::minds::deception::runner::action(world, id, |a| a.target = Some(target));
+    let stock = if world.config.deception_lab.is_some() {
+        world
+            .agents()
+            .map(|a| {
+                a.caches
+                    .get(&(torus.index(stop) as u32))
+                    .copied()
+                    .unwrap_or(0.0)
+            })
+            .sum()
+    } else {
+        0.0
+    };
+    let wasted_before = world.events.raids_wasted;
     let harvest = go_and_gather(world, id, stop);
+    crate::minds::deception::runner::inspection(
+        world,
+        id,
+        stop,
+        stock,
+        harvest,
+        world.events.raids_wasted > wasted_before,
+    );
     // Minds 8: a seen cache it can't reach is given up, after the gather so
     // a forgoing scrounger staying put is judged as it chose (the gather
     // touches only entries where it stands, never the target's).

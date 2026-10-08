@@ -1,5 +1,7 @@
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { resolve } from 'node:path';
+import { env } from 'node:process';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
@@ -86,7 +88,7 @@ import type {
 } from './types';
 import { InspectPanel } from './ui/inspect-panel';
 import { MODEL_CHARTS } from './ui/series-data';
-import { Sim, protection_config_json, protection_episode_json, config_series_names, initSync, model_schemas_json, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
+import { Sim, deception_config_json, deception_episode_json, protection_config_json, protection_episode_json, config_series_names, initSync, model_schemas_json, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
 // Built by `npm run build` (wasm-pack) before `npm test`.
 const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
@@ -1681,7 +1683,7 @@ describe('spatial episode presets', () => {
       const root = fileURLToPath(new URL('../../', import.meta.url));
       await withNativeTraceDirectory(async scratch => {
         const tracePath = `${scratch}/task-7-native-${id}.json`;
-        execFileSync(`${root}target/release/sugarscape`, [
+        execFileSync(resolve(root, env.CARGO_TARGET_DIR ?? 'target', 'release/sugarscape'), [
           'run', '--preset', id, '--seed', '1', '--ticks', '200',
           '--fingerprint-trace', tracePath,
         ], { cwd: root, encoding: 'utf8' });
@@ -1739,7 +1741,7 @@ describe('protection checked WASM boundary', () => {
       await withNativeTraceDirectory(async scratch => {
         const configPath = `${scratch}/config.json`, tracePath = `${scratch}/trace.json`;
         writeFileSync(configPath, JSON.stringify(config));
-        execFileSync(`${root}target/release/sugarscape`, ['run', '--config', configPath, '--seed', '7', '--ticks', '64', '--fingerprint-trace', tracePath], { cwd: root, encoding: 'utf8' });
+        execFileSync(resolve(root, env.CARGO_TARGET_DIR ?? 'target', 'release/sugarscape'), ['run', '--config', configPath, '--seed', '7', '--ticks', '64', '--fingerprint-trace', tracePath], { cwd: root, encoding: 'utf8' });
         const trace = JSON.parse(readFileSync(tracePath, 'utf8')) as { tick: number; fingerprint: string }[];
         expect(trace.map(row => row.tick)).toEqual(Array.from({ length: 65 }, (_, t) => t));
         const e = await Engine.create({ config, seed: 7 }, { presets, transport: inline() });
@@ -1747,6 +1749,61 @@ describe('protection checked WASM boundary', () => {
           if (row.tick > 0) await e.advance(1);
           expect(await e.fingerprint()).toBe(row.fingerprint);
           expect(`0x${episode.frames[row.tick].fingerprint}`).toBe(row.fingerprint);
+        }
+      });
+    });
+  }
+});
+
+
+describe('deception checked WASM boundary', () => {
+  const lab = (override = {}) => JSON.stringify({ sender: 'sham', view: 'ambiguous', display_seen: true, layout: 'off_route', effort_cost: 3, mirrored: false, ...override });
+  const errors = (call: () => unknown): { field: string; message: string }[] => {
+    try { call(); } catch (error) { return JSON.parse(String(error)); }
+    throw new Error('invalid boundary input accepted');
+  };
+  it('rejects nondecimal and overflowing seeds with structured seed errors', () => {
+    for (const seed of ['', '-1', '+7', '7.0', ' 7', '18446744073709551616']) {
+      expect(errors(() => deception_episode_json(lab(), seed))).toEqual([{ field: 'seed', message: expect.any(String) }]);
+    }
+  });
+  it('rejects malformed and unknown fields before construction', () => {
+    for (const input of ['{', lab({ hidden_stock: 12 }), lab({ sender: 'invalid' }), lab({ view: 'private' })]) {
+      expect(errors(() => deception_config_json(input))).toEqual([{ field: 'deception_lab', message: expect.any(String) }]);
+      expect(errors(() => deception_episode_json(input, '7'))).toEqual([{ field: 'deception_lab', message: expect.any(String) }]);
+    }
+  });
+  it('rejects unsupported costs with structured rig errors', () => {
+    for (const effort_cost of [-1, 1, 3.5]) {
+      expect(errors(() => deception_config_json(lab({ effort_cost })))).toContainEqual({ field: 'deception_lab.effort_cost', message: expect.any(String) });
+      expect(errors(() => deception_episode_json(lab({ effort_cost }), '7'))).toContainEqual({ field: 'deception_lab.effort_cost', message: expect.any(String) });
+    }
+  });
+  for (const [name, override] of [
+    ['sham ambiguous seen paid', {}],
+    ['matched neutral ambiguous seen paid', { sender: 'matched_neutral' }],
+    ['sham clear seen paid', { view: 'clear' }],
+    ['sham ambiguous unseen paid', { display_seen: false }],
+  ] as const) {
+    it(`matches ${name} native trace, episode record and engine at every tick 0–64`, async () => {
+      const root = fileURLToPath(new URL('../../', import.meta.url));
+      const config = JSON.parse(deception_config_json(lab(override)));
+      const episode = JSON.parse(deception_episode_json(lab(override), '7'));
+      expect(episode.frames.map((f: { tick: number }) => f.tick)).toEqual(Array.from({ length: 65 }, (_, tick) => tick));
+      expect(episode.ledger_errors).toEqual([]);
+      expect(episode.fixture_errors).toEqual([]);
+      await withNativeTraceDirectory(async scratch => {
+        const configPath = `${scratch}/config.json`, tracePath = `${scratch}/trace.json`;
+        writeFileSync(configPath, JSON.stringify(config));
+        execFileSync(resolve(root, env.CARGO_TARGET_DIR ?? 'target', 'release/sugarscape'), ['run', '--config', configPath, '--seed', '7', '--ticks', '64', '--fingerprint-trace', tracePath], { cwd: root, encoding: 'utf8' });
+        const trace = JSON.parse(readFileSync(tracePath, 'utf8')) as { tick: number; fingerprint: string }[];
+        expect(trace.map(f => f.tick)).toEqual(Array.from({ length: 65 }, (_, tick) => tick));
+        const e = await Engine.create({ config, seed: 7 }, { presets, transport: inline() });
+        for (const row of trace) {
+          if (row.tick > 0) await e.advance(1);
+          expect(e.tick).toBe(row.tick);
+          expect(await e.fingerprint(), `${name} engine tick ${row.tick}`).toBe(row.fingerprint);
+          expect(`0x${episode.frames[row.tick].fingerprint}`, `${name} episode tick ${row.tick}`).toBe(row.fingerprint);
         }
       });
     });

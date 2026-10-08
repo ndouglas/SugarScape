@@ -1,0 +1,27 @@
+{
+  "writer": "/root/p4_registered_measurement_writer",
+  "started_utc": "2026-10-08T06:21:33.882584+00:00",
+  "command": [
+    "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/task5-prospective-packet-e10f98d/native/survey",
+    "--deception",
+    "--run",
+    "--protocol-revision",
+    "e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+    "--out",
+    "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/scientific-campaign-e10f98d99586d94f5adc8eab1f95b80e5c5b1865"
+  ],
+  "cwd": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/task5-scientific-source-e10f98d",
+  "environment_overrides": {
+    "CARGO_HOME": "/tmp/sugarscape-minds-p4-20261007-vb9tv64o/cargo-home",
+    "CARGO_TARGET_DIR": "/tmp/sugarscape-minds-p4-20261007-vb9tv64o/target",
+    "CARGO_NET_OFFLINE": "true"
+  },
+  "login_shell": false,
+  "exact_accepted_command": true,
+  "launch_count": 1,
+  "output_absent_immediately_before_launch": true,
+  "source_head_immediately_before_launch": "e10f98d99586d94f5adc8eab1f95b80e5c5b1865",
+  "full_git_status_immediately_before_launch": "",
+  "identity_receipt": "measurement-prelaunch-identity.json",
+  "automatic_retry_resume_seed_replacement": false
+}

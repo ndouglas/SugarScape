@@ -8,6 +8,7 @@ pub enum Outflow {
     Consumption,
     BurialCost,
     Deposit { site: u32 },
+    ActionCost,
 }
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct CohortBalance {
@@ -133,6 +134,7 @@ impl Ledger {
                 match kind {
                     Outflow::Consumption => c.consumed += q,
                     Outflow::BurialCost => c.cost += q,
+                    Outflow::ActionCost => c.cost += q,
                     Outflow::Deposit { site } => *c.cached.entry(site).or_default() += q,
                 }
             } else {

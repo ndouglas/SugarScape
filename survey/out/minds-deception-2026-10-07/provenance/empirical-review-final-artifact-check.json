@@ -1,0 +1,12 @@
+{
+  "utc": "2026-10-08T07:30:40.236287+00:00",
+  "frozen_handoff": {
+    "findings-draft.md": "63b3fec098b1909744d62176f55da7efa3b5bd56c2bb731467bbdb8385ca4667",
+    "provenance-draft.json": "87b325b9aed6ca195580882e87e1eea3462a4cd79fa5052ec55fd48bfb2ed450",
+    "actual-artifact-report.md": "4380c60065a2bf2e4c5d24ed9b5c4f35e664698a9917859ebacf7764fc1d2222",
+    "evidence-manifest-draft.json": "ee09eb5a190a05fb5f2b2aa9987fa858f62c8467f4bc440b6a2d37c366b18191"
+  },
+  "all_current_and_history_inventory_files_match": 64,
+  "all_provenance_measurement_receipt_and_figures_tool_bindings_match": true,
+  "first_empirical_diagnostic_issue_corrected_and_preserved": true
+}

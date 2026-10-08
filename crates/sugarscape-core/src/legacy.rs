@@ -223,6 +223,7 @@ pub(crate) fn convert(value: serde_json::Value) -> Result<Config, FieldError> {
         spatial_hoarding: old.spatial_hoarding,
         lab: None,
         protection_lab: None,
+        deception_lab: None,
         schedule,
     })
 }

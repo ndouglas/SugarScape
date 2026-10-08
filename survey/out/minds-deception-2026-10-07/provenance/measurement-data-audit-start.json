@@ -1,0 +1,6 @@
+{
+  "started_utc": "2026-10-08T06:53:02.228028+00:00",
+  "writer": "/root/p4_registered_measurement_writer",
+  "operation": "read-only complete saved registry/frame/analysis and source/packet invariant audit",
+  "no_world_or_rng_invocation": true
+}

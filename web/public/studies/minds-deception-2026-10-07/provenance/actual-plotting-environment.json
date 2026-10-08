@@ -1,0 +1,10 @@
+{
+  "executable": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/plot-env/bin/python",
+  "ijson": "3.5.1",
+  "ijson_module": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/checkout/.superpowers/sdd/2026-10-07-minds-deception/scientific-execution/actual-artifacts/plot-env/lib/python3.13/site-packages/ijson/__init__.py",
+  "matplotlib": "3.10.9",
+  "matplotlib_module": "/opt/homebrew/lib/python3.13/site-packages/matplotlib/__init__.py",
+  "numpy": "2.4.6",
+  "new_owned_env": true,
+  "general_system_site_packages": true
+}

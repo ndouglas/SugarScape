@@ -635,3 +635,155 @@ fn protection_checkpoints_cover_prepared_memory_and_every_stage() {
         assert!(stages.contains(&stage), "missing {stage:?}");
     }
 }
+
+#[test]
+fn deception_checkpoints_restore_phases_memory_diagnostics_and_rng_continuation() {
+    use sugarscape_core::minds::deception::{lab::rig_config, state::*};
+    let mut covered = Vec::new();
+    let mut paid = false;
+    let mut memory = false;
+    for sender in [SenderPolicy::Sham, SenderPolicy::MatchedNeutral] {
+        let mut straight = ModelWorld::Sugarscape(Box::new(
+            World::new(
+                rig_config(LabConfig {
+                    sender,
+                    effort_cost: 3.0,
+                    ..Default::default()
+                }),
+                7,
+            )
+            .unwrap(),
+        ));
+        for tick in 0..=32 {
+            let owner = sugar(&straight).agent(1).unwrap();
+            let state = owner.deception.clone();
+            covered.push(state.as_ref().unwrap().stage);
+            let seen = sugar(&straight).agent(2).unwrap().seen.clone();
+            memory |= !seen.is_empty();
+            let runtime = sugar(&straight).deception.clone();
+            paid |= runtime
+                .as_ref()
+                .unwrap()
+                .actions
+                .iter()
+                .any(|a| a.effort == 3.0);
+            let mut expected = ModelWorld::Sugarscape(Box::new(sugar(&straight).clone()));
+            let cp = straight.checkpoint().unwrap();
+            let mut restored = ModelWorld::Sugarscape(Box::new(sugar(&straight).clone()));
+            restored.model_mut().run(3);
+            restored.restore(&cp).unwrap();
+            assert_eq!(
+                sugar(&restored).agent(1).unwrap().deception,
+                state,
+                "state tick {tick}"
+            );
+            assert_eq!(
+                sugar(&restored).agent(2).unwrap().seen,
+                seen,
+                "memory tick {tick}"
+            );
+            assert_eq!(sugar(&restored).deception, runtime, "runtime tick {tick}");
+            for next in tick..64 {
+                expected.model_mut().run(1);
+                restored.model_mut().run(1);
+                assert_eq!(
+                    expected.model().fingerprint(),
+                    restored.model().fingerprint(),
+                    "continuation {tick} -> {next}"
+                );
+                assert_eq!(
+                    sugar(&expected).deception,
+                    sugar(&restored).deception,
+                    "shuffled action stream {tick} -> {next}"
+                );
+                assert_eq!(inspect_all(&expected), inspect_all(&restored));
+            }
+            assert_eq!(all_series(&expected), all_series(&restored));
+            straight.model_mut().run(1);
+        }
+    }
+    for stage in [
+        Stage::Preparation,
+        Stage::ToDisplay,
+        Stage::Display,
+        Stage::Return,
+    ] {
+        assert!(covered.contains(&stage), "missing {stage:?}");
+    }
+    assert!(paid, "paid bout exercised");
+    assert!(memory, "observer memory exercised");
+}
+
+#[test]
+fn deception_checkpoint_preserves_pending_departure_and_its_next_action() {
+    use sugarscape_core::minds::deception::{lab::rig_config, state::*};
+    let mut w = World::new(
+        rig_config(LabConfig {
+            sender: SenderPolicy::Sham,
+            effort_cost: 3.0,
+            ..Default::default()
+        }),
+        7,
+    )
+    .unwrap();
+    for _ in 0..20 {
+        w.step();
+    }
+    // Counterfactual source-state control: this queue is authoritative regardless
+    // of whether this finite construction episode happens to recover its source.
+    w.agent_mut(1)
+        .unwrap()
+        .deception
+        .as_mut()
+        .unwrap()
+        .pending_departure = true;
+    let mut expected = ModelWorld::Sugarscape(Box::new(w.clone()));
+    let mut restored = ModelWorld::Sugarscape(Box::new(w));
+    let cp = restored.checkpoint().unwrap();
+    restored.model_mut().run(3);
+    restored.restore(&cp).unwrap();
+    assert!(
+        sugar(&restored)
+            .agent(1)
+            .unwrap()
+            .deception
+            .as_ref()
+            .unwrap()
+            .pending_departure
+    );
+    for tick in 20..64 {
+        expected.model_mut().run(1);
+        restored.model_mut().run(1);
+        if tick == 20 {
+            let action = sugar(&restored)
+                .deception
+                .as_ref()
+                .unwrap()
+                .actions
+                .iter()
+                .find(|a| a.actor == 1)
+                .unwrap();
+            assert_eq!(action.action, "departure");
+            assert_eq!(action.target, Some(Pos::new(3, 2)));
+            assert!(
+                !sugar(&restored)
+                    .agent(1)
+                    .unwrap()
+                    .deception
+                    .as_ref()
+                    .unwrap()
+                    .pending_departure
+            );
+        }
+        assert_eq!(
+            sugar(&expected).deception,
+            sugar(&restored).deception,
+            "actions tick {tick}"
+        );
+        assert_eq!(
+            expected.model().fingerprint(),
+            restored.model().fingerprint()
+        );
+        assert_eq!(inspect_all(&expected), inspect_all(&restored));
+    }
+}

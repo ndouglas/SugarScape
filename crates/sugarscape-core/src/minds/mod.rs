@@ -6,6 +6,7 @@
 pub mod astar;
 pub mod caching;
 pub mod central;
+pub mod deception;
 pub mod goap;
 pub mod grid;
 pub mod memory;
@@ -22,6 +23,9 @@ use crate::world::World;
 /// Rule M's step under the configured decision rule: moves `id` and returns
 /// its harvest.
 pub(crate) fn decide(world: &mut World, id: AgentId) -> Harvest {
+    if let Some(harvest) = deception::runner::scripted_action(world, id) {
+        return harvest;
+    }
     if let Some(harvest) = protection::lab::scripted_action(world, id) {
         return harvest;
     }

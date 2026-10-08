@@ -447,7 +447,7 @@ verdicts. The program's [durable record][minds] preserves superseded rounds and 
 | Minds 7 | Hoarding endpoints/threshold approximately recovered under per-burrow reading; speed/loss and source readings differ | [RR-HOARD-01–06](#rr-hoard-01) |
 | Minds 8 | Second-round hazard/condition/forgoing frequency directions supported; other own hypotheses fail; first-round overclaims withdrawn | [RR-M8-01–06](#rr-m8-01); [RR-FIX-14](#rr-fix-14) |
 | Minds 9 | Complete measured campaign, no formal Holds/Fails or stability judgment; replay/biology checks recovered | [RR-M9-01–03](#rr-m9-01) |
-| Protection/deception | P3 fixed campaign measured: all 7,680 episodes/208 estimates retained, independently reviewed; publication pending; P4 prospective | [RR-P3-01–04](#rr-p3-01); [RR-LEAD-04](#rr-lead-04) |
+| Protection/deception | P3 fixed campaign measured: all 7,680 episodes/208 estimates retained, independently reviewed; publication pending; P4 measured and independently empirically Approved: all 3,840 episodes/128 separate estimates; final integration/publication/remote verification/archive pending | [RR-P3-01–04](#rr-p3-01); [RR-P4-01–04](#rr-p4-01); [RR-LEAD-04](#rr-lead-04) |
 | Burrow/construction | Selected excavation anchors/design readings; no scientific reproduction results yet | [RR-LEAD-05](#rr-lead-05) |
 | Foraging F1/F2 | CPFA controller rules/variants and fixed-world implementation documented; scientific execution separate | [RR-LEAD-06](#rr-lead-06) |
 
@@ -532,6 +532,22 @@ scientific claim. The next action is retention/regression monitoring, not rerunn
 | <a id="rr-fix-13"></a>RR-FIX-13 | polarity, M36 / Local correction / Resolved / R; [record][eptelemetry] | Direct stock telemetry and strict JSON [export correction][epexport] retain measured same-seed counts/receipts; no period-exposure measurement implied. | Retain telemetry/export amendments with source clock and denominators. |
 | <a id="rr-fix-14"></a>RR-FIX-14 | Minds 8 / Local correction / Superseded / L; [record][minds] | First-design field band/condition/scrounger comparisons inadequate; four interpretation overclaims withdrawn. Second round replaced judges and preserves first-round data. | Use later results without pooling rounds; retain first-round audit/withdrawal. |
 
+## Minds P4 — dated execution update, campaign 2026-10-07
+
+All 96×40 episodes completed after actual independent prospective acceptance; saved-data reanalysis
+is byte-identical. The [actual independent empirical review](../survey/out/minds-deception-2026-10-07/provenance/empirical-review.md)
+Approved all 64 primary and 64 separate secondary descriptive estimates and corrected reporting.
+The [packet](../survey/out/minds-deception-2026-10-07/README.md) links public lossless raw/full-analysis,
+accepted-source/native-executable/protocol and saved-reanalysis archives. Final integration review,
+publication, remote CI/Pages/served verification and final archival remain pending.
+
+| ID | Classification and record | Finding or limit | Follow-up |
+|---|---|---|---|
+| <a id="rr-p4-01"></a>RR-P4-01 | Minds P4 / Question / Open / R; [findings][p4] | Seen ambiguous off-route primary food/lifetime are −6.6/+6.6 free and −12/+12 paid, separately per orientation; all other 28 primary strata are zero. On-route false inspection does not establish benefit. | Retain all 64 primary and 64 separate secondary estimates; broader geometry/contact requires new registration. |
+| <a id="rr-p4-02"></a>RR-P4-02 | Minds P4 / Question / Open / R; [findings][p4] | Physical recovery free39/paid36 precedes departure40/37. Ordinary action order/recovery and transient source occupancy participate in the off-route race; selected target occupancy cannot exclude suppressed candidates. | Keep full raw recovery frames and unsuccessful seeds; isolate causal contributions only in a new design. |
+| <a id="rr-p4-03"></a>RR-P4-03 | Minds P4 / Provenance / Resolved for fixed campaign / R; [actual review](../survey/out/minds-deception-2026-10-07/provenance/empirical-review.md) | One registered launch; all 3,840 complete, zero failed/invalid/partial/pending/unavailable. One same-native saved-data reanalysis is byte-identical. Original audit/render/reporting corrections and historical Task4 TDD noncompliance remain preserved. | Preserve frozen e10 scientific identity separately from publication commits and exact public archive/member hashes; finish remote served-byte verification. |
+| <a id="rr-p4-04"></a>RR-P4-04 | Minds P4 / Question / Open / R; [findings][p4] | Supplied cue rules, ordinary aliases and repeated endpoints do not establish learned intent, independent animal replication or a numerical corvid reproduction. Paid lifetime against Ordinary is −3 outside the seen ambiguous off-route cells. | Keep false estimate/diversion/first-transfer/lifetime separate; unresolved 1998 source remains a lead. |
+
 ## Minds P3 — dated execution update, campaign 2026-10-06
 
 Added on 2026-10-07 UTC (2026-10-06 America/New_York). All entries concern our own bounded
@@ -556,7 +572,7 @@ not evidence of a failed model.
 | <a id="rr-lead-01"></a>RR-LEAD-01 | Cederman–Rao 2001 / Lead / Not measured / D; [record][dpauthor] | Empirical varying-coefficient dyad-year GLM needs actual data/coding/filtering/bandwidth; not additional 2001 lattice dynamics or current validation. | Retrieve data/estimation protocol and visually verify numerical OCR before empirical reproduction. |
 | <a id="rr-lead-02"></a>RR-LEAD-02 | Cederman–Gleditsch 2004 / Lead / Not measured / D; [record][dpauthor] | Regime-change extension explicitly not directly comparable to 2001; 50×50 /200 states /500+10,000 periods and Moran's I differ from 2001 exposure. | Freeze its own calibration/equations/statistics/protocol; do not fold source-reported .072/.064 into our results. |
 | <a id="rr-lead-03"></a>RR-LEAD-03 | Rousseau 2005 / DomGeoSim / Lead / Blocked on source / D; [primary book][rousseau] and [earlier audit][dpauthor] | Rousseau’s Democracy and War, chapter 7, printed p. 337 notes 2–3, reports reproducing Cederman before extending it, using Cederman-provided code programmed by van der Veen. It reports similar, nonidentical results and minor corrections said to leave substantive findings unchanged. This is a reported reproduction, not our independent exact-2001-code verification; the earlier bounded audit remains unchanged. | Retrieve publication-mapped DomGeoSim/code/corrections/RNG/settings and outputs before docking or adopting a source-equivalence verdict. |
-| <a id="rr-lead-04"></a>RR-LEAD-04 | Minds protection/deception / Lead / Superseded for first P3; P4 Not measured / D with later R; [original record][m9], [dated execution][p3] | The 2026-10-06 backfill recorded P3 as implemented but unexecuted. Later actual prospective gate and 7,680-episode campaign close that availability gap; independently reviewed; publication pending. P4/behavior trees/HTN/collective agency remain prospective. | Use dated P3 evidence without rewriting its registration or historical results; P4 and broader protection need their own designs. |
+| <a id="rr-lead-04"></a>RR-LEAD-04 | Minds protection/deception / Lead / Superseded for first P3/P4 availability; broader work Open / D with later R; [original record][m9], [dated P3 execution][p3], [dated P4 execution][p4] | The 2026-10-06 backfill recorded P3 as implemented but unexecuted. Later actual prospective gate and 7,680-episode campaign close that availability gap; independently reviewed; publication pending. P4 [protocol](superpowers/specs/2026-10-07-minds-deception-protocol.md) now has one accepted complete 96×40 campaign and byte-identical saved-data reanalysis, independently empirically Approved; all 64 primary/64 separate secondary estimates remain. Final integration review, publication, remote verification and final archival remain pending. Its supplied cue assumptions separate false estimates, diversion and economics; the unresolved 1998 citation remains a lead. Behavior trees/HTN/collective agency remain prospective. | Use dated P3 evidence without rewriting its registration or historical results; broader P4/protection extensions need new designs; use the dated bounded P4 evidence without revising its registration. |
 | <a id="rr-lead-05"></a>RR-LEAD-05 | Burrow/construction / Lead / Not measured / D; [record][burrow] | Pielström–Roces 2013 selected transport/cue anchor; Green 2017 /Prasath 2023 later alternatives; architecture books research sources, not reproduced models. | Refine approved excavation contract and specify independent validation; no existing failure verdict. |
 | <a id="rr-lead-06"></a>RR-LEAD-06 | Foraging/construction / Lead / Not measured / D; [record][foraging] | Hecker–Moses 2015 CPFA controller reference and Michael 2023 termite comparison; F1/F2 implemented rules are not executed scientific reproductions. | Bind source controller/world/measurement before execution; keep biological shortcut comparison separate. |
 
@@ -608,6 +624,7 @@ and are not redistributed or replaced by this register.
 [m8]: ../README.md#minds-8-watching
 [m9]: studies/2026-09-27-minds.md#minds-9-spatial-hoarding-paid-defense-and-seasonal-inheritance
 [p3]: superpowers/specs/2026-10-06-minds-protection-findings.md
+[p4]: superpowers/specs/2026-10-07-minds-deception-findings.md
 [eprepair]: superpowers/specs/2026-10-03-emergent-polarity-sequential-amendment.md
 [epdomestic]: superpowers/specs/2026-10-03-emergent-polarity-domestic-amendment.md
 [eptelemetry]: superpowers/specs/2026-10-03-emergent-polarity-telemetry-amendment.md

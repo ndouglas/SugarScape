@@ -1,0 +1,20 @@
+{
+  "login_shell": false,
+  "environment_overrides": {
+    "CARGO_HOME": "/tmp/sugarscape-minds-p4-20261007-vb9tv64o/cargo-home",
+    "CARGO_TARGET_DIR": "/tmp/sugarscape-minds-p4-20261007-vb9tv64o/target",
+    "CARGO_NET_OFFLINE": "true"
+  },
+  "inherited_relevant_variables": {
+    "PATH": "/Users/nathan/.codex/packages/app-server-daemon/releases/0.161.0-aarch64-apple-darwin/codex-path:/Users/nathan/.codex/tmp/arg0/codex-arg0HZCY15:/Users/nathan/.codex/tmp/arg0/codex-arg0Q7Upj6:/Users/nathan/.codex/packages/standalone/releases/0.160.1-aarch64-apple-darwin/codex-path:/Users/nathan/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/nathan/.gem/ruby/3.1.3/bin:/Users/nathan/.rubies/ruby-3.1.3/lib/ruby/gems/3.1.0/bin:/Users/nathan/.rubies/ruby-3.1.3/bin:/Users/nathan/.venv/bin:/Users/nathan/Projects/flutterSDK/flutter:/opt/homebrew/anaconda3/bin:/opt/homebrew/opt/gnu-getopt/bin:/Users/nathan/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand:/Users/nathan/Library/Application Support/Code/User/globalStorage/github.copilot-chat/copilotCli:/Users/nathan/.elan/bin:/Users/nathan/.cabal/bin:/Users/nathan/.ghcup/bin:/Users/nathan/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/nathan/.nvm/versions/node/v18.20.1/bin:/Users/nathan/.venv/bin:/Users/nathan/Projects/flutterSDK/flutter:/opt/homebrew/anaconda3/bin:/opt/homebrew/opt/gnu-getopt/bin:/Applications/Visual Studio Code.app/Contents/Resources/app/bin:/usr/local/sbin:/opt/homebrew/bin:/Users/nathan/.local/bin:/Users/nathan/.cargo/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/TeX/texbin:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/Users/nathan/Library/Application Support/Code/User/globalStorage/github.copilot-chat/debugCommand:/Users/nathan/Library/Application Support/Code/User/globalStorage/github.copilot-chat/copilotCli:/Users/nathan/.vscode/extensions/ms-python.debugpy-2026.6.0-darwin-arm64/bundled/scripts/noConfigScripts:/Users/nathan/go/bin:/Users/nathan/.pub-cache/bin:/Users/nathan/go/bin:/Users/nathan/.pub-cache/bin",
+    "PWD": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/task5-scientific-source-e10f98d",
+    "TMPDIR": "/var/folders/_0/j0_zkq_d3jn0klz033gq33cc0000gn/T/"
+  },
+  "cwd": "/private/tmp/sugarscape-minds-p4-20261007-vb9tv64o/task5-scientific-source-e10f98d",
+  "cargo_config": {
+    "path": "/tmp/sugarscape-minds-p4-20261007-vb9tv64o/cargo-home/config.toml",
+    "sha256": "d1c0ec173c0342c0fd0cba7ad16b1901325c64220eb6abd8082b99f76811d24c",
+    "bytes": 80,
+    "mode": "100644"
+  }
+}
