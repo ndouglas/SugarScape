@@ -1075,6 +1075,12 @@ impl World {
                 l.reconcile()
             });
         }
+        if self.agent(id).is_some() {
+            crate::minds::deception::accounting::update(self, id, |l| {
+                l.lose_owner();
+                l.reconcile()
+            });
+        }
         let agent = self.agents.remove(&id)?;
         if !agent.caches.is_empty() {
             self.events.cache_lost += agent.caches.values().sum::<f64>();

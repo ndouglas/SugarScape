@@ -58,6 +58,11 @@ fn runtime_round_trips() {
         display: 59,
         prepared: false,
         diagnostics: true,
+        ledger: None,
+        ledger_errors: vec![],
+        bouts: vec![],
+        sham_bouts_seen: 0,
+        sham_sightings: 0,
     };
     assert_eq!(
         serde_json::from_str::<Runtime>(&serde_json::to_string(&runtime).unwrap()).unwrap(),
@@ -81,6 +86,11 @@ fn default_off_json_and_fingerprint_remain_compatible() {
         display: 59,
         prepared: true,
         diagnostics: true,
+        ledger: None,
+        ledger_errors: vec![],
+        bouts: vec![],
+        sham_bouts_seen: 0,
+        sham_sightings: 0,
     });
     assert_eq!(w.fingerprint(), hidden.fingerprint());
 }

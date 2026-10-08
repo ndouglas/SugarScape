@@ -92,6 +92,65 @@ pub fn update_seen(
     Ok(())
 }
 
+/// Sole P4 information channel. Recipient sight and public view belong to the sensor.
+pub(crate) fn dispatch(
+    w: &mut crate::world::World,
+    actor: u64,
+    site: u32,
+    actual_transfer: f64,
+    initial_clear: bool,
+) -> Result<(), String> {
+    let lab = w
+        .config
+        .deception_lab
+        .as_ref()
+        .ok_or("P4 observation requires lab")?;
+    if w.deception.is_none() || site as usize >= w.sites.len() {
+        return Err("P4 observation requires valid runtime and site".into());
+    }
+    let view = if initial_clear { View::Clear } else { lab.view };
+    let obs = perceive(
+        actor,
+        site,
+        w.tick,
+        actual_transfer,
+        view,
+        super::state::NOMINAL_AMOUNT,
+    )?;
+    if !w.config.watching.on {
+        return Ok(());
+    }
+    let watchers = crate::minds::caching::watching::watchers_of(w, actor, site);
+    for &receiver in &watchers {
+        update_seen(
+            &mut w.agent_mut(receiver).expect("live watcher").seen,
+            &obs,
+            crate::minds::memory::MEMORY_CAP,
+        )?;
+    }
+    if actual_transfer > 0.0 && !watchers.is_empty() {
+        w.events.burials_seen += 1;
+        w.events.sightings += u32::try_from(watchers.len()).unwrap_or(u32::MAX);
+    } else if actual_transfer == 0.0 && !watchers.is_empty() {
+        if let Some(r) = w.deception.as_mut().filter(|r| r.diagnostics) {
+            r.sham_bouts_seen += 1;
+            r.sham_sightings += watchers.len() as u64;
+        }
+    }
+    Ok(())
+}
+/// True only when the bounded P4 channel owns this positive burial.
+pub(crate) fn on_real_burial(w: &mut crate::world::World, actor: u64, site: u32, q: f64) -> bool {
+    if w.config.deception_lab.is_none() || w.deception.is_none() || q <= 0.0 {
+        return false;
+    }
+    let initial_clear = super::accounting::is_original_deposit(w, actor, site, q);
+    if let Err(error) = dispatch(w, actor, site, q, initial_clear) {
+        super::accounting::fail(w, error);
+    }
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

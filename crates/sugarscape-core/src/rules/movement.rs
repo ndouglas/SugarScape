@@ -553,6 +553,8 @@ pub(crate) fn gather_site(
         *have += got;
     }
     crate::minds::protection::ledger::update(world, id, |l| l.harvest(harvest.gathered[0]));
+    crate::minds::deception::accounting::update(world, id, |l| l.harvest(harvest.gathered[0]));
+    crate::minds::deception::accounting::reconcile_world(world);
     if let Some(a) = world.protection_actions.last_mut().filter(|a| a.id == id) {
         a.harvest += harvest.gathered[0];
     }

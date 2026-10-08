@@ -116,5 +116,13 @@ pub(crate) fn initialize(w: &mut World) {
         display: w.torus.index(transform(&lab, display)) as u32,
         prepared: false,
         diagnostics: true,
+        ledger: Some(crate::minds::protection::ledger::Ledger::new(
+            1,
+            w.agent(1).expect("constructed owner").holdings[0],
+        )),
+        ledger_errors: vec![],
+        bouts: vec![],
+        sham_bouts_seen: 0,
+        sham_sightings: 0,
     });
 }

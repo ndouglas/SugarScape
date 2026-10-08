@@ -67,12 +67,16 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
     if world.config.disease.enabled && world.config.disease.cure == DiseaseCure::NextTick {
         disease::cure_immune(world, id);
     }
-    let harvest = if world.config.combat.enabled {
-        combat::act(world, id)
-    } else {
-        crate::minds::decide(world, id)
-    };
+    let harvest =
+        if let Some(harvest) = crate::minds::deception::controller::display_turn(world, id) {
+            harvest
+        } else if world.config.combat.enabled {
+            combat::act(world, id)
+        } else {
+            crate::minds::decide(world, id)
+        };
     crate::minds::protection::ledger::reconcile_world(world);
+    crate::minds::deception::accounting::reconcile_world(world);
     if world.config.memory.span > 0 {
         crate::minds::memory::observe(world, id);
     }
@@ -91,6 +95,7 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
         credit::record_income(world, id, &harvest);
     }
     crate::minds::protection::ledger::reconcile_world(world);
+    crate::minds::deception::accounting::reconcile_world(world);
     if lifecycle::check_death(world, id) {
         return;
     }

@@ -83,4 +83,14 @@ pub struct Runtime {
     pub prepared: bool,
     /// Diagnostics never affect decisions or fingerprints.
     pub diagnostics: bool,
+    #[serde(default)]
+    pub ledger: Option<crate::minds::protection::ledger::Ledger>,
+    #[serde(default)]
+    pub ledger_errors: Vec<String>,
+    #[serde(default)]
+    pub bouts: Vec<super::controller::BoutRecord>,
+    #[serde(default)]
+    pub sham_bouts_seen: u64,
+    #[serde(default)]
+    pub sham_sightings: u64,
 }
