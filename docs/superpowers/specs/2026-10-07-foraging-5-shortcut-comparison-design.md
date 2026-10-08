@@ -1,7 +1,7 @@
 # F5: bounded shortcut and food-return comparison
 
 **Date:** 2026-10-07.
-**Status:** mechanism-first scope, collection/analysis architecture and this complete written specification/candidate workload approved by the user on 2026-10-07. The [implementation plan](../plans/2026-10-07-foraging-5-shortcut-comparison.md) awaits review; executable scientific registration and scientific execution remain separate.
+**Status:** mechanism-first scope, collection/analysis architecture and this complete written specification/candidate workload approved by the user on 2026-10-07. The user approved the [implementation plan](../plans/2026-10-07-foraging-5-shortcut-comparison.md) on2026-10-07; subagent-driven engineering execution is starting; executable scientific registration and scientific execution remain separate.
 **Programme:** [F1–F5 construction sequence](2026-10-04-foraging-construction-design.md).
 **Baseline:** [F4 construction](2026-10-06-foraging-4-construction-design.md), locally integrated at `568a3fa`, recorded at `a2ebf4f`; fresh merged-tree workspace 2,852 passed/0 failed/103 ignored, formatter and core Clippy clean. This design worktree includes subsequent main `0d2bc3b` shared-surface work.
 **Sources:** [preliminary shortcut audit](../../studies/2026-10-07-foraging-shortcut-reading.md), including retrieved author material and unresolved workbook/figure access.
@@ -120,7 +120,7 @@ Write deterministic `analysis.json` and `results.md` into a new directory. Reana
 
 ## Review gates and next step
 
-The user approved scope, collection/analysis architecture and this concrete written specification on 2026-10-07. The staged implementation plan is written for review and preserves the standing subagent-driven preference. Preserve F1–F4 production regression gates; include `cargo test --manifest-path survey/Cargo.toml`, survey formatting/Clippy, core workspace tests/format/Clippy and independent task/whole-branch reviews appropriate to the eventual plan.
+The user approved scope, collection/analysis architecture and this concrete written specification on 2026-10-07. The user approved the staged implementation plan on2026-10-07; it preserves the standing subagent-driven preference and engineering execution is starting. Preserve F1–F4 production regression gates; include `cargo test --manifest-path survey/Cargo.toml`, survey formatting/Clippy, core workspace tests/format/Clippy and independent task/whole-branch reviews appropriate to the eventual plan.
 
 Engineering fixtures, harness integration, executable scientific manifest registration and actual scientific collection retain separate approvals. This written design authorizes no campaign execution. Future controller robustness, biological geometry calibration, widening/backfill/feeding, workforce/rotation sensitivity, role allocation and relay transport require explicit later designs.
 
