@@ -185,12 +185,15 @@ impl Protocol {
             return invalid("prefix identifiers differ from protocol");
         }
         if prefix.role != self.experimenter
-            && prefix
+            && (matches!(
+                prefix.checkpoint,
+                Checkpoint::Boundary(Boundary::TrialChoice { .. })
+            ) || prefix
                 .entries
                 .iter()
-                .any(|e| matches!(e, Entry::OwnChoice { .. }))
+                .any(|e| matches!(e, Entry::OwnChoice { .. })))
         {
-            return invalid("responder cannot receive the experimenter's private choices");
+            return invalid("responder cannot receive private choices or trial choice checkpoints");
         }
         let valid_prior = if prefix.role == self.experimenter && self.policy != PolicyKind::Known {
             prefix.own_prior == OwnPrior::Uniform
@@ -201,8 +204,45 @@ impl Protocol {
             return invalid("own prior disagrees with declared policy role");
         }
         if prefix.role == self.experimenter {
+            if let Checkpoint::BeforeSlot(Position {
+                phase: Phase::Calibration,
+                round,
+                ..
+            })
+            | Checkpoint::AfterSlot(Position {
+                phase: Phase::Calibration,
+                round,
+                ..
+            }) = prefix.checkpoint
+            {
+                if !prefix.entries.contains(&Entry::OwnChoice {
+                    boundary: Boundary::ProbeChoice {
+                        completed: round - 1,
+                    },
+                    choice: Choice::ContinueProbe,
+                }) {
+                    return invalid("entered probe round omitted its own continue intervention");
+                }
+            }
             for entry in &prefix.entries {
+                if let Entry::OwnChoice {
+                    boundary: Boundary::ProbeChoice { completed },
+                    choice: Choice::StopProbing,
+                } = entry
+                {
+                    if !prefix.entries.contains(&Entry::PublicProbeStop {
+                        completed: *completed,
+                    }) {
+                        return invalid("own stop omitted its atomic public stop counterpart");
+                    }
+                }
                 let required = match entry {
+                    Entry::Physical(LocalEntry::Reset {
+                        phase: Phase::Calibration,
+                    }) => Some((
+                        Boundary::ProbeChoice { completed: 0 },
+                        Choice::ContinueProbe,
+                    )),
                     Entry::PublicProbeStop { completed } => Some((
                         Boundary::ProbeChoice {
                             completed: *completed,

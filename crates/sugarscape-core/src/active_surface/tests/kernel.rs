@@ -417,6 +417,7 @@ fn selecting_stop_records_public_boundary_without_bits_or_cost() {
 #[test]
 fn every_one_step_snapshot_is_a_valid_local_view() {
     for experimenter in [Role::A, Role::B] {
+        let protocol = Protocol::new(experimenter, PolicyKind::Adaptive);
         let mut s = state(
             experimenter,
             PolicyKind::Adaptive,
@@ -451,13 +452,75 @@ fn every_one_step_snapshot_is_a_valid_local_view() {
                 Checkpoint::Finished => break,
                 _ => {}
             }
+            for role in [Role::A, Role::B] {
+                protocol.validate_prefix(s.prefix(role)).unwrap();
+            }
             let step = advance_one(&mut s).unwrap();
             count += step.events.len();
             for role in [Role::A, Role::B] {
                 View::from_prefix(s.prefix(role).clone(), belief()).unwrap();
+                protocol.validate_prefix(s.prefix(role)).unwrap();
             }
         }
         assert_eq!(count, 60);
+    }
+}
+
+// Catches requiring Continue only after the first paid outcome of a round.
+#[test]
+fn entered_probe_round_requires_own_continue_before_first_paid_slot() {
+    for experimenter in [Role::A, Role::B] {
+        let protocol = Protocol::new(experimenter, PolicyKind::Adaptive);
+        for completed in 0..=2 {
+            let mut s = state(experimenter, PolicyKind::Adaptive, Mechanism::Inert);
+            for _ in 0..completed {
+                apply_choice(&mut s, Choice::ContinueProbe).unwrap();
+            }
+            select_choice(&mut s, Choice::ContinueProbe).unwrap();
+            advance_one(&mut s).unwrap();
+            let mut prefix = s.prefix(experimenter).clone();
+            prefix.entries.retain(|entry| {
+                !matches!(entry, Entry::OwnChoice { boundary: Boundary::ProbeChoice { completed: chosen }, .. } if *chosen == completed)
+            });
+            assert!(protocol.validate_prefix(&prefix).is_err());
+        }
+    }
+}
+
+// Catches accepting the private half of an atomically emitted public Stop.
+#[test]
+fn queued_own_stop_requires_matching_public_stop() {
+    for experimenter in [Role::A, Role::B] {
+        let protocol = Protocol::new(experimenter, PolicyKind::Adaptive);
+        let mut s = state(experimenter, PolicyKind::Adaptive, Mechanism::Inert);
+        select_choice(&mut s, Choice::StopProbing).unwrap();
+        let mut prefix = s.prefix(experimenter).clone();
+        prefix
+            .entries
+            .retain(|entry| !matches!(entry, Entry::PublicProbeStop { .. }));
+        assert!(protocol.validate_prefix(&prefix).is_err());
+    }
+}
+
+// Catches giving a responder the experimenter's private live decision checkpoint.
+#[test]
+fn responder_cannot_have_a_trial_choice_checkpoint() {
+    for experimenter in [Role::A, Role::B] {
+        let protocol = Protocol::new(experimenter, PolicyKind::Adaptive);
+        let mut s = state(
+            experimenter,
+            PolicyKind::Adaptive,
+            Mechanism::SharedPersistent,
+        );
+        apply_choice(&mut s, Choice::StopProbing).unwrap();
+        let responder = if experimenter == Role::A {
+            Role::B
+        } else {
+            Role::A
+        };
+        let mut prefix = s.prefix(responder).clone();
+        prefix.checkpoint = Checkpoint::Boundary(Boundary::TrialChoice { trial: 0 });
+        assert!(protocol.validate_prefix(&prefix).is_err());
     }
 }
 
