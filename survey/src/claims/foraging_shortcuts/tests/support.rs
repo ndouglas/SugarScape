@@ -8,7 +8,7 @@ use std::{
     sync::{Mutex, OnceLock},
 };
 use sugarscape_core::foraging::construction as core;
-pub(super) fn test_provenance() -> Provenance {
+pub(in crate::claims::foraging_shortcuts) fn test_provenance() -> Provenance {
     Provenance {
         code_revision: "a".repeat(40),
         protocol_revision: "b".repeat(40),
@@ -35,7 +35,10 @@ pub(super) fn cached_candidate_episode(id: &str, seed: u64) -> Result<core::Epis
     cache.insert(key, e.clone());
     Ok(e)
 }
-pub(super) fn encoded_fixture(id: &str, seed: u64) -> Result<Vec<u8>, String> {
+pub(in crate::claims::foraging_shortcuts) fn encoded_fixture(
+    id: &str,
+    seed: u64,
+) -> Result<Vec<u8>, String> {
     encode_envelope(
         &RunKey {
             condition: id.into(),
@@ -47,7 +50,10 @@ pub(super) fn encoded_fixture(id: &str, seed: u64) -> Result<Vec<u8>, String> {
         4 * 1024 * 1024,
     )
 }
-pub(super) fn decode_fixture(id: &str, seed: u64) -> Result<WireEnvelope, String> {
+pub(in crate::claims::foraging_shortcuts) fn decode_fixture(
+    id: &str,
+    seed: u64,
+) -> Result<WireEnvelope, String> {
     decode_envelope(
         &encoded_fixture(id, seed)?,
         &RunKey {
@@ -132,4 +138,33 @@ pub(super) fn disconnected_handling_fixture() -> super::super::wire::WireEpisode
     }
     e.summary = e.snapshots.last().unwrap().summary.clone();
     e
+}
+
+/// Owns one exclusively created test directory; never cleans up a pre-existing path.
+pub(in crate::claims::foraging_shortcuts) struct OwnedTempdir(std::path::PathBuf);
+impl OwnedTempdir {
+    pub(in crate::claims::foraging_shortcuts) fn path(&self) -> &std::path::Path {
+        &self.0
+    }
+}
+impl Drop for OwnedTempdir {
+    fn drop(&mut self) {
+        std::fs::remove_dir_all(&self.0).expect("remove owned test directory");
+    }
+}
+pub(in crate::claims::foraging_shortcuts) fn owned_tempdir() -> OwnedTempdir {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(0);
+    loop {
+        let path = std::env::temp_dir().join(format!(
+            "sugarscape-f5-{}-{}",
+            std::process::id(),
+            NEXT.fetch_add(1, Ordering::Relaxed)
+        ));
+        match std::fs::create_dir(&path) {
+            Ok(()) => return OwnedTempdir(path),
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(e) => panic!("create owned test directory {}: {e}", path.display()),
+        }
+    }
 }

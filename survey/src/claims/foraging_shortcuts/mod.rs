@@ -1,6 +1,12 @@
 //! Fixed F5 shortcut comparison inputs; manifest construction never runs workers.
 mod access;
 mod agents;
+#[allow(
+    dead_code,
+    reason = "Task 4 collector and Task 5 analyzer consume the archive API"
+)]
+mod archive;
+mod io;
 mod manifest;
 mod physical;
 mod scenario;

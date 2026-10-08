@@ -18,7 +18,7 @@ Spec/plan approved2026-10-07; subagent-driven execution. Detailed plan: docs/sup
 **Goal**: Bounded exclusive writer and streaming reader
 **Success Criteria**: No overwrite/subset, correct failure evidence and final publication
 **Tests**: `foraging_shortcuts::tests::archive`
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 4: Collector and CLI
 **Goal**: Explicit provenance-bound construction collection
