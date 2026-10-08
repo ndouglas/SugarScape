@@ -124,5 +124,82 @@ pub(crate) fn initialize(w: &mut World) {
         bouts: vec![],
         sham_bouts_seen: 0,
         sham_sightings: 0,
+        source_recovered: false,
+        actions: vec![],
+        observations: vec![],
+        choices: vec![],
+        deaths: vec![],
+        fixture_errors: vec![],
+        restrictions: Default::default(),
     });
+}
+
+/// Canonical axis order is fixed before constructing any worlds.
+pub fn conditions() -> Vec<LabConfig> {
+    let mut out = Vec::new();
+    for sender in [
+        SenderPolicy::Ordinary,
+        SenderPolicy::MatchedNeutral,
+        SenderPolicy::Sham,
+    ] {
+        for view in [View::Ambiguous, View::Clear] {
+            for display_seen in [false, true] {
+                for layout in [Layout::OnRoute, Layout::OffRoute] {
+                    for effort_cost in [0.0, 3.0] {
+                        for mirrored in [false, true] {
+                            out.push(LabConfig {
+                                sender,
+                                view,
+                                display_seen,
+                                layout,
+                                effort_cost,
+                                mirrored,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    out.sort_by_key(condition_id);
+    out
+}
+pub fn condition_id(c: &LabConfig) -> String {
+    format!(
+        "{}-{}-{}-{}-cost{}-{}",
+        match c.sender {
+            SenderPolicy::Ordinary => "ordinary",
+            SenderPolicy::MatchedNeutral => "matched_neutral",
+            SenderPolicy::Sham => "sham",
+        },
+        match c.view {
+            View::Ambiguous => "ambiguous",
+            View::Clear => "clear",
+        },
+        if c.display_seen { "seen" } else { "unseen" },
+        match c.layout {
+            Layout::OnRoute => "on_route",
+            Layout::OffRoute => "off_route",
+        },
+        c.effort_cost,
+        if c.mirrored { "reflected" } else { "base" }
+    )
+}
+/// Declared owner waypoints; no RNG or world construction occurs here.
+pub(crate) fn owner_route(layout: Layout, outward: bool) -> Vec<Pos> {
+    let points: &[(u32, u32)] = match (layout, outward) {
+        (Layout::OnRoute, true) => &[(3, 4), (3, 5)],
+        (Layout::OffRoute, true) => &[(4, 3), (5, 3), (5, 4), (5, 5), (5, 6)],
+        (Layout::OnRoute, false) => &[(2, 5), (2, 4), (2, 3)],
+        (Layout::OffRoute, false) => &[(5, 5), (4, 5), (3, 5), (2, 5), (2, 4), (2, 3)],
+    };
+    points.iter().map(|&(x, y)| Pos::new(x, y)).collect()
+}
+pub(crate) fn observer_route(outward: bool) -> Vec<Pos> {
+    let points: &[(u32, u32)] = if outward {
+        &[(4, 6), (5, 6), (6, 6), (7, 6), (7, 7)]
+    } else {
+        &[(7, 6), (6, 6), (5, 6), (4, 6), (3, 6)]
+    };
+    points.iter().map(|&(x, y)| Pos::new(x, y)).collect()
 }

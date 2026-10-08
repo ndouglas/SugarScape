@@ -52,6 +52,7 @@ impl Harvest {
 /// (if still alive) mate with each neighbor, spread culture to them, trade,
 /// borrow, and (rule E) train its immune system and pass on disease.
 pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
+    crate::minds::deception::runner::start_action(world, id);
     if world.config.protection_lab.is_some() {
         world
             .protection_actions
@@ -75,6 +76,7 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
         } else {
             crate::minds::decide(world, id)
         };
+    crate::minds::deception::runner::finish_action(world, id, harvest);
     crate::minds::protection::ledger::reconcile_world(world);
     crate::minds::deception::accounting::reconcile_world(world);
     if world.config.memory.span > 0 {
@@ -83,7 +85,10 @@ pub(crate) fn agent_turn(world: &mut World, id: AgentId) {
     // Minds 5: burying, after the move and harvest and before eating.
     if world.config.spatial_hoarding.enabled {
         crate::minds::spatial_hoarding::delivery::finish_turn(world, id);
-    } else if world.config.protection_lab.is_none() && world.config.caching.buries() {
+    } else if world.config.protection_lab.is_none()
+        && world.config.deception_lab.is_none()
+        && world.config.caching.buries()
+    {
         crate::minds::caching::rules::act(world, id, &harvest);
     }
     lifecycle::metabolize(world, id, harvest);

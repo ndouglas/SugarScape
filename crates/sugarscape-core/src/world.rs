@@ -1069,6 +1069,7 @@ impl World {
     /// by an edit aren't reported in any tick's `cache_lost`. Minds 6: its
     /// open fate records close as `Lost`.
     pub(crate) fn remove(&mut self, id: AgentId) -> Option<Agent> {
+        crate::minds::deception::runner::removed(self, id, "removed");
         if self.agent(id).is_some() {
             crate::minds::protection::ledger::update(self, id, |l| {
                 l.lose_owner();
@@ -1154,6 +1155,19 @@ impl World {
             Vec::new()
         };
         let agent = self.remove(id)?;
+        if let Some(d) = self
+            .deception
+            .as_mut()
+            .filter(|_| self.config.deception_lab.is_some())
+            .and_then(|r| r.deaths.iter_mut().rev().find(|d| d.actor == id))
+        {
+            d.cause = match cause {
+                DeathCause::Starvation => "starvation",
+                DeathCause::OldAge => "old_age",
+                DeathCause::Combat => "combat",
+            }
+            .into();
+        }
         self.events.deaths.push(Death {
             id,
             tribe: agent.tribe(),
@@ -1249,6 +1263,7 @@ impl World {
         self.protection_actions.clear();
         self.protection_deaths.clear();
         crate::minds::protection::lab::begin_tick(self);
+        crate::minds::deception::runner::begin_tick(self);
         self.apply_schedule();
         if self.config.pilfering_on() {
             crate::minds::caching::theft::count_candidates(self);

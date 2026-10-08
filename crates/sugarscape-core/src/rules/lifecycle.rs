@@ -38,6 +38,10 @@ pub(crate) fn metabolize(world: &mut World, id: AgentId, harvest: Harvest) {
         *have -= burn;
     }
     let pos = agent.pos;
+    crate::minds::deception::runner::action(world, id, |a| {
+        a.metabolic_demand = burned[0];
+        a.metabolic_consumed = consumed;
+    });
     crate::minds::protection::ledger::update(world, id, |l| {
         l.outflow(
             consumed,

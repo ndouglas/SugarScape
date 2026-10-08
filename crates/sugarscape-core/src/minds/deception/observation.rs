@@ -121,7 +121,20 @@ pub(crate) fn dispatch(
         return Ok(());
     }
     let watchers = crate::minds::caching::watching::watchers_of(w, actor, site);
+    let actual_stock = w
+        .agent(actor)
+        .and_then(|a| a.caches.get(&site))
+        .copied()
+        .unwrap_or(0.0);
     for &receiver in &watchers {
+        if let Some(r) = w.deception.as_mut() {
+            r.observations.push(super::records::ObservedRecord {
+                receiver,
+                public: obs.clone(),
+                actual_transfer,
+                actual_stock,
+            });
+        }
         update_seen(
             &mut w.agent_mut(receiver).expect("live watcher").seen,
             &obs,

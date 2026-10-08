@@ -93,4 +93,18 @@ pub struct Runtime {
     pub sham_bouts_seen: u64,
     #[serde(default)]
     pub sham_sightings: u64,
+    #[serde(default)]
+    pub source_recovered: bool,
+    #[serde(default)]
+    pub actions: Vec<super::records::ActionRecord>,
+    #[serde(default)]
+    pub observations: Vec<super::records::ObservedRecord>,
+    #[serde(default)]
+    pub choices: Vec<super::records::ChoiceRecord>,
+    #[serde(default)]
+    pub deaths: Vec<super::records::DeathRecord>,
+    #[serde(default)]
+    pub fixture_errors: Vec<String>,
+    #[serde(default)]
+    pub restrictions: std::collections::BTreeMap<u64, u64>,
 }

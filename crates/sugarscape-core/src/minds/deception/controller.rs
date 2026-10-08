@@ -67,11 +67,22 @@ pub(crate) fn perform_bout(
     let site = w.torus.index(a.pos) as u32;
     let a = w.agent_mut(actor).expect("checked alive actor");
     a.deception.as_mut().expect("checked sender").attempted = true;
+    super::runner::action(w, actor, |a| {
+        a.action = match kind {
+            BoutKind::Neutral => "neutral",
+            BoutKind::Sham => "sham",
+        }
+        .into()
+    });
     if held < effort {
+        super::runner::action(w, actor, |a| {
+            a.cancellation = Some(BoutResult::Unaffordable)
+        });
         record(w, actor, kind, effort, BoutResult::Unaffordable);
         return Ok(BoutResult::Unaffordable);
     }
-    a.holdings[0] -= effort;
+    w.agent_mut(actor).expect("checked actor").holdings[0] -= effort;
+    super::runner::action(w, actor, |a| a.effort = effort);
     accounting::update(w, actor, |l| l.outflow(effort, Outflow::ActionCost));
     accounting::reconcile_world(w);
     // The sender never reads receiver memory, view, visibility or stock.

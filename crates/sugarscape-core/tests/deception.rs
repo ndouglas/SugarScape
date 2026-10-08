@@ -63,6 +63,13 @@ fn runtime_round_trips() {
         bouts: vec![],
         sham_bouts_seen: 0,
         sham_sightings: 0,
+        source_recovered: false,
+        actions: vec![],
+        observations: vec![],
+        choices: vec![],
+        deaths: vec![],
+        fixture_errors: vec![],
+        restrictions: Default::default(),
     };
     assert_eq!(
         serde_json::from_str::<Runtime>(&serde_json::to_string(&runtime).unwrap()).unwrap(),
@@ -91,6 +98,13 @@ fn default_off_json_and_fingerprint_remain_compatible() {
         bouts: vec![],
         sham_bouts_seen: 0,
         sham_sightings: 0,
+        source_recovered: false,
+        actions: vec![],
+        observations: vec![],
+        choices: vec![],
+        deaths: vec![],
+        fixture_errors: vec![],
+        restrictions: Default::default(),
     });
     assert_eq!(w.fingerprint(), hidden.fingerprint());
 }
