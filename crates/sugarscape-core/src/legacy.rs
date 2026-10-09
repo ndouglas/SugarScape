@@ -175,6 +175,7 @@ pub(crate) fn convert(value: serde_json::Value) -> Result<Config, FieldError> {
         }
     }
     Ok(Config {
+        behavior_tree: Default::default(),
         width: old.width,
         height: old.height,
         population: old.population,

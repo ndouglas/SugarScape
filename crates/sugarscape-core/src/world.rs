@@ -220,6 +220,7 @@ pub struct TickEvents {
 
 #[derive(Clone)]
 pub struct World {
+    pub bt_work: Option<crate::minds::behavior_tree::WorkCounters>,
     pub deception: Option<crate::minds::deception::state::Runtime>,
     pub config: Config,
     pub torus: Torus,
@@ -469,6 +470,7 @@ impl World {
                 .collect()
         };
         let mut world = World {
+            bt_work: None,
             torus,
             tick: 0,
             sites,

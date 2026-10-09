@@ -447,6 +447,7 @@ pub enum DecisionRule {
     #[default]
     Book,
     Utility,
+    BehaviorTree,
     Goap,
     Mvt,
 }
@@ -1139,7 +1140,7 @@ pub const STRUCTURAL_FIELDS: [&str; 5] =
     ["width", "height", "tag_length", "population", "placement"];
 
 /// Paths a schedule may not set: structure (culture, disease) and the decision rule.
-pub const RESET_ONLY_PATHS: [&str; 34] = [
+pub const RESET_ONLY_PATHS: [&str; 37] = [
     "culture.rule",
     "culture.features",
     "culture.traits",
@@ -1152,6 +1153,9 @@ pub const RESET_ONLY_PATHS: [&str; 34] = [
     "disease.immune_length",
     "decision",
     "decision.rule",
+    "behavior_tree",
+    "behavior_tree.profile",
+    "behavior_tree.visits",
     "walls",
     "memory",
     "memory.span",
@@ -1268,6 +1272,11 @@ pub struct Config {
     pub walls: Vec<Wall>,
     pub memory: Memory,
     pub truffles: Truffles,
+    #[serde(
+        default,
+        skip_serializing_if = "crate::minds::behavior_tree::state::Settings::is_default"
+    )]
+    pub behavior_tree: crate::minds::behavior_tree::state::Settings,
     pub goap: Goap,
     pub mvt: Mvt,
     pub caching: Caching,
@@ -1363,6 +1372,7 @@ impl Default for Config {
             walls: Vec::new(),
             memory: Memory::default(),
             truffles: Truffles::default(),
+            behavior_tree: Default::default(),
             goap: Goap::default(),
             mvt: Mvt::default(),
             caching: Caching::default(),
@@ -1957,7 +1967,11 @@ impl Config {
             );
         }
         e.check(
-            !(dc.rule == DecisionRule::Utility && self.combat.enabled),
+            !((dc.rule == DecisionRule::Utility
+                || (dc.rule == DecisionRule::BehaviorTree
+                    && self.behavior_tree.profile
+                        == crate::minds::behavior_tree::state::Profile::UtilityLeaf))
+                && self.combat.enabled),
             "decision.rule",
             "rule C decides moves under combat",
         );
@@ -1966,6 +1980,11 @@ impl Config {
                 || self.movement.mode == MoveMode::Walk,
             "decision.rule",
             "planning and the marginal-value rule walk; set movement.mode to walk",
+        );
+        e.check(
+            (1..=64).contains(&self.behavior_tree.visits),
+            "behavior_tree.visits",
+            "must be between 1 and 64",
         );
         // A plan sums the values of the sites it harvests against G, sugar
         // for ticks of burn; with n ≥ 2 goods rule M's values are foresight
