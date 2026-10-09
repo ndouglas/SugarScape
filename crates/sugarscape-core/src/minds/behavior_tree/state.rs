@@ -9,6 +9,8 @@ use std::collections::BTreeMap;
 pub enum Profile {
     BookLeaf,
     UtilityLeaf,
+    GuardedRate,
+    UnguardedRate,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -109,6 +111,8 @@ impl TaskState {
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+// Phase is a redundant projection of valid target/gross/failure control state.
+// Saved-data validation must check phase coherence, not treat phase alone as authority.
 pub struct FsmState {
     pub phase: FsmPhase,
 }
@@ -150,3 +154,21 @@ impl std::fmt::Display for PolicyError {
     }
 }
 impl std::error::Error for PolicyError {}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LabRuntime {
+    pub task: TaskState,
+    pub living_ticks: u64,
+    pub external_added: f64,
+    pub external_removed: f64,
+    pub consumed: f64,
+    pub death_loss: f64,
+    pub diagnostics: bool,
+    pub controller_timing: bool,
+    pub fatal_error: Option<String>,
+    pub errors: Vec<String>,
+    pub(crate) observation: Option<Observation>,
+    pub(crate) receipt: Option<PhysicalReceipt>,
+    pub(crate) controller_seconds: Option<f64>,
+}

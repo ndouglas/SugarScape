@@ -9,12 +9,8 @@ mod runtime_tests;
 #[cfg(test)]
 mod policy_tests;
 
-// Task 3 supplies the production lab callers for this internal adapter graph.
-#[allow(dead_code)]
 pub(crate) mod forage;
-#[allow(dead_code)]
 pub(crate) mod fsm;
-#[allow(dead_code)]
 pub(crate) mod policy;
 pub mod state;
 pub(crate) mod telemetry;
@@ -39,3 +35,13 @@ pub(crate) fn routine_tree() -> runtime::Tree {
     ])
     .expect("closed valid graph")
 }
+
+pub mod lab;
+pub mod records;
+pub mod runner;
+pub use records::{EpisodeFailure, EpisodeRecord, RunOptions};
+pub const EPISODE_SCHEMA: &str = "minds-behavior-tree-episode-v1";
+#[cfg(test)]
+mod lab_tests;
+#[cfg(test)]
+mod runner_tests;

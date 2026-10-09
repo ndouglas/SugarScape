@@ -204,12 +204,33 @@ impl Host for RoutineHost<'_> {
     }
 }
 
+// Standalone adapter fixtures retain the original self-expiring interface.
+#[cfg(test)]
 pub(crate) fn act_routine(
     w: &mut World,
     id: u64,
     s: &mut TaskState,
     guarded: bool,
     visits: u16,
+) -> Result<Turn, PolicyError> {
+    act_routine_inner(w, id, s, guarded, visits, true)
+}
+pub(crate) fn act_routine_after_expiry(
+    w: &mut World,
+    id: u64,
+    s: &mut TaskState,
+    guarded: bool,
+    visits: u16,
+) -> Result<Turn, PolicyError> {
+    act_routine_inner(w, id, s, guarded, visits, false)
+}
+fn act_routine_inner(
+    w: &mut World,
+    id: u64,
+    s: &mut TaskState,
+    guarded: bool,
+    visits: u16,
+    expire: bool,
 ) -> Result<Turn, PolicyError> {
     let tree = super::routine_tree();
     s.tree
@@ -231,7 +252,9 @@ pub(crate) fn act_routine(
         harvest: Harvest::default(),
         settlement_error: None,
     };
-    expire_failed(host.state, o.action_tick);
+    if expire {
+        expire_failed(host.state, o.action_tick);
+    }
     let normalize = host
         .state
         .target
@@ -266,15 +289,33 @@ pub(crate) fn act_routine(
     })
 }
 
+#[cfg(test)]
 pub(crate) fn act_task_goap(
     w: &mut World,
     id: u64,
     s: &mut TaskState,
 ) -> Result<Turn, PolicyError> {
+    act_task_goap_inner(w, id, s, true)
+}
+pub(crate) fn act_task_goap_after_expiry(
+    w: &mut World,
+    id: u64,
+    s: &mut TaskState,
+) -> Result<Turn, PolicyError> {
+    act_task_goap_inner(w, id, s, false)
+}
+fn act_task_goap_inner(
+    w: &mut World,
+    id: u64,
+    s: &mut TaskState,
+    expire: bool,
+) -> Result<Turn, PolicyError> {
     let o = preflight(w, id, s)?;
     telemetry::reset(w);
     telemetry::note_candidates(w, o.candidates.len() as u64);
-    expire_failed(s, o.action_tick);
+    if expire {
+        expire_failed(s, o.action_tick);
+    }
     if completed(s) {
         s.target = None;
         s.task_plan = None;
@@ -407,5 +448,6 @@ pub(crate) fn act(w: &mut World, id: u64) -> Harvest {
     match w.config.behavior_tree.profile {
         Profile::BookLeaf => crate::rules::movement::act(w, id),
         Profile::UtilityLeaf => crate::minds::utility::act(w, id),
+        Profile::GuardedRate | Profile::UnguardedRate => unreachable!("checked lab dispatch"),
     }
 }

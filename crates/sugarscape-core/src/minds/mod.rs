@@ -25,6 +25,9 @@ use crate::world::World;
 /// its harvest.
 pub(crate) fn decide(world: &mut World, id: AgentId) -> Harvest {
     behavior_tree::telemetry::reset(world);
+    if let Some(harvest) = behavior_tree::runner::turn(world, id) {
+        return harvest;
+    }
     if let Some(harvest) = deception::runner::scripted_action(world, id) {
         return harvest;
     }

@@ -1201,6 +1201,7 @@ fn reset_only(path: &str) -> bool {
             | ["lab", ..]
             | ["protection_lab", ..]
             | ["deception_lab", ..]
+            | ["behavior_tree_lab", ..]
             | ["spatial_hoarding", ..]
             | ["walls", ..]
     ) || RESET_ONLY_PATHS.contains(&path)
@@ -1293,6 +1294,8 @@ pub struct Config {
     pub protection_lab: Option<crate::minds::protection::state::LabConfig>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub deception_lab: Option<crate::minds::deception::state::LabConfig>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub behavior_tree_lab: Option<crate::minds::behavior_tree::state::LabConfig>,
     pub schedule: Vec<ScheduledChange>,
 }
 
@@ -1373,6 +1376,7 @@ impl Default for Config {
             memory: Memory::default(),
             truffles: Truffles::default(),
             behavior_tree: Default::default(),
+            behavior_tree_lab: None,
             goap: Goap::default(),
             mvt: Mvt::default(),
             caching: Caching::default(),
@@ -1838,7 +1842,8 @@ impl Config {
         e.range(self.vision, "vision");
         e.check(self.vision.min >= 1, "vision.min", "must be ≥ 1");
         e.check(
-            self.vision.max <= max_vision,
+            self.vision.max <= max_vision
+                || (self.behavior_tree_lab.is_some() && self.vision == URange::new(8, 8)),
             "vision.max",
             format!("must be ≤ {max_vision} (half the grid)"),
         );
@@ -1907,7 +1912,9 @@ impl Config {
         e.check(
             self.growback.rate.is_finite()
                 && (self.growback.rate > 0.0
-                    || ((self.protection_lab.is_some() || self.deception_lab.is_some())
+                    || ((self.protection_lab.is_some()
+                        || self.deception_lab.is_some()
+                        || self.behavior_tree_lab.is_some())
                         && self.growback.rate == 0.0)),
             "growback.rate",
             "must be a number > 0",
@@ -2312,6 +2319,7 @@ impl Config {
         );
         e.0.extend(crate::minds::protection::lab::validation_errors(self));
         e.0.extend(crate::minds::deception::lab::validation_errors(self));
+        e.0.extend(crate::minds::behavior_tree::lab::validation_errors(self));
         e.finish()
     }
 
@@ -2524,6 +2532,9 @@ impl Config {
             if changed {
                 out.push(FieldError::new(format!("spatial_hoarding.{path}"), msg));
             }
+        }
+        if self.behavior_tree_lab != next.behavior_tree_lab {
+            out.push(FieldError::new("behavior_tree_lab", msg));
         }
         if self.deception_lab != next.deception_lab {
             out.push(FieldError::new("deception_lab", msg));

@@ -6,11 +6,29 @@ use super::state::{FsmPhase, PolicyError, TaskState, Turn};
 use super::telemetry;
 use crate::world::World;
 
+#[cfg(test)]
 pub(crate) fn act_fsm(w: &mut World, id: u64, s: &mut TaskState) -> Result<Turn, PolicyError> {
+    act_fsm_inner(w, id, s, true)
+}
+pub(crate) fn act_fsm_after_expiry(
+    w: &mut World,
+    id: u64,
+    s: &mut TaskState,
+) -> Result<Turn, PolicyError> {
+    act_fsm_inner(w, id, s, false)
+}
+fn act_fsm_inner(
+    w: &mut World,
+    id: u64,
+    s: &mut TaskState,
+    expire: bool,
+) -> Result<Turn, PolicyError> {
     let o = preflight(w, id, s)?;
     telemetry::reset(w);
     telemetry::note_candidates(w, o.candidates.len() as u64);
-    expire_failed(s, o.action_tick);
+    if expire {
+        expire_failed(s, o.action_tick);
+    }
     if completed(s) {
         s.target = None;
         s.fsm.phase = FsmPhase::Finished;
