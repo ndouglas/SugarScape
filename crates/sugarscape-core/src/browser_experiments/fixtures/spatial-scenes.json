@@ -1,0 +1,1597 @@
+{
+  "schema_version": 1,
+  "studies": {
+    "burrow_excavation": {
+      "default_scene": "burrow-excavation-default",
+      "controls": {
+        "seed": {
+          "type": "decimal_u64"
+        },
+        "ticks": {
+          "type": "integer",
+          "min": 0
+        },
+        "sample_every": {
+          "type": "integer",
+          "min": 1
+        },
+        "transport": {
+          "path": [
+            "config",
+            "transport"
+          ],
+          "values": [
+            "direct",
+            "relay"
+          ]
+        },
+        "cue": {
+          "path": [
+            "config",
+            "cue"
+          ],
+          "values": [
+            "blind",
+            "responsive"
+          ]
+        }
+      },
+      "comparisons": [
+        {
+          "id": "transport",
+          "path": [
+            "config",
+            "transport"
+          ],
+          "values": [
+            "direct",
+            "relay"
+          ]
+        },
+        {
+          "id": "cue",
+          "path": [
+            "config",
+            "cue"
+          ],
+          "values": [
+            "blind",
+            "responsive"
+          ]
+        }
+      ],
+      "comparison_contract": "Change exactly one declared control while retaining setup, seed, horizon and sampling; same seed does not promise paired random draws."
+    },
+    "burrow_access": {
+      "default_scene": "burrow-access-default",
+      "controls": {
+        "seed": {
+          "type": "decimal_u64"
+        },
+        "ticks": {
+          "type": "integer",
+          "min": 0
+        },
+        "sample_every": {
+          "type": "integer",
+          "min": 1
+        },
+        "transport": {
+          "path": [
+            "config",
+            "lab",
+            "transport"
+          ],
+          "values": [
+            "direct",
+            "relay"
+          ]
+        },
+        "cue": {
+          "path": [
+            "config",
+            "lab",
+            "cue"
+          ],
+          "values": [
+            "blind",
+            "responsive"
+          ]
+        },
+        "objective": {
+          "path": [
+            "config",
+            "task",
+            "objective"
+          ],
+          "values": [
+            "explore",
+            "known_goal"
+          ]
+        }
+      },
+      "comparisons": [
+        {
+          "id": "transport",
+          "path": [
+            "config",
+            "lab",
+            "transport"
+          ],
+          "values": [
+            "direct",
+            "relay"
+          ]
+        },
+        {
+          "id": "cue",
+          "path": [
+            "config",
+            "lab",
+            "cue"
+          ],
+          "values": [
+            "blind",
+            "responsive"
+          ]
+        },
+        {
+          "id": "objective",
+          "path": [
+            "config",
+            "task",
+            "objective"
+          ],
+          "values": [
+            "explore",
+            "known_goal"
+          ]
+        }
+      ],
+      "comparison_contract": "Change exactly one declared control while retaining setup, seed, horizon and sampling; same seed does not promise paired random draws."
+    },
+    "foraging_fixed": {
+      "default_scene": "foraging-fixed-default",
+      "controls": {
+        "seed": {
+          "type": "decimal_u64"
+        },
+        "ticks": {
+          "type": "integer",
+          "min": 1
+        },
+        "sample_every": {
+          "type": "integer",
+          "min": 1
+        },
+        "p_search": {
+          "path": [
+            "setup",
+            "parameters",
+            "p_search"
+          ],
+          "values": [
+            0.5,
+            1.0
+          ]
+        },
+        "p_return": {
+          "path": [
+            "setup",
+            "parameters",
+            "p_return"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        "lambda_fidelity": {
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_fidelity"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        "lambda_publish": {
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_publish"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        "lambda_waypoint": {
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_waypoint"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        "omega": {
+          "path": [
+            "setup",
+            "parameters",
+            "omega"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        "lambda_informed": {
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_informed"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        }
+      },
+      "comparisons": [
+        {
+          "id": "p_search",
+          "path": [
+            "setup",
+            "parameters",
+            "p_search"
+          ],
+          "values": [
+            0.5,
+            1.0
+          ]
+        },
+        {
+          "id": "p_return",
+          "path": [
+            "setup",
+            "parameters",
+            "p_return"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "id": "lambda_fidelity",
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_fidelity"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "id": "lambda_publish",
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_publish"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "id": "lambda_waypoint",
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_waypoint"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "id": "omega",
+          "path": [
+            "setup",
+            "parameters",
+            "omega"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "id": "lambda_informed",
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_informed"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        }
+      ],
+      "comparison_contract": "Change exactly one declared control while retaining setup, seed, horizon and sampling; same seed does not promise paired random draws."
+    },
+    "foraging_passage": {
+      "default_scene": "foraging-passage-default",
+      "controls": {
+        "seed": {
+          "type": "decimal_u64"
+        },
+        "ticks": {
+          "type": "integer",
+          "min": 1
+        },
+        "sample_every": {
+          "type": "integer",
+          "min": 1
+        },
+        "p_search": {
+          "path": [
+            "setup",
+            "parameters",
+            "p_search"
+          ],
+          "values": [
+            0.5,
+            1.0
+          ]
+        },
+        "p_return": {
+          "path": [
+            "setup",
+            "parameters",
+            "p_return"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        "lambda_fidelity": {
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_fidelity"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        "lambda_publish": {
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_publish"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        "lambda_waypoint": {
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_waypoint"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        }
+      },
+      "comparisons": [
+        {
+          "id": "p_search",
+          "path": [
+            "setup",
+            "parameters",
+            "p_search"
+          ],
+          "values": [
+            0.5,
+            1.0
+          ]
+        },
+        {
+          "id": "p_return",
+          "path": [
+            "setup",
+            "parameters",
+            "p_return"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "id": "lambda_fidelity",
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_fidelity"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "id": "lambda_publish",
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_publish"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "id": "lambda_waypoint",
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_waypoint"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        }
+      ],
+      "comparison_contract": "Change exactly one declared control while retaining setup, seed, horizon and sampling; same seed does not promise paired random draws."
+    },
+    "foraging_construction": {
+      "default_scene": "foraging-construction-default",
+      "controls": {
+        "seed": {
+          "type": "decimal_u64"
+        },
+        "ticks": {
+          "type": "integer",
+          "min": 1
+        },
+        "sample_every": {
+          "type": "integer",
+          "min": 1
+        },
+        "p_search": {
+          "path": [
+            "setup",
+            "parameters",
+            "p_search"
+          ],
+          "values": [
+            0.5,
+            1.0
+          ]
+        },
+        "p_return": {
+          "path": [
+            "setup",
+            "parameters",
+            "p_return"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        "lambda_fidelity": {
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_fidelity"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        "lambda_publish": {
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_publish"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        "lambda_waypoint": {
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_waypoint"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        }
+      },
+      "comparisons": [
+        {
+          "id": "p_search",
+          "path": [
+            "setup",
+            "parameters",
+            "p_search"
+          ],
+          "values": [
+            0.5,
+            1.0
+          ]
+        },
+        {
+          "id": "p_return",
+          "path": [
+            "setup",
+            "parameters",
+            "p_return"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "id": "lambda_fidelity",
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_fidelity"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "id": "lambda_publish",
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_publish"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        },
+        {
+          "id": "lambda_waypoint",
+          "path": [
+            "setup",
+            "parameters",
+            "lambda_waypoint"
+          ],
+          "values": [
+            0.0,
+            0.5
+          ]
+        }
+      ],
+      "comparison_contract": "Change exactly one declared control while retaining setup, seed, horizon and sampling; same seed does not promise paired random draws."
+    }
+  },
+  "scenes": [
+    {
+      "id": "burrow-excavation-default",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "burrow_excavation",
+        "config": {
+          "fixture": {
+            "growing": {
+              "width": 41,
+              "height": 25,
+              "workers": 8
+            }
+          },
+          "transport": "direct",
+          "cue": "blind",
+          "freshness_window": "32",
+          "relay_distance": 3,
+          "response_weight": 3,
+          "minimum_recent_units": 2
+        },
+        "seed": "7",
+        "ticks": 128,
+        "sample_every": 16
+      },
+      "provenance": {
+        "source_path": "docs/examples/burrow/direct-blind.json",
+        "source_sha256": "7e82f23cb2ce3bbcb821389322819c02374d7938ad6e1921cb3373f2c33993f8",
+        "intentional_changes": [
+          "Browser horizon 128 and sampling 16 are illustrative; all native config values retained.",
+          "freshness_window encoded as canonical decimal text."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "burrow-access-default",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "burrow_access",
+        "config": {
+          "lab": {
+            "fixture": {
+              "growing": {
+                "width": 41,
+                "height": 25,
+                "workers": 8
+              }
+            },
+            "transport": "direct",
+            "cue": "blind",
+            "freshness_window": "32",
+            "relay_distance": 3,
+            "response_weight": 3,
+            "minimum_recent_units": 2
+          },
+          "task": {
+            "goal": {
+              "x": 7,
+              "y": 12
+            },
+            "objective": "explore",
+            "goal_weight": 3
+          }
+        },
+        "seed": "7",
+        "ticks": 128,
+        "sample_every": 16
+      },
+      "provenance": {
+        "source_path": "docs/examples/burrow/access-explore.json",
+        "source_sha256": "3fef938fe2815b7243f83329462fcf630e675f009663fddd3b715b6e433735de",
+        "intentional_changes": [
+          "Browser horizon 128 and sampling 16 are illustrative; all native config/task values retained.",
+          "freshness_window encoded as canonical decimal text."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "foraging-fixed-default",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "foraging_fixed",
+        "setup": {
+          "width": 5,
+          "height": 5,
+          "nest": {
+            "x": 2,
+            "y": 2
+          },
+          "agents": 1,
+          "resources": [
+            {
+              "id": "18446744073709551615",
+              "pos": {
+                "x": 3,
+                "y": 2
+              }
+            }
+          ],
+          "parameters": {
+            "p_search": 1.0,
+            "p_return": 0.0,
+            "lambda_fidelity": 0.0,
+            "lambda_publish": 0.0,
+            "lambda_waypoint": 0.0,
+            "omega": 0.0,
+            "lambda_informed": 0.0
+          }
+        },
+        "seed": "12",
+        "ticks": 20,
+        "sample_every": 7
+      },
+      "provenance": {
+        "source_path": "crates/sugarscape-core/src/foraging/fixed/mod.rs",
+        "source_sha256": "5f864e6bcdb6c3bac3e6c261ac95c3645cd3100828613dcf6940f8e822163acf",
+        "intentional_changes": [
+          "Product-guide native example setup, seed, horizon and sampling retained.",
+          "Resource identity u64::MAX encoded as canonical decimal text."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "foraging-passage-default",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "foraging_passage",
+        "setup": {
+          "width": 5,
+          "height": 5,
+          "open": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            },
+            {
+              "x": 2,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 1
+            }
+          ],
+          "nest": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            }
+          ],
+          "workers": [
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "resources": [
+            {
+              "id": "18446744073709551615",
+              "pos": {
+                "x": 3,
+                "y": 0
+              }
+            }
+          ],
+          "parameters": {
+            "p_search": 1.0,
+            "p_return": 0.0,
+            "lambda_fidelity": 0.0,
+            "lambda_publish": 0.0,
+            "lambda_waypoint": 0.0
+          }
+        },
+        "seed": "12",
+        "ticks": 40,
+        "sample_every": 7
+      },
+      "provenance": {
+        "source_path": "crates/sugarscape-core/src/foraging/passage/mod.rs",
+        "source_sha256": "11a09aaa01baa5a208a85b2620f0b1eb0dd1b822b6306eae434aa59a2c6e6132",
+        "intentional_changes": [
+          "Product-guide native example setup, seed, horizon and sampling retained.",
+          "Resource identity u64::MAX encoded as canonical decimal text."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "foraging-construction-default",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "foraging_construction",
+        "setup": {
+          "width": 5,
+          "height": 3,
+          "open": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            },
+            {
+              "x": 2,
+              "y": 0
+            },
+            {
+              "x": 0,
+              "y": 1
+            }
+          ],
+          "diggable": [
+            {
+              "x": 3,
+              "y": 0
+            }
+          ],
+          "nest": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            }
+          ],
+          "waste": {
+            "x": 0,
+            "y": 1
+          },
+          "workers": [
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "food": [
+            {
+              "id": "18446744073709551615",
+              "pos": {
+                "x": 3,
+                "y": 0
+              }
+            }
+          ],
+          "parameters": {
+            "p_search": 1.0,
+            "p_return": 0.0,
+            "lambda_fidelity": 0.0,
+            "lambda_publish": 0.0,
+            "lambda_waypoint": 0.0
+          }
+        },
+        "seed": "12",
+        "ticks": 40,
+        "sample_every": 7
+      },
+      "provenance": {
+        "source_path": "crates/sugarscape-core/src/foraging/construction/mod.rs",
+        "source_sha256": "5dc95c1cec2c81e8e2e42600ed6d74c656e5beb0acea7e80cfd6b20851b7528c",
+        "intentional_changes": [
+          "Product-guide native example setup, seed, horizon and sampling retained.",
+          "Resource identity u64::MAX encoded as canonical decimal text."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "burrow-choice",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "burrow_excavation",
+        "config": {
+          "fixture": {
+            "choice": {
+              "side": "left",
+              "pile": "fresh_accumulation"
+            }
+          },
+          "transport": "direct",
+          "cue": "blind",
+          "freshness_window": "32",
+          "relay_distance": 3,
+          "response_weight": 3,
+          "minimum_recent_units": 2
+        },
+        "seed": "7",
+        "ticks": 1,
+        "sample_every": 1
+      },
+      "provenance": {
+        "source_path": "crates/sugarscape-core/src/burrow/fixtures.rs",
+        "source_sha256": "ef43e69bd8fb956b509d812cebcdca5ab5787c0c11f9f9213f3bc6886f292a80",
+        "intentional_changes": [
+          "Left fresh-accumulation choice fixture, direct/blind, one requested tick and sample interval 1.",
+          "Other config fields match the direct/blind default; fixture can stop at a same-tick choice stage."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "burrow-corridor",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "burrow_excavation",
+        "config": {
+          "fixture": {
+            "corridor": {
+              "length": 9,
+              "workers": 2
+            }
+          },
+          "transport": "direct",
+          "cue": "blind",
+          "freshness_window": "32",
+          "relay_distance": 3,
+          "response_weight": 3,
+          "minimum_recent_units": 2
+        },
+        "seed": "7",
+        "ticks": 32,
+        "sample_every": 7
+      },
+      "provenance": {
+        "source_path": "crates/sugarscape-core/src/burrow/fixtures.rs",
+        "source_sha256": "ef43e69bd8fb956b509d812cebcdca5ab5787c0c11f9f9213f3bc6886f292a80",
+        "intentional_changes": [
+          "Corridor length 9 with two workers, direct/blind, horizon 32 and sampling 7.",
+          "Other config fields match the direct/blind default."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "burrow-access-known-goal",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "burrow_access",
+        "config": {
+          "lab": {
+            "fixture": {
+              "growing": {
+                "width": 41,
+                "height": 25,
+                "workers": 8
+              }
+            },
+            "transport": "direct",
+            "cue": "blind",
+            "freshness_window": "32",
+            "relay_distance": 3,
+            "response_weight": 3,
+            "minimum_recent_units": 2
+          },
+          "task": {
+            "goal": {
+              "x": 7,
+              "y": 12
+            },
+            "objective": "known_goal",
+            "goal_weight": 3
+          }
+        },
+        "seed": "7",
+        "ticks": 128,
+        "sample_every": 16
+      },
+      "provenance": {
+        "source_path": "docs/examples/burrow/access-known-goal.json",
+        "source_sha256": "24e2c2330971c5a4a39fe877eb19bfba3c4abc8235b11288cab1dc3a5fa9108e",
+        "intentional_changes": [
+          "Changes only objective from the browser access default; coordinate is supplied benchmark knowledge."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "foraging-passage-disconnected",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "foraging_passage",
+        "setup": {
+          "width": 5,
+          "height": 5,
+          "open": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 3
+            }
+          ],
+          "nest": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            }
+          ],
+          "workers": [
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "resources": [
+            {
+              "id": "18446744073709551615",
+              "pos": {
+                "x": 3,
+                "y": 3
+              }
+            }
+          ],
+          "parameters": {
+            "p_search": 1.0,
+            "p_return": 0.0,
+            "lambda_fidelity": 0.0,
+            "lambda_publish": 0.0,
+            "lambda_waypoint": 0.0
+          }
+        },
+        "seed": "12",
+        "ticks": 40,
+        "sample_every": 7
+      },
+      "provenance": {
+        "source_path": "crates/sugarscape-core/src/foraging/passage/mod.rs",
+        "source_sha256": "11a09aaa01baa5a208a85b2620f0b1eb0dd1b822b6306eae434aa59a2c6e6132",
+        "intentional_changes": [
+          "Replace open mask by (0,0),(1,0),(3,3) and move the resource to disconnected (3,3)."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "foraging-construction-protected",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "foraging_construction",
+        "setup": {
+          "width": 5,
+          "height": 3,
+          "open": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            },
+            {
+              "x": 2,
+              "y": 0
+            },
+            {
+              "x": 0,
+              "y": 1
+            }
+          ],
+          "diggable": [
+            {
+              "x": 2,
+              "y": 0
+            }
+          ],
+          "nest": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            }
+          ],
+          "waste": {
+            "x": 0,
+            "y": 1
+          },
+          "workers": [
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "food": [
+            {
+              "id": "18446744073709551615",
+              "pos": {
+                "x": 3,
+                "y": 0
+              }
+            }
+          ],
+          "parameters": {
+            "p_search": 1.0,
+            "p_return": 0.0,
+            "lambda_fidelity": 0.0,
+            "lambda_publish": 0.0,
+            "lambda_waypoint": 0.0
+          }
+        },
+        "seed": "12",
+        "ticks": 40,
+        "sample_every": 7
+      },
+      "provenance": {
+        "source_path": "crates/sugarscape-core/src/foraging/construction/mod.rs",
+        "source_sha256": "5dc95c1cec2c81e8e2e42600ed6d74c656e5beb0acea7e80cfd6b20851b7528c",
+        "intentional_changes": [
+          "Diggable mask contains only initially open (2,0), leaving food buried at protected (3,0)."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "foraging-construction-no-dig",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "foraging_construction",
+        "setup": {
+          "width": 5,
+          "height": 5,
+          "open": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            },
+            {
+              "x": 2,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 1
+            }
+          ],
+          "nest": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            }
+          ],
+          "workers": [
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "parameters": {
+            "p_search": 1.0,
+            "p_return": 0.0,
+            "lambda_fidelity": 0.0,
+            "lambda_publish": 0.0,
+            "lambda_waypoint": 0.0
+          },
+          "food": [
+            {
+              "id": "18446744073709551615",
+              "pos": {
+                "x": 3,
+                "y": 0
+              }
+            }
+          ],
+          "diggable": [],
+          "waste": {
+            "x": 3,
+            "y": 1
+          }
+        },
+        "seed": "12",
+        "ticks": 40,
+        "sample_every": 7
+      },
+      "provenance": {
+        "source_path": "crates/sugarscape-core/src/foraging/passage/mod.rs",
+        "source_sha256": "11a09aaa01baa5a208a85b2620f0b1eb0dd1b822b6306eae434aa59a2c6e6132",
+        "intentional_changes": [
+          "Use F3 geometry/resources as F4 food with empty diggable mask and waste (3,1); engineering no-dig reduction."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "foraging-passage-congestion",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "foraging_passage",
+        "setup": {
+          "width": 5,
+          "height": 5,
+          "open": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            },
+            {
+              "x": 2,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 1
+            }
+          ],
+          "nest": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            }
+          ],
+          "workers": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "resources": [
+            {
+              "id": "18446744073709551615",
+              "pos": {
+                "x": 3,
+                "y": 0
+              }
+            }
+          ],
+          "parameters": {
+            "p_search": 1.0,
+            "p_return": 0.0,
+            "lambda_fidelity": 0.0,
+            "lambda_publish": 0.0,
+            "lambda_waypoint": 0.0
+          }
+        },
+        "seed": "12",
+        "ticks": 40,
+        "sample_every": 7
+      },
+      "provenance": {
+        "source_path": "crates/sugarscape-core/src/foraging/passage/mod.rs",
+        "source_sha256": "11a09aaa01baa5a208a85b2620f0b1eb0dd1b822b6306eae434aa59a2c6e6132",
+        "intentional_changes": [
+          "Add a second worker at (0,0), within the native capacity of two."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "foraging-construction-equal-ids",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "foraging_construction",
+        "setup": {
+          "width": 5,
+          "height": 3,
+          "open": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            },
+            {
+              "x": 2,
+              "y": 0
+            },
+            {
+              "x": 0,
+              "y": 1
+            }
+          ],
+          "diggable": [
+            {
+              "x": 3,
+              "y": 0
+            }
+          ],
+          "nest": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            }
+          ],
+          "waste": {
+            "x": 0,
+            "y": 1
+          },
+          "workers": [
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "food": [
+            {
+              "id": "0",
+              "pos": {
+                "x": 3,
+                "y": 0
+              }
+            }
+          ],
+          "parameters": {
+            "p_search": 1.0,
+            "p_return": 0.0,
+            "lambda_fidelity": 0.0,
+            "lambda_publish": 0.0,
+            "lambda_waypoint": 0.0
+          }
+        },
+        "seed": "12",
+        "ticks": 40,
+        "sample_every": 7
+      },
+      "provenance": {
+        "source_path": "crates/sugarscape-core/src/foraging/construction/mod.rs",
+        "source_sha256": "5dc95c1cec2c81e8e2e42600ed6d74c656e5beb0acea7e80cfd6b20851b7528c",
+        "intentional_changes": [
+          "Food ID 0 may share its number with the first spoil token; their namespaces remain distinct."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "foraging-fixed-information",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "foraging_fixed",
+        "setup": {
+          "width": 5,
+          "height": 5,
+          "nest": {
+            "x": 2,
+            "y": 2
+          },
+          "agents": 1,
+          "resources": [
+            {
+              "id": "18446744073709551615",
+              "pos": {
+                "x": 3,
+                "y": 2
+              }
+            }
+          ],
+          "parameters": {
+            "p_search": 0.5,
+            "p_return": 0.25,
+            "lambda_fidelity": 1.0,
+            "lambda_publish": 1.0,
+            "lambda_waypoint": 0.1,
+            "omega": 0.5,
+            "lambda_informed": 0.5
+          }
+        },
+        "seed": "12",
+        "ticks": 40,
+        "sample_every": 7
+      },
+      "provenance": {
+        "source_path": "crates/sugarscape-core/src/foraging/fixed/mod.rs",
+        "source_sha256": "5f864e6bcdb6c3bac3e6c261ac95c3645cd3100828613dcf6940f8e822163acf",
+        "intentional_changes": [
+          "Supplied information-enabled engineering parameters: p_search 0.5, p_return 0.25, lambda_fidelity 1, lambda_publish 1, lambda_waypoint 0.1.",
+          "Horizon 40, seed 12, sampling 7; this is not an efficacy comparison.",
+          "Fixed-world omega and lambda_informed are 0.5."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "foraging-passage-information",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "foraging_passage",
+        "setup": {
+          "width": 5,
+          "height": 5,
+          "open": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            },
+            {
+              "x": 2,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 0
+            },
+            {
+              "x": 3,
+              "y": 1
+            }
+          ],
+          "nest": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            }
+          ],
+          "workers": [
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "resources": [
+            {
+              "id": "18446744073709551615",
+              "pos": {
+                "x": 3,
+                "y": 0
+              }
+            }
+          ],
+          "parameters": {
+            "p_search": 0.5,
+            "p_return": 0.25,
+            "lambda_fidelity": 1.0,
+            "lambda_publish": 1.0,
+            "lambda_waypoint": 0.1
+          }
+        },
+        "seed": "12",
+        "ticks": 40,
+        "sample_every": 7
+      },
+      "provenance": {
+        "source_path": "crates/sugarscape-core/src/foraging/passage/mod.rs",
+        "source_sha256": "11a09aaa01baa5a208a85b2620f0b1eb0dd1b822b6306eae434aa59a2c6e6132",
+        "intentional_changes": [
+          "Supplied information-enabled engineering parameters: p_search 0.5, p_return 0.25, lambda_fidelity 1, lambda_publish 1, lambda_waypoint 0.1.",
+          "Horizon 40, seed 12, sampling 7; this is not an efficacy comparison."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    },
+    {
+      "id": "foraging-construction-information",
+      "label": "Engineering demonstration",
+      "input": {
+        "study": "foraging_construction",
+        "setup": {
+          "width": 5,
+          "height": 3,
+          "open": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            },
+            {
+              "x": 2,
+              "y": 0
+            },
+            {
+              "x": 0,
+              "y": 1
+            }
+          ],
+          "diggable": [
+            {
+              "x": 3,
+              "y": 0
+            }
+          ],
+          "nest": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 1,
+              "y": 0
+            }
+          ],
+          "waste": {
+            "x": 0,
+            "y": 1
+          },
+          "workers": [
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "food": [
+            {
+              "id": "18446744073709551615",
+              "pos": {
+                "x": 3,
+                "y": 0
+              }
+            }
+          ],
+          "parameters": {
+            "p_search": 0.5,
+            "p_return": 0.25,
+            "lambda_fidelity": 1.0,
+            "lambda_publish": 1.0,
+            "lambda_waypoint": 0.1
+          }
+        },
+        "seed": "12",
+        "ticks": 40,
+        "sample_every": 7
+      },
+      "provenance": {
+        "source_path": "crates/sugarscape-core/src/foraging/construction/mod.rs",
+        "source_sha256": "5dc95c1cec2c81e8e2e42600ed6d74c656e5beb0acea7e80cfd6b20851b7528c",
+        "intentional_changes": [
+          "Supplied information-enabled engineering parameters: p_search 0.5, p_return 0.25, lambda_fidelity 1, lambda_publish 1, lambda_waypoint 0.1.",
+          "Horizon 40, seed 12, sampling 7; this is not an efficacy comparison."
+        ],
+        "claim": "Supplied engineering demonstration; no biological, coordination, learning, optimality or treatment-effect claim."
+      }
+    }
+  ]
+}

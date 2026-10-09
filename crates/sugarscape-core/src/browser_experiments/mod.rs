@@ -6,6 +6,7 @@ mod record;
 mod recorded;
 pub use recorded::recorded_results_json;
 pub mod reporting;
+pub mod spatial;
 pub mod surfaces;
 pub mod testimony;
 pub mod wink;
@@ -26,6 +27,11 @@ pub const MAX_EPISODE_BYTES: usize = 16 * 1024 * 1024;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum StudyId {
+    BurrowExcavation,
+    BurrowAccess,
+    ForagingFixed,
+    ForagingPassage,
+    ForagingConstruction,
     Wink,
     Testimony,
     TestimonyGame,
@@ -40,6 +46,11 @@ pub fn run(input: &Input) -> Result<EpisodeRecord, Vec<FieldError>> {
     // Revalidate typed inputs too as other adapters acquire bounded selectors.
     let input = normalize_input(&record::bounded_json(input, MAX_INPUT_BYTES, "input")?)?;
     match input {
+        Input::BurrowExcavation { .. }
+        | Input::BurrowAccess { .. }
+        | Input::ForagingFixed { .. }
+        | Input::ForagingPassage { .. }
+        | Input::ForagingConstruction { .. } => spatial::run(&input),
         Input::Wink { .. } => wink::run(&input),
         Input::SharedSurface { .. } | Input::ActiveSurface { .. } => surfaces::run(&input),
         Input::Testimony { .. } | Input::TestimonyGame { .. } => testimony::run(&input),

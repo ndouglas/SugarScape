@@ -1,5 +1,5 @@
 //! Strict, normalized episode selection. Payload transport has separate rules.
-use super::{record, FieldError, StudyId, MAX_INPUT_BYTES};
+use super::{record, spatial, FieldError, StudyId, MAX_INPUT_BYTES};
 use crate::deduction::PolicyKind;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -36,9 +36,44 @@ pub enum WinkMode {
     Diagnostic,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "study", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Input {
+    BurrowExcavation {
+        config: spatial::input::BurrowConfigInput,
+        #[serde(deserialize_with = "spatial::input::deserialize_seed")]
+        seed: SeedText,
+        ticks: u32,
+        sample_every: u32,
+    },
+    BurrowAccess {
+        config: spatial::input::BurrowAccessConfigInput,
+        #[serde(deserialize_with = "spatial::input::deserialize_seed")]
+        seed: SeedText,
+        ticks: u32,
+        sample_every: u32,
+    },
+    ForagingFixed {
+        setup: spatial::input::FixedSetupInput,
+        #[serde(deserialize_with = "spatial::input::deserialize_seed")]
+        seed: SeedText,
+        ticks: u32,
+        sample_every: u32,
+    },
+    ForagingPassage {
+        setup: spatial::input::PassageSetupInput,
+        #[serde(deserialize_with = "spatial::input::deserialize_seed")]
+        seed: SeedText,
+        ticks: u32,
+        sample_every: u32,
+    },
+    ForagingConstruction {
+        setup: spatial::input::ConstructionSetupInput,
+        #[serde(deserialize_with = "spatial::input::deserialize_seed")]
+        seed: SeedText,
+        ticks: u32,
+        sample_every: u32,
+    },
     SharedSurface {
         protocol: crate::shared_surface::Protocol,
         environment: crate::shared_surface::Environment,
@@ -83,6 +118,11 @@ pub enum Input {
 impl Input {
     pub fn study(&self) -> StudyId {
         match self {
+            Self::BurrowExcavation { .. } => StudyId::BurrowExcavation,
+            Self::BurrowAccess { .. } => StudyId::BurrowAccess,
+            Self::ForagingFixed { .. } => StudyId::ForagingFixed,
+            Self::ForagingPassage { .. } => StudyId::ForagingPassage,
+            Self::ForagingConstruction { .. } => StudyId::ForagingConstruction,
             Self::SharedSurface { .. } => StudyId::SharedSurface,
             Self::ActiveSurface { .. } => StudyId::ActiveSurface,
             Self::Wink { .. } => StudyId::Wink,
@@ -103,6 +143,11 @@ pub fn normalize_input(json: &str) -> Result<Input, Vec<FieldError>> {
         serde_json::from_str(json).map_err(|e| super::error("input", e.to_string()))?;
     record::serialized_size(&input, MAX_INPUT_BYTES, "input")?;
     match &input {
+        Input::BurrowExcavation { .. }
+        | Input::BurrowAccess { .. }
+        | Input::ForagingFixed { .. }
+        | Input::ForagingPassage { .. }
+        | Input::ForagingConstruction { .. } => spatial::validate_input(&input)?,
         Input::Wink { .. } => {}
         Input::SharedSurface { .. } | Input::ActiveSurface { .. } => {
             super::surfaces::validate_input(&input)?

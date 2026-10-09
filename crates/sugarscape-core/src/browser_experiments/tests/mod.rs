@@ -9,3 +9,5 @@ mod reporting;
 mod surfaces;
 
 mod portability;
+
+mod spatial_input;

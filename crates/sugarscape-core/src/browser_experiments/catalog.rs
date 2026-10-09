@@ -10,6 +10,7 @@ pub enum StudyFamily {
     Game,
     Testimony,
     Surface,
+    Spatial,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -33,10 +34,16 @@ pub fn catalog() -> Vec<StudyDescriptor> {
     studies.extend(super::testimony::descriptors());
     studies.extend(super::reporting::descriptors());
     studies.extend(super::surfaces::descriptors());
+    studies.extend(super::spatial::descriptors());
     studies
 }
 pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> {
     match study {
+        StudyId::BurrowExcavation
+        | StudyId::BurrowAccess
+        | StudyId::ForagingFixed
+        | StudyId::ForagingPassage
+        | StudyId::ForagingConstruction => super::spatial::rules_identity(study),
         StudyId::Wink => {
             let receipts: Value =
                 serde_json::from_str(include_str!("fixtures/engine-identities.json"))
