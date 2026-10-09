@@ -1,0 +1,12 @@
+{
+  "estimate_ci95_null": 0,
+  "cell_work_null": 0,
+  "cell_search_expansions_null": 0,
+  "cell_controller_total_null": 0,
+  "active_invocation_seconds_null": 0,
+  "unrestricted_completion_available": 56,
+  "unrestricted_completion_unavailable": 8,
+  "unavailable_reasons": {
+    "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)": 320
+  }
+}

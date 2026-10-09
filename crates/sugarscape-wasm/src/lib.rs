@@ -124,6 +124,43 @@ pub fn deception_episode_json(lab_json: &str, seed: &str) -> Result<String, JsVa
     Ok(serde_json::to_string(&record).expect("episode serializes"))
 }
 
+/// Checked food-task construction, sharing the native rig and full validation.
+#[wasm_bindgen]
+pub fn behavior_tree_config_json(lab_json: &str) -> Result<String, JsValue> {
+    let config = read_behavior_tree_config(lab_json)?;
+    Ok(serde_json::to_string(&config).expect("config serializes"))
+}
+
+fn read_behavior_tree_config(lab_json: &str) -> Result<Config, JsValue> {
+    let lab = serde_json::from_str(lab_json).map_err(|error| {
+        field_errors(vec![FieldError::new(
+            "behavior_tree_lab",
+            error.to_string(),
+        )])
+    })?;
+    let config = sugarscape_core::minds::behavior_tree::lab::rig_config(lab);
+    config.validate().map_err(field_errors)?;
+    Ok(config)
+}
+
+/// Research-only episode records from the same core policy as native execution.
+#[wasm_bindgen]
+pub fn behavior_tree_episode_json(lab_json: &str, seed: &str) -> Result<String, JsValue> {
+    let config = read_behavior_tree_config(lab_json)?;
+    let seed = decimal_seed(seed)
+        .map_err(|message| field_errors(vec![FieldError::new("seed", message)]))?;
+    let record = sugarscape_core::minds::behavior_tree::runner::run_episode(
+        config.behavior_tree_lab.expect("checked lab"),
+        seed,
+        sugarscape_core::minds::behavior_tree::RunOptions {
+            diagnostics: true,
+            controller_timing: false,
+        },
+    )
+    .map_err(|failure| field_errors(vec![FieldError::new("episode", failure.message)]))?;
+    Ok(serde_json::to_string(&record).expect("episode serializes"))
+}
+
 /// Checked standalone excavation replay; serializes the same core record as the native CLI.
 #[wasm_bindgen]
 pub fn burrow_replay_json(
@@ -930,5 +967,60 @@ mod deception_boundary_tests {
         assert!(errors
             .iter()
             .any(|e| e["field"] == "deception_lab.effort_cost"));
+    }
+}
+
+#[cfg(all(test, target_arch = "wasm32"))]
+mod behavior_tree_boundary_tests {
+    use super::*;
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    const LAB: &str = r#"{"controller":"guarded_tree","scenario":"better_alternative","quota":40,"mirrored":false}"#;
+
+    #[wasm_bindgen_test]
+    fn behavior_tree_checked_exports_use_canonical_core_records() {
+        let config: Config =
+            serde_json::from_str(&behavior_tree_config_json(LAB).unwrap()).unwrap();
+        config.validate().unwrap();
+        let episode: sugarscape_core::minds::behavior_tree::EpisodeRecord =
+            serde_json::from_str(&behavior_tree_episode_json(LAB, "7").unwrap()).unwrap();
+        assert_eq!(episode.frames.len(), 65);
+        assert!(episode.errors.is_empty());
+        assert!(episode
+            .frames
+            .iter()
+            .all(|f| f.controller_seconds.is_none()));
+    }
+
+    #[wasm_bindgen_test]
+    fn behavior_tree_boundary_rejects_unknown_fields_and_invalid_quota() {
+        for input in [
+            "{",
+            &LAB.replace("40", "21"),
+            &LAB.replace("false}", "false,\"extra\":1}"),
+        ] {
+            for error in [
+                behavior_tree_config_json(input).unwrap_err(),
+                behavior_tree_episode_json(input, "7").unwrap_err(),
+            ] {
+                let errors: Vec<serde_json::Value> =
+                    serde_json::from_str(&error.as_string().unwrap()).unwrap();
+                assert!(errors.iter().any(|e| e["field"]
+                    .as_str()
+                    .is_some_and(|f| f.starts_with("behavior_tree_lab"))));
+            }
+        }
+        for seed in ["", "-1", "+7", "7.0", " 7", "7\n", "18446744073709551616"] {
+            let error = behavior_tree_episode_json(LAB, seed).unwrap_err();
+            let errors: Vec<serde_json::Value> =
+                serde_json::from_str(&error.as_string().unwrap()).unwrap();
+            assert_eq!(errors[0]["field"], "seed");
+        }
+    }
+
+    #[wasm_bindgen_test]
+    fn behavior_tree_decimal_seed_parser_accepts_full_u64_without_construction() {
+        assert_eq!(decimal_seed("18446744073709551615"), Ok(u64::MAX));
+        assert_eq!(decimal_seed("0007"), Ok(7));
     }
 }

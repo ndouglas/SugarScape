@@ -447,6 +447,7 @@ pub enum DecisionRule {
     #[default]
     Book,
     Utility,
+    BehaviorTree,
     Goap,
     Mvt,
 }
@@ -1139,7 +1140,7 @@ pub const STRUCTURAL_FIELDS: [&str; 5] =
     ["width", "height", "tag_length", "population", "placement"];
 
 /// Paths a schedule may not set: structure (culture, disease) and the decision rule.
-pub const RESET_ONLY_PATHS: [&str; 34] = [
+pub const RESET_ONLY_PATHS: [&str; 37] = [
     "culture.rule",
     "culture.features",
     "culture.traits",
@@ -1152,6 +1153,9 @@ pub const RESET_ONLY_PATHS: [&str; 34] = [
     "disease.immune_length",
     "decision",
     "decision.rule",
+    "behavior_tree",
+    "behavior_tree.profile",
+    "behavior_tree.visits",
     "walls",
     "memory",
     "memory.span",
@@ -1197,6 +1201,7 @@ fn reset_only(path: &str) -> bool {
             | ["lab", ..]
             | ["protection_lab", ..]
             | ["deception_lab", ..]
+            | ["behavior_tree_lab", ..]
             | ["spatial_hoarding", ..]
             | ["walls", ..]
     ) || RESET_ONLY_PATHS.contains(&path)
@@ -1268,6 +1273,11 @@ pub struct Config {
     pub walls: Vec<Wall>,
     pub memory: Memory,
     pub truffles: Truffles,
+    #[serde(
+        default,
+        skip_serializing_if = "crate::minds::behavior_tree::state::Settings::is_default"
+    )]
+    pub behavior_tree: crate::minds::behavior_tree::state::Settings,
     pub goap: Goap,
     pub mvt: Mvt,
     pub caching: Caching,
@@ -1284,6 +1294,8 @@ pub struct Config {
     pub protection_lab: Option<crate::minds::protection::state::LabConfig>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub deception_lab: Option<crate::minds::deception::state::LabConfig>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub behavior_tree_lab: Option<crate::minds::behavior_tree::state::LabConfig>,
     pub schedule: Vec<ScheduledChange>,
 }
 
@@ -1363,6 +1375,8 @@ impl Default for Config {
             walls: Vec::new(),
             memory: Memory::default(),
             truffles: Truffles::default(),
+            behavior_tree: Default::default(),
+            behavior_tree_lab: None,
             goap: Goap::default(),
             mvt: Mvt::default(),
             caching: Caching::default(),
@@ -1828,7 +1842,8 @@ impl Config {
         e.range(self.vision, "vision");
         e.check(self.vision.min >= 1, "vision.min", "must be ≥ 1");
         e.check(
-            self.vision.max <= max_vision,
+            self.vision.max <= max_vision
+                || (self.behavior_tree_lab.is_some() && self.vision == URange::new(8, 8)),
             "vision.max",
             format!("must be ≤ {max_vision} (half the grid)"),
         );
@@ -1897,7 +1912,9 @@ impl Config {
         e.check(
             self.growback.rate.is_finite()
                 && (self.growback.rate > 0.0
-                    || ((self.protection_lab.is_some() || self.deception_lab.is_some())
+                    || ((self.protection_lab.is_some()
+                        || self.deception_lab.is_some()
+                        || self.behavior_tree_lab.is_some())
                         && self.growback.rate == 0.0)),
             "growback.rate",
             "must be a number > 0",
@@ -1957,7 +1974,11 @@ impl Config {
             );
         }
         e.check(
-            !(dc.rule == DecisionRule::Utility && self.combat.enabled),
+            !((dc.rule == DecisionRule::Utility
+                || (dc.rule == DecisionRule::BehaviorTree
+                    && self.behavior_tree.profile
+                        == crate::minds::behavior_tree::state::Profile::UtilityLeaf))
+                && self.combat.enabled),
             "decision.rule",
             "rule C decides moves under combat",
         );
@@ -1966,6 +1987,11 @@ impl Config {
                 || self.movement.mode == MoveMode::Walk,
             "decision.rule",
             "planning and the marginal-value rule walk; set movement.mode to walk",
+        );
+        e.check(
+            (1..=64).contains(&self.behavior_tree.visits),
+            "behavior_tree.visits",
+            "must be between 1 and 64",
         );
         // A plan sums the values of the sites it harvests against G, sugar
         // for ticks of burn; with n ≥ 2 goods rule M's values are foresight
@@ -2293,6 +2319,7 @@ impl Config {
         );
         e.0.extend(crate::minds::protection::lab::validation_errors(self));
         e.0.extend(crate::minds::deception::lab::validation_errors(self));
+        e.0.extend(crate::minds::behavior_tree::lab::validation_errors(self));
         e.finish()
     }
 
@@ -2505,6 +2532,9 @@ impl Config {
             if changed {
                 out.push(FieldError::new(format!("spatial_hoarding.{path}"), msg));
             }
+        }
+        if self.behavior_tree_lab != next.behavior_tree_lab {
+            out.push(FieldError::new("behavior_tree_lab", msg));
         }
         if self.deception_lab != next.deception_lab {
             out.push(FieldError::new("deception_lab", msg));

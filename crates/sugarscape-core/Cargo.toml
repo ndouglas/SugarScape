@@ -9,7 +9,7 @@ license.workspace = true
 # Exact common software transcendentals for GeoSim native/WASM reproducibility.
 libm = { version = "=0.2.16", default-features = false, features = ["force-soft-floats"] }
 rand.workspace = true
-rand_pcg.workspace = true
+rand_pcg = { workspace = true, features = ["serde1"] }
 serde.workspace = true
 serde_json = { workspace = true, features = ["float_roundtrip"] }
 

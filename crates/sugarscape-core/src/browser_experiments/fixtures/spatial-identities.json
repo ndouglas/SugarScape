@@ -1,10 +1,10 @@
 {
   "burrow_excavation": {
     "adapter_schema_version": 1,
-    "source_sha256": "686e0609e743682faadca98474cec9ffcd590cdd444b77894fde91a120acdf64",
+    "source_sha256": "ee87df331a2812cc881f0342f2a0e3556a6e2121640d532aca84fad93dbe409a",
     "source_digest_format": "SHA256 of sorted path + NUL + lowercase file SHA256 + newline entries",
     "source_files": {
-      "Cargo.lock": "7217929fea10793e589d820bcdf4555ad6aa3f57fb9af9d5cfce5473310bde5f",
+      "Cargo.lock": "b36bf3b527b6bb318de2274c4c9c5e1b13ea434898f536083fce8d4a6ff0e9a3",
       "crates/sugarscape-core/src/burrow/access.rs": "4717a7c22c60c76ee09f6791c3c1f69c8e1b1f57f5e6fe4129593af92ce79559",
       "crates/sugarscape-core/src/burrow/actions.rs": "08df834681b1ec8c29d42cdd1494a2618714b01120720a721249098248f953d8",
       "crates/sugarscape-core/src/burrow/config.rs": "982573596c884c6319c94a8230a31dd208d431c71f7fcad5cbc28aa60658fee5",
@@ -23,16 +23,16 @@
       "crates/sugarscape-core/src/burrow/tests/validation.rs": "0dd0053c1c4cc9cec6c12db452d431c0003c8a5a4f848d5178ccb4a5bc6033e5",
       "crates/sugarscape-core/src/burrow/validation.rs": "9525f2dc8cf92f76cf1c06f2156522d00526840189ad26c532eea744f3b5f0cf",
       "crates/sugarscape-core/src/burrow/view.rs": "962a80abc30d2cdd511749899de4bfe5d77f9c5ad275a374d3a3c17b20b54118",
-      "crates/sugarscape-core/src/rng.rs": "af425707764621e3e11eed48574498671d3ba52927ab266a660295b51b9e2d1d"
+      "crates/sugarscape-core/src/rng.rs": "3366aedd661653a78cfcd134512fa4f63daa85778481041bb46ff618a71b4ad9"
     },
     "target_contract": "original integer Burrow runner; no target suffix"
   },
   "burrow_access": {
     "adapter_schema_version": 1,
-    "source_sha256": "686e0609e743682faadca98474cec9ffcd590cdd444b77894fde91a120acdf64",
+    "source_sha256": "ee87df331a2812cc881f0342f2a0e3556a6e2121640d532aca84fad93dbe409a",
     "source_digest_format": "SHA256 of sorted path + NUL + lowercase file SHA256 + newline entries",
     "source_files": {
-      "Cargo.lock": "7217929fea10793e589d820bcdf4555ad6aa3f57fb9af9d5cfce5473310bde5f",
+      "Cargo.lock": "b36bf3b527b6bb318de2274c4c9c5e1b13ea434898f536083fce8d4a6ff0e9a3",
       "crates/sugarscape-core/src/burrow/access.rs": "4717a7c22c60c76ee09f6791c3c1f69c8e1b1f57f5e6fe4129593af92ce79559",
       "crates/sugarscape-core/src/burrow/actions.rs": "08df834681b1ec8c29d42cdd1494a2618714b01120720a721249098248f953d8",
       "crates/sugarscape-core/src/burrow/config.rs": "982573596c884c6319c94a8230a31dd208d431c71f7fcad5cbc28aa60658fee5",
@@ -51,16 +51,16 @@
       "crates/sugarscape-core/src/burrow/tests/validation.rs": "0dd0053c1c4cc9cec6c12db452d431c0003c8a5a4f848d5178ccb4a5bc6033e5",
       "crates/sugarscape-core/src/burrow/validation.rs": "9525f2dc8cf92f76cf1c06f2156522d00526840189ad26c532eea744f3b5f0cf",
       "crates/sugarscape-core/src/burrow/view.rs": "962a80abc30d2cdd511749899de4bfe5d77f9c5ad275a374d3a3c17b20b54118",
-      "crates/sugarscape-core/src/rng.rs": "af425707764621e3e11eed48574498671d3ba52927ab266a660295b51b9e2d1d"
+      "crates/sugarscape-core/src/rng.rs": "3366aedd661653a78cfcd134512fa4f63daa85778481041bb46ff618a71b4ad9"
     },
     "target_contract": "original integer Burrow runner; no target suffix"
   },
   "foraging_fixed": {
     "adapter_schema_version": 1,
-    "source_sha256": "ac2f8d995ee244c8dfec58ec15a0808e12a75124493e47d916c5e12687473b49",
+    "source_sha256": "eaac288d72ac99e22f43064053322ae91ec83fa060ec33a2d22784845ffc0f05",
     "source_digest_format": "SHA256 of sorted path + NUL + lowercase file SHA256 + newline entries",
     "source_files": {
-      "Cargo.lock": "7217929fea10793e589d820bcdf4555ad6aa3f57fb9af9d5cfce5473310bde5f",
+      "Cargo.lock": "b36bf3b527b6bb318de2274c4c9c5e1b13ea434898f536083fce8d4a6ff0e9a3",
       "crates/sugarscape-core/src/foraging/config.rs": "4631cf2e0e4278c3b4dc8b50dd4e8b4a391c8ddf08b14bfb2f1ef92d95f95c57",
       "crates/sugarscape-core/src/foraging/construction/access.rs": "20bf27f2224195e46ae8f58e62350a372b8c91033b7d4c842c4d82cfb5858a82",
       "crates/sugarscape-core/src/foraging/construction/actions.rs": "91935bbe6e4083c7326120ba22652a5d6356daa060386e7bc4fbfb913b969bf7",
@@ -131,16 +131,16 @@
       "crates/sugarscape-core/src/foraging/tests/information.rs": "f88a1312581e4b41f96bae1846a897b3b502cce4f396c1d7573580736a114c9c",
       "crates/sugarscape-core/src/foraging/tests/mod.rs": "6a01e17a05bb5a6a09a602c5a7b5db596c24539fff7437348498c0b971702501",
       "crates/sugarscape-core/src/foraging/tests/rules.rs": "90de9f7ae7b7678f177e0ae5acbb70582b98683ba0a8fcf7cc663b955bd3265d",
-      "crates/sugarscape-core/src/rng.rs": "af425707764621e3e11eed48574498671d3ba52927ab266a660295b51b9e2d1d"
+      "crates/sugarscape-core/src/rng.rs": "3366aedd661653a78cfcd134512fa4f63daa85778481041bb46ff618a71b4ad9"
     },
     "target_contract": "actual ARCH/OS appended by runnable CPFA adapter; foreign targets reject"
   },
   "foraging_passage": {
     "adapter_schema_version": 1,
-    "source_sha256": "ac2f8d995ee244c8dfec58ec15a0808e12a75124493e47d916c5e12687473b49",
+    "source_sha256": "eaac288d72ac99e22f43064053322ae91ec83fa060ec33a2d22784845ffc0f05",
     "source_digest_format": "SHA256 of sorted path + NUL + lowercase file SHA256 + newline entries",
     "source_files": {
-      "Cargo.lock": "7217929fea10793e589d820bcdf4555ad6aa3f57fb9af9d5cfce5473310bde5f",
+      "Cargo.lock": "b36bf3b527b6bb318de2274c4c9c5e1b13ea434898f536083fce8d4a6ff0e9a3",
       "crates/sugarscape-core/src/foraging/config.rs": "4631cf2e0e4278c3b4dc8b50dd4e8b4a391c8ddf08b14bfb2f1ef92d95f95c57",
       "crates/sugarscape-core/src/foraging/construction/access.rs": "20bf27f2224195e46ae8f58e62350a372b8c91033b7d4c842c4d82cfb5858a82",
       "crates/sugarscape-core/src/foraging/construction/actions.rs": "91935bbe6e4083c7326120ba22652a5d6356daa060386e7bc4fbfb913b969bf7",
@@ -211,16 +211,16 @@
       "crates/sugarscape-core/src/foraging/tests/information.rs": "f88a1312581e4b41f96bae1846a897b3b502cce4f396c1d7573580736a114c9c",
       "crates/sugarscape-core/src/foraging/tests/mod.rs": "6a01e17a05bb5a6a09a602c5a7b5db596c24539fff7437348498c0b971702501",
       "crates/sugarscape-core/src/foraging/tests/rules.rs": "90de9f7ae7b7678f177e0ae5acbb70582b98683ba0a8fcf7cc663b955bd3265d",
-      "crates/sugarscape-core/src/rng.rs": "af425707764621e3e11eed48574498671d3ba52927ab266a660295b51b9e2d1d"
+      "crates/sugarscape-core/src/rng.rs": "3366aedd661653a78cfcd134512fa4f63daa85778481041bb46ff618a71b4ad9"
     },
     "target_contract": "actual ARCH/OS appended by runnable CPFA adapter; foreign targets reject"
   },
   "foraging_construction": {
     "adapter_schema_version": 1,
-    "source_sha256": "ac2f8d995ee244c8dfec58ec15a0808e12a75124493e47d916c5e12687473b49",
+    "source_sha256": "eaac288d72ac99e22f43064053322ae91ec83fa060ec33a2d22784845ffc0f05",
     "source_digest_format": "SHA256 of sorted path + NUL + lowercase file SHA256 + newline entries",
     "source_files": {
-      "Cargo.lock": "7217929fea10793e589d820bcdf4555ad6aa3f57fb9af9d5cfce5473310bde5f",
+      "Cargo.lock": "b36bf3b527b6bb318de2274c4c9c5e1b13ea434898f536083fce8d4a6ff0e9a3",
       "crates/sugarscape-core/src/foraging/config.rs": "4631cf2e0e4278c3b4dc8b50dd4e8b4a391c8ddf08b14bfb2f1ef92d95f95c57",
       "crates/sugarscape-core/src/foraging/construction/access.rs": "20bf27f2224195e46ae8f58e62350a372b8c91033b7d4c842c4d82cfb5858a82",
       "crates/sugarscape-core/src/foraging/construction/actions.rs": "91935bbe6e4083c7326120ba22652a5d6356daa060386e7bc4fbfb913b969bf7",
@@ -291,7 +291,7 @@
       "crates/sugarscape-core/src/foraging/tests/information.rs": "f88a1312581e4b41f96bae1846a897b3b502cce4f396c1d7573580736a114c9c",
       "crates/sugarscape-core/src/foraging/tests/mod.rs": "6a01e17a05bb5a6a09a602c5a7b5db596c24539fff7437348498c0b971702501",
       "crates/sugarscape-core/src/foraging/tests/rules.rs": "90de9f7ae7b7678f177e0ae5acbb70582b98683ba0a8fcf7cc663b955bd3265d",
-      "crates/sugarscape-core/src/rng.rs": "af425707764621e3e11eed48574498671d3ba52927ab266a660295b51b9e2d1d"
+      "crates/sugarscape-core/src/rng.rs": "3366aedd661653a78cfcd134512fa4f63daa85778481041bb46ff618a71b4ad9"
     },
     "target_contract": "actual ARCH/OS appended by runnable CPFA adapter; foreign targets reject"
   }

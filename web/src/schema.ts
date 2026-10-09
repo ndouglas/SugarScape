@@ -232,9 +232,9 @@ export const GROUPS: Group[] = [
     controls: [{ kind: 'range', path: 'foresight.range', label: 'Foresight φ', min: 0, max: 20 }],
   },
   {
-    title: 'Decision (Minds 1, 4)',
+    title: 'Decision (Minds 1, 4, 10)',
     minds: true,
-    note: 'Which rule decides where an agent moves. The book’s rule M goes to the best site in sight. The utility mind multiplies that welfare by travel and crowding considerations; with both at 0 and Idle at Stay it is rule M exactly. Travel, crowding and idle apply only under the utility mind; rule C decides moves under combat. GOAP plans a run of harvests among the sites it knows that gathers enough food for the horizon, pricing each walk by its length; it needs one good. The marginal-value rule keeps a running average of its intake and leaves a patch once nothing within a step is worth that average; it also needs one good. Both need walking (Movement: Walk).',
+    note: 'Which rule decides where an agent moves. The book’s rule M goes to the best site in sight. The utility mind multiplies that welfare by travel and crowding considerations; with both at 0 and Idle at Stay it is rule M exactly. Travel, crowding and idle apply only under the utility mind; rule C decides moves under combat. GOAP plans a run of harvests among the sites it knows that gathers enough food for the horizon, pricing each walk by its length; it needs one good. The marginal-value rule keeps a running average of its intake and leaves a patch once nothing within a step is worth that average; it also needs one good. Both need walking (Movement: Walk). Behavior tree selects a supplied routine: Book leaf calls rule M once; Utility leaf calls the utility mind once. These routines retain no task state and are not learned skills. Interrupted food tasks use checked research configurations; measurements are pending.',
     controls: [
       {
         kind: 'select', path: 'decision.rule', label: 'Rule', reset: true,
@@ -244,6 +244,15 @@ export const GROUPS: Group[] = [
           { value: 'utility', label: 'Utility mind', apply: (c) => { c.decision = { ...decision(c), rule: 'utility' }; } },
           { value: 'goap', label: 'GOAP (plan)', apply: (c) => { c.decision = { ...decision(c), rule: 'goap' }; } },
           { value: 'mvt', label: 'Marginal value (leave below your average)', apply: (c) => { c.decision = { ...decision(c), rule: 'mvt' }; } },
+          { value: 'behavior_tree', label: 'Behavior tree (supplied routine)', apply: (c) => { c.decision = { ...decision(c), rule: 'behavior_tree' }; } },
+        ],
+      },
+      {
+        kind: 'select', path: 'behavior_tree.profile', label: 'Behavior tree: supplied routine', reset: true,
+        current: (c) => c.behavior_tree?.profile ?? 'book_leaf',
+        options: [
+          { value: 'book_leaf', label: 'Book leaf (rule M)', apply: (c) => { c.behavior_tree = { profile: 'book_leaf', visits: 64 }; } },
+          { value: 'utility_leaf', label: 'Utility leaf', apply: (c) => { c.behavior_tree = { profile: 'utility_leaf', visits: 64 }; } },
         ],
       },
       {

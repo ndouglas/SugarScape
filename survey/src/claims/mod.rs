@@ -2,6 +2,7 @@ mod agreement;
 mod ants;
 mod auctions;
 mod bali;
+pub(crate) mod behavior_trees;
 pub(crate) mod burrow;
 pub(crate) mod burrow_archive;
 pub(crate) mod burrow_report;

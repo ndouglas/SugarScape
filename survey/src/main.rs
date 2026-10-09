@@ -85,6 +85,13 @@ fn run_claim(c: &Claim, seeds: &[u64]) -> Outcome {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    if let Some(result) = claims::behavior_trees::route(&args[1..]) {
+        if let Err(error) = result {
+            eprintln!("behavior-trees: {error}");
+            std::process::exit(2);
+        }
+        return;
+    }
     if args[1..].iter().any(|a| a == "--foraging-shortcuts") {
         let mut route = args[1..].to_vec();
         let position = route

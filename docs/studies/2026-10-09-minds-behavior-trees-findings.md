@@ -1,0 +1,9 @@
+# Minds 10: behavior-tree findings
+
+The fixed 96×40 campaign is complete and independently empirically accepted for faithful integration. The [full findings](../../web/public/studies/minds-behavior-trees-2026-10-08/findings.md) retain all four separately labelled families, 256 exact native estimates, 640 guarded-tree/FSM checks, null completion floors, aliases and timing limitations. Supplied routines are not learned skills or independent animal replications.
+
+Scientific source remains `e67b8d293ffb21c3a6fb94daf727e69b7a7af51b`; subsequent integration commits have a separate identity. The [actual empirical decision](../../web/public/studies/minds-behavior-trees-2026-10-08/acceptance/empirical-decision.json) is SHA256 `380236b10318774522196bb539e9fba40e46180cdca26ce997854661fd9180b1`.
+
+The [lossless scientific archive](../../web/public/studies/minds-behavior-trees-2026-10-08/archive/README.md) contains every registered raw file, both byte-identical saved native analyses, the frozen source/native binary, complete construction/opportunity verification and original approved report/plots. Every archived member was scanned and fully decompressed to verify hashes, sizes and modes. The public scientific cutoff excludes private inherited credentials and preserves explicit derivative lineage; full private originals remain retained.
+
+This is local integration preparation. Fresh integration review, local-main merge/normal push, exact-head CI/Pages/deployment, served hashes and final private immutable archive closure remain pending. [Engineering readiness](2026-10-09-minds-behavior-trees-readiness.md), [registered protocol](../superpowers/specs/2026-10-08-minds-behavior-trees-protocol.md) and [reproduction details](../../web/public/studies/minds-behavior-trees-2026-10-08/REPRODUCING.md) retain the scientific and software boundaries.

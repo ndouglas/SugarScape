@@ -48,7 +48,9 @@ pub fn crowd(world: &World, site: Pos, mover: AgentId) -> u32 {
 /// remembered scores above 0, and then only among the sites in sight.
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let d = world.config.decision;
+    crate::minds::behavior_tree::telemetry::note_selection(world);
     let (welfare, start) = candidates_with_memory(world, id);
+    crate::minds::behavior_tree::telemetry::note_candidates(world, welfare.len() as u64);
     // Scored only when a consideration is on; otherwise the score is the
     // welfare itself, and no copy is made.
     let rescored = (d.crowding > 0.0 || d.travel > 0.0).then(|| {
@@ -63,6 +65,9 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
         }
         scored
     });
+    if rescored.is_some() {
+        crate::minds::behavior_tree::telemetry::note_candidates(world, welfare.len() as u64);
+    }
     let scored = rescored.as_deref().unwrap_or(&welfare);
     let idle = d.idle == Idle::Wander
         && scored[..start].iter().all(|c| c.2 == 0.0)

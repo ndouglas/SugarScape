@@ -220,6 +220,8 @@ pub struct TickEvents {
 
 #[derive(Clone)]
 pub struct World {
+    pub behavior_tree_lab: Option<crate::minds::behavior_tree::state::LabRuntime>,
+    pub bt_work: Option<crate::minds::behavior_tree::WorkCounters>,
     pub deception: Option<crate::minds::deception::state::Runtime>,
     pub config: Config,
     pub torus: Torus,
@@ -469,6 +471,8 @@ impl World {
                 .collect()
         };
         let mut world = World {
+            bt_work: None,
+            behavior_tree_lab: None,
             torus,
             tick: 0,
             sites,
@@ -508,7 +512,9 @@ impl World {
         if world.config.disease.enabled {
             world.diseases = rules::disease::initial_list(&world.config.disease, &mut world.rng);
         }
-        if world.config.protection_lab.is_some() {
+        if world.config.behavior_tree_lab.is_some() {
+            crate::minds::behavior_tree::lab::initialize(&mut world);
+        } else if world.config.protection_lab.is_some() {
             crate::minds::protection::lab::initialize(&mut world);
         } else if world.config.deception_lab.is_some() {
             crate::minds::deception::lab::initialize(&mut world);
@@ -637,6 +643,20 @@ impl World {
         }
         self.walls[i] = 0;
         self.regions = label_regions(self.torus, &self.walls);
+    }
+
+    /// The fixed food-task event closes only its unoccupied, food-free site.
+    pub(crate) fn close_behavior_tree_wall(&mut self, pos: Pos) -> Result<(), String> {
+        if self.is_occupied(pos) {
+            return Err(format!("occupied wall-event site ({},{})", pos.x, pos.y));
+        }
+        if self.site(pos).resource[0] != 0.0 || self.site(pos).capacity[0] != 0.0 {
+            return Err("wall-event site is not food-free".into());
+        }
+        let i = self.torus.index(pos);
+        self.walls[i] = 2;
+        self.regions = label_regions(self.torus, &self.walls);
+        Ok(())
     }
 
     /// Whether `pos` is an opaque wall: it also stops sight.
@@ -1057,6 +1077,13 @@ impl World {
                 }
             }
         }
+        if self.behavior_tree_lab.is_some() {
+            let state = crate::minds::behavior_tree::runner::semantic_bytes(self);
+            eat(state.len() as u64);
+            for byte in state {
+                eat(u64::from(byte));
+            }
+        }
         h
     }
 
@@ -1083,6 +1110,7 @@ impl World {
             });
         }
         let agent = self.agents.remove(&id)?;
+        crate::minds::behavior_tree::runner::note_removal(self, id, agent.holdings[0].max(0.0));
         if !agent.caches.is_empty() {
             self.events.cache_lost += agent.caches.values().sum::<f64>();
         }
@@ -1251,6 +1279,13 @@ impl World {
     /// (agents born or killed during the tick are skipped), then the
     /// environment updates and everyone ages.
     pub fn step(&mut self) {
+        if self
+            .behavior_tree_lab
+            .as_ref()
+            .is_some_and(|r| r.fatal_error.is_some() || self.tick >= 64)
+        {
+            return;
+        }
         self.events = TickEvents::default();
         self.relocation_events = self
             .config
@@ -1265,6 +1300,9 @@ impl World {
         crate::minds::protection::lab::begin_tick(self);
         crate::minds::deception::runner::begin_tick(self);
         self.apply_schedule();
+        if crate::minds::behavior_tree::lab::begin_step(self).is_err() {
+            return;
+        }
         if self.config.pilfering_on() {
             crate::minds::caching::theft::count_candidates(self);
         }
@@ -1299,6 +1337,7 @@ impl World {
             agent.age += 1;
         }
         self.tick += 1;
+        crate::minds::behavior_tree::runner::reconcile(self);
         let snapshot = Snapshot::of(self);
         self.stats.push(snapshot);
         self.record_trail();
@@ -1317,6 +1356,13 @@ impl World {
     /// with `stop_when_settled`, at least two agents, and the latest tick
     /// settled (milestone 14).
     pub fn is_finished(&self) -> bool {
+        if self
+            .behavior_tree_lab
+            .as_ref()
+            .is_some_and(|r| r.fatal_error.is_some() || self.tick >= 64)
+        {
+            return true;
+        }
         self.config.culture.stop_when_settled
             && self.config.culture.axelrod()
             && self.population() >= 2

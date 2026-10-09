@@ -4,6 +4,7 @@
 //! values only what rule M does.
 
 pub mod astar;
+pub mod behavior_tree;
 pub mod caching;
 pub mod central;
 pub mod deception;
@@ -23,6 +24,10 @@ use crate::world::World;
 /// Rule M's step under the configured decision rule: moves `id` and returns
 /// its harvest.
 pub(crate) fn decide(world: &mut World, id: AgentId) -> Harvest {
+    behavior_tree::telemetry::reset(world);
+    if let Some(harvest) = behavior_tree::runner::turn(world, id) {
+        return harvest;
+    }
     if let Some(harvest) = deception::runner::scripted_action(world, id) {
         return harvest;
     }
@@ -53,6 +58,7 @@ pub(crate) fn decide(world: &mut World, id: AgentId) -> Harvest {
     match world.config.decision.rule {
         DecisionRule::Book => movement::act(world, id),
         DecisionRule::Utility => utility::act(world, id),
+        DecisionRule::BehaviorTree => behavior_tree::forage::act(world, id),
         DecisionRule::Goap => goap::forage::act(world, id),
         DecisionRule::Mvt => mvt::act(world, id),
     }

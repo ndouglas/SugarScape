@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-10-09T10:45:30.725478+00:00",
+  "native_strict_loads": 2,
+  "worlds_constructed_during_analysis": 0,
+  "entire_output_comparison": [
+    {
+      "name": "analysis.json",
+      "bytes": 22178854,
+      "sha256": "3a24716d45b938ecb3af8f6b9b777433baef3064f462a3a31af9daa024924cea",
+      "equal_bytes": true
+    },
+    {
+      "name": "results.md",
+      "bytes": 29978,
+      "sha256": "835fe3b4ab730c70d512bd6e0be2f1e268290ac06a4856259f9c04bc0579437c",
+      "equal_bytes": true
+    }
+  ],
+  "total_equal_bytes": 22208832,
+  "estimates": 256,
+  "families": {
+    "primary": 64,
+    "secondary": 64,
+    "ablation": 64,
+    "legacy_reference": 64
+  },
+  "matched_pairs": 640,
+  "matched_frames": 41600,
+  "cells": 96,
+  "endpoints": 3840,
+  "frames": 249600,
+  "completion_summaries": 64,
+  "completion_available": 56,
+  "completion_unavailable": 8,
+  "unavailable_pair_rows": 320,
+  "endpoint_nulls": {
+    "first_completion": 480,
+    "unattained_reason": 3360
+  },
+  "physical_duplicate_groups": 40,
+  "alias_groups": 28,
+  "empirical_acceptance": false
+}

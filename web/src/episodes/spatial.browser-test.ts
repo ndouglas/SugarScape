@@ -1,3 +1,4 @@
+import { canonical } from './comparison';
 import { SpatialControls } from './spatial-controls';
 import { spatialCatalog,renderDescriptor } from './catalog';
 import { renderSpatial,renderSpatialResult } from './spatial-view';
@@ -80,4 +81,57 @@ export async function spatialLifecycleChecks(catalog:StudyDescriptor[]):Promise<
  [...emptyView.el.querySelectorAll('button')].find(b=>b.textContent==='Run episode')!.click();const limit=performance.now()+60000;while(emptyView.el.querySelector<HTMLFieldSetElement>('.episode-setup')!.disabled){if(performance.now()>limit)throw new Error('Empty-choice fixture did not settle');await new Promise(r=>setTimeout(r,20));}
  const compare=[...emptyView.el.querySelectorAll('button')].find(b=>b.textContent==='Run matched comparison')!;check('empty candidate comparison stays disabled after busy release',compare.disabled);emptyView.dispose();emptyView.el.remove();
  check('source default record remains unchanged',JSON.stringify(first.input)===JSON.stringify(d.default_input));return checks;
+}
+
+/** Current raw editor text is authority for real Run/Share, including before blur. */
+export async function spatialRawEditorChecks():Promise<BrowserCheck[]> {
+ const {EpisodeView}=await import('./view');const {createEpisodeClient}=await import('./client');
+ const checks:BrowserCheck[]=[];const check=(name:string,passed:boolean)=>checks.push({name,passed});
+ let workers=0,clipboardCalls=0,invalidClipboardCalls=0,invalidShare=true;const copied:string[]=[];
+ const client=createEpisodeClient(()=>{workers++;return new Worker(new URL('./worker.ts',import.meta.url),{type:'module'});});
+ const originalWrite=navigator.clipboard.writeText;
+ navigator.clipboard.writeText=async(text:string)=>{clipboardCalls++;if(invalidShare)invalidClipboardCalls++;copied.push(text);};
+ const view=new EpisodeView(client);document.body.append(view.el);
+ const button=(name:string)=>[...view.el.querySelectorAll('button')].find(b=>b.textContent===name)!;
+ const status=()=>view.el.querySelector(':scope > .row > [role="status"]')!.textContent!;
+ const idle=async()=>{const deadline=performance.now()+60000;while(view.el.querySelector<HTMLFieldSetElement>('.episode-setup')!.disabled){if(performance.now()>deadline)throw new Error('Raw-editor Run did not settle');await new Promise(r=>setTimeout(r,20));}};
+ const sameRecords=(shown:typeof view.session.shown,records:typeof view.session.records)=>view.session.shown===shown&&view.replay.record===shown&&records.length===view.session.records.length&&records.every((r,i)=>view.session.records[i]===r);
+ try {
+  await view.ready;const catalog=await client.catalog();
+  for(const study of ['foraging_fixed','burrow_excavation']){
+   const d=catalog.find(d=>d.id===study)!,root=study.startsWith('burrow')?'config':'setup';
+   view.openInput(d.default_input);button('Run episode').click();await idle();check(`${root}: prior real successful record`,view.session.shown?.study===study);
+   for(const [variant,text] of [['malformed','{x'],['empty','']] as const)for(const phase of ['before blur','after change']){
+    view.openInput(d.default_input);const shown=view.session.shown,records=[...view.session.records];
+    const json=view.el.querySelector<HTMLTextAreaElement>(`[aria-label="Complete ${root} JSON"]`)!;json.closest('details')!.open=true;json.focus();json.value=text;
+    if(phase==='after change')json.dispatchEvent(new Event('change'));
+    const priorWorkers=workers;button('Run episode').click();await idle();
+    check(`${root}/${variant}/${phase}: Run rejects before worker`,workers===priorWorkers&&status().startsWith(root+':'));
+    check(`${root}/${variant}/${phase}: Run retains shown/records`,sameRecords(shown,records));
+    invalidShare=true;const priorClipboard=clipboardCalls;button('Share input link').click();
+    const until=performance.now()+3000;while(clipboardCalls===priorClipboard&&!status().startsWith(root+':')&&performance.now()<until)await new Promise(r=>setTimeout(r,20));
+    check(`${root}/${variant}/${phase}: Share rejects without stale clipboard/link`,clipboardCalls===priorClipboard&&status().startsWith(root+':'));
+    check(`${root}/${variant}/${phase}: actions preserve attempted text`,json.value===text);
+    const seed=view.el.querySelector<HTMLInputElement>('[aria-label="Seed (decimal u64)"]')!;seed.value='23';seed.dispatchEvent(new Event('change'));
+    check(`${root}/${variant}/${phase}: unrelated scalar preserves raw text`,json.value===text);
+    if(root==='setup'){
+     const id=view.el.querySelector<HTMLInputElement>('[aria-label="resources 0 ID (decimal u64)"]')!;id.value='0';id.dispatchEvent(new Event('change'));
+     check(`${root}/${variant}/${phase}: resource edit preserves raw text`,json.value===text);
+    }
+    // No blur/change event: Run must parse this current valid replacement itself.
+    json.value=JSON.stringify(obj(d.default_input)[root],null,2);const oldShown=view.session.shown;button('Run episode').click();await idle();
+    check(`${root}/${variant}/${phase}: corrected current JSON recovers`,view.session.shown!==oldShown&&obj(view.session.shown!.input).seed==='23'&&canonical(obj(view.session.shown!.input)[root])===canonical(obj(d.default_input)[root]));
+    invalidShare=false;const beforeValidShare=clipboardCalls;button('Share input link').click();const shareDeadline=performance.now()+3000;
+    while(clipboardCalls===beforeValidShare&&performance.now()<shareDeadline)await new Promise(r=>setTimeout(r,20));
+    const {decodeEpisode}=await import('./share');const url=copied.at(-1),token=url?.split('#e=')[1];const shared=token?await decodeEpisode(token):null;
+    check(`${root}/${variant}/${phase}: corrected input Share recovers with current seed`,clipboardCalls===beforeValidShare+1&&obj(shared).seed==='23'&&obj(shared).study===study);
+
+    view.openInput(d.default_input);const again=view.el.querySelector<HTMLTextAreaElement>(`[aria-label="Complete ${root} JSON"]`)!;again.value=text;again.dispatchEvent(new Event('change'));
+    const scene=view.el.querySelector<HTMLSelectElement>('[aria-label="Spatial setup"]')!;scene.value='0';scene.dispatchEvent(new Event('change'));button('Run episode').click();await idle();
+    check(`${root}/${variant}/${phase}: explicit named setup recovers`,view.session.shown?.study===study&&status().startsWith('Episode complete'));
+   }
+  }
+  check('invalid raw edits never copy an input URL',invalidClipboardCalls===0);
+ }finally{navigator.clipboard.writeText=originalWrite;view.dispose();view.el.remove();}
+ return checks;
 }

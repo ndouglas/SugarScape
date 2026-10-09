@@ -1,0 +1,434 @@
+[
+  {
+    "path": "primary-quota_attained.png",
+    "sha256": "0e4d1bcb1922160135b1c8a32345d51464e872e70f16f6a346b0cdcbfa14e49e",
+    "bytes": 213853,
+    "mode": "100644",
+    "family": "primary",
+    "metric": "quota_attained",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "primary-quota_attained.svg",
+    "sha256": "4c89655ccedc4e77bee0fd94150a8450c3998dda3c4ab1894cfe13103bda924e",
+    "bytes": 31287,
+    "mode": "100644",
+    "family": "primary",
+    "metric": "quota_attained",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "primary-restricted_completion_ticks.png",
+    "sha256": "9c097528512415cc0587326c67b869bc5c0121f7775a1a7eb00e8537f7a84eed",
+    "bytes": 219009,
+    "mode": "100644",
+    "family": "primary",
+    "metric": "restricted_completion_ticks",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "primary-restricted_completion_ticks.svg",
+    "sha256": "7e4dfaa2263d83658d2bf38784e35589847a3f74d567c80ec3c86725d051e0a1",
+    "bytes": 32674,
+    "mode": "100644",
+    "family": "primary",
+    "metric": "restricted_completion_ticks",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "primary-gross_gathered.png",
+    "sha256": "19d64a40b9ca92cfd6812b893b62f9bd623f4cdad743d49ff08cbe5a6c567f86",
+    "bytes": 219558,
+    "mode": "100644",
+    "family": "primary",
+    "metric": "gross_gathered",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "primary-gross_gathered.svg",
+    "sha256": "edefa7f7a2435d8ddf005d25a5c9bbb329aa22cfce0f52ca1df1096cfcd18a3d",
+    "bytes": 31422,
+    "mode": "100644",
+    "family": "primary",
+    "metric": "gross_gathered",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "primary-living_ticks.png",
+    "sha256": "6ceb91a961213e4ab5955da0e02e66a820919961fbb391ce9dfa632ba123b9be",
+    "bytes": 214613,
+    "mode": "100644",
+    "family": "primary",
+    "metric": "living_ticks",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "primary-living_ticks.svg",
+    "sha256": "2c29e04d33087733a17c6f1bb1d1ad696623a7a37c943e580645928d991b46f5",
+    "bytes": 31394,
+    "mode": "100644",
+    "family": "primary",
+    "metric": "living_ticks",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "secondary-quota_attained.png",
+    "sha256": "13422a9968012040a93b1722e70b92c313b31c8025b7f5b1ab78740e01cb4b95",
+    "bytes": 215809,
+    "mode": "100644",
+    "family": "secondary",
+    "metric": "quota_attained",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "secondary-quota_attained.svg",
+    "sha256": "514a2486a593b733acd0422c6efe92e08ab8e2e6eae4f27da56332755e1e4423",
+    "bytes": 31272,
+    "mode": "100644",
+    "family": "secondary",
+    "metric": "quota_attained",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "secondary-restricted_completion_ticks.png",
+    "sha256": "ac3c76799308881a21e5ec6aaf2273914cdbe70253590494a7851c993226553f",
+    "bytes": 219859,
+    "mode": "100644",
+    "family": "secondary",
+    "metric": "restricted_completion_ticks",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "secondary-restricted_completion_ticks.svg",
+    "sha256": "251a1045c95016842a9c72ab562282895c931f05331d3881bad41c4fad813a71",
+    "bytes": 32563,
+    "mode": "100644",
+    "family": "secondary",
+    "metric": "restricted_completion_ticks",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "secondary-gross_gathered.png",
+    "sha256": "7ea20da76f63e7ca48d9b1b3993b7ec880d9a5d9d78252bbb7e37144a7356a7e",
+    "bytes": 218686,
+    "mode": "100644",
+    "family": "secondary",
+    "metric": "gross_gathered",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "secondary-gross_gathered.svg",
+    "sha256": "f356f8d220c21bf11d449169fc77b312bdd886447b7b8e67b7e25ffd97faaa9a",
+    "bytes": 31299,
+    "mode": "100644",
+    "family": "secondary",
+    "metric": "gross_gathered",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "secondary-living_ticks.png",
+    "sha256": "c5d9f11da68612dc9637f90be59bf2787fa99da73c76fa97c61003aec4d2ecb0",
+    "bytes": 214097,
+    "mode": "100644",
+    "family": "secondary",
+    "metric": "living_ticks",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "secondary-living_ticks.svg",
+    "sha256": "d1b4778b23aea76b465a4619c589c34deee61528dfd5f785d44181044dd63095",
+    "bytes": 31277,
+    "mode": "100644",
+    "family": "secondary",
+    "metric": "living_ticks",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "ablation-quota_attained.png",
+    "sha256": "5a997e4840399c8c259c71e8b980be427884e41be9d9b6365c582e51d62f1f63",
+    "bytes": 215171,
+    "mode": "100644",
+    "family": "ablation",
+    "metric": "quota_attained",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "ablation-quota_attained.svg",
+    "sha256": "279dc91dfd304f3e519c3ccb2508196a04a3047fa82b54061bbcf000c13a0a7d",
+    "bytes": 31284,
+    "mode": "100644",
+    "family": "ablation",
+    "metric": "quota_attained",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "ablation-restricted_completion_ticks.png",
+    "sha256": "7d108b5b8d1741a3fb0bcf738db62fd640d8927c09c1cc4287e647d8aac4c494",
+    "bytes": 220138,
+    "mode": "100644",
+    "family": "ablation",
+    "metric": "restricted_completion_ticks",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "ablation-restricted_completion_ticks.svg",
+    "sha256": "3719409d41616c67dd13cc96b5eb1da00d2bc9a68b912b4c30ec827e0779a086",
+    "bytes": 32621,
+    "mode": "100644",
+    "family": "ablation",
+    "metric": "restricted_completion_ticks",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "ablation-gross_gathered.png",
+    "sha256": "6feac0061225665a062579982b742c6849679e47559dffa302cf20fe08e6501d",
+    "bytes": 218029,
+    "mode": "100644",
+    "family": "ablation",
+    "metric": "gross_gathered",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "ablation-gross_gathered.svg",
+    "sha256": "6563b277e7f472bf2807a8f1f6e94a5b6db004493f9edd4fc0f4d42f513b3d97",
+    "bytes": 31311,
+    "mode": "100644",
+    "family": "ablation",
+    "metric": "gross_gathered",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "ablation-living_ticks.png",
+    "sha256": "bce67776142f6ecc1ff2083ddd5d28361cb4532a794bbe3113da643ba9ccea0e",
+    "bytes": 213382,
+    "mode": "100644",
+    "family": "ablation",
+    "metric": "living_ticks",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "ablation-living_ticks.svg",
+    "sha256": "d923585b0431f70c8b5a536ea72051cb4266b4def8563469c96ee773d04eff19",
+    "bytes": 31289,
+    "mode": "100644",
+    "family": "ablation",
+    "metric": "living_ticks",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "legacy_reference-quota_attained.png",
+    "sha256": "2cc997a1774e88d96979bce361421bc2feb42b0d7ff2b6ef1a66a738ebf362ba",
+    "bytes": 217952,
+    "mode": "100644",
+    "family": "legacy_reference",
+    "metric": "quota_attained",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "legacy_reference-quota_attained.svg",
+    "sha256": "65bc3c315025da25d78b9d9b8c5cc1e2ddd184a458d8899901609a6d0558981f",
+    "bytes": 31299,
+    "mode": "100644",
+    "family": "legacy_reference",
+    "metric": "quota_attained",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "legacy_reference-restricted_completion_ticks.png",
+    "sha256": "2077d33cbb2068a346498da06f0c5434cb6477ec3ed90e4df305fa402f6df1ad",
+    "bytes": 221952,
+    "mode": "100644",
+    "family": "legacy_reference",
+    "metric": "restricted_completion_ticks",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "legacy_reference-restricted_completion_ticks.svg",
+    "sha256": "54e0866a6c39193822e76b621d710a77f67faacb57915a474c7f5f4c8b08e649",
+    "bytes": 32590,
+    "mode": "100644",
+    "family": "legacy_reference",
+    "metric": "restricted_completion_ticks",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "legacy_reference-gross_gathered.png",
+    "sha256": "4edb3169d1a2b82d647c2eb6457894a87d28777817d348da730c389db30d0cfd",
+    "bytes": 220807,
+    "mode": "100644",
+    "family": "legacy_reference",
+    "metric": "gross_gathered",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "legacy_reference-gross_gathered.svg",
+    "sha256": "19ffaa623c6dacd5c885ab36e7bfa65e6a6d586a809989ad1edc1cce8b813719",
+    "bytes": 31326,
+    "mode": "100644",
+    "family": "legacy_reference",
+    "metric": "gross_gathered",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  },
+  {
+    "path": "legacy_reference-living_ticks.png",
+    "sha256": "c8019a87c510e87c5882eb89966d04157bc907e7c718160db760deb9a4a793f2",
+    "bytes": 216247,
+    "mode": "100644",
+    "family": "legacy_reference",
+    "metric": "living_ticks",
+    "rows": 16,
+    "pixel_dimensions": [
+      2100,
+      1470
+    ]
+  },
+  {
+    "path": "legacy_reference-living_ticks.svg",
+    "sha256": "19a985408a982d50c631e8cdac266fb83638c573b1957738ac44b82fdbac4adf",
+    "bytes": 31304,
+    "mode": "100644",
+    "family": "legacy_reference",
+    "metric": "living_ticks",
+    "rows": 16,
+    "svg_dimensions": {
+      "width": "1080pt",
+      "height": "756pt",
+      "viewBox": "0 0 1080 756"
+    }
+  }
+]

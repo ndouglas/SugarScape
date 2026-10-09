@@ -1,0 +1,12 @@
+{
+  "python": "3.13.5 (main, Jun 11 2025, 15:36:57) [Clang 17.0.0 (clang-1700.0.13.3)]",
+  "executable": "/opt/homebrew/opt/python@3.13/bin/python3.13",
+  "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+  "matplotlib": "3.10.9",
+  "matplotlib_module": "/opt/homebrew/lib/python3.13/site-packages/matplotlib/__init__.py",
+  "backend": "Agg",
+  "font": "DejaVu Sans",
+  "analysis_sha256": "3a24716d45b938ecb3af8f6b9b777433baef3064f462a3a31af9daa024924cea",
+  "chart_inputs_sha256": "ebc3c925a439a69c2fcc24e9181ac755005c721d31c5e9d3ea9fd789737beed8",
+  "scientific_recomputation": false
+}

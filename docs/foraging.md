@@ -482,3 +482,8 @@ energy conversion, significance-selected verdict or animal uncertainty claim.
 The inaccessible workbook/README and source figure remain prerequisites for a
 source-data or quantitative biological comparison; this harness supplies no
 hidden calibration and scientific execution remains a separate approval.
+
+
+## Browser engineering examples
+
+F2 fixed, F3 passage, and F4 construction engineering examples are available in the browser [experiment viewer](experiment-viewer.md#spatial-engineering-demonstrations). The viewer distinguishes private stale topology beliefs from researcher state and sampled completed ticks from actions. F5 and scientific campaign collection remain outside its scope.

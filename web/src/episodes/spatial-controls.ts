@@ -7,10 +7,41 @@ export class SpatialControls {
   readonly el=h('div',{class:'episode-controls spatial-controls'});
   private draft:Record<string,Json>;
   private jsonEditor:HTMLTextAreaElement|null=null;
+  private jsonError:HTMLParagraphElement|null=null;
+  private jsonBaseline='';
+  private jsonChanged=false;
   constructor(private descriptor:StudyDescriptor,input:Json=descriptor.default_input,private changed:(input:Json)=>void=()=>{}){this.draft=structuredClone(obj(input));this.render();}
-  input():Json{return structuredClone(this.draft);}
+  input():Json{this.readCurrentJson();return structuredClone(this.draft);}
+  private rootKey():string{return this.descriptor.id.startsWith('burrow')?'config':'setup';}
+  /** Action consumers read current text even if no input/change/blur event fired. */
+  private readCurrentJson():void {
+    const editor=this.jsonEditor;
+    if(!editor||(!this.jsonChanged&&editor.value===this.jsonBaseline))return;
+    try {
+      this.draft[this.rootKey()]=JSON.parse(editor.value) as Json;
+      if(this.jsonError)this.jsonError.textContent='';
+      editor.removeAttribute('aria-invalid');
+    }catch(error){
+      this.jsonChanged=true;
+      const message=`${this.rootKey()}: ${error instanceof Error?error.message:String(error)}`;
+      if(this.jsonError)this.jsonError.textContent=message;
+      editor.setAttribute('aria-invalid','true');
+      throw new Error(message);
+    }
+  }
+  private edit(change:()=>void):void {
+    let valid=true;
+    try{this.readCurrentJson();}catch{valid=false;} // The contextual editor error remains visible.
+    change();
+    if(!valid)return; // Keep unfinished raw text and reject action retrieval until corrected.
+    if(this.jsonEditor){
+      this.jsonEditor.value=JSON.stringify(this.draft[this.rootKey()],null,2)??'';
+      this.jsonBaseline=this.jsonEditor.value;this.jsonChanged=false;
+    }
+    this.changed(this.input());
+  }
   private get(path:string[]):Json|undefined {let value:Json=this.draft;for(const key of path){const row=obj(value);if(!(key in row))return undefined;value=row[key];}return value;}
-  private set(path:string[],value:Json):void {let row=this.draft;for(const key of path.slice(0,-1)){if(!row[key]||typeof row[key]!=='object'||Array.isArray(row[key]))row[key]={};row=obj(row[key]);}row[path.at(-1)!]=value;this.changed(this.input());if(this.jsonEditor){const root=this.descriptor.id.startsWith('burrow')?'config':'setup';this.jsonEditor.value=JSON.stringify(this.draft[root],null,2)??'';}}
+  private set(path:string[],value:Json):void {this.edit(()=>{let row=this.draft;for(const key of path.slice(0,-1)){if(!row[key]||typeof row[key]!=='object'||Array.isArray(row[key]))row[key]={};row=obj(row[key]);}row[path.at(-1)!]=value;});}
   private scalar(path:string[],title:string,kind:'number'|'text',min?:number,max?:number):HTMLElement {
     const value=this.get(path),numeric=typeof value==='number'&&Number.isFinite(value);
     const input=h('input',{type:kind,value:kind==='number'&&!numeric?'':value===undefined?'':valueText(value),min,max,step:kind==='number'?'any':undefined,'aria-label':title});
@@ -42,16 +73,22 @@ export class SpatialControls {
       if(this.descriptor.id==='burrow_access')tuning.append(this.scalar(['config','task','goal_weight'],'Goal weight','number',0));
       this.el.append(h('details',{},h('summary',{},'Original Burrow settings'),tuning));
     }
-    const root=this.descriptor.id.startsWith('burrow')?'config':'setup';
+    const root=this.rootKey();
     const json=h('textarea',{'aria-label':`Complete ${root} JSON`,rows:8,value:this.draft[root]===undefined?'':JSON.stringify(this.draft[root],null,2),spellcheck:false});
-    this.jsonEditor=json;
-    const error=h('p',{role:'status',class:'hint'});
-    json.addEventListener('change',()=>{try{this.draft[root]=JSON.parse(json.value) as Json;this.changed(this.input());this.render();}catch(e){error.textContent=`${root}: ${e instanceof Error?e.message:String(e)}`;}});
+    this.jsonEditor=json;this.jsonBaseline=json.value;this.jsonChanged=false;
+    const error=h('p',{role:'status',class:'hint'});this.jsonError=error;
+    json.addEventListener('input',()=>{this.jsonChanged=true;});
+    json.addEventListener('change',()=>{
+      this.jsonChanged=true;
+      let input:Json;
+      try{input=this.input();}catch{return;} // input() has shown the contextual parse error.
+      this.render();this.changed(input);
+    });
     const geometry=h('details',{},h('summary',{},'Geometry, resources and complete native settings'),h('p',{class:'hint'},'JSON retains spawn order, geometry, resource identities and all original fields. Resource IDs must be quoted decimal strings.'),json,error);
     const setup=obj(this.draft.setup),field=this.descriptor.id==='foraging_construction'?'food':'resources';
     for(const [index,resource] of list(setup[field]).entries()){
       const id=h('input',{type:'text',value:valueText(obj(resource).id),'aria-label':`${field} ${index} ID (decimal u64)`});
-      id.addEventListener('change',()=>{const resources=list(obj(this.draft.setup)[field]);const row=obj(resources[index]);row.id=id.value;this.changed(this.input());json.value=JSON.stringify(this.draft[root],null,2);});geometry.append(h('label',{},`${label(field)} ${index} ID (decimal u64)`,id));
+      id.addEventListener('change',()=>this.edit(()=>{const resources=list(obj(this.draft.setup)[field]);const row=obj(resources[index]);row.id=id.value;}));geometry.append(h('label',{},`${label(field)} ${index} ID (decimal u64)`,id));
     }
     this.el.append(geometry);
   }

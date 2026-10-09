@@ -63,6 +63,8 @@ pub(crate) fn devaluation(config: &Config, site: &Site, good: usize) -> Option<f
 /// A rememberer (Minds 3) also weighs the sites it remembers out of sight.
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     let (candidates, start) = candidates_with_memory(world, id);
+    crate::minds::behavior_tree::telemetry::note_candidates(world, candidates.len() as u64);
+    crate::minds::behavior_tree::telemetry::note_selection(world);
     let target = choose(&candidates, &mut world.rng);
     record_choice(world, id, &candidates, start, target);
     arrive(world, id, target)
@@ -608,6 +610,7 @@ fn walking_stop(world: &mut World, id: AgentId, target: Pos) -> (Pos, bool) {
     let found = if world.walled_apart(pos, target) {
         None
     } else {
+        crate::minds::behavior_tree::telemetry::note_path(world);
         let grid = TorusGrid::new(torus, |q| q == target || !world.is_occupied(q));
         astar(&grid, torus.index(pos), torus.index(target), WALK_LIMIT)
     };

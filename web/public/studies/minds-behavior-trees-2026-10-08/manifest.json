@@ -1,0 +1,911 @@
+{
+  "schema": "minds-behavior-tree-manifest-v1",
+  "conditions": [
+    {
+      "id": "guarded-tree-better-alternative-quota20-m0",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "better_alternative",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "guarded-tree-better-alternative-quota20-m1",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "better_alternative",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "guarded-tree-better-alternative-quota40-m0",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "better_alternative",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "guarded-tree-better-alternative-quota40-m1",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "better_alternative",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "guarded-tree-depleted-target-quota20-m0",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "depleted_target",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "guarded-tree-depleted-target-quota20-m1",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "depleted_target",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "guarded-tree-depleted-target-quota40-m0",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "depleted_target",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "guarded-tree-depleted-target-quota40-m1",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "depleted_target",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "guarded-tree-stable-quota20-m0",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "stable",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "guarded-tree-stable-quota20-m1",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "stable",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "guarded-tree-stable-quota40-m0",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "stable",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "guarded-tree-stable-quota40-m1",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "stable",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "guarded-tree-temporary-obstacle-quota20-m0",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "temporary_obstacle",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "guarded-tree-temporary-obstacle-quota20-m1",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "temporary_obstacle",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "guarded-tree-temporary-obstacle-quota40-m0",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "temporary_obstacle",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "guarded-tree-temporary-obstacle-quota40-m1",
+      "lab": {
+        "controller": "guarded_tree",
+        "scenario": "temporary_obstacle",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "legacy-goap-better-alternative-quota20-m0",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "better_alternative",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "legacy-goap-better-alternative-quota20-m1",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "better_alternative",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "legacy-goap-better-alternative-quota40-m0",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "better_alternative",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "legacy-goap-better-alternative-quota40-m1",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "better_alternative",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "legacy-goap-depleted-target-quota20-m0",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "depleted_target",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "legacy-goap-depleted-target-quota20-m1",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "depleted_target",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "legacy-goap-depleted-target-quota40-m0",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "depleted_target",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "legacy-goap-depleted-target-quota40-m1",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "depleted_target",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "legacy-goap-stable-quota20-m0",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "stable",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "legacy-goap-stable-quota20-m1",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "stable",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "legacy-goap-stable-quota40-m0",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "stable",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "legacy-goap-stable-quota40-m1",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "stable",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "legacy-goap-temporary-obstacle-quota20-m0",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "temporary_obstacle",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "legacy-goap-temporary-obstacle-quota20-m1",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "temporary_obstacle",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "legacy-goap-temporary-obstacle-quota40-m0",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "temporary_obstacle",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "legacy-goap-temporary-obstacle-quota40-m1",
+      "lab": {
+        "controller": "legacy_goap",
+        "scenario": "temporary_obstacle",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "matched-fsm-better-alternative-quota20-m0",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "better_alternative",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "matched-fsm-better-alternative-quota20-m1",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "better_alternative",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "matched-fsm-better-alternative-quota40-m0",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "better_alternative",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "matched-fsm-better-alternative-quota40-m1",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "better_alternative",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "matched-fsm-depleted-target-quota20-m0",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "depleted_target",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "matched-fsm-depleted-target-quota20-m1",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "depleted_target",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "matched-fsm-depleted-target-quota40-m0",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "depleted_target",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "matched-fsm-depleted-target-quota40-m1",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "depleted_target",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "matched-fsm-stable-quota20-m0",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "stable",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "matched-fsm-stable-quota20-m1",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "stable",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "matched-fsm-stable-quota40-m0",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "stable",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "matched-fsm-stable-quota40-m1",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "stable",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "matched-fsm-temporary-obstacle-quota20-m0",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "temporary_obstacle",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "matched-fsm-temporary-obstacle-quota20-m1",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "temporary_obstacle",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "matched-fsm-temporary-obstacle-quota40-m0",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "temporary_obstacle",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "matched-fsm-temporary-obstacle-quota40-m1",
+      "lab": {
+        "controller": "matched_fsm",
+        "scenario": "temporary_obstacle",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "reactive-utility-better-alternative-quota20-m0",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "better_alternative",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "reactive-utility-better-alternative-quota20-m1",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "better_alternative",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "reactive-utility-better-alternative-quota40-m0",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "better_alternative",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "reactive-utility-better-alternative-quota40-m1",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "better_alternative",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "reactive-utility-depleted-target-quota20-m0",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "depleted_target",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "reactive-utility-depleted-target-quota20-m1",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "depleted_target",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "reactive-utility-depleted-target-quota40-m0",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "depleted_target",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "reactive-utility-depleted-target-quota40-m1",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "depleted_target",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "reactive-utility-stable-quota20-m0",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "stable",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "reactive-utility-stable-quota20-m1",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "stable",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "reactive-utility-stable-quota40-m0",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "stable",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "reactive-utility-stable-quota40-m1",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "stable",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "reactive-utility-temporary-obstacle-quota20-m0",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "temporary_obstacle",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "reactive-utility-temporary-obstacle-quota20-m1",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "temporary_obstacle",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "reactive-utility-temporary-obstacle-quota40-m0",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "temporary_obstacle",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "reactive-utility-temporary-obstacle-quota40-m1",
+      "lab": {
+        "controller": "reactive_utility",
+        "scenario": "temporary_obstacle",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "task-goap-better-alternative-quota20-m0",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "better_alternative",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "task-goap-better-alternative-quota20-m1",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "better_alternative",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "task-goap-better-alternative-quota40-m0",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "better_alternative",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "task-goap-better-alternative-quota40-m1",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "better_alternative",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "task-goap-depleted-target-quota20-m0",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "depleted_target",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "task-goap-depleted-target-quota20-m1",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "depleted_target",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "task-goap-depleted-target-quota40-m0",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "depleted_target",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "task-goap-depleted-target-quota40-m1",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "depleted_target",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "task-goap-stable-quota20-m0",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "stable",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "task-goap-stable-quota20-m1",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "stable",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "task-goap-stable-quota40-m0",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "stable",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "task-goap-stable-quota40-m1",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "stable",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "task-goap-temporary-obstacle-quota20-m0",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "temporary_obstacle",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "task-goap-temporary-obstacle-quota20-m1",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "temporary_obstacle",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "task-goap-temporary-obstacle-quota40-m0",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "temporary_obstacle",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "task-goap-temporary-obstacle-quota40-m1",
+      "lab": {
+        "controller": "task_goap",
+        "scenario": "temporary_obstacle",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "unguarded-tree-better-alternative-quota20-m0",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "better_alternative",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "unguarded-tree-better-alternative-quota20-m1",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "better_alternative",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "unguarded-tree-better-alternative-quota40-m0",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "better_alternative",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "unguarded-tree-better-alternative-quota40-m1",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "better_alternative",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "unguarded-tree-depleted-target-quota20-m0",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "depleted_target",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "unguarded-tree-depleted-target-quota20-m1",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "depleted_target",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "unguarded-tree-depleted-target-quota40-m0",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "depleted_target",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "unguarded-tree-depleted-target-quota40-m1",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "depleted_target",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "unguarded-tree-stable-quota20-m0",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "stable",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "unguarded-tree-stable-quota20-m1",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "stable",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "unguarded-tree-stable-quota40-m0",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "stable",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "unguarded-tree-stable-quota40-m1",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "stable",
+        "quota": 40,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "unguarded-tree-temporary-obstacle-quota20-m0",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "temporary_obstacle",
+        "quota": 20,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "unguarded-tree-temporary-obstacle-quota20-m1",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "temporary_obstacle",
+        "quota": 20,
+        "mirrored": true
+      }
+    },
+    {
+      "id": "unguarded-tree-temporary-obstacle-quota40-m0",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "temporary_obstacle",
+        "quota": 40,
+        "mirrored": false
+      }
+    },
+    {
+      "id": "unguarded-tree-temporary-obstacle-quota40-m1",
+      "lab": {
+        "controller": "unguarded_tree",
+        "scenario": "temporary_obstacle",
+        "quota": 40,
+        "mirrored": true
+      }
+    }
+  ],
+  "seeds": [
+    30001,
+    30002,
+    30003,
+    30004,
+    30005,
+    30006,
+    30007,
+    30008,
+    30009,
+    30010,
+    30011,
+    30012,
+    30013,
+    30014,
+    30015,
+    30016,
+    30017,
+    30018,
+    30019,
+    30020,
+    30021,
+    30022,
+    30023,
+    30024,
+    30025,
+    30026,
+    30027,
+    30028,
+    30029,
+    30030,
+    30031,
+    30032,
+    30033,
+    30034,
+    30035,
+    30036,
+    30037,
+    30038,
+    30039,
+    30040
+  ]
+}

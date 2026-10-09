@@ -1,0 +1,2234 @@
+[
+  {
+    "id": "primary:guarded-tree-better-alternative-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": -1.0,
+      "ci95": [
+        -1.0,
+        -1.0
+      ],
+      "positive": 0,
+      "zero": 0,
+      "negative": 40
+    },
+    "unavailable": []
+  },
+  {
+    "id": "primary:guarded-tree-better-alternative-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": -1.0,
+      "ci95": [
+        -1.0,
+        -1.0
+      ],
+      "positive": 0,
+      "zero": 0,
+      "negative": 40
+    },
+    "unavailable": []
+  },
+  {
+    "id": "primary:guarded-tree-better-alternative-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 6.0,
+      "ci95": [
+        6.0,
+        6.0
+      ],
+      "positive": 40,
+      "zero": 0,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "primary:guarded-tree-better-alternative-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 6.0,
+      "ci95": [
+        6.0,
+        6.0
+      ],
+      "positive": 40,
+      "zero": 0,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "primary:guarded-tree-depleted-target-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "primary:guarded-tree-depleted-target-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "primary:guarded-tree-depleted-target-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": null,
+    "unavailable": [
+      [
+        30001,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30002,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30003,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30004,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30005,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30006,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30007,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30008,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30009,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30010,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30011,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30012,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30013,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30014,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30015,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30016,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30017,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30018,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30019,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30020,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30021,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30022,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30023,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30024,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30025,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30026,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30027,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30028,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30029,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30030,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30031,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30032,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30033,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30034,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30035,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30036,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30037,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30038,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30039,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30040,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ]
+    ]
+  },
+  {
+    "id": "primary:guarded-tree-depleted-target-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": null,
+    "unavailable": [
+      [
+        30001,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30002,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30003,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30004,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30005,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30006,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30007,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30008,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30009,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30010,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30011,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30012,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30013,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30014,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30015,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30016,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30017,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30018,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30019,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30020,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30021,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30022,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30023,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30024,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30025,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30026,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30027,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30028,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30029,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30030,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30031,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30032,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30033,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30034,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30035,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30036,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30037,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30038,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30039,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30040,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ]
+    ]
+  },
+  {
+    "id": "primary:guarded-tree-stable-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "primary:guarded-tree-stable-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "primary:guarded-tree-stable-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "primary:guarded-tree-stable-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "primary:guarded-tree-temporary-obstacle-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "primary:guarded-tree-temporary-obstacle-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "primary:guarded-tree-temporary-obstacle-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "primary:guarded-tree-temporary-obstacle-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-better-alternative-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-better-alternative-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-better-alternative-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-better-alternative-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-depleted-target-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-depleted-target-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-depleted-target-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": null,
+    "unavailable": [
+      [
+        30001,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30002,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30003,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30004,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30005,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30006,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30007,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30008,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30009,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30010,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30011,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30012,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30013,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30014,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30015,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30016,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30017,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30018,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30019,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30020,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30021,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30022,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30023,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30024,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30025,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30026,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30027,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30028,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30029,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30030,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30031,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30032,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30033,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30034,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30035,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30036,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30037,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30038,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30039,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30040,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ]
+    ]
+  },
+  {
+    "id": "secondary:guarded-tree-depleted-target-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": null,
+    "unavailable": [
+      [
+        30001,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30002,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30003,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30004,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30005,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30006,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30007,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30008,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30009,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30010,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30011,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30012,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30013,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30014,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30015,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30016,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30017,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30018,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30019,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30020,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30021,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30022,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30023,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30024,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30025,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30026,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30027,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30028,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30029,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30030,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30031,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30032,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30033,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30034,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30035,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30036,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30037,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30038,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30039,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30040,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ]
+    ]
+  },
+  {
+    "id": "secondary:guarded-tree-stable-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-stable-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-stable-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-stable-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-temporary-obstacle-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-temporary-obstacle-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-temporary-obstacle-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "secondary:guarded-tree-temporary-obstacle-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-better-alternative-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-better-alternative-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-better-alternative-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-better-alternative-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-depleted-target-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": -6.0,
+      "ci95": [
+        -6.0,
+        -6.0
+      ],
+      "positive": 0,
+      "zero": 0,
+      "negative": 40
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-depleted-target-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": -6.0,
+      "ci95": [
+        -6.0,
+        -6.0
+      ],
+      "positive": 0,
+      "zero": 0,
+      "negative": 40
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-depleted-target-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": null,
+    "unavailable": [
+      [
+        30001,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30002,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30003,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30004,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30005,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30006,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30007,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30008,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30009,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30010,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30011,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30012,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30013,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30014,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30015,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30016,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30017,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30018,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30019,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30020,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30021,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30022,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30023,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30024,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30025,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30026,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30027,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30028,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30029,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30030,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30031,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30032,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30033,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30034,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30035,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30036,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30037,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30038,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30039,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30040,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ]
+    ]
+  },
+  {
+    "id": "ablation:guarded-tree-depleted-target-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": null,
+    "unavailable": [
+      [
+        30001,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30002,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30003,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30004,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30005,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30006,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30007,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30008,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30009,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30010,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30011,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30012,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30013,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30014,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30015,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30016,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30017,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30018,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30019,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30020,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30021,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30022,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30023,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30024,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30025,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30026,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30027,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30028,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30029,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30030,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30031,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30032,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30033,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30034,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30035,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30036,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30037,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30038,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30039,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30040,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ]
+    ]
+  },
+  {
+    "id": "ablation:guarded-tree-stable-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-stable-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-stable-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-stable-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-temporary-obstacle-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-temporary-obstacle-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-temporary-obstacle-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "ablation:guarded-tree-temporary-obstacle-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-better-alternative-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-better-alternative-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-better-alternative-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-better-alternative-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-depleted-target-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-depleted-target-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-depleted-target-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": null,
+    "unavailable": [
+      [
+        30001,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30002,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30003,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30004,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30005,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30006,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30007,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30008,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30009,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30010,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30011,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30012,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30013,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30014,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30015,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30016,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30017,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30018,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30019,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30020,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30021,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30022,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30023,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30024,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30025,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30026,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30027,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30028,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30029,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30030,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30031,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30032,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30033,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30034,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30035,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30036,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30037,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30038,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30039,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30040,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ]
+    ]
+  },
+  {
+    "id": "legacy_reference:guarded-tree-depleted-target-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": null,
+    "unavailable": [
+      [
+        30001,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30002,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30003,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30004,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30005,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30006,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30007,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30008,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30009,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30010,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30011,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30012,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30013,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30014,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30015,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30016,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30017,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30018,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30019,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30020,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30021,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30022,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30023,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30024,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30025,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30026,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30027,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30028,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30029,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30030,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30031,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30032,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30033,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30034,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30035,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30036,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30037,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30038,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30039,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ],
+      [
+        30040,
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)"
+      ]
+    ]
+  },
+  {
+    "id": "legacy_reference:guarded-tree-stable-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-stable-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-stable-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-stable-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m0:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  },
+  {
+    "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m1:unrestricted_completion_ticks",
+    "denominator": 40,
+    "summary": {
+      "n": 40,
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "positive": 0,
+      "zero": 40,
+      "negative": 0
+    },
+    "unavailable": []
+  }
+]

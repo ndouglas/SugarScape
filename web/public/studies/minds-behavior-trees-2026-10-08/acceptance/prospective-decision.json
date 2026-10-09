@@ -1,0 +1,621 @@
+{
+  "schema": "minds-behavior-tree-prospective-decision-v1",
+  "decision": "ACCEPT",
+  "acceptance": true,
+  "decision_timestamp": "2026-10-09T08:01:44.176162+00:00",
+  "reviewer_identity": "/root/minds_bt_remaining_controller/prospective_reviewer",
+  "role": "fresh independent actual prospective scientific reviewer",
+  "implementation_role": false,
+  "helpers_used": false,
+  "registered_worlds_at_decision": 0,
+  "worlds_constructed_by_reviewer": 0,
+  "registered_estimates_computed_by_reviewer": 0,
+  "candidate_packet": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1",
+  "source_root": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source",
+  "source_revision": "e67b8d293ffb21c3a6fb94daf727e69b7a7af51b",
+  "binary": {
+    "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/target/release/survey",
+    "sha256": "223b950a3eb4e210bc18e8e102b919c746ad0db8cfda1dc3e9fa1a320656a76e",
+    "bytes": 21900704,
+    "mode": "100755"
+  },
+  "protocol": {
+    "path": "docs/superpowers/specs/2026-10-08-minds-behavior-trees-protocol.md",
+    "sha256": "24bb95554afc458e42c41c25dd402ce6c480edece2e5f8c990596a2c225ac8bc",
+    "bytes": 11396,
+    "mode": "100644"
+  },
+  "source_inventory_sha256": "09aedae3cf1b213ba0b01d7da06c54acad1ac90c9f7280225aab9c9ec0e58f76",
+  "compiled_inputs_sha256": "cb403c31ca8d547facfa58d2e9dc22c2429cb37e99d611812c4207b611bd6f39",
+  "manifest_sha256": "138b000e4faf7bf6ec2ff40c9b249e846e0f168accee707ec46d94f38c87969a",
+  "packet_inventory": {
+    "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/packet-inventory.json",
+    "sha256": "c6e0cc63bbdc92c0dbcac0438d5f76e1b3fca1d6135e5a5abe6757ebaccf50cb",
+    "bytes": 1504676,
+    "mode": "100644"
+  },
+  "command_identity": {
+    "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/proposed-one-writer-command.json",
+    "sha256": "eea08619de85948b41e14d1d6a0f8524776475f68c673b4378f2f0e83a826a4f",
+    "bytes": 3647,
+    "mode": "100644"
+  },
+  "config_bindings_identity": {
+    "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/declared-config-bindings.json",
+    "sha256": "0ff1e2d23cbd0e3f587f36319acb57fcbbb6d7f7cbd070990f6e06c4f70c0445",
+    "bytes": 76579,
+    "mode": "100644"
+  },
+  "writer_environment_identity": {
+    "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/writer-environment.json",
+    "sha256": "8193f17f8ae20763e0557d84151ef9fb40ef2c60b5adb70040d76f34a7f145f6",
+    "bytes": 10285,
+    "mode": "100644"
+  },
+  "argv": [
+    "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/target/release/survey",
+    "--behavior-trees",
+    "--run",
+    "--protocol-revision",
+    "e67b8d293ffb21c3a6fb94daf727e69b7a7af51b",
+    "--out",
+    "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/registered-run-1"
+  ],
+  "cwd": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source",
+  "output_directory": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/registered-run-1",
+  "output_absent_at_decision": true,
+  "reviewed_binding_files": [
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/README.md",
+      "sha256": "8f1a718fea3389cf0e43ce8323b2af6bd3f60fab24568305a9a1c52f35ca53a9",
+      "bytes": 18803,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/packet-inventory.json",
+      "sha256": "c6e0cc63bbdc92c0dbcac0438d5f76e1b3fca1d6135e5a5abe6757ebaccf50cb",
+      "bytes": 1504676,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/final-verification.json",
+      "sha256": "c18a8d4b56112d94f05d3f2a70768234c7966fa79d516cffcc2b3ad4af7d5331",
+      "bytes": 1064,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/receipts/final-packet-verification.json",
+      "sha256": "1d51728da4b4efbe45454da8fab3e13b1880fc280a006f8c533c5b5541bf5f84",
+      "bytes": 10560,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source-inventory.json",
+      "sha256": "6e305718ca08b120592af2e9595faec41fb3a4a4c62aba6c3dfcc0242134b4e0",
+      "bytes": 545429,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source-freeze.json",
+      "sha256": "eae327558246d28186ebb032a1d588487834c07b1f85bad0ca61aa22f7d584c6",
+      "bytes": 365,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/native-preflight.json",
+      "sha256": "63aa72af6f6c5858e5974aeae14a1dd361e61bc607d3be1ae1cd3172d870d6ff",
+      "bytes": 618590,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/artifact-identities.json",
+      "sha256": "da11497c4a288cb19c4eab577dd589f5d251578aaa327179b7c499a23277421c",
+      "bytes": 2064,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/manifest.json",
+      "sha256": "a963270ce088177459ed42aa33af916d5a9550c757fff08c976b87080e4073ef",
+      "bytes": 21008,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/registered-declaration.json",
+      "sha256": "5c393c410975b18a90f7b1b8b04ea7d6e3217e1d120dfb40f1578fd800460800",
+      "bytes": 350623,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/proposed-one-writer-command.json",
+      "sha256": "eea08619de85948b41e14d1d6a0f8524776475f68c673b4378f2f0e83a826a4f",
+      "bytes": 3647,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/writer-environment.json",
+      "sha256": "8193f17f8ae20763e0557d84151ef9fb40ef2c60b5adb70040d76f34a7f145f6",
+      "bytes": 10285,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/declared-config-bindings.json",
+      "sha256": "0ff1e2d23cbd0e3f587f36319acb57fcbbb6d7f7cbd070990f6e06c4f70c0445",
+      "bytes": 76579,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/output-absence.json",
+      "sha256": "5048a5002ea6419cdc327701676b476b17784abbdec6049a2a6e9f688bbd2d87",
+      "bytes": 281,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/bt_compiled_inputs.rs",
+      "sha256": "bb13569108ced047fdb709b43b9146f09b12827c839bcedd1d73d9828d404a8d",
+      "bytes": 36404,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/build-environment.sh",
+      "sha256": "3ecad86d0a747a1a30241f818a1a6da6b685639c0ca96ca57796d6e7ba2cc2a3",
+      "bytes": 326,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/configuration/cargo-discovery.json",
+      "sha256": "9f5f7807275c3e57152083f3413237eb1f9696443dc31b023cfc5f682e7f6517",
+      "bytes": 621,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/configuration/cargo-config-0.toml",
+      "sha256": "d1c0ec173c0342c0fd0cba7ad16b1901325c64220eb6abd8082b99f76811d24c",
+      "bytes": 80,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/configuration/cargo-config-1.toml",
+      "sha256": "d1c0ec173c0342c0fd0cba7ad16b1901325c64220eb6abd8082b99f76811d24c",
+      "bytes": 80,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/receipts/survey-release.json",
+      "sha256": "6a99bb35e7a19cfebac110a48cc2eebf449ab7f6053aafb5442bcc27cbcc52f3",
+      "bytes": 11084,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/receipts/rustc.json",
+      "sha256": "b23e831dbb28d99fff13f5072fd577a9a8d91e84567208321787345342140472",
+      "bytes": 10545,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/receipts/cargo.json",
+      "sha256": "a74e3a01ea2c2d70ad8110d60372069886342fdef4d1b969cdb268fa6fea0d53",
+      "bytes": 10545,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/receipts/platform.json",
+      "sha256": "72f3365e25f6c49fce5aa5146a2bb87880d3d5e5c5dd5318d04d1ca47868b48d",
+      "bytes": 10544,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/frozen-lineage-binding.json",
+      "sha256": "1a92ff458d9b467d655883dc337ac4c30cf2a996304254802a9d5f6a03154fdd",
+      "bytes": 1331,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/frozen-saved-check/verification.json",
+      "sha256": "803a860b64d135efd86c31b5bb4a2afd1dbd90419430f81d7e303ed7f1b4e7db",
+      "bytes": 31385,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/receipts/frozen-strict-saved-check.json",
+      "sha256": "2e3482c381c4375442aa74996361a8071bde6d4a02353d002edef7d30b79b977",
+      "bytes": 11246,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/checker/src/main.rs",
+      "sha256": "96a8531f3ddc649d826a2a03fa6d2cdc443d29ceeb5c1620c8187beb44079308",
+      "bytes": 5988,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/checker/build.rs",
+      "sha256": "e47adb54bad2f29a279092b2be30eec3bf8ef8703ff51de75438fcf42e0d8e2c",
+      "bytes": 227,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/tools/opportunities.py",
+      "sha256": "311c11fab0d4eccfebb7230f3ed074438393911297af4ea0c2682833439b2e95",
+      "bytes": 10440,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/tools/task_oracle.py",
+      "sha256": "146948d34f2bfc69ad4354db709c1937547ce0b98f1453f6a2e5e888e1fdeb45",
+      "bytes": 1933,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/tools/test_task_oracle.py",
+      "sha256": "f30bac4caed153f4a639cf2542dbffe21d2ac7e226441972add6ad7fbab866c2",
+      "bytes": 1226,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/tools/test_opportunities.py",
+      "sha256": "a979bac934b7506dde118b423fee71d22b1af5d599ba8a9b85f96717eb13b42b",
+      "bytes": 1936,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/hand-opportunity-table.json",
+      "sha256": "05adf6f27f91e69f10ce61cb9aecee9038c05c04586cbaefc98dc02646937751",
+      "bytes": 566547,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/task-oracle/inputs.json",
+      "sha256": "ec969e734b2c2dbb884c2851c80cce167f8389e08741e6e1fbf13e7ec4ad213d",
+      "bytes": 9847,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/task-oracle/results.json",
+      "sha256": "dbffa424e5cc1902e4bb56ffe8fbc9b274f2f6c1a590b3020dee67b8b8bcffcc",
+      "bytes": 19709,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/opportunity-results-3/summary.json",
+      "sha256": "f8ee042144f6259d944f7304baf793b18abe9407b070afdf1fa2b71cde5e0021",
+      "bytes": 544,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/opportunity-results-3/opportunities.json",
+      "sha256": "01c45c9b35f22980a84e99a0ed28538081eec697282138d0410b9d0818e08bce",
+      "bytes": 71511995,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/opportunity-results-3/event-boundaries.json",
+      "sha256": "ad5f8c6c1dd43d809e01e39b4d6b3c7ed94d59ab7f8652fd311ae23b78de8f0d",
+      "bytes": 68035,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/opportunity-results-3/construction-endpoints.json",
+      "sha256": "a98a7ce1c1b8b46ef13d3f5a1175b754f48045451bcb74eb0c5767a0835d2a21",
+      "bytes": 80227,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/opportunity-results-3/physical-duplicates.json",
+      "sha256": "4942da216bc53222c8c85892ac9cd9bc2f5de729826d48459c9d8d45620b7b2b",
+      "bytes": 16315,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/opportunity-results-3/initial-controls.json",
+      "sha256": "676bf5c3cb2c1589a3dc1c360c6caf3d106abc799c745e7f9cc27e7459056d1e",
+      "bytes": 271,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/opportunity-results-3/matched-pairs.json",
+      "sha256": "769b7cc8381b062c3cc422b3a9ace1f0843b7ceb1745970161dd1949a0687d40",
+      "bytes": 6995,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/construction-work-census.json",
+      "sha256": "faf0affe79ab7945505a661bb09130b2afc7c5c078298325ac70fcd3ee4fe036",
+      "bytes": 93027,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/helper-limitations.json",
+      "sha256": "e2af9a05e95ab3661a50a3cf25ec7d7f8da9947f5ac8fb9c468ca9842d260188",
+      "bytes": 1871,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/lineage/whole-branch-fix-construction-lineage.json",
+      "sha256": "ca41869a895f235eb8728d878e33abfb189224d41ea052debe9b4f16df6bee09",
+      "bytes": 124057,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/lineage/whole-branch-fix-construction-candidate-source-equivalence.json",
+      "sha256": "e0a1cf6326a891d236aec2ac99e909f79815bcb4702b62e663f5e8f4f35b198e",
+      "bytes": 3665,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source/Cargo.lock",
+      "sha256": "b36bf3b527b6bb318de2274c4c9c5e1b13ea434898f536083fce8d4a6ff0e9a3",
+      "bytes": 22062,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source/survey/Cargo.lock",
+      "sha256": "e19475b4bedba028702e12b35e5f1b8c7f7bf2a889238b30e2a598f1b223dcfc",
+      "bytes": 5894,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source/survey/build_support/bt_source_identity.rs",
+      "sha256": "3f101cd477c9592b0482abb5504c325fb9b24044a7bfa1b6e95b3c0b255c8605",
+      "bytes": 3631,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source/survey/build.rs",
+      "sha256": "6b37841382600314e1fd33bae97d01b9b730048ea0117cf7fd4efa8a74eb0586",
+      "bytes": 3954,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source/docs/superpowers/plans/2026-10-08-minds-behavior-trees.md",
+      "sha256": "bc99d786024d6680f4f3d9700596668f12be17fc93c31b5089e55031bfc8e3b1",
+      "bytes": 69700,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source/docs/superpowers/specs/2026-10-08-minds-behavior-trees-design.md",
+      "sha256": "813cbf93fc8446d5e7c52eb4f8798187c71af35d2d442ac33fc5ee4d81e8ac60",
+      "bytes": 23621,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source/docs/superpowers/specs/2026-10-08-minds-behavior-trees-protocol.md",
+      "sha256": "24bb95554afc458e42c41c25dd402ce6c480edece2e5f8c990596a2c225ac8bc",
+      "bytes": 11396,
+      "mode": "100644"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/target/release/survey",
+      "sha256": "223b950a3eb4e210bc18e8e102b919c746ad0db8cfda1dc3e9fa1a320656a76e",
+      "bytes": 21900704,
+      "mode": "100755"
+    },
+    {
+      "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/checker-target/release/bt-candidate-construction-checker",
+      "sha256": "9633c4b1bbb4a660dc8f91ad487950ae9ca45da9d07b86377d1f9ccfb71cddd4",
+      "bytes": 1460416,
+      "mode": "100755"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/execution-authorization.json",
+      "sha256": "38f150868159f3dfa33a9c4f93d0bd29fb5f79c5c3c414149be64c39b1d27f3d",
+      "bytes": 611,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/remaining-review-global-constraints.md",
+      "sha256": "98b58d6267c3e0a922768a0ba71bb80f4d51d2eb34b5e2a7f74313c6809b569f",
+      "bytes": 3130,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/task-5-brief.md",
+      "sha256": "29e6bcfed1b575de4b0f8b3434415900cb920369f19faee7872b383736980f86",
+      "bytes": 10530,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/whole-branch-review.md",
+      "sha256": "61b983d4ccf4944f33f0edbb045777818bfff763d34a3677c0a2287a08b182fa",
+      "bytes": 21881,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/whole-branch-fix-review.md",
+      "sha256": "772deb191f3e914233936e2b484a5dfcb23a4a2bcad794a789eec58b690f3af3",
+      "bytes": 8829,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/frozen-packet-report.md",
+      "sha256": "525ff79fe2502eab51479d7256e54256f016daaf1ac4172e5d343062887bb6c7",
+      "bytes": 7172,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/frozen-packet-handoff.json",
+      "sha256": "6b57cc4e20c88e3fd5bcc18b621f7be11aa806aefd8320ffef5f319d2d4a4266",
+      "bytes": 3318,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/prospective-audit.py",
+      "sha256": "d5da75b6e42c9e4a35d9eeee67932ed3a5a4069a9a4f6d5140a18950729e8148",
+      "bytes": 16735,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/prospective-audit-run.json",
+      "sha256": "022a52778b4aa44004f8277118353a2f03f248543b12b99c79f32341d893adf4",
+      "bytes": 463,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/prospective-audit-initial-limitation.json",
+      "sha256": "d7f79c3df8aaf1ffa48b1d2a0c6cbdc0a057c62130e4dafe9b37fe173f0a5403",
+      "bytes": 411,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/prospective-audit-2.py",
+      "sha256": "6d782a464b0532d7cd5377826915eb9ed6e4bb76e399336b820b80edd42c9153",
+      "bytes": 16758,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/prospective-audit-run-2.json",
+      "sha256": "b6f4cdb7558c44d2fda22b6e4d5c47da32b3ebe178810808b14fae5da74a4fd7",
+      "bytes": 465,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/prospective-audit-summary.json",
+      "sha256": "2678df3466d14fd414c38b8cafd6ea7b071102ea030b4ed8f0f3158935839a79",
+      "bytes": 3443,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/prospective-supplementary-audit.json",
+      "sha256": "15c2f3554385120fd5f3b3d21ec7a202d33c316fd71d94449aad195539611287",
+      "bytes": 1061,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/prospective-native-manifest-2.json",
+      "sha256": "74fc2b7d0ed2ec9677389a7d5bd82f03bed72440128807212da97deffed23ccf",
+      "bytes": 746,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/prospective-native-manifest-2.stdout",
+      "sha256": "a963270ce088177459ed42aa33af916d5a9550c757fff08c976b87080e4073ef",
+      "bytes": 21008,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/prospective-final-state-receipt.json",
+      "sha256": "5bbb7fba2dabbb0888d1d731a8f49599a4e774f2c56fa180d3b32f788275a16f",
+      "bytes": 767,
+      "mode": "100644"
+    },
+    {
+      "path": "/private/tmp/sugarscape-minds-bt-20261008/checkout/.superpowers/sdd/2026-10-08-minds-behavior-trees/prospective-review.md",
+      "sha256": "09adcbe665da0223c3859510c21574b90aa1ff6aba0954c93754f960c29fb5db",
+      "bytes": 13487,
+      "mode": "100644"
+    }
+  ],
+  "requirement_checks": [
+    {
+      "requirement": "approved_scope",
+      "status": "PASS",
+      "reason": "Exact approved design/plan hashes match authorization; final protocol conforms to supplied route-failure-only cooldown."
+    },
+    {
+      "requirement": "frozen_identity",
+      "status": "PASS",
+      "reason": "All 6788 packet files, 2740 complete tracked source files, 676 compiled inputs and actual native binary hashes/modes verified; source clean."
+    },
+    {
+      "requirement": "actual_native_build",
+      "status": "PASS",
+      "reason": "Actual release/locked/offline build receipt and compiler/config/stamp binding verified; pure actual-native manifest matches."
+    },
+    {
+      "requirement": "environment",
+      "status": "PASS",
+      "reason": "Exact writer environment file bound privately; actual duplicate identical cfg and documented PWD-only normalization accepted."
+    },
+    {
+      "requirement": "fixed_matrix",
+      "status": "PASS",
+      "reason": "96 unique cells x40 exact labels; all four 64-estimate families, all 640 matches,16 PNG/16 SVG declarations checked."
+    },
+    {
+      "requirement": "construction_census",
+      "status": "PASS",
+      "reason": "192 seed7/8 records/12480 frames and all derived streams/192 endpoints checked; no measured envelopes."
+    },
+    {
+      "requirement": "initial_controls",
+      "status": "PASS",
+      "reason": "Reflected physical/memory and exact initial RNG controls match across all labels within seed."
+    },
+    {
+      "requirement": "opportunities",
+      "status": "PASS",
+      "reason": "12288 transitions/2948 positive candidates; independent geometry/perception/connectivity; all384 event sites free; filter categories separate."
+    },
+    {
+      "requirement": "physical_accounting",
+      "status": "PASS",
+      "reason": "Actual movement, incidental harvest, immediate quota, metabolism/death/clocks/censoring and conservation checked."
+    },
+    {
+      "requirement": "matched_fsm",
+      "status": "PASS",
+      "reason": "32 construction pairs/2080 frames physical-task/exact RNG agreement; registered640 remain future."
+    },
+    {
+      "requirement": "oracle",
+      "status": "PASS",
+      "reason": "Independent explicit-holdings enumeration matches16 physical-task strata/94854states and witnesses; bounded omniscient/free-action scope."
+    },
+    {
+      "requirement": "controls_and_costs",
+      "status": "PASS",
+      "reason": "Supplied guarded/unguarded/FSM/task-versus-legacy goals, information/ties/reflection, node limits/token/settlement, work/timing boundaries retained."
+    },
+    {
+      "requirement": "estimands_and_limits",
+      "status": "PASS",
+      "reason": "All40 denominators/families/strata; nullfloor and40physicalsignatures retained; no favorable pooling, learned intent, animal independence or positive-effect criterion."
+    },
+    {
+      "requirement": "lineage",
+      "status": "PASS",
+      "reason": "Exactly12records168frames failed_until/fingerprint-only correction; six excluded test/fixture/README paths; production equivalence checked."
+    },
+    {
+      "requirement": "one_writer_and_failure",
+      "status": "PASS",
+      "reason": "Exact one-command/cwd/environment; external expected-identity binding required before launch; preserve all attempts; no retry/resume/overwrite/replacement."
+    },
+    {
+      "requirement": "output_absence",
+      "status": "PASS",
+      "reason": "Exact registered-run-1 destination absent at actual decision; review constructed0Worlds."
+    },
+    {
+      "requirement": "later_gates",
+      "status": "PASS",
+      "reason": "Saved reanalysis/empiricalreview/publication/integration/CI/served/archive pending; private environment must never be publicly copied."
+    }
+  ],
+  "blocking_findings": [],
+  "nonblocking_limitations": [
+    "Actual work is instrumented/range-checked, not entirely independently reconstructed.",
+    "Saved validator does not recompute historical World fingerprints; separate mutation/checkpoint/parity tests have bounded roles.",
+    "Original frozen source/executable paths must be retained for saved loading.",
+    "Historical Task2 exact exit/output and Task4 separate environment snapshot limitations remain.",
+    "Post-write sync acknowledgement census and read-only retained-file census can differ; preserve both and never resume.",
+    "Construction copied streams are not original synced collection streams; all construction timing null.",
+    "Physical-task oracle grants omniscient free actions and excludes controller information/computation.",
+    "Repeated labels/physical signatures and linked food/lifetime endpoints do not imply independent biological evidence.",
+    "Raw environment captures contain private credentials; future public artifacts must use explicitly redacted metadata and private-original hash lineage, never raw public equality.",
+    "Initial reviewer helper exit1 was documented PWD-only normalization assumption; original preserved and corrected audit exit0.",
+    "All packet failed helper generations/REDs, tool notices, existing ignores/browser-only skip and inline assertion receipt limitation preserved."
+  ],
+  "authorized_action": "One invocation of the exact proposed registered collection command only, after the external writer durably binds this decision and independently checks expected executable/source/protocol/manifest/config/input/environment identities and absence of the destination.",
+  "mandatory_writer_conditions": [
+    "Persist this actual decision hash and exact launch bindings before any registered World.",
+    "Independently recheck actual executable expected hash/mode, clean source identity, protocol, manifest, compiled-input/config/environment bindings and absent output immediately before invocation.",
+    "Invoke exactly once with retained argv/cwd/environment; collector selfhash is not an external prior expectedhash.",
+    "On real failure stop and preserve original attempts/prefix/censuses; no automatic retry/resume/overwrite or seed replacement."
+  ],
+  "not_authorized": [
+    "Empirical claims before complete saved-data verification and fresh empirical review",
+    "Scientific retry/resume/overwrite/seed replacement",
+    "Integration/publication/served assets/archive closure without remaining gates",
+    "Public disclosure of private raw environment captures"
+  ]
+}

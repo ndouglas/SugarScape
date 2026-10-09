@@ -197,3 +197,21 @@ describe('spatial import diagnostics preserve contextual source and target failu
     });
   }
 });
+
+// Source bindings must authenticate the workspace used to build these artifacts.
+// Keep this metadata guard independent of native/WASM episode reconstruction.
+describe('spatial source identity integrity', () => {
+  const identities = JSON.parse(readFileSync(`${cwd}/crates/sugarscape-core/src/browser_experiments/fixtures/spatial-identities.json`, 'utf8')) as Record<string, { source_files: Record<string, string>; source_sha256: string }>;
+  for (const [study, identity] of Object.entries(identities)) {
+    it(`${study} authenticates every declared source and the canonical digest`, async () => {
+      const mismatches: string[] = [];
+      let canonical = '';
+      for (const [path, expected] of Object.entries(identity.source_files).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
+        const actual = await hash(readFileSync(new URL(path, new URL('../../../', import.meta.url))));
+        if (actual !== expected) mismatches.push(path);
+        canonical += `${path}\0${actual}\n`;
+      }
+      expect({ mismatches, source_sha256: await hash(new TextEncoder().encode(canonical)) }).toEqual({ mismatches: [], source_sha256: identity.source_sha256 });
+    });
+  }
+});

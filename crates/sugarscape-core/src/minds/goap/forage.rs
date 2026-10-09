@@ -49,9 +49,22 @@ pub(crate) struct Forage {
     /// ascending, then site index.
     order: Vec<u8>,
     goal: f64,
+    // Optional observer; absent during ordinary unmeasured decisions.
+    candidate_work: Option<std::cell::Cell<u64>>,
 }
 
 impl Forage {
+    pub(crate) fn observe_candidates(&mut self) {
+        self.candidate_work = Some(std::cell::Cell::new(0));
+    }
+    pub(crate) fn candidate_evaluations(&self) -> Option<u64> {
+        self.candidate_work.as_ref().map(std::cell::Cell::get)
+    }
+    fn note_candidate(&self) {
+        if let Some(n) = self.candidate_work.as_ref() {
+            n.set(n.get() + 1);
+        }
+    }
     /// `sites[0]` is the agent's own site; each entry is a site and its
     /// value. At most 16 slots.
     pub(crate) fn new(torus: Torus, sites: &[(Pos, f64)], goal: f64) -> Self {
@@ -78,6 +91,7 @@ impl Forage {
             dist,
             order,
             goal,
+            candidate_work: None,
         }
     }
 
@@ -98,6 +112,7 @@ impl Domain for Forage {
         let n = self.values.len();
         for &i in &self.order {
             if mask & (1 << i) == 0 {
+                self.note_candidate();
                 let cost = self.dist[usize::from(at) * n + usize::from(i)] + 1;
                 out.push((i, f64::from(cost), (i, mask | 1 << i)));
             }
@@ -115,7 +130,10 @@ impl Domain for Forage {
         }
         let v_max = (0..self.values.len())
             .filter(|&i| mask & (1 << i) == 0)
-            .map(|i| self.values[i])
+            .map(|i| {
+                self.note_candidate();
+                self.values[i]
+            })
             .fold(0.0, f64::max);
         if v_max > 0.0 {
             ((self.goal - g) / v_max).ceil()
@@ -142,7 +160,16 @@ fn goal_of(world: &World, id: AgentId) -> f64 {
 /// utility mind as they were. Also used by MVT (Minds 4, Task 5), which
 /// needs the same reachability check.
 pub(crate) fn reachable_candidates(world: &World, id: AgentId) -> (Vec<(Pos, u32, f64)>, usize) {
+    let (out, start, _) = reachable_candidates_counted(world, id);
+    (out, start)
+}
+
+fn reachable_candidates_counted(
+    world: &World,
+    id: AgentId,
+) -> (Vec<(Pos, u32, f64)>, usize, usize) {
     let (all, start) = candidates_with_memory(world, id);
+    let evaluated = all.len();
     let a = world.agent(id).expect("live agent");
     let failed = a
         .plan
@@ -157,7 +184,7 @@ pub(crate) fn reachable_candidates(world: &World, id: AgentId) -> (Vec<(Pos, u32
         kept_before_start += usize::from(i < start);
         out.push(c);
     }
-    (out, kept_before_start)
+    (out, kept_before_start, evaluated)
 }
 
 /// The next target of the agent's plan if it still holds, dropping the
@@ -213,18 +240,26 @@ fn go(
 /// `None` and the agent takes the rate choice: the candidates of best value ÷
 /// (distance + 1), passed to `choose` (rule M's tie rule and draw).
 pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
-    let (candidates, start) = reachable_candidates(world, id);
+    let (candidates, start, evaluated) = reachable_candidates_counted(world, id);
+    crate::minds::behavior_tree::telemetry::note_candidates(world, evaluated as u64);
     if let Some(t) = next_target(world, id, &candidates, start) {
         return go(world, id, &candidates, start, t);
     }
+    crate::minds::behavior_tree::telemetry::note_selection(world);
     let goal = goal_of(world, id);
     let torus = world.torus;
     let mut others: Vec<usize> = (1..candidates.len()).collect();
     // The shortlist's key: the rate uses the fallback's distance + 1, with
     // travel as the plan counts it (0 under the reduction's hook).
-    let key = |c: &(Pos, u32, f64)| match world.config.goap.shortlist {
-        Shortlist::Rate => c.2 / (f64::from(travel(c.1)) + 1.0),
-        Shortlist::Value => c.2,
+    let evaluations = world.bt_work.as_ref().map(|_| std::cell::Cell::new(0u64));
+    let key = |c: &(Pos, u32, f64)| {
+        if let Some(n) = evaluations.as_ref() {
+            n.set(n.get() + 1);
+        }
+        match world.config.goap.shortlist {
+            Shortlist::Rate => c.2 / (f64::from(travel(c.1)) + 1.0),
+            Shortlist::Value => c.2,
+        }
     };
     others.sort_by(|&i, &j| {
         let (a, b) = (&candidates[i], &candidates[j]);
@@ -233,13 +268,19 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
             .then(a.1.cmp(&b.1))
             .then(torus.index(a.0).cmp(&torus.index(b.0)))
     });
+    if let Some(n) = evaluations.as_ref() {
+        crate::minds::behavior_tree::telemetry::note_candidates(world, n.get());
+    }
     others.truncate(world.config.goap.k as usize);
     let slots: Vec<usize> = std::iter::once(0).chain(others).collect();
     let sites: Vec<(Pos, f64)> = slots
         .iter()
         .map(|&i| (candidates[i].0, candidates[i].2))
         .collect();
-    let domain = Forage::new(torus, &sites, goal);
+    let mut domain = Forage::new(torus, &sites, goal);
+    if world.bt_work.is_some() {
+        domain.observe_candidates();
+    }
     // Every slot harvested is the most any plan gathers: short of G, no
     // plan exists, so don't search.
     let found = if domain.is_goal(&(0, (1u16 << sites.len()) - 1)) {
@@ -247,8 +288,16 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
     } else {
         Err(Fallback::Short)
     };
+    if let Some(n) = domain.candidate_evaluations() {
+        crate::minds::behavior_tree::telemetry::note_candidates(world, n);
+    }
     match found {
         Ok(p) => {
+            crate::minds::behavior_tree::telemetry::note_search(
+                world,
+                Some(p.expanded as u64),
+                None,
+            );
             let steps: Vec<(Pos, f64)> = p.actions.iter().map(|&s| sites[usize::from(s)]).collect();
             if !steps.is_empty() {
                 let remembers = world.agent(id).expect("live agent").remembers;
@@ -269,12 +318,29 @@ pub(crate) fn act(world: &mut World, id: AgentId) -> Harvest {
             go(world, id, &candidates, start, target)
         }
         Err(why) => {
+            if matches!(why, Fallback::Limit) {
+                crate::minds::behavior_tree::telemetry::note_search(
+                    world,
+                    None,
+                    Some("failed search does not expose exact expansions"),
+                );
+            }
+            if let Some(c) = world.bt_work.as_mut() {
+                match why {
+                    Fallback::Short => c.fallback_short += 1,
+                    Fallback::Limit => c.fallback_limit += 1,
+                }
+            }
             let e = &mut world.events;
             match why {
                 Fallback::Short => e.fallback_short += 1,
                 Fallback::Limit => e.fallback_limit += 1,
             }
             world.agent_mut(id).expect("live agent").goap_plan = None;
+            crate::minds::behavior_tree::telemetry::note_candidates(
+                world,
+                2 * candidates.len() as u64,
+            );
             let rate = |c: &(Pos, u32, f64)| c.2 / (f64::from(c.1) + 1.0);
             let best = candidates
                 .iter()

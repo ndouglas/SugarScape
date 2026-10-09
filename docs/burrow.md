@@ -239,3 +239,8 @@ Engineering review closure: Task and whole-branch reviews approved against `eea1
 
 
 Resource access merged into `main` at `6076aed` after user authorization. Fresh merged checks passed: 2205 workspace tests (103 existing ignored), 248 survey tests and 1030 web tests; both format checks and the rebuilt WASM/typechecked browser build passed. Complete commands and evidence are in the [integration closure](superpowers/plans/2026-10-04-burrow-2-resource-access.md#verified-integration-into-main). Burrow scientific registration/execution remain separate.
+
+
+## Browser engineering examples
+
+Burrow excavation and access engineering examples are available in the browser [experiment viewer](experiment-viewer.md#spatial-engineering-demonstrations). The viewer retains original CLI semantics and labels unavailable Agent observations and sampled native stages; these examples are separate from scientific measurements.
