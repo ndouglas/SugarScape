@@ -592,3 +592,175 @@ fn behavior_tree_impossible_native_duration_is_rejected() {
     r.frames[1].controller_seconds = Some(f64::MAX);
     assert!(validate::validate_episode(&r, &r.lab, r.seed).is_err());
 }
+
+#[test]
+fn behavior_tree_complete_invalid_tail_without_newline_is_rejected() {
+    let record = construction();
+    let mut order = record.frames[0].clone();
+    order.tick = 99;
+    let mut semantic = record.frames[0].clone();
+    semantic.actor.as_mut().unwrap().holdings += 1.0;
+    for bytes in [
+        serde_json::to_vec(&order).unwrap(),
+        b"{}".to_vec(),
+        serde_json::to_vec(&semantic).unwrap(),
+    ] {
+        let root = directory();
+        let out = root.join("archive");
+        let m = manifest::Manifest {
+            schema: manifest::manifest().schema,
+            conditions: vec![manifest::Condition {
+                id: manifest::id(&record.lab),
+                lab: record.lab.clone(),
+            }],
+            seeds: vec![record.seed],
+        };
+        let error = archive::collect_with_frames(
+            &out,
+            m.clone(),
+            provenance(&m),
+            |_, _, _| panic!("failure-only fixture must not construct"),
+            |_| Err("injected open failure".into()),
+        )
+        .unwrap_err();
+        assert!(error.contains("pending: 1"));
+        let index: archive::Index =
+            wire::decode(&std::fs::read(out.join("index.json")).unwrap()).unwrap();
+        let frames = out.join(&index.attempts[0].frames);
+        std::fs::write(&frames, &bytes).unwrap();
+        let result = archive::load_declared(&out.join("index.json"), &m);
+        assert_eq!(std::fs::read(&frames).unwrap(), bytes);
+        assert!(
+            result.is_err(),
+            "complete invalid JSON cannot be a torn tail"
+        );
+        std::fs::remove_dir_all(root).unwrap();
+    }
+}
+
+#[test]
+fn behavior_tree_per_attempt_git_inventory_drift_precedes_constructor() {
+    git_drift_precedes_constructor("tracked_addition");
+}
+#[test]
+fn behavior_tree_per_attempt_git_index_only_drift_precedes_constructor() {
+    git_drift_precedes_constructor("index_only");
+}
+fn git_drift_precedes_constructor(drift: &str) {
+    let temp = directory();
+    let root = temp.join("repo");
+    std::fs::create_dir(&root).unwrap();
+    let git = |args: &[&str]| {
+        let output = std::process::Command::new("git")
+            .arg("-C")
+            .arg(&root)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "git {args:?}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        output.stdout
+    };
+    for name in archive::inputs::DIRECTORIES {
+        std::fs::create_dir_all(root.join(name)).unwrap();
+    }
+    for name in archive::inputs::FILES
+        .iter()
+        .copied()
+        .chain(["binary", "outside.txt"])
+    {
+        let path = root.join(name);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(path, b"original").unwrap();
+    }
+    git(&["init", "-q"]);
+    git(&["config", "user.name", "BT engineering test"]);
+    git(&["config", "user.email", "bt-test@example.invalid"]);
+    git(&["add", "."]);
+    git(&["commit", "-qm", "Bind engineering fixture"]);
+    let mut m = manifest::manifest();
+    m.conditions.truncate(1);
+    m.seeds.truncate(2);
+    let mut p = provenance(&m);
+    p.source_root = root.to_string_lossy().into();
+    p.source_revision = String::from_utf8(git(&["rev-parse", "HEAD"]))
+        .unwrap()
+        .trim()
+        .into();
+    p.binary = archive::identity(
+        &root.join("binary"),
+        root.join("binary").to_string_lossy().into(),
+    )
+    .unwrap();
+    p.protocol = archive::identity(
+        &root.join(archive::inputs::PROTOCOL),
+        archive::inputs::PROTOCOL.into(),
+    )
+    .unwrap();
+    p.source_inventory = git(&["ls-files", "-z"])
+        .split(|b| *b == 0)
+        .filter(|b| !b.is_empty())
+        .map(|b| {
+            let name = std::str::from_utf8(b).unwrap();
+            archive::identity(&root.join(name), name.into()).unwrap()
+        })
+        .collect();
+    p.source_sha256 = archive::hash(&serde_json::to_vec(&p.source_inventory).unwrap());
+    let entries = archive::inputs::read(&root).unwrap();
+    p.compiled_inputs_sha256 =
+        archive::inputs::fingerprint(entries.clone().into_iter().map(Ok)).unwrap();
+    p.compiled_input_paths = entries.into_iter().map(|e| e.0).collect();
+    archive::verify_bound_files(&p).unwrap();
+    let bound = p.clone();
+    let out = temp.join("archive");
+    let mut calls = 0;
+    let result = archive::collect_with_frames(
+        &out,
+        m.clone(),
+        p,
+        |_, _, _| {
+            calls += 1;
+            Err(sugarscape_core::minds::behavior_tree::EpisodeFailure {
+                message: "failure-only callback, no World".into(),
+                partial: None,
+            })
+        },
+        |path| {
+            assert!(path.exists());
+            match drift {
+                "tracked_addition" => {
+                    std::fs::write(root.join("new-outside.txt"), b"new tracked bytes").unwrap();
+                    git(&["add", "new-outside.txt"]);
+                }
+                _ => {
+                    std::fs::write(root.join("outside.txt"), b"index-only bytes").unwrap();
+                    git(&["add", "outside.txt"]);
+                    std::fs::write(root.join("outside.txt"), b"original").unwrap();
+                }
+            }
+            archive::verify_bound_files(&bound)?;
+            std::fs::OpenOptions::new()
+                .append(true)
+                .open(path)
+                .map_err(|e| e.to_string())
+        },
+    );
+    assert_eq!(calls, 0, "{drift} must stop before constructor");
+    assert!(result.unwrap_err().contains("pending: 1"));
+    let a = archive::load_declared(&out.join("index.json"), &m).unwrap();
+    assert_eq!(a.index.census.as_ref().unwrap().pending, 1);
+    assert_eq!(a.index.census.as_ref().unwrap().unstarted, 1);
+    let raw = std::fs::read(out.join(&a.index.attempts[0].start)).unwrap();
+    assert_eq!(
+        wire::decode::<archive::AttemptStart>(&raw).unwrap(),
+        a.attempts[0].start
+    );
+    assert!(std::fs::read(out.join(&a.index.attempts[0].frames))
+        .unwrap()
+        .is_empty());
+    assert!(!out.join(&a.index.attempts[0].outcome).exists());
+    std::fs::remove_dir_all(temp).unwrap();
+}

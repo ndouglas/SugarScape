@@ -207,17 +207,39 @@ pub fn run(revision: &str, out: &Path) -> Result<(), String> {
         },
         |path| {
             verify_bound_files(&bound)?;
-            let head =
-                String::from_utf8(git(root, &["rev-parse", "HEAD"])?).map_err(|e| e.to_string())?;
-            if head.trim() != bound.source_revision {
-                return Err("bound Git revision changed before constructor".into());
-            }
             fs::OpenOptions::new()
                 .append(true)
                 .open(path)
                 .map_err(|e| e.to_string())
         },
     )
+}
+/// Match the frozen tracked set and index/worktree state. Untracked archive
+/// outputs are allowed, as in saved loading; tracked additions are not.
+fn verify_frozen_git(p: &Provenance) -> Result<(), String> {
+    let root = Path::new(&p.source_root);
+    let head = String::from_utf8(git(root, &["rev-parse", "HEAD"])?).map_err(|e| e.to_string())?;
+    if head.trim() != p.source_revision
+        || !git(root, &["status", "--porcelain", "--untracked-files=no"])?.is_empty()
+    {
+        return Err("bound source revision is no longer clean and frozen".into());
+    }
+    let tracked = git(root, &["ls-files", "-z"])?;
+    let names = tracked
+        .split(|b| *b == 0)
+        .filter(|b| !b.is_empty())
+        .map(|b| std::str::from_utf8(b).map(str::to_owned))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+    if p.source_inventory
+        .iter()
+        .map(|e| e.path.clone())
+        .collect::<Vec<_>>()
+        != names
+    {
+        return Err("bound source inventory is not complete tracked inventory".into());
+    }
+    Ok(())
 }
 /// Rehash the original bound executable, protocol, full tracked inventory and
 /// compiled closure after the start/stream are durable and before construction.
@@ -248,7 +270,7 @@ pub(super) fn verify_bound_files(p: &Provenance) -> Result<(), String> {
     {
         return Err("bound compiled inputs changed before constructor".into());
     }
-    Ok(())
+    verify_frozen_git(p)
 }
 
 type Sink<'a> = dyn FnMut(&Frame) -> Result<(), String> + 'a;
@@ -404,27 +426,7 @@ pub fn load(path: &Path) -> Result<Archive, String> {
     {
         return Err("invalid source/protocol identity".into());
     }
-    let head = String::from_utf8(git(root, &["rev-parse", "HEAD"])?).map_err(|e| e.to_string())?;
-    if head.trim() != p.source_revision
-        || !git(root, &["status", "--porcelain", "--untracked-files=no"])?.is_empty()
-    {
-        return Err("saved source revision is no longer frozen".into());
-    }
-    let tracked = git(root, &["ls-files", "-z"])?;
-    let names = tracked
-        .split(|b| *b == 0)
-        .filter(|b| !b.is_empty())
-        .map(|b| std::str::from_utf8(b).map(str::to_owned))
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| e.to_string())?;
-    if p.source_inventory
-        .iter()
-        .map(|e| e.path.clone())
-        .collect::<Vec<_>>()
-        != names
-    {
-        return Err("saved source inventory is not complete tracked inventory".into());
-    }
+    verify_frozen_git(p)?;
     if hash(&serde_json::to_vec(&p.source_inventory).map_err(|e| e.to_string())?) != p.source_sha256
     {
         return Err("source inventory digest mismatch".into());
@@ -536,8 +538,16 @@ pub(super) fn load_declared(path: &Path, expected: &Manifest) -> Result<Archive,
             let bytes = io::read(&frames_path)?;
             for line in bytes.split_inclusive(|b| *b == b'\n') {
                 if !line.ends_with(b"\n") {
-                    torn_tail = Some(String::from_utf8_lossy(line).into());
-                    break;
+                    // A missing delimiter alone cannot hide a complete invalid
+                    // record. Only an actual JSON EOF is a truncated tail.
+                    match serde_json::from_slice::<Box<serde_json::value::RawValue>>(line) {
+                        Err(error) if error.is_eof() => {
+                            torn_tail = Some(String::from_utf8_lossy(line).into());
+                            break;
+                        }
+                        Err(error) => return Err(format!("invalid frame tail: {error}")),
+                        Ok(_) => {}
+                    }
                 }
                 let f: Frame = wire::decode(line)?;
                 if f.tick != frames.len() as u64 {
