@@ -13,3 +13,5 @@ mod portability;
 mod spatial_input;
 
 mod spatial_burrow;
+
+mod spatial_fixed;

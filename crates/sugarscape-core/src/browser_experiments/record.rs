@@ -122,7 +122,21 @@ pub fn validate_episode(json: &str) -> Result<EpisodeRecord, Vec<FieldError>> {
             "unsupported episode format version",
         ));
     }
-    if saved.rules_identity != catalog::rules_identity(saved.study)? {
+    let expected_identity = catalog::rules_identity(saved.study)?;
+    if saved.rules_identity != expected_identity {
+        if matches!(
+            saved.study,
+            StudyId::ForagingFixed | StudyId::ForagingPassage | StudyId::ForagingConstruction
+        ) {
+            if let (Some((saved_source, saved_target)), Some((expected_source, expected_target))) = (
+                saved.rules_identity.rsplit_once(":target:"),
+                expected_identity.rsplit_once(":target:"),
+            ) {
+                if saved_source == expected_source && saved_target != expected_target {
+                    return Err(super::error("rules_identity", format!("incompatible CPFA target {saved_target:?}; reconstruction requires {expected_target:?}")));
+                }
+            }
+        }
         return Err(super::error(
             "rules_identity",
             "engine source or rules version mismatch",

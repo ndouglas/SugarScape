@@ -204,7 +204,8 @@ pub fn preflight(input: &Input) -> Checked<()> {
         )?;
         add(native, mul(frames, frame)?)?
     } else {
-        // Charge repeated native AND researcher snapshots, local Agent views,
+        // Cover native AND researcher snapshots plus F2's conservatively charged
+        // typed snapshot staging copy (three full copies), local Agent views,
         // supplied geometry and every Agent's full sparse map. Counts retain
         // complete inventories/access milestones and all resource/waypoint/spoil
         // records, rather than only snapshot_bytes or newly changed cells.

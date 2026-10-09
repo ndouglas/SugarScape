@@ -136,7 +136,7 @@ let native_value = wire::lossless_value(serde_json::to_value(&native)
 
 **Interfaces:** `spatial::fixed::run(&Input)->Result<EpisodeRecord,Vec<FieldError>>`; register fixed descriptor. Capture one original fixed::World, original Snapshot/summary and native Episode shape including original compact snapshot byte count.
 
-- [ ] **Step1: RED replay/read-only tests.** At default20/7 and horizons1/1,8/2 compare all original snapshots/summary/seed/snapshot_bytes to fixed::run with snapshots=true. Initial/final snapshots occur exactly once; no early stop after food depletion. Selected own state does not include other Agents/resources/server advice. Large cargo/resource IDs stay exact and censored event times remain null. A World stepped with extra observational calls must reach the same next snapshot as one stepped without them.
+- [x] **Step1: RED replay/read-only tests.** At default20/7 and horizons1/1,8/2 compare all original snapshots/summary/seed/snapshot_bytes to fixed::run with snapshots=true. Initial/final snapshots occur exactly once; no early stop after food depletion. Selected own state does not include other Agents/resources/server advice. Large cargo/resource IDs stay exact and censored event times remain null. A World stepped with extra observational calls must reach the same next snapshot as one stepped without them.
 
 ```rust
 let mut plain = fixed::World::new(setup.clone(), 12).unwrap();
@@ -150,7 +150,7 @@ for _ in 0..20 {
 ```
 
 Run `cargo test -p sugarscape-core browser_experiments::tests::spatial_fixed`; retain genuine RED for new adapter assertions.
-- [ ] **Step2: Implement original step loop and bounded capture.** `World::new(setup,seed)`, initial capture, `for completed in1..=ticks { world.step()?; if completed%sample_every==0 || completed==ticks { capture } }`, final summary. Use native serialization to reproduce snapshot_bytes; no physics/controller code copied. Prefix reader data and native Episode components are charged to CaptureBudget before retention. Supplied arena/nest can be public; own AgentView is local; resources/otherAgents/waypoints are researcher-only. Do not infer local food observations.
+- [x] **Step2: Implement original step loop and bounded capture.** `World::new(setup,seed)`, initial capture, `for completed in1..=ticks { world.step()?; if completed%sample_every==0 || completed==ticks { capture } }`, final summary. Use native serialization to reproduce snapshot_bytes; no physics/controller code copied. Prefix reader data and native Episode components are charged to CaptureBudget before retention. Supplied arena/nest can be public; own AgentView is local; resources/otherAgents/waypoints are researcher-only. Do not infer local food observations.
 
 ```rust
 let mut world = fixed::World::new(setup.to_core()?, seed.value())?;
@@ -164,9 +164,9 @@ for completed in 1..=ticks {
 ```
 
 `capture_fixed(&fixed::World,&str,&mut Capture)->Result<(),Vec<FieldError>>` is internal to fixed.rs; `Capture` owns checked original Snapshot retention plus checkpoint/budget state. It reproduces native snapshot_bytes using original Snapshot serialization before wire conversion.
-- [ ] **Step3: GREEN/profile.** Run focused tests, core Clippy/edited formatting; reference metadata binds original engine digest and target ARCH/OS. Preserve all original fields, including original target-dependent floats; no new tolerance path.
-- [ ] **Step4: Independent gate.** Reviewer checks runner equivalence, RNG/capture, private/global separation, exact IDs and budget accounting.
-- [ ] **Step5: Commit.** `feat(experiments): capture bounded fixed-world foraging episodes`.
+- [x] **Step3: GREEN/profile.** Run focused tests, core Clippy/edited formatting; reference metadata binds original engine digest and target ARCH/OS. Preserve all original fields, including original target-dependent floats; no new tolerance path.
+- [x] **Step4: Independent gate.** Reviewer checks runner equivalence, RNG/capture, private/global separation, exact IDs and budget accounting.
+- [x] **Step5: Commit.** `feat(experiments): capture bounded fixed-world foraging episodes`.
 
 ## Task 4: CPFA F3/F4 physical snapshots and private-memory capture
 

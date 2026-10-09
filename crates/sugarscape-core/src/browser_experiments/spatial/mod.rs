@@ -1,6 +1,7 @@
 //! Bounded browser inputs and adapters around unchanged spatial lab engines.
 pub mod budget;
 pub mod burrow;
+pub mod fixed;
 pub mod input;
 pub mod scenes;
 use super::{error, EpisodeRecord, FieldError, Input, StudyDescriptor, StudyId};
@@ -26,6 +27,13 @@ pub(crate) fn descriptors() -> Vec<StudyDescriptor> {
             "Supplied structural-access task with Explore or KnownGoal information.",
             "When does structural access occur, and which Agents have locally observed completion?",
         ),
+        (
+            StudyId::ForagingFixed,
+            "foraging_fixed",
+            "Fixed-world foraging engineering demonstration",
+            "Supplied arena and original fixed-world CPFA controller.",
+            "What do original completed-tick snapshots and each Agent's own captured state show?",
+        ),
     ]
     .into_iter()
     .map(|(id, key, title, supplied, question)| {
@@ -40,6 +48,9 @@ pub(crate) fn run(input: &Input) -> Result<EpisodeRecord, Vec<FieldError>> {
     ) {
         return burrow::run(input);
     }
+    if matches!(input, Input::ForagingFixed { .. }) {
+        return fixed::run(input);
+    }
     Err(error(
         "study",
         format!("spatial adapter {:?} is not implemented", input.study()),
@@ -49,6 +60,7 @@ pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> 
     let key = match study {
         StudyId::BurrowExcavation => "burrow_excavation",
         StudyId::BurrowAccess => "burrow_access",
+        StudyId::ForagingFixed => "foraging_fixed",
         _ => {
             return Err(error(
                 "rules_identity",
@@ -65,7 +77,15 @@ pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> 
     let schema = identities[key]["adapter_schema_version"]
         .as_u64()
         .ok_or_else(|| error("rules_identity", "missing adapter schema version"))?;
-    Ok(format!(
-        "{key}:spatial-adapter-{schema}:source-sha256:{digest}"
-    ))
+    let source = format!("{key}:spatial-adapter-{schema}:source-sha256:{digest}");
+    if study == StudyId::ForagingFixed {
+        Ok(format!("{source}:target:{}", target_tag()))
+    } else {
+        Ok(source)
+    }
+}
+
+/// Actual compilation target, shared by the CPFA source identity and capture.
+pub(crate) fn target_tag() -> String {
+    format!("{}-{}", std::env::consts::ARCH, std::env::consts::OS)
 }

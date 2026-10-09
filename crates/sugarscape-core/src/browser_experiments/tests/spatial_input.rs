@@ -209,7 +209,9 @@ fn every_declared_engineering_scene_passes_preflight_and_only_implemented_studie
         assert_eq!(serde_json::to_value(&input).unwrap(), row["input"]);
         let implemented = matches!(
             input,
-            Input::BurrowExcavation { .. } | Input::BurrowAccess { .. }
+            Input::BurrowExcavation { .. }
+                | Input::BurrowAccess { .. }
+                | Input::ForagingFixed { .. }
         );
         assert_eq!(
             catalog()
