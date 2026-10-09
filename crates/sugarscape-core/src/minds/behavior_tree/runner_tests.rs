@@ -251,3 +251,69 @@ fn behavior_tree_after_expiry_entries_match_standalone_adapters() {
         assert_eq!(a.fingerprint(), b.fingerprint());
     }
 }
+
+#[test]
+fn behavior_tree_wall_and_fatal_message_are_semantic_but_research_fields_are_not() {
+    let mut base = World::new(
+        lab::rig_config(LabConfig {
+            controller: Controller::GuardedTree,
+            scenario: Scenario::Stable,
+            quota: 40,
+            mirrored: false,
+        }),
+        7,
+    )
+    .unwrap();
+    base.behavior_tree_lab.as_mut().unwrap().fatal_error = Some("first error".into());
+    let mut changed = base.clone();
+    changed.walls[0] = 0;
+    assert_ne!(base.fingerprint(), changed.fingerprint());
+    let mut changed = base.clone();
+    changed.behavior_tree_lab.as_mut().unwrap().fatal_error = Some("second error".into());
+    assert_ne!(base.fingerprint(), changed.fingerprint());
+    type Mutation = (&'static str, fn(&mut World));
+    let mutations: &[Mutation] = &[
+        ("diagnostics", |w| {
+            w.behavior_tree_lab.as_mut().unwrap().diagnostics = false
+        }),
+        ("timing", |w| {
+            w.behavior_tree_lab.as_mut().unwrap().controller_timing = true
+        }),
+        ("error history", |w| {
+            w.behavior_tree_lab
+                .as_mut()
+                .unwrap()
+                .errors
+                .push("history".into())
+        }),
+        ("observation", |w| {
+            w.behavior_tree_lab.as_mut().unwrap().observation = Some(Observation {
+                action_tick: 1,
+                origin: crate::geometry::Pos::new(2, 5),
+                quota: 40,
+                gross: 0.0,
+                candidates: vec![],
+            })
+        }),
+        ("receipt", |w| {
+            w.behavior_tree_lab.as_mut().unwrap().receipt = Some(PhysicalReceipt {
+                action_tick: 1,
+                actor: 1,
+                origin: crate::geometry::Pos::new(2, 5),
+                target: crate::geometry::Pos::new(2, 5),
+                destination: crate::geometry::Pos::new(2, 5),
+                gathered: 0.0,
+                route_failed: false,
+            })
+        }),
+        ("seconds", |w| {
+            w.behavior_tree_lab.as_mut().unwrap().controller_seconds = Some(0.01)
+        }),
+        ("work", |w| w.bt_work = Some(Default::default())),
+    ];
+    for (name, change) in mutations {
+        let mut changed = base.clone();
+        change(&mut changed);
+        assert_eq!(base.fingerprint(), changed.fingerprint(), "{name}");
+    }
+}

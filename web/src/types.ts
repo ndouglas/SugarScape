@@ -59,7 +59,7 @@ export interface DiseaseRule {
  * (planning) and `mvt` (the marginal-value rule); both need `movement.mode: 'walk'`.
  */
 export interface Decision {
-  rule: 'book' | 'utility' | 'goap' | 'mvt';
+  rule: 'book' | 'utility' | 'goap' | 'mvt' | 'behavior_tree';
   travel: number;
   crowding: number;
   idle: 'stay' | 'wander';
@@ -240,6 +240,14 @@ export interface Config {
   foresight: { enabled: boolean; range: URange };
   disease: DiseaseRule;
   decision?: Decision;
+  /** Closed supplied routines; task profiles require a checked research rig. */
+  behavior_tree?: { profile: 'book_leaf' | 'utility_leaf' | 'guarded_rate' | 'unguarded_rate'; visits: number };
+  behavior_tree_lab?: {
+    controller: 'reactive_utility' | 'guarded_tree' | 'matched_fsm' | 'unguarded_tree' | 'task_goap' | 'legacy_goap';
+    scenario: 'stable' | 'better_alternative' | 'depleted_target' | 'temporary_obstacle';
+    quota: 20 | 40;
+    mirrored: boolean;
+  };
   movement?: Movement;
   walls?: Wall[];
   memory?: Memory;

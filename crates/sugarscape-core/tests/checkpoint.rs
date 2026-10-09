@@ -787,3 +787,155 @@ fn deception_checkpoint_preserves_pending_departure_and_its_next_action() {
         assert_eq!(inspect_all(&expected), inspect_all(&restored));
     }
 }
+
+#[test]
+fn behavior_tree_checkpoints_preserve_each_transition_and_later_actions() {
+    use sugarscape_core::minds::behavior_tree::{lab, state::*};
+    let mut covered = std::collections::BTreeSet::new();
+    for seed in [7, 8] {
+        for condition in lab::conditions() {
+            let mut straight = ModelWorld::Sugarscape(Box::new(
+                World::new(lab::rig_config(condition.clone()), seed).unwrap(),
+            ));
+            let mut last_completion = None;
+            let mut alive = true;
+            for tick in 0..=64 {
+                let w = sugar(&straight);
+                let task = &w.behavior_tree_lab.as_ref().unwrap().task;
+                let completion = task.first_completion;
+                let living = w.agent(1).is_some();
+                if tick == 0 {
+                    covered.insert("selection");
+                }
+                if task.target.is_some() && w.agent(1).is_some_and(|a| !a.plan.path.is_empty()) {
+                    covered.insert("transit");
+                }
+                if !task.failed_until.is_empty() {
+                    covered.insert("cooldown");
+                }
+                if tick == 3 && condition.scenario == Scenario::DepletedTarget {
+                    covered.insert("depletion");
+                }
+                if completion.is_some() && last_completion.is_none() {
+                    covered.insert("first completion");
+                }
+                if alive && !living {
+                    covered.insert("death");
+                }
+                if [0, 1, 2, 3, 4, 6, 7, 10, 16, 32, 64].contains(&tick)
+                    || completion != last_completion
+                    || living != alive
+                    || !task.failed_until.is_empty()
+                {
+                    let saved = w.clone();
+                    let cp = straight.checkpoint().unwrap();
+                    let mut restored = ModelWorld::Sugarscape(Box::new(saved.clone()));
+                    restored.model_mut().run(2);
+                    restored.restore(&cp).unwrap();
+                    let mut expected = ModelWorld::Sugarscape(Box::new(saved));
+                    for next in tick..=64 {
+                        assert_eq!(
+                            expected.model().fingerprint(),
+                            restored.model().fingerprint(),
+                            "{condition:?} seed{seed} {tick}->{next}"
+                        );
+                        assert_eq!(
+                            sugar(&expected).behavior_tree_lab,
+                            sugar(&restored).behavior_tree_lab,
+                            "authoritative state and action receipt"
+                        );
+                        assert_eq!(
+                            sugarscape_core::minds::behavior_tree::runner::snapshot(sugar(
+                                &expected
+                            ))
+                            .unwrap()
+                            .rng_state_json,
+                            sugarscape_core::minds::behavior_tree::runner::snapshot(sugar(
+                                &restored
+                            ))
+                            .unwrap()
+                            .rng_state_json
+                        );
+                        assert_eq!(expected.model().agents_csv(), restored.model().agents_csv());
+                        expected.model_mut().run(1);
+                        restored.model_mut().run(1);
+                    }
+                }
+                last_completion = completion;
+                alive = living;
+                straight.model_mut().run(1);
+            }
+        }
+    }
+    for phase in [
+        "selection",
+        "transit",
+        "cooldown",
+        "depletion",
+        "first completion",
+        "death",
+    ] {
+        assert!(covered.contains(phase), "missing real checkpoint {phase}");
+    }
+}
+
+#[test]
+fn behavior_tree_checkpoint_preserves_budget_deferral_and_deadline_map() {
+    use sugarscape_core::minds::behavior_tree::{lab, state::*};
+    let mut w = World::new(
+        lab::rig_config(LabConfig {
+            controller: Controller::GuardedTree,
+            scenario: Scenario::Stable,
+            quota: 40,
+            mirrored: false,
+        }),
+        7,
+    )
+    .unwrap();
+    // Counterfactual executor budget is construction-only, outside the fixed study rig.
+    w.config.behavior_tree.visits = 1;
+    w.step();
+    assert!(w
+        .behavior_tree_lab
+        .as_ref()
+        .unwrap()
+        .task
+        .tree
+        .deferred
+        .is_some());
+    w.behavior_tree_lab
+        .as_mut()
+        .unwrap()
+        .task
+        .failed_until
+        .extend([(22, 4), (23, 5)]);
+    let mut original = ModelWorld::Sugarscape(Box::new(w.clone()));
+    let mut restored = ModelWorld::Sugarscape(Box::new(w));
+    let cp = restored.checkpoint().unwrap();
+    restored.model_mut().run(2);
+    restored.restore(&cp).unwrap();
+    assert_eq!(
+        sugar(&original).behavior_tree_lab,
+        sugar(&restored).behavior_tree_lab
+    );
+    for _ in 1..=64 {
+        original.model_mut().run(1);
+        restored.model_mut().run(1);
+        assert_eq!(
+            original.model().fingerprint(),
+            restored.model().fingerprint()
+        );
+        assert_eq!(
+            sugar(&original).behavior_tree_lab,
+            sugar(&restored).behavior_tree_lab
+        );
+        assert_eq!(
+            sugarscape_core::minds::behavior_tree::runner::snapshot(sugar(&original))
+                .unwrap()
+                .rng_state_json,
+            sugarscape_core::minds::behavior_tree::runner::snapshot(sugar(&restored))
+                .unwrap()
+                .rng_state_json
+        );
+    }
+}

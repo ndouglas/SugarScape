@@ -17,6 +17,7 @@ import { wasmSimModule } from './sim-module';
 import { InlineTransport } from './transport';
 import { decodeShare, encodeShare } from './share';
 import type {
+  Config,
   AgreementConfig,
   HoardConfig,
   HoardInspection,
@@ -88,7 +89,7 @@ import type {
 } from './types';
 import { InspectPanel } from './ui/inspect-panel';
 import { MODEL_CHARTS } from './ui/series-data';
-import { Sim, deception_config_json, deception_episode_json, protection_config_json, protection_episode_json, config_series_names, initSync, model_schemas_json, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
+import { Sim, behavior_tree_config_json, behavior_tree_episode_json, deception_config_json, deception_episode_json, protection_config_json, protection_episode_json, config_series_names, initSync, model_schemas_json, presets_json, run_point, sweep_points } from './wasm-pkg/sugarscape.js';
 
 // Built by `npm run build` (wasm-pack) before `npm test`.
 const wasm = initSync({ module: readFileSync(new URL('./wasm-pkg/sugarscape_bg.wasm', import.meta.url)) });
@@ -1807,5 +1808,130 @@ describe('deception checked WASM boundary', () => {
         }
       });
     });
+  }
+});
+
+
+describe('behavior tree checked WASM boundary', () => {
+  const lab = (override = {}) => JSON.stringify({ controller: 'guarded_tree', scenario: 'better_alternative', quota: 40, mirrored: false, ...override });
+  const errors = (call: () => unknown): { field: string; message: string }[] => {
+    try { call(); } catch (error) { return JSON.parse(String(error)); }
+    throw new Error('invalid boundary input accepted');
+  };
+  for (const [rule, profile] of [['book', 'book_leaf'], ['utility', 'utility_leaf']] as const) {
+    for (const seed of [7, 8]) {
+      it(`behavior tree ${profile} preserves ${rule} actions and legacy hashes on seed ${seed}`, () => {
+        const config = structuredClone(unit.config) as Config;
+        config.decision = { rule, travel: 1, crowding: 0.5, idle: 'wander' };
+        const leaf = structuredClone(config);
+        leaf.decision!.rule = 'behavior_tree';
+        leaf.behavior_tree = { profile, visits: 64 };
+        const ordinary = new Sim(JSON.stringify(config), seed, null);
+        const tree = new Sim(JSON.stringify(leaf), seed, null);
+        try {
+          for (let tick = 0; tick <= 200; tick++) {
+            expect(tree.fingerprint()).toBe(ordinary.fingerprint());
+            expect(tree.export_agents_csv()).toBe(ordinary.export_agents_csv());
+            ordinary.step(1); tree.step(1);
+          }
+        } finally { ordinary.free(); tree.free(); }
+      });
+    }
+  }
+  it('rejects malformed, unknown and invalid lab fields before construction', () => {
+    for (const input of ['{', lab({ extra: 1 }), lab({ controller: 'book' }), lab({ scenario: 'unknown' }), lab({ quota: 21 }), lab({ mirrored: 'false' })]) {
+      expect(errors(() => behavior_tree_config_json(input))).toContainEqual({ field: expect.stringMatching(/^behavior_tree_lab/), message: expect.any(String) });
+      expect(errors(() => behavior_tree_episode_json(input, '7'))).toContainEqual({ field: expect.stringMatching(/^behavior_tree_lab/), message: expect.any(String) });
+    }
+  });
+  it('rejects nondecimal and overflowing seeds with structured errors', () => {
+    for (const seed of ['', '-1', '+7', '7.0', ' 7', '7 ', '1e3', '18446744073709551616']) {
+      expect(errors(() => behavior_tree_episode_json(lab(), seed))).toEqual([{ field: 'seed', message: expect.any(String) }]);
+    }
+    expect(JSON.parse(behavior_tree_episode_json(lab(), '0007')).seed).toBe(7);
+  });
+  it('rejects invalid selector, profile and budget through the real simulator', () => {
+    const config = JSON.parse(behavior_tree_config_json(lab()));
+    for (const change of [
+      { decision: { ...config.decision, rule: 'unknown' } },
+      { behavior_tree: { profile: 'unknown', visits: 64 } },
+      { behavior_tree: { profile: 'guarded_rate', visits: 0 } },
+      { behavior_tree: { profile: 'guarded_rate', visits: 65 } },
+      { behavior_tree: { profile: 'book_leaf', visits: 64 } },
+    ]) expect(() => new Sim(JSON.stringify({ ...config, ...change }), 7, null)).toThrow();
+  });
+  it('keeps guarded tree and matched FSM physical/task/RNG projections exact in WASM', () => {
+    const projection = (f: Record<string, any>) => ({
+      tick: f.tick, actor: f.actor, cells: f.cells, receipt: f.receipt,
+      quota: f.task.quota, gross: f.task.gross, first_completion: f.task.first_completion,
+      target: f.task.target, failed_until: f.task.failed_until, living_ticks: f.living_ticks,
+      external_added: f.external_added, external_removed: f.external_removed,
+      consumed: f.consumed, death_loss: f.death_loss,
+    });
+    for (const scenario of ['stable', 'better_alternative', 'depleted_target', 'temporary_obstacle']) {
+      for (const quota of [20, 40]) for (const mirrored of [false, true]) for (const seed of [7, 8]) {
+        const guarded = JSON.parse(behavior_tree_episode_json(lab({ scenario, quota, mirrored }), String(seed)));
+        const fsm = JSON.parse(behavior_tree_episode_json(lab({ controller: 'matched_fsm', scenario, quota, mirrored }), String(seed)));
+        for (let tick = 0; tick <= 64; tick++) {
+          expect(projection(guarded.frames[tick])).toEqual(projection(fsm.frames[tick]));
+          expect(guarded.frames[tick].rng_state_json).toBe(fsm.frames[tick].rng_state_json);
+        }
+      }
+    }
+  });
+  for (const controller of ['reactive_utility', 'guarded_tree', 'matched_fsm', 'unguarded_tree', 'task_goap', 'legacy_goap']) {
+    for (const scenario of ['stable', 'better_alternative', 'depleted_target', 'temporary_obstacle']) {
+      for (const quota of [20, 40]) for (const mirrored of [false, true]) for (const seed of [7, 8]) {
+        it(`behavior tree ${controller}/${scenario}/q${quota}/m${Number(mirrored)}/seed${seed} matches native, episode and engine every tick`, async () => {
+          const root = fileURLToPath(new URL('../../', import.meta.url));
+          const input = lab({ controller, scenario, quota, mirrored });
+          const config = JSON.parse(behavior_tree_config_json(input));
+          const episode = JSON.parse(behavior_tree_episode_json(input, String(seed)));
+          expect(episode.errors).toEqual([]);
+          expect(episode.frames.map((f: { tick: number }) => f.tick)).toEqual(Array.from({ length: 65 }, (_, tick) => tick));
+          const initial = episode.frames[0];
+          expect(initial.actor.pos).toEqual({ x: mirrored ? 8 : 2, y: 5 });
+          expect(initial.actor.holdings).toBe(16);
+          expect(initial.task.quota).toBe(quota);
+          expect(initial.task.gross).toBe(0);
+          const c = initial.cells.find((cell: { site: number }) => cell.site === 9 * 11 + (mirrored ? 6 : 4));
+          expect([c.food, c.capacity]).toEqual([24, 36]);
+          expect(initial.actor.memory.find((m: { site: number }) => m.site === c.site)).toEqual({ site: c.site, levels: [24], most: [24], tick: 0 });
+          await withNativeTraceDirectory(async scratch => {
+            const configPath = `${scratch}/config.json`, tracePath = `${scratch}/trace.json`;
+            writeFileSync(configPath, JSON.stringify(config));
+            execFileSync(resolve(root, env.CARGO_TARGET_DIR ?? 'target', 'release/sugarscape'), ['run', '--config', configPath, '--seed', String(seed), '--ticks', '64', '--fingerprint-trace', tracePath], { cwd: root, encoding: 'utf8' });
+            const trace = JSON.parse(readFileSync(tracePath, 'utf8')) as { tick: number; fingerprint: string }[];
+            expect(trace.map(f => f.tick)).toEqual(episode.frames.map((f: { tick: number }) => f.tick));
+            const e = await Engine.create({ config, seed }, { presets, transport: inline() });
+            const sim = new Sim(JSON.stringify(config), seed, null);
+            try {
+              for (const row of trace) {
+                if (row.tick > 0) { await e.advance(1); sim.step(1); }
+                expect(e.tick).toBe(row.tick);
+                expect(await e.fingerprint()).toBe(row.fingerprint);
+                expect(sim.fingerprint()).toBe(row.fingerprint);
+                const actor = episode.frames[row.tick].actor;
+                if (actor) {
+                  expect(Array.from(sim.locate(1)!)).toEqual([actor.pos.x, actor.pos.y]);
+                  const view = JSON.parse(sim.inspect(actor.pos.x, actor.pos.y));
+                  expect(view.agent.holdings).toEqual([actor.holdings]);
+                  expect(view.agent.metabolism).toEqual([actor.metabolism]);
+                  expect(view.agent.vision).toBe(actor.vision);
+                } else expect(sim.locate(1)).toBeUndefined();
+                for (const cell of episode.frames[row.tick].cells) {
+                  const site = JSON.parse(sim.inspect(cell.site % 11, Math.floor(cell.site / 11))).site;
+                  expect(site.resources).toEqual([cell.food]);
+                  expect(site.capacities).toEqual([cell.capacity]);
+                  expect(site.wall).toBe(cell.wall);
+                }
+
+                expect(`0x${episode.frames[row.tick].fingerprint}`).toBe(row.fingerprint);
+              }
+            } finally { sim.free(); }
+          });
+        });
+      }
+    }
   }
 });

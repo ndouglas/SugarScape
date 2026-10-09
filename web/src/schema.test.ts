@@ -49,7 +49,7 @@ describe('decision', () => {
     expect(rule.kind).toBe('select');
     if (rule.kind !== 'select') return;
     expect(rule.reset).toBe(true);
-    expect(rule.options.map((o) => o.value)).toEqual(['book', 'utility', 'goap', 'mvt']);
+    expect(rule.options.map((o) => o.value)).toEqual(['book', 'utility', 'goap', 'mvt', 'behavior_tree']);
     const c = {} as unknown as Config;
     expect(rule.current(c)).toBe('book'); // older configs have no decision
     rule.options[1].apply(c);
@@ -498,5 +498,25 @@ describe('spatial hoarding episode controls', () => {
     const c = { spatial_hoarding: { larder: 1 } } as unknown as Config;
     control('spatial_hoarding.larder').adjust!(c, {} as Config);
     expect(c.spatial_hoarding).toEqual({ enabled: false, larder: 1, defense: 0.5, guard: true, defense_slope: 10, find_larder: 0.25 });
+  });
+});
+
+
+describe('behavior tree leaf profiles', () => {
+  it('offers a closed supplied routine selector with the book leaf default', () => {
+    const profile = control('behavior_tree.profile');
+    if (profile.kind !== 'select') throw new Error('profile is a select');
+    const c = {} as unknown as Config;
+    expect(profile.current(c)).toBe('book_leaf');
+    expect(profile.options.map(o => o.value)).toEqual(['book_leaf', 'utility_leaf']);
+    expect(profile.reset).toBe(true);
+    profile.options[1].apply(c);
+    expect(c.behavior_tree).toEqual({ profile: 'utility_leaf', visits: 64 });
+    const rule = control('decision.rule');
+    if (rule.kind !== 'select') throw new Error('rule is a select');
+    rule.options.find(o => o.value === 'behavior_tree')!.apply(c);
+    expect(c.decision?.rule).toBe('behavior_tree');
+    profile.options[0].apply(c);
+    expect(c.behavior_tree).toEqual({ profile: 'book_leaf', visits: 64 });
   });
 });

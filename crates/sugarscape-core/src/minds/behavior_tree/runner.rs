@@ -184,6 +184,15 @@ pub(crate) fn semantic_bytes(w: &World) -> Vec<u8> {
     ))
     .expect("serializable semantic lab state")
 }
+/// Read-only research projection of an enabled food-task laboratory.
+/// This uses the runner's canonical frame and cannot affect policy or RNG state.
+pub fn snapshot(w: &World) -> Result<Frame, String> {
+    if w.behavior_tree_lab.is_none() {
+        return Err("behavior-tree snapshot requires an enabled lab".into());
+    }
+    Ok(frame(w))
+}
+
 pub(crate) fn frame(w: &World) -> Frame {
     let r = w.behavior_tree_lab.as_ref().expect("enabled lab");
     Frame {
