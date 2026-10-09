@@ -1,7 +1,7 @@
 # Spatial campaign web visualizations — Batch B
 
 **Date:** 2026-10-08
-**Status:** proposed written design for user review; no implementation plan or runtime work approved.
+**Status:** written spec approved by user LGTM on 2026-10-08; implementation plan under review, runtime work not yet approved.
 **Builds on:** the [visualization inventory](2026-10-08-campaign-visualization-inventory.md), [episode viewer](../../experiment-viewer.md), [Burrow labs](../../burrow.md), and [standalone foraging labs](../../foraging.md).
 
 ## Intended outcome
