@@ -45,3 +45,5 @@ pub const EPISODE_SCHEMA: &str = "minds-behavior-tree-episode-v1";
 mod lab_tests;
 #[cfg(test)]
 mod runner_tests;
+
+pub mod verification;

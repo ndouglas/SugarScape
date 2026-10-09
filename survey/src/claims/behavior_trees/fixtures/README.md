@@ -1,0 +1,1 @@
+Engineering construction fixtures copied from the preserved Task 3 seeds 7/8 source records. These are not registered measurements. Whitespace was compacted with RNG JSON retained as an opaque String. Full original hashes and typed-equivalence evidence are retained in Task 4 engineering receipts.
