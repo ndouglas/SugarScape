@@ -4,6 +4,7 @@
 //! values only what rule M does.
 
 pub mod astar;
+pub mod behavior_tree;
 pub mod caching;
 pub mod central;
 pub mod deception;
