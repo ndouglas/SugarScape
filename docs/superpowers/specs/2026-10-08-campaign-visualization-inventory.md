@@ -68,3 +68,9 @@ WASM exports and parity tests, core public campaign interfaces, and product
 guides. At inspection main contained another campaign's staged F5 files, which
 this task neither edited nor staged. Existing crowd runtime remained untouched.
 The unapproved raw-discovery proposal is deferred by the user's new direction.
+
+## Delivery update — 2026-10-08
+
+Batch A is delivered at main `74feeed12216262f2ffefca90487b8f665f5c715`, with exact-commit CI and Pages success. Its eight working entries are documented in the [viewer guide](../../experiment-viewer.md). The table above retains the original inspection state.
+
+Batch B now has a [proposed spatial-viewer design](2026-10-08-spatial-campaign-web-visualizations-design.md) covering Burrow excavation/access and CPFA F2–F4. Its written spec and implementation plan still require review before runtime work. Batch C and raw surface discovery remain deferred. F5 native archive/comparison engineering is integrated, while its scientific candidate remains unapproved; it is outside Batch B.
