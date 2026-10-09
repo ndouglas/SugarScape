@@ -1,0 +1,24 @@
+{
+  "start": "2026-10-09T11:25:29.356929+00:00",
+  "end": "2026-10-09T11:26:21.632876+00:00",
+  "argv": [
+    "zstd",
+    "-d",
+    "-c",
+    "/private/tmp/sugarscape-minds-bt-20261008/integration-1/scientific-e67b8d2.tar.zst"
+  ],
+  "exit": 0,
+  "members_verified": 14934,
+  "bytes_verified": 13067756638,
+  "all_hashes_sizes_modes_match": true,
+  "archive": {
+    "sha256": "6b01bed58654d9498578788954a4e9091ce99429b01a82440d3f23712612cd60",
+    "bytes": 277896521,
+    "mode": "0o644"
+  },
+  "manifest": {
+    "sha256": "1464409a0e922fede0ffe2385ca2f627d7480c4a0634336f3316636e0a58a962",
+    "bytes": 6926917,
+    "mode": "0o644"
+  }
+}

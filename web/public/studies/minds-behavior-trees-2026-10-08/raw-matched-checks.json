@@ -1,0 +1,7042 @@
+[
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      false,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      20,
+      true,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      false,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "better_alternative",
+      40,
+      true,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      false,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      20,
+      true,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      false,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "depleted_target",
+      40,
+      true,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      false,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      20,
+      true,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      false,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "stable",
+      40,
+      true,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      false,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      20,
+      true,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      false,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30001
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30002
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30003
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30004
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30005
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30006
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30007
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30008
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30009
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30010
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30011
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30012
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30013
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30014
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30015
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30016
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30017
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30018
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30019
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30020
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30021
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30022
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30023
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30024
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30025
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30026
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30027
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30028
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30029
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30030
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30031
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30032
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30033
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30034
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30035
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30036
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30037
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30038
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30039
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  },
+  {
+    "stratum": [
+      "temporary_obstacle",
+      40,
+      true,
+      30040
+    ],
+    "frames": 65,
+    "equal_physical_task": true,
+    "equal_rng": true
+  }
+]

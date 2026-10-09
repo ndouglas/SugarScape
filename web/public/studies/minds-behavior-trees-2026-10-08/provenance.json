@@ -1,0 +1,209 @@
+{
+  "schema": "minds-bt-reporting-provenance-v1",
+  "status": "READY_FOR_FRESH_EMPIRICAL_REVIEW",
+  "scientific_revision": "e67b8d293ffb21c3a6fb94daf727e69b7a7af51b",
+  "source_sha256": "09aedae3cf1b213ba0b01d7da06c54acad1ac90c9f7280225aab9c9ec0e58f76",
+  "compiled_inputs_sha256": "cb403c31ca8d547facfa58d2e9dc22c2429cb37e99d611812c4207b611bd6f39",
+  "native_manifest_sha256": "138b000e4faf7bf6ec2ff40c9b249e846e0f168accee707ec46d94f38c87969a",
+  "protocol_file": {
+    "sha256": "24bb95554afc458e42c41c25dd402ce6c480edece2e5f8c990596a2c225ac8bc",
+    "bytes": 11396,
+    "mode": "100644"
+  },
+  "binary": {
+    "sha256": "223b950a3eb4e210bc18e8e102b919c746ad0db8cfda1dc3e9fa1a320656a76e",
+    "bytes": 21900704,
+    "mode": "100755"
+  },
+  "actual_prospective_decision_sha256": "a313aa5701f684af09839546dd0289167a7a219e8d830400b9116d9e6cf0fd4e",
+  "native_outputs": [
+    {
+      "name": "analysis.json",
+      "bytes": 22178854,
+      "sha256": "3a24716d45b938ecb3af8f6b9b777433baef3064f462a3a31af9daa024924cea",
+      "equal_bytes": true
+    },
+    {
+      "name": "results.md",
+      "bytes": 29978,
+      "sha256": "835fe3b4ab730c70d512bd6e0be2f1e268290ac06a4856259f9c04bc0579437c",
+      "equal_bytes": true
+    }
+  ],
+  "source_and_private_evidence_lineage": {
+    "raw_inventory": {
+      "sha256": "e06559a120f65a14df45d4d734b3eae354b8d50ead0703bfe2922f0e677fbfda",
+      "bytes": 4091496,
+      "mode": "100600"
+    },
+    "source_inventory": {
+      "sha256": "6e305718ca08b120592af2e9595faec41fb3a4a4c62aba6c3dfcc0242134b4e0",
+      "bytes": 545429,
+      "mode": "100644"
+    },
+    "frozen_packet_inventory": {
+      "sha256": "c6e0cc63bbdc92c0dbcac0438d5f76e1b3fca1d6135e5a5abe6757ebaccf50cb",
+      "bytes": 1504676,
+      "mode": "100644"
+    },
+    "writer_final_preservation": {
+      "sha256": "eca14facdcf576fd2db3df1ffa0394320baad5f47a55f8b0cddbd454d67cb1ae",
+      "bytes": 1343,
+      "mode": "100600"
+    },
+    "external_raw_validation": {
+      "sha256": "089eb8427e622a734a223249f57daeedd277dca765639d05dd5b7c51fe8c96c2",
+      "bytes": 1107,
+      "mode": "100600"
+    },
+    "private_writer_environment": {
+      "sha256": "8193f17f8ae20763e0557d84151ef9fb40ef2c60b5adb70040d76f34a7f145f6",
+      "bytes": 10285,
+      "mode": "100644"
+    },
+    "operational_overlap_disclosure": {
+      "sha256": "362bbe3c9dfd75c8e02c0e7e5a7c901d8850478657cec195aeaa873f2f51f29d",
+      "bytes": 664,
+      "mode": "100644"
+    },
+    "native_reanalysis_byte_comparison": {
+      "sha256": "131b83ec1fad15dd93e655eac912dfddf692599d39ccdef736c267c10a2e3011",
+      "bytes": 1080,
+      "mode": "100600"
+    }
+  },
+  "allowlisted_scientific_environment": {
+    "rustc": "1.98.1",
+    "target": "aarch64-apple-darwin",
+    "profile": "release",
+    "opt_level": 3,
+    "debug": false,
+    "build_argv": [
+      "cargo",
+      "build",
+      "--manifest-path",
+      "survey/Cargo.toml",
+      "--release",
+      "--locked",
+      "--offline"
+    ],
+    "effective_encoded_rustflags": "--cfg\u001ftokio_unstable\u001f--cfg\u001ftokio_unstable",
+    "configuration_note": "Two identical read-only inherited/owned cfg declarations; shell RUSTFLAGS and CARGO_ENCODED_RUSTFLAGS unset."
+  },
+  "commands": {
+    "registered-writer": {
+      "argv": [
+        "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/target/release/survey",
+        "--behavior-trees",
+        "--run",
+        "--protocol-revision",
+        "e67b8d293ffb21c3a6fb94daf727e69b7a7af51b",
+        "--out",
+        "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/registered-run-1"
+      ],
+      "cwd": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source",
+      "start": "2026-10-09T08:06:30.678408+00:00",
+      "end": "2026-10-09T10:31:38.090022+00:00",
+      "exit": 0,
+      "wall_seconds": 8707.411614
+    },
+    "registered-analysis": {
+      "argv": [
+        "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/target/release/survey",
+        "--behavior-trees",
+        "--analyze",
+        "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/registered-run-1/final-index.json",
+        "--out",
+        "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/registered-execution-e67b8d2-1/registered-analysis-1"
+      ],
+      "cwd": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source",
+      "start": "2026-10-09T10:36:31.216968+00:00",
+      "end": "2026-10-09T10:40:45.954009+00:00",
+      "exit": 0,
+      "wall_seconds": 254.737041
+    },
+    "registered-reanalysis": {
+      "argv": [
+        "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/target/release/survey",
+        "--behavior-trees",
+        "--analyze",
+        "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/registered-run-1/final-index.json",
+        "--out",
+        "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/registered-execution-e67b8d2-1/registered-reanalysis-1"
+      ],
+      "cwd": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source",
+      "start": "2026-10-09T10:41:11.200458+00:00",
+      "end": "2026-10-09T10:45:23.053573+00:00",
+      "exit": 0,
+      "wall_seconds": 251.853115
+    }
+  },
+  "scientific_counts": {
+    "census": {
+      "planned": 3840,
+      "attempted": 3840,
+      "complete": 3840,
+      "failed": 0,
+      "invalid": 0,
+      "partial": 0,
+      "pending": 0,
+      "unstarted": 0
+    },
+    "raw_counts": {
+      "episodes": 3840,
+      "frames": 249600,
+      "transitions": 245760,
+      "active_calls": 50480,
+      "hold_calls": 147600,
+      "dead_ticks": 47680
+    },
+    "cells": 96,
+    "estimates": 256,
+    "families": {
+      "primary": 64,
+      "secondary": 64,
+      "ablation": 64,
+      "legacy_reference": 64
+    },
+    "matched_pairs": 640,
+    "matched_frames": 41600,
+    "task_attained": 3360,
+    "task_completion_null": 480,
+    "unrestricted_completion_available": 56,
+    "unrestricted_completion_unavailable": 8,
+    "nullability": {
+      "estimate_ci95_null": 0,
+      "cell_work_null": 0,
+      "cell_search_expansions_null": 0,
+      "cell_controller_total_null": 0,
+      "active_invocation_seconds_null": 0,
+      "unrestricted_completion_available": 56,
+      "unrestricted_completion_unavailable": 8,
+      "unavailable_reasons": {
+        "guarded=Some(DiedBeforeQuota); comparator=Some(DiedBeforeQuota)": 320
+      }
+    }
+  },
+  "plotting": {
+    "input": "native-chart-inputs.json",
+    "input_identity": {
+      "sha256": "ebc3c925a439a69c2fcc24e9181ac755005c721d31c5e9d3ea9fd789737beed8",
+      "bytes": 96677,
+      "mode": "100644"
+    },
+    "row_bindings": "figures/plot-row-bindings.json",
+    "inventory": "figures/plot-inventory.json",
+    "environment": "figures/plot-environment.json",
+    "tools": "reporting-tools/",
+    "scientific_estimate_recomputation": false
+  },
+  "confidentiality": {
+    "private_originals_preserved": true,
+    "public_raw_environment_copy": false,
+    "public_private_environment_byte_equality_claim": false,
+    "allowlist": "Only compiler/target/profile/optimization/actual build arguments and effective cfg flags; full private-original hashes retained."
+  },
+  "raw_frame_archive_status": "Retained complete privately; future reviewed public scientific archive not yet built",
+  "empirical_approval": null,
+  "publication_approval": null
+}

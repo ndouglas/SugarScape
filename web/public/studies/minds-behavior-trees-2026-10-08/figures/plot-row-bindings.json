@@ -1,0 +1,6658 @@
+[
+  {
+    "figure": "primary-quota_attained",
+    "row": 0,
+    "chart_index": 32,
+    "analysis_index": 32,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota20-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 1,
+    "chart_index": 40,
+    "analysis_index": 40,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota40-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 2,
+    "chart_index": 0,
+    "analysis_index": 0,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota20-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 3,
+    "chart_index": 8,
+    "analysis_index": 8,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota40-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 4,
+    "chart_index": 16,
+    "analysis_index": 16,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota20-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 5,
+    "chart_index": 24,
+    "analysis_index": 24,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota40-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 6,
+    "chart_index": 48,
+    "analysis_index": 48,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 7,
+    "chart_index": 56,
+    "analysis_index": 56,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 8,
+    "chart_index": 36,
+    "analysis_index": 36,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota20-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 9,
+    "chart_index": 44,
+    "analysis_index": 44,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota40-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 10,
+    "chart_index": 4,
+    "analysis_index": 4,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota20-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 11,
+    "chart_index": 12,
+    "analysis_index": 12,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota40-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 12,
+    "chart_index": 20,
+    "analysis_index": 20,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota20-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 13,
+    "chart_index": 28,
+    "analysis_index": 28,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota40-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 14,
+    "chart_index": 52,
+    "analysis_index": 52,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-quota_attained",
+    "row": 15,
+    "chart_index": 60,
+    "analysis_index": 60,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 0,
+    "chart_index": 33,
+    "analysis_index": 33,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota20-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 1,
+    "chart_index": 41,
+    "analysis_index": 41,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota40-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 2,
+    "chart_index": 1,
+    "analysis_index": 1,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota20-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -1.0,
+        "ci95": [
+          -1.0,
+          -1.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 3,
+    "chart_index": 9,
+    "analysis_index": 9,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota40-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 6.0,
+        "ci95": [
+          6.0,
+          6.0
+        ],
+        "positive": 40,
+        "zero": 0,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 4,
+    "chart_index": 17,
+    "analysis_index": 17,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota20-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 5,
+    "chart_index": 25,
+    "analysis_index": 25,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota40-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 6,
+    "chart_index": 49,
+    "analysis_index": 49,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 7,
+    "chart_index": 57,
+    "analysis_index": 57,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 8,
+    "chart_index": 37,
+    "analysis_index": 37,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota20-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 9,
+    "chart_index": 45,
+    "analysis_index": 45,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota40-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 10,
+    "chart_index": 5,
+    "analysis_index": 5,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota20-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -1.0,
+        "ci95": [
+          -1.0,
+          -1.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 11,
+    "chart_index": 13,
+    "analysis_index": 13,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota40-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 6.0,
+        "ci95": [
+          6.0,
+          6.0
+        ],
+        "positive": 40,
+        "zero": 0,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 12,
+    "chart_index": 21,
+    "analysis_index": 21,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota20-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 13,
+    "chart_index": 29,
+    "analysis_index": 29,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota40-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 14,
+    "chart_index": 53,
+    "analysis_index": 53,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "row": 15,
+    "chart_index": 61,
+    "analysis_index": 61,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 0,
+    "chart_index": 34,
+    "analysis_index": 34,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota20-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 1,
+    "chart_index": 42,
+    "analysis_index": 42,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota40-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 2,
+    "chart_index": 2,
+    "analysis_index": 2,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota20-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -12.0,
+        "ci95": [
+          -12.0,
+          -12.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 3,
+    "chart_index": 10,
+    "analysis_index": 10,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota40-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 24.0,
+        "ci95": [
+          24.0,
+          24.0
+        ],
+        "positive": 40,
+        "zero": 0,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 4,
+    "chart_index": 18,
+    "analysis_index": 18,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota20-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 5,
+    "chart_index": 26,
+    "analysis_index": 26,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota40-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 6,
+    "chart_index": 50,
+    "analysis_index": 50,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 7,
+    "chart_index": 58,
+    "analysis_index": 58,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 8,
+    "chart_index": 38,
+    "analysis_index": 38,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota20-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 9,
+    "chart_index": 46,
+    "analysis_index": 46,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota40-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 10,
+    "chart_index": 6,
+    "analysis_index": 6,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota20-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -12.0,
+        "ci95": [
+          -12.0,
+          -12.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 11,
+    "chart_index": 14,
+    "analysis_index": 14,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota40-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 24.0,
+        "ci95": [
+          24.0,
+          24.0
+        ],
+        "positive": 40,
+        "zero": 0,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 12,
+    "chart_index": 22,
+    "analysis_index": 22,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota20-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 13,
+    "chart_index": 30,
+    "analysis_index": 30,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota40-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 14,
+    "chart_index": 54,
+    "analysis_index": 54,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "row": 15,
+    "chart_index": 62,
+    "analysis_index": 62,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 0,
+    "chart_index": 35,
+    "analysis_index": 35,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota20-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 1,
+    "chart_index": 43,
+    "analysis_index": 43,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota40-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 2,
+    "chart_index": 3,
+    "analysis_index": 3,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota20-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -12.0,
+        "ci95": [
+          -12.0,
+          -12.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 3,
+    "chart_index": 11,
+    "analysis_index": 11,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota40-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 8.0,
+        "ci95": [
+          8.0,
+          8.0
+        ],
+        "positive": 40,
+        "zero": 0,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 4,
+    "chart_index": 19,
+    "analysis_index": 19,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota20-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 5,
+    "chart_index": 27,
+    "analysis_index": 27,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota40-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 6,
+    "chart_index": 51,
+    "analysis_index": 51,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 7,
+    "chart_index": 59,
+    "analysis_index": 59,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 8,
+    "chart_index": 39,
+    "analysis_index": 39,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota20-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 9,
+    "chart_index": 47,
+    "analysis_index": 47,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-stable-quota40-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 10,
+    "chart_index": 7,
+    "analysis_index": 7,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota20-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -12.0,
+        "ci95": [
+          -12.0,
+          -12.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 11,
+    "chart_index": 15,
+    "analysis_index": 15,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-better-alternative-quota40-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 8.0,
+        "ci95": [
+          8.0,
+          8.0
+        ],
+        "positive": 40,
+        "zero": 0,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 12,
+    "chart_index": 23,
+    "analysis_index": 23,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota20-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 13,
+    "chart_index": 31,
+    "analysis_index": 31,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-depleted-target-quota40-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 14,
+    "chart_index": 55,
+    "analysis_index": 55,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "primary-living_ticks",
+    "row": 15,
+    "chart_index": 63,
+    "analysis_index": 63,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 0,
+    "chart_index": 96,
+    "analysis_index": 96,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota20-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 1,
+    "chart_index": 104,
+    "analysis_index": 104,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota40-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 2,
+    "chart_index": 64,
+    "analysis_index": 64,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 3,
+    "chart_index": 72,
+    "analysis_index": 72,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 4,
+    "chart_index": 80,
+    "analysis_index": 80,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 5,
+    "chart_index": 88,
+    "analysis_index": 88,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 6,
+    "chart_index": 112,
+    "analysis_index": 112,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 7,
+    "chart_index": 120,
+    "analysis_index": 120,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 8,
+    "chart_index": 100,
+    "analysis_index": 100,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota20-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 9,
+    "chart_index": 108,
+    "analysis_index": 108,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota40-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 10,
+    "chart_index": 68,
+    "analysis_index": 68,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 11,
+    "chart_index": 76,
+    "analysis_index": 76,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 12,
+    "chart_index": 84,
+    "analysis_index": 84,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 13,
+    "chart_index": 92,
+    "analysis_index": 92,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 14,
+    "chart_index": 116,
+    "analysis_index": 116,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "row": 15,
+    "chart_index": 124,
+    "analysis_index": 124,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 0,
+    "chart_index": 97,
+    "analysis_index": 97,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota20-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 1,
+    "chart_index": 105,
+    "analysis_index": 105,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota40-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 2,
+    "chart_index": 65,
+    "analysis_index": 65,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 3,
+    "chart_index": 73,
+    "analysis_index": 73,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 4,
+    "chart_index": 81,
+    "analysis_index": 81,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 5,
+    "chart_index": 89,
+    "analysis_index": 89,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 6,
+    "chart_index": 113,
+    "analysis_index": 113,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 7,
+    "chart_index": 121,
+    "analysis_index": 121,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 8,
+    "chart_index": 101,
+    "analysis_index": 101,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota20-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 9,
+    "chart_index": 109,
+    "analysis_index": 109,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota40-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 10,
+    "chart_index": 69,
+    "analysis_index": 69,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 11,
+    "chart_index": 77,
+    "analysis_index": 77,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 12,
+    "chart_index": 85,
+    "analysis_index": 85,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 13,
+    "chart_index": 93,
+    "analysis_index": 93,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 14,
+    "chart_index": 117,
+    "analysis_index": 117,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "row": 15,
+    "chart_index": 125,
+    "analysis_index": 125,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 0,
+    "chart_index": 98,
+    "analysis_index": 98,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota20-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 1,
+    "chart_index": 106,
+    "analysis_index": 106,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota40-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 2,
+    "chart_index": 66,
+    "analysis_index": 66,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 3,
+    "chart_index": 74,
+    "analysis_index": 74,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 4,
+    "chart_index": 82,
+    "analysis_index": 82,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 5,
+    "chart_index": 90,
+    "analysis_index": 90,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 6,
+    "chart_index": 114,
+    "analysis_index": 114,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 7,
+    "chart_index": 122,
+    "analysis_index": 122,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 8,
+    "chart_index": 102,
+    "analysis_index": 102,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota20-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 9,
+    "chart_index": 110,
+    "analysis_index": 110,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota40-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 10,
+    "chart_index": 70,
+    "analysis_index": 70,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 11,
+    "chart_index": 78,
+    "analysis_index": 78,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 12,
+    "chart_index": 86,
+    "analysis_index": 86,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 13,
+    "chart_index": 94,
+    "analysis_index": 94,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 14,
+    "chart_index": 118,
+    "analysis_index": 118,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "row": 15,
+    "chart_index": 126,
+    "analysis_index": 126,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 0,
+    "chart_index": 99,
+    "analysis_index": 99,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota20-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 1,
+    "chart_index": 107,
+    "analysis_index": 107,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota40-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 2,
+    "chart_index": 67,
+    "analysis_index": 67,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 3,
+    "chart_index": 75,
+    "analysis_index": 75,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 4,
+    "chart_index": 83,
+    "analysis_index": 83,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 5,
+    "chart_index": 91,
+    "analysis_index": 91,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 6,
+    "chart_index": 115,
+    "analysis_index": 115,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 7,
+    "chart_index": 123,
+    "analysis_index": 123,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 8,
+    "chart_index": 103,
+    "analysis_index": 103,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota20-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 9,
+    "chart_index": 111,
+    "analysis_index": 111,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-stable-quota40-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 10,
+    "chart_index": 71,
+    "analysis_index": 71,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 11,
+    "chart_index": 79,
+    "analysis_index": 79,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 12,
+    "chart_index": 87,
+    "analysis_index": 87,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 13,
+    "chart_index": 95,
+    "analysis_index": 95,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 14,
+    "chart_index": 119,
+    "analysis_index": 119,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "row": 15,
+    "chart_index": 127,
+    "analysis_index": 127,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 0,
+    "chart_index": 160,
+    "analysis_index": 160,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota20-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 1,
+    "chart_index": 168,
+    "analysis_index": 168,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota40-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 2,
+    "chart_index": 128,
+    "analysis_index": 128,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 3,
+    "chart_index": 136,
+    "analysis_index": 136,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 4,
+    "chart_index": 144,
+    "analysis_index": 144,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 5,
+    "chart_index": 152,
+    "analysis_index": 152,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 6,
+    "chart_index": 176,
+    "analysis_index": 176,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 7,
+    "chart_index": 184,
+    "analysis_index": 184,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 8,
+    "chart_index": 164,
+    "analysis_index": 164,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota20-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 9,
+    "chart_index": 172,
+    "analysis_index": 172,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota40-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 10,
+    "chart_index": 132,
+    "analysis_index": 132,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 11,
+    "chart_index": 140,
+    "analysis_index": 140,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 12,
+    "chart_index": 148,
+    "analysis_index": 148,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 13,
+    "chart_index": 156,
+    "analysis_index": 156,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 14,
+    "chart_index": 180,
+    "analysis_index": 180,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "row": 15,
+    "chart_index": 188,
+    "analysis_index": 188,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 0,
+    "chart_index": 161,
+    "analysis_index": 161,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota20-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 1,
+    "chart_index": 169,
+    "analysis_index": 169,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota40-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 2,
+    "chart_index": 129,
+    "analysis_index": 129,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 3,
+    "chart_index": 137,
+    "analysis_index": 137,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 4,
+    "chart_index": 145,
+    "analysis_index": 145,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -6.0,
+        "ci95": [
+          -6.0,
+          -6.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 5,
+    "chart_index": 153,
+    "analysis_index": 153,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 6,
+    "chart_index": 177,
+    "analysis_index": 177,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 7,
+    "chart_index": 185,
+    "analysis_index": 185,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 8,
+    "chart_index": 165,
+    "analysis_index": 165,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota20-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 9,
+    "chart_index": 173,
+    "analysis_index": 173,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota40-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 10,
+    "chart_index": 133,
+    "analysis_index": 133,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 11,
+    "chart_index": 141,
+    "analysis_index": 141,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 12,
+    "chart_index": 149,
+    "analysis_index": 149,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -6.0,
+        "ci95": [
+          -6.0,
+          -6.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 13,
+    "chart_index": 157,
+    "analysis_index": 157,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 14,
+    "chart_index": 181,
+    "analysis_index": 181,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "row": 15,
+    "chart_index": 189,
+    "analysis_index": 189,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 0,
+    "chart_index": 162,
+    "analysis_index": 162,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota20-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 1,
+    "chart_index": 170,
+    "analysis_index": 170,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota40-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 2,
+    "chart_index": 130,
+    "analysis_index": 130,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 3,
+    "chart_index": 138,
+    "analysis_index": 138,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 4,
+    "chart_index": 146,
+    "analysis_index": 146,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 5,
+    "chart_index": 154,
+    "analysis_index": 154,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 6,
+    "chart_index": 178,
+    "analysis_index": 178,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 7,
+    "chart_index": 186,
+    "analysis_index": 186,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 8,
+    "chart_index": 166,
+    "analysis_index": 166,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota20-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 9,
+    "chart_index": 174,
+    "analysis_index": 174,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota40-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 10,
+    "chart_index": 134,
+    "analysis_index": 134,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 11,
+    "chart_index": 142,
+    "analysis_index": 142,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 12,
+    "chart_index": 150,
+    "analysis_index": 150,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 13,
+    "chart_index": 158,
+    "analysis_index": 158,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 14,
+    "chart_index": 182,
+    "analysis_index": 182,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "row": 15,
+    "chart_index": 190,
+    "analysis_index": 190,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 0,
+    "chart_index": 163,
+    "analysis_index": 163,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota20-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 1,
+    "chart_index": 171,
+    "analysis_index": 171,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota40-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 2,
+    "chart_index": 131,
+    "analysis_index": 131,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 3,
+    "chart_index": 139,
+    "analysis_index": 139,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 4,
+    "chart_index": 147,
+    "analysis_index": 147,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 5,
+    "chart_index": 155,
+    "analysis_index": 155,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 6,
+    "chart_index": 179,
+    "analysis_index": 179,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 7,
+    "chart_index": 187,
+    "analysis_index": 187,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 8,
+    "chart_index": 167,
+    "analysis_index": 167,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota20-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 9,
+    "chart_index": 175,
+    "analysis_index": 175,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-stable-quota40-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 10,
+    "chart_index": 135,
+    "analysis_index": 135,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 11,
+    "chart_index": 143,
+    "analysis_index": 143,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 12,
+    "chart_index": 151,
+    "analysis_index": 151,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 13,
+    "chart_index": 159,
+    "analysis_index": 159,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 14,
+    "chart_index": 183,
+    "analysis_index": 183,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "row": 15,
+    "chart_index": 191,
+    "analysis_index": 191,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 0,
+    "chart_index": 224,
+    "analysis_index": 224,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 1,
+    "chart_index": 232,
+    "analysis_index": 232,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 2,
+    "chart_index": 192,
+    "analysis_index": 192,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 3,
+    "chart_index": 200,
+    "analysis_index": 200,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 4,
+    "chart_index": 208,
+    "analysis_index": 208,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 5,
+    "chart_index": 216,
+    "analysis_index": 216,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 6,
+    "chart_index": 240,
+    "analysis_index": 240,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 7,
+    "chart_index": 248,
+    "analysis_index": 248,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 8,
+    "chart_index": 228,
+    "analysis_index": 228,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 9,
+    "chart_index": 236,
+    "analysis_index": 236,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 10,
+    "chart_index": 196,
+    "analysis_index": 196,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 11,
+    "chart_index": 204,
+    "analysis_index": 204,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 12,
+    "chart_index": 212,
+    "analysis_index": 212,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 13,
+    "chart_index": 220,
+    "analysis_index": 220,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 14,
+    "chart_index": 244,
+    "analysis_index": 244,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "row": 15,
+    "chart_index": 252,
+    "analysis_index": 252,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 0,
+    "chart_index": 225,
+    "analysis_index": 225,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 1,
+    "chart_index": 233,
+    "analysis_index": 233,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 2,
+    "chart_index": 193,
+    "analysis_index": 193,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 3,
+    "chart_index": 201,
+    "analysis_index": 201,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 4,
+    "chart_index": 209,
+    "analysis_index": 209,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 5,
+    "chart_index": 217,
+    "analysis_index": 217,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 6,
+    "chart_index": 241,
+    "analysis_index": 241,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 7,
+    "chart_index": 249,
+    "analysis_index": 249,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 8,
+    "chart_index": 229,
+    "analysis_index": 229,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 9,
+    "chart_index": 237,
+    "analysis_index": 237,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 10,
+    "chart_index": 197,
+    "analysis_index": 197,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 11,
+    "chart_index": 205,
+    "analysis_index": 205,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 12,
+    "chart_index": 213,
+    "analysis_index": 213,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 13,
+    "chart_index": 221,
+    "analysis_index": 221,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 14,
+    "chart_index": 245,
+    "analysis_index": 245,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "row": 15,
+    "chart_index": 253,
+    "analysis_index": 253,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 0,
+    "chart_index": 226,
+    "analysis_index": 226,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 1,
+    "chart_index": 234,
+    "analysis_index": 234,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 2,
+    "chart_index": 194,
+    "analysis_index": 194,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 3,
+    "chart_index": 202,
+    "analysis_index": 202,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 4,
+    "chart_index": 210,
+    "analysis_index": 210,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 5,
+    "chart_index": 218,
+    "analysis_index": 218,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 6,
+    "chart_index": 242,
+    "analysis_index": 242,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 7,
+    "chart_index": 250,
+    "analysis_index": 250,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 8,
+    "chart_index": 230,
+    "analysis_index": 230,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 9,
+    "chart_index": 238,
+    "analysis_index": 238,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 10,
+    "chart_index": 198,
+    "analysis_index": 198,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 11,
+    "chart_index": 206,
+    "analysis_index": 206,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 12,
+    "chart_index": 214,
+    "analysis_index": 214,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 13,
+    "chart_index": 222,
+    "analysis_index": 222,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 14,
+    "chart_index": 246,
+    "analysis_index": 246,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "row": 15,
+    "chart_index": 254,
+    "analysis_index": 254,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 0,
+    "chart_index": 227,
+    "analysis_index": 227,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 1,
+    "chart_index": 235,
+    "analysis_index": 235,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 2,
+    "chart_index": 195,
+    "analysis_index": 195,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 3,
+    "chart_index": 203,
+    "analysis_index": 203,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 4,
+    "chart_index": 211,
+    "analysis_index": 211,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 5,
+    "chart_index": 219,
+    "analysis_index": 219,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 6,
+    "chart_index": 243,
+    "analysis_index": 243,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 7,
+    "chart_index": 251,
+    "analysis_index": 251,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "base",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 8,
+    "chart_index": 231,
+    "analysis_index": 231,
+    "scenario": "stable",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 9,
+    "chart_index": 239,
+    "analysis_index": 239,
+    "scenario": "stable",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 10,
+    "chart_index": 199,
+    "analysis_index": 199,
+    "scenario": "better-alternative",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 11,
+    "chart_index": 207,
+    "analysis_index": 207,
+    "scenario": "better-alternative",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 12,
+    "chart_index": 215,
+    "analysis_index": 215,
+    "scenario": "depleted-target",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 13,
+    "chart_index": 223,
+    "analysis_index": 223,
+    "scenario": "depleted-target",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 14,
+    "chart_index": 247,
+    "analysis_index": 247,
+    "scenario": "temporary-obstacle",
+    "quota": 20,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "row": 15,
+    "chart_index": 255,
+    "analysis_index": 255,
+    "scenario": "temporary-obstacle",
+    "quota": 40,
+    "orientation": "reflected",
+    "native": {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  }
+]

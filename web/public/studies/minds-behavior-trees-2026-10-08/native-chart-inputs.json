@@ -1,0 +1,4364 @@
+{
+  "source": {
+    "path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/registered-execution-e67b8d2-1/registered-analysis-1/analysis.json",
+    "sha256": "3a24716d45b938ecb3af8f6b9b777433baef3064f462a3a31af9daa024924cea",
+    "bytes": 22178854,
+    "mode": "100644"
+  },
+  "estimates": [
+    {
+      "id": "primary:guarded-tree-better-alternative-quota20-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota20-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -1.0,
+        "ci95": [
+          -1.0,
+          -1.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota20-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -12.0,
+        "ci95": [
+          -12.0,
+          -12.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota20-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -12.0,
+        "ci95": [
+          -12.0,
+          -12.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota20-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota20-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -1.0,
+        "ci95": [
+          -1.0,
+          -1.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota20-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -12.0,
+        "ci95": [
+          -12.0,
+          -12.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota20-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -12.0,
+        "ci95": [
+          -12.0,
+          -12.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota40-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota40-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 6.0,
+        "ci95": [
+          6.0,
+          6.0
+        ],
+        "positive": 40,
+        "zero": 0,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota40-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 24.0,
+        "ci95": [
+          24.0,
+          24.0
+        ],
+        "positive": 40,
+        "zero": 0,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota40-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 8.0,
+        "ci95": [
+          8.0,
+          8.0
+        ],
+        "positive": 40,
+        "zero": 0,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota40-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota40-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 6.0,
+        "ci95": [
+          6.0,
+          6.0
+        ],
+        "positive": 40,
+        "zero": 0,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota40-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 24.0,
+        "ci95": [
+          24.0,
+          24.0
+        ],
+        "positive": 40,
+        "zero": 0,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-better-alternative-quota40-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 8.0,
+        "ci95": [
+          8.0,
+          8.0
+        ],
+        "positive": 40,
+        "zero": 0,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota20-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota20-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota20-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota20-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota20-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota20-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota20-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota20-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota40-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota40-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota40-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota40-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota40-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota40-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota40-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-depleted-target-quota40-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota20-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota20-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota20-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota20-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota20-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota20-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota20-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota20-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota40-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota40-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota40-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota40-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota40-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota40-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota40-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-stable-quota40-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota20-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m0:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m0:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m0:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m0:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m1:quota_attained",
+      "family": "primary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m1:restricted_completion_ticks",
+      "family": "primary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m1:gross_gathered",
+      "family": "primary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "primary:guarded-tree-temporary-obstacle-quota40-m1:living_ticks",
+      "family": "primary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota20-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-better-alternative-quota40-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota20-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-depleted-target-quota40-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota20-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota20-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota20-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota20-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota20-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota20-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota20-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota20-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota40-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota40-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota40-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota40-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota40-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota40-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota40-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-stable-quota40-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota20-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m0:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m0:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m0:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m0:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m1:quota_attained",
+      "family": "secondary",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m1:restricted_completion_ticks",
+      "family": "secondary",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m1:gross_gathered",
+      "family": "secondary",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "secondary:guarded-tree-temporary-obstacle-quota40-m1:living_ticks",
+      "family": "secondary",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota20-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-better-alternative-quota40-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -6.0,
+        "ci95": [
+          -6.0,
+          -6.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": -6.0,
+        "ci95": [
+          -6.0,
+          -6.0
+        ],
+        "positive": 0,
+        "zero": 0,
+        "negative": 40
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota20-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-depleted-target-quota40-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota20-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota20-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota20-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota20-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota20-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota20-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota20-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota20-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota40-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota40-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota40-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota40-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota40-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota40-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota40-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-stable-quota40-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota20-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m0:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m0:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m0:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m0:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m1:quota_attained",
+      "family": "ablation",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m1:restricted_completion_ticks",
+      "family": "ablation",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m1:gross_gathered",
+      "family": "ablation",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "ablation:guarded-tree-temporary-obstacle-quota40-m1:living_ticks",
+      "family": "ablation",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota20-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-better-alternative-quota40-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota20-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-depleted-target-quota40-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota20-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-stable-quota40-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota20-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m0:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m0:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m0:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m0:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m1:quota_attained",
+      "family": "legacy_reference",
+      "metric": "quota_attained",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m1:restricted_completion_ticks",
+      "family": "legacy_reference",
+      "metric": "restricted_completion_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m1:gross_gathered",
+      "family": "legacy_reference",
+      "metric": "gross_gathered",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    },
+    {
+      "id": "legacy_reference:guarded-tree-temporary-obstacle-quota40-m1:living_ticks",
+      "family": "legacy_reference",
+      "metric": "living_ticks",
+      "denominator": 40,
+      "summary": {
+        "n": 40,
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "positive": 0,
+        "zero": 40,
+        "negative": 0
+      }
+    }
+  ],
+  "transformation": "Exact parsed native estimate rows; no recomputation",
+  "rows": 256
+}

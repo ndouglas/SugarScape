@@ -1,0 +1,22 @@
+# Reporting inputs and reproduction
+
+The reporting candidate was independently empirically accepted for faithful integration on 2026-10-09 ([actual decision](acceptance/empirical-decision.json), SHA256 `380236b10318774522196bb539e9fba40e46180cdca26ce997854661fd9180b1`). The [lossless scientific archive](archive/README.md) now implements the explicit [archive cutoff proposal](archive-cutoff-proposal.json), with every logical member hash, size and mode verified in a complete decompression stream. The unchanged originals and complete private operational history remain in their user-owned evidence roots. Integration review, remote publication and served-byte verification remain pending; this status does not authorize another collection.
+
+`analysis.json` and `results.md` are byte-exact copies of the authoritative native saved analysis, which was compared in full with one fresh same-native saved reanalysis. `native-chart-inputs.json` preserves the writer's original bytes. The source path in that file is a provenance reference; plotting uses the local `analysis.json` and validates its SHA256 before binding all 256 rows. Original export permissions are recorded in source bindings; public copies are regular readable files, so byte identity does not imply identical file mode.
+
+The 16 figure pairs contain exactly one panel for each registered family/metric, each 16 rows with 8 base and 8 reflected. All units/signs/native intervals and all 40-pair denominators are explicit. [Native results](results.md) provide complete tables, [diagnostics](all-cell-diagnostics.md) provide all 96 cell endpoint/work/timing summaries and all 64 unrestricted availability rows, and JSON retains exact arrays/reasons. Min/median/max summaries are secondary diagnostics only. No paired estimates or confidence intervals are computed by Python.
+
+To reproduce only the plots with an already available compatible Python environment, from this directory:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s reporting-tools -v
+MPLCONFIGDIR=/private/tmp/minds-bt-plot-cache XDG_CACHE_HOME=/private/tmp/minds-bt-cache PYTHONDONTWRITEBYTECODE=1 python3 reporting-tools/plot_native.py --data . --out /private/tmp/minds-bt-new-plots
+```
+
+Use a new output directory. Plotting refuses populated figure destinations. The exact observed dependencies are in [requirements-observed.txt](reporting-tools/requirements-observed.txt); [plot environment](figures/plot-environment.json) records the actual interpreter, Matplotlib and platform. PNGs are 2100×1470 pixels; SVGs are 1080×756pt with the same viewBox and scientific values. Rendering can differ in font rasterization across hosts; exact delivered files are bound by SHA256 in the inventory.
+
+For the actual reporting run, Matplotlib rendered all figures and checked text bounds. An existing local Sharp/librsvg installation separately rendered every actual SVG offline; each PNG and SVG raster was visually inspected. Initial SVG whitespace compressed the n/sign separator; that full earlier generation remains privately preserved. Final panels use an explicit separator. Other retained reporting history: the first null-interval test initially errored on an empty stub, then was corrected to a genuine assertion red; the descriptive-table helper first assumed unavailable reasons were objects, while native stores seed/reason pairs, and was corrected. macOS sips could not decode SVG (exit13); local HTTP bind was sandbox-denied and browser file URLs were policy-blocked. Those paths were abandoned; offline rendering succeeded without package installation. No scientific data changed.
+
+The faithful repository copy is staged at `web/public/studies/minds-behavior-trees-2026-10-08/`, with a study entry at `docs/studies/2026-10-09-minds-behavior-trees-findings.md`. All original scientific inputs, values, tables and figures are unchanged; only the findings/reproduction administrative status and archive links are updated. The original 61-file approved reporting directory remains unchanged inside the scientific archive. New acceptance/archive/publication metadata is outside that cutoff. CI, Pages, served hashes and complete private immutable archive closure must be recorded only after they occur.
+
+The unchanged `provenance.json` and `archive-cutoff-proposal.json` retain their historical reporting-stage status. The added actual acceptance decision and constructed-archive manifest supersede those administrative pending fields; their original scientific identities and numbers remain unchanged.

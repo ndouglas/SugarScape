@@ -1,0 +1,70 @@
+{
+  "schema": "minds-bt-scientific-archive-cutoff-proposal-v1",
+  "status": "PROPOSAL_FOR_LATER_ARCHIVE_OWNER_NOT_AN_EXISTING_ARCHIVE",
+  "scientific_revision": "e67b8d293ffb21c3a6fb94daf727e69b7a7af51b",
+  "include_losslessly_after_review": [
+    {
+      "content": "Complete frozen tracked source including protocol/design/approved plan/lockfiles and actual build-input selector",
+      "root": "scientific-candidate-e67b8d2-1/source",
+      "inventory": "source-inventory.json",
+      "identity": {
+        "sha256": "6e305718ca08b120592af2e9595faec41fb3a4a4c62aba6c3dfcc0242134b4e0",
+        "bytes": 545429,
+        "mode": "100644"
+      }
+    },
+    {
+      "content": "Actual native executable, generated stamp, 96 config exports, 192 construction records, opportunity streams, oracle inputs/results and verification tools",
+      "root": "scientific-candidate-e67b8d2-1",
+      "selection": "Explicit scientific member allowlist; never whole private packet",
+      "binary_sha256": "223b950a3eb4e210bc18e8e102b919c746ad0db8cfda1dc3e9fa1a320656a76e"
+    },
+    {
+      "content": "ALL 11523 registered start/frame/outcome/index/census files, 12064047212 bytes; no dropped seeds/records",
+      "root": "scientific-candidate-e67b8d2-1/registered-run-1",
+      "inventory": "raw-output-inventory.json",
+      "identity": {
+        "sha256": "e06559a120f65a14df45d4d734b3eae354b8d50ead0703bfe2922f0e677fbfda",
+        "bytes": 4091496,
+        "mode": "100600"
+      }
+    },
+    {
+      "content": "Entire baseline AND fresh saved native analysis.json/results.md",
+      "roots": [
+        "registered-execution-e67b8d2-1/registered-analysis-1",
+        "registered-execution-e67b8d2-1/registered-reanalysis-1"
+      ],
+      "identities": [
+        {
+          "name": "analysis.json",
+          "bytes": 22178854,
+          "sha256": "3a24716d45b938ecb3af8f6b9b777433baef3064f462a3a31af9daa024924cea",
+          "equal_bytes": true
+        },
+        {
+          "name": "results.md",
+          "bytes": 29978,
+          "sha256": "835fe3b4ab730c70d512bd6e0be2f1e268290ac06a4856259f9c04bc0579437c",
+          "equal_bytes": true
+        }
+      ]
+    },
+    {
+      "content": "Reviewed report, all exact chart input rows, all 16 PNG/SVG, complete diagnostic exports and plotting scripts/tests/environment",
+      "root": "reporting-e67b8d2-1/public",
+      "inventory": "Later finalized public manifest; exact proposed file list held in reporting handoff"
+    }
+  ],
+  "private_only_unchanged": [
+    "Full raw writer/build environments and inherited credential-bearing operational receipts",
+    "All original private failed history, inventories and reviews before explicitly scanned public derivatives",
+    "Git config and unreviewed operational metadata; do not copy entire .git blindly"
+  ],
+  "publish_scientific_allowlist_or_redacted_derivative": [
+    "Compiler and platform, lockfile/config scientific identities, effective flags, actual argv/cwd/times/exits, source/binary/protocol/manifest/input identities",
+    "Prospective/empirical/engineering/integration review texts and receipt summaries only after private exact-value scanning",
+    "Public original-to-derivative manifest containing hash of private original, field selection/redaction rule and public derivative hash without secret values"
+  ],
+  "cutoff_rule": "Scientific raw records/source/native outputs stay lossless; operational secrets do not. Record separate private-original and public-derivative identities. No claim of public equality with unredacted private operational originals. Add final integration/CI/Pages/served/archive receipts later with explicit cutoff to avoid self-reference."
+}

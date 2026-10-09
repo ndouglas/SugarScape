@@ -1,0 +1,65 @@
+{
+  "schema": "minds-bt-public-archive-v1",
+  "status": "BUILT_AND_FULL_STREAM_VERIFIED_LOCAL_NOT_DEPLOYED",
+  "scientific_revision": "e67b8d293ffb21c3a6fb94daf727e69b7a7af51b",
+  "archive_filename": "scientific-e67b8d2.tar.zst",
+  "archive": {
+    "sha256": "6b01bed58654d9498578788954a4e9091ce99429b01a82440d3f23712612cd60",
+    "bytes": 277896521,
+    "mode": "0o644"
+  },
+  "member_manifest": "scientific-members.json",
+  "member_manifest_identity": {
+    "sha256": "1464409a0e922fede0ffe2385ca2f627d7480c4a0634336f3316636e0a58a962",
+    "bytes": 6926917,
+    "mode": "0o644"
+  },
+  "parts": [
+    {
+      "path": "scientific-e67b8d2.tar.zst.part-0000",
+      "sha256": "1f19738edd529e891bd564753a985fed641497313c369a0e0fd742a3e721d0fb",
+      "bytes": 50331648,
+      "mode": "0o644"
+    },
+    {
+      "path": "scientific-e67b8d2.tar.zst.part-0001",
+      "sha256": "52deb1e2be2b981ffe383f927399f3b4946b733e1c125b80202af6adba1e9980",
+      "bytes": 50331648,
+      "mode": "0o644"
+    },
+    {
+      "path": "scientific-e67b8d2.tar.zst.part-0002",
+      "sha256": "c4191fbcae5e5f3769030e2087bd6b04a1b687b85c00d4f23d1824864e78c518",
+      "bytes": 50331648,
+      "mode": "0o644"
+    },
+    {
+      "path": "scientific-e67b8d2.tar.zst.part-0003",
+      "sha256": "76267a220db6de2445b692bd31c27288d4d02bf6b70455acc06dc8e7c33a5bfc",
+      "bytes": 50331648,
+      "mode": "0o644"
+    },
+    {
+      "path": "scientific-e67b8d2.tar.zst.part-0004",
+      "sha256": "ac60c799e100eb493908f579ccfa6c2cb6220d0437192d1f2534861b8adadb71",
+      "bytes": 50331648,
+      "mode": "0o644"
+    },
+    {
+      "path": "scientific-e67b8d2.tar.zst.part-0005",
+      "sha256": "8015f9a96eb5ec9313add7ff5b876491dca4ab9fd7e053d57c4bc4f3d432b36f",
+      "bytes": 26238281,
+      "mode": "0o644"
+    }
+  ],
+  "member_count": 14934,
+  "logical_bytes": 13067756638,
+  "raw_files": 11523,
+  "raw_bytes": 12064047212,
+  "roundtrip_receipt": "roundtrip.json",
+  "compression_receipt": "compression.json",
+  "cutoff": "Full declared frozen source, accepted scientific Git ancestry, native inputs/binary, corrected construction/opportunity/oracle, all registered raw files, both native analyses, original empirically approved reporting, scanned acceptance and scientific metadata derivatives. Excludes private operational environments, credentials, unrelated refs/config and full failed operational history. Later archive/publication/CI/served receipts live outside payload cutoff. Original approved report status is a historical snapshot.",
+  "original_native_path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/target/release/survey",
+  "original_source_path": "/Users/nathan/Projects/ndouglas/SugarScape/.superpowers/sdd/2026-10-08-minds-behavior-trees-execution/scientific-candidate-e67b8d2-1/source",
+  "platform_limitation": "Native binary and strict saved loader retain original macOS/architecture and source-root/Git identity requirements. Bundle restores exact accepted commit; relocated raw archives are inspectable but no portable strict-loader claim is made."
+}

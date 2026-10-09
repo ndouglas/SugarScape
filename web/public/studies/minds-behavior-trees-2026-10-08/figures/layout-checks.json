@@ -1,0 +1,114 @@
+[
+  {
+    "figure": "primary-quota_attained",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "primary-restricted_completion_ticks",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "primary-gross_gathered",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "primary-living_ticks",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "secondary-quota_attained",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "secondary-restricted_completion_ticks",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "secondary-gross_gathered",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "secondary-living_ticks",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "ablation-quota_attained",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "ablation-restricted_completion_ticks",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "ablation-gross_gathered",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "ablation-living_ticks",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "legacy_reference-quota_attained",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "legacy_reference-restricted_completion_ticks",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "legacy_reference-gross_gathered",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  },
+  {
+    "figure": "legacy_reference-living_ticks",
+    "visible_text_inside_canvas": true,
+    "rows": 16,
+    "base": 8,
+    "reflected": 8
+  }
+]
