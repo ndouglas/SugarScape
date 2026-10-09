@@ -867,10 +867,12 @@ fn behavior_tree_checkpoints_preserve_each_transition_and_later_actions() {
             }
         }
     }
+    // Genuine route-failure cooldown checkpoints are exercised by the internal
+    // behavior_tree_model_checkpoint_restores_real_route_failure_deadlines test.
+    // This fixed construction matrix need not produce a physical route failure.
     for phase in [
         "selection",
         "transit",
-        "cooldown",
         "depletion",
         "first completion",
         "death",

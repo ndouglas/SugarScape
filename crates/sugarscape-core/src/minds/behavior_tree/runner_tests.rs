@@ -317,3 +317,76 @@ fn behavior_tree_wall_and_fatal_message_are_semantic_but_research_fields_are_not
         assert_eq!(base.fingerprint(), changed.fingerprint(), "{name}");
     }
 }
+
+#[test]
+fn behavior_tree_model_checkpoint_restores_real_route_failure_deadlines() {
+    use crate::{geometry::Pos, model::ModelWorld};
+    fn world(m: &ModelWorld) -> &World {
+        match m {
+            ModelWorld::Sugarscape(w) => w,
+            _ => unreachable!(),
+        }
+    }
+    for seed in [7, 8] {
+        for controller in [Controller::GuardedTree, Controller::MatchedFsm] {
+            let mut w = World::new(
+                lab::rig_config(LabConfig {
+                    controller,
+                    scenario: Scenario::Stable,
+                    quota: 20,
+                    mirrored: false,
+                }),
+                seed,
+            )
+            .unwrap();
+            // Software-only sealed origin: exercise actual failed movement without
+            // requiring the registered single-blocker matrix to block every route.
+            w.move_agent(1, Pos::new(2, 2));
+            for p in [
+                Pos::new(1, 2),
+                Pos::new(3, 2),
+                Pos::new(2, 1),
+                Pos::new(2, 3),
+            ] {
+                w.close_behavior_tree_wall(p).unwrap();
+            }
+            w.step();
+            let first = super::runner::snapshot(&w).unwrap();
+            assert!(first.receipt.as_ref().unwrap().route_failed);
+            assert_eq!(first.task.failed_until, [(103, 4)].into());
+            w.step();
+            let second = super::runner::snapshot(&w).unwrap();
+            assert!(second.receipt.as_ref().unwrap().route_failed);
+            assert_eq!(second.task.failed_until.get(&103), Some(&4));
+            assert_eq!(second.task.failed_until.len(), 2);
+            let other = *second
+                .task
+                .failed_until
+                .keys()
+                .find(|&&site| site != 103)
+                .unwrap();
+            assert_eq!(second.task.failed_until[&other], 5);
+            assert_eq!(
+                (second.task.target, second.actor.as_ref().unwrap().holdings),
+                (None, 14.0)
+            );
+            // Opening a path must not expire either deadline early, and avoids
+            // renewing a deadline with another blocked attempt when it expires.
+            w.open_wall(Pos::new(3, 2));
+            let mut expected = w.clone();
+            let mut restored = ModelWorld::Sugarscape(Box::new(w));
+            let checkpoint = restored.checkpoint().unwrap();
+            restored.model_mut().run(4);
+            restored.restore(&checkpoint).unwrap();
+            for tick in 2..=64 {
+                let a = super::runner::snapshot(&expected).unwrap();
+                let b = super::runner::snapshot(world(&restored)).unwrap();
+                assert_eq!(a, b, "{controller:?} seed{seed} tick{tick}");
+                assert_eq!(a.task.failed_until.contains_key(&103), tick < 4);
+                assert_eq!(a.task.failed_until.contains_key(&other), tick < 5);
+                expected.step();
+                restored.model_mut().run(1);
+            }
+        }
+    }
+}

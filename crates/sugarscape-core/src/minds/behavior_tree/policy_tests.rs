@@ -343,7 +343,7 @@ fn behavior_tree_invalid_actor_is_rejected_before_effects() {
 }
 
 #[test]
-fn behavior_tree_stale_positive_empty_arrival_is_a_failure_not_a_failed_route() {
+fn behavior_tree_stale_positive_empty_arrival_clears_target_without_cooldown() {
     use crate::minds::memory::Seen;
     let (mut w, id) = policy_world();
     w.config.memory.span = 128;
@@ -356,6 +356,7 @@ fn behavior_tree_stale_positive_empty_arrival_is_a_failure_not_a_failed_route() 
     let mut s = TaskState::new(20);
     s.target = Some(site);
     w.move_agent(id, Pos::new(6, 5));
+    // Arrival ends the commitment; only physical route failure earns a cooldown.
     // Unguarded continuation deliberately arrives on an empty, now visible target.
     let t = act_routine(&mut w, id, &mut s, false, 64).unwrap();
     let r = t.receipt.unwrap();
@@ -367,7 +368,7 @@ fn behavior_tree_stale_positive_empty_arrival_is_a_failure_not_a_failed_route() 
             r.route_failed,
             s.failed_until.get(&site).copied()
         ),
-        (Status::Failure, Pos::new(7, 5), 0.0, false, Some(4))
+        (Status::Failure, Pos::new(7, 5), 0.0, false, None)
     );
 }
 
@@ -703,8 +704,9 @@ fn behavior_tree_retained_present_zero_value_is_only_unguarded_commitment() {
     );
     assert_eq!((a.receipt, &tree.rng), (c.receipt, &fsm.rng));
     assert_eq!(
-        (b.status, us.failed_until.get(&58).copied()),
-        (Status::Failure, Some(4))
+        // Empty arrival clears commitment, but the route succeeded.
+        (b.status, us.target, us.failed_until.get(&58).copied()),
+        (Status::Failure, None, None)
     );
 }
 
@@ -802,4 +804,90 @@ fn behavior_tree_legacy_failed_search_keeps_exact_expansions_unavailable() {
         )
     );
     assert!(c.candidate_evaluations > 0);
+}
+
+#[test]
+fn behavior_tree_shared_settlement_empty_arrival_preserves_other_deadlines() {
+    let mut state = TaskState::new(20);
+    state.target = Some(62);
+    state.failed_until.insert(60, 5);
+    let receipt = super::state::PhysicalReceipt {
+        action_tick: 1,
+        actor: 1,
+        origin: Pos::new(6, 5),
+        target: Pos::new(7, 5),
+        destination: Pos::new(7, 5),
+        gathered: 0.0,
+        route_failed: false,
+    };
+    super::forage::settle(&mut state, &receipt).unwrap();
+    assert_eq!(
+        (state.target, state.gross, state.failed_until),
+        (None, 0.0, [(60, 5)].into())
+    );
+}
+
+#[test]
+fn behavior_tree_all_task_controllers_empty_arrival_has_no_cooldown_or_extra_action() {
+    use super::state::TaskPlan;
+    use crate::minds::memory::Seen;
+    for controller in [
+        Controller::GuardedTree,
+        Controller::UnguardedTree,
+        Controller::MatchedFsm,
+        Controller::TaskGoap,
+    ] {
+        let (mut w, id) = policy_world();
+        w.config.memory.span = 128;
+        w.config.growback.rate = 0.0;
+        set_sugar(&mut w, 3, 5, 0.0);
+        w.move_agent(id, Pos::new(6, 5));
+        let a = w.agent_mut(id).unwrap();
+        a.remembers = true;
+        // Software fixture: adjacent remembered target is outside this actor's sight.
+        a.vision = 0;
+        a.memory.sites.insert(62, Seen::new(&[24.0], &[24.0], 0));
+        w.bt_work = Some(WorkCounters::default());
+        let mut state = TaskState::new(20);
+        state.target = Some(62);
+        state.failed_until.insert(60, 5);
+        if controller == Controller::TaskGoap {
+            state.task_plan = Some(TaskPlan {
+                goal: 20.0,
+                steps: vec![(Pos::new(7, 5), 24.0)],
+            });
+        }
+        let rng = w.rng.clone();
+        let holdings = w.agent(id).unwrap().holdings;
+        let turn = match controller {
+            Controller::MatchedFsm => act_fsm(&mut w, id, &mut state),
+            Controller::TaskGoap => act_task_goap(&mut w, id, &mut state),
+            _ => act_routine(
+                &mut w,
+                id,
+                &mut state,
+                controller == Controller::GuardedTree,
+                64,
+            ),
+        }
+        .unwrap();
+        let receipt = turn.receipt.unwrap();
+        assert_eq!(
+            (
+                turn.status,
+                receipt.destination,
+                receipt.gathered,
+                receipt.route_failed
+            ),
+            (Status::Failure, Pos::new(7, 5), 0.0, false),
+            "{controller:?}"
+        );
+        assert_eq!(
+            (state.target, state.gross, state.failed_until),
+            (None, 0.0, [(60, 5)].into()),
+            "{controller:?}"
+        );
+        assert_eq!((&w.rng, w.agent(id).unwrap().holdings), (&rng, holdings));
+        assert_eq!(w.bt_work.unwrap().path_queries, 1);
+    }
 }

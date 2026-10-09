@@ -513,7 +513,7 @@ fn transition(before: &Frame, after: &Frame, lab: &LabConfig) -> Result<(), Stri
         let failed = receipt.route_failed
             || (selected.is_some() && destination == target && gathered <= 0.0);
         if let Some(site) = task.target {
-            if failed {
+            if receipt.route_failed {
                 task.failed_until.insert(site, t + 3);
                 task.target = None
             } else if destination == target {

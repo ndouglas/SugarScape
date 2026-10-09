@@ -136,9 +136,7 @@ pub(crate) fn physical(
 pub(crate) fn settle(s: &mut TaskState, receipt: &PhysicalReceipt) -> Result<(), PolicyError> {
     s.gross += receipt.gathered;
     if let Some(site) = s.target {
-        if receipt.route_failed
-            || (receipt.destination == receipt.target && receipt.gathered <= 0.0)
-        {
+        if receipt.route_failed {
             note_failure(s, site, receipt.action_tick)?;
         } else if receipt.destination == receipt.target {
             s.target = None;

@@ -764,3 +764,32 @@ fn git_drift_precedes_constructor(drift: &str) {
     assert!(!out.join(&a.index.attempts[0].outcome).exists());
     std::fs::remove_dir_all(temp).unwrap();
 }
+
+#[test]
+fn behavior_tree_saved_empty_arrival_accepts_no_cooldown_and_rejects_extra_deadline() {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+        "src/claims/behavior_trees/fixtures/unguarded_tree-depleted_target-q40-mirrored-seed8.json",
+    );
+    let mut r: sugarscape_core::minds::behavior_tree::EpisodeRecord =
+        wire::decode(&std::fs::read(path).unwrap()).unwrap();
+    let i =
+        r.frames
+            .iter()
+            .position(|f| {
+                f.receipt.as_ref().is_some_and(|a| {
+                    a.destination == a.target && a.gathered == 0.0 && !a.route_failed
+                }) && f.tick > 0
+                    && r.frames[f.tick as usize - 1].task.target.is_some()
+            })
+            .unwrap();
+    let target = r.frames[i].receipt.as_ref().unwrap().target;
+    let site = target.y * 11 + target.x;
+    assert_eq!(r.frames[i].task.target, None);
+    // The actual corrected construction record contains no empty-arrival deadline.
+    assert!(!r.frames[i].task.failed_until.contains_key(&site));
+    validate::validate_episode(&r, &r.lab, r.seed).unwrap();
+    // Reintroducing the old extra cooldown must invalidate the saved transition.
+    let deadline = r.frames[i].tick + 3;
+    r.frames[i].task.failed_until.insert(site, deadline);
+    assert!(validate::validate_frames(&r.frames[..=i], &r.lab, r.seed).is_err());
+}
