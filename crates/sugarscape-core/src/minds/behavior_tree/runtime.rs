@@ -347,14 +347,18 @@ impl<H: Host> Evaluator<'_, H> {
             // Store the first unfinished child *before* any unavailable entry.
             // Guard reconstruction must not move an existing cursor backwards.
             self.state.cursors.insert(id, resume.max(index) as u8);
+            let physical_used_before = self.physical_used;
             let status = self.enter(child, rechecking || index < resume);
             if self.completed {
                 return Status::Success;
             }
             if status == Status::Running {
-                if index < resume && self.state.deferred.is_none() {
-                    // A genuinely running earlier branch displaced the former
-                    // branch; budget deferral while checking guards did not.
+                if index < resume
+                    && (self.state.deferred.is_none() || self.physical_used != physical_used_before)
+                {
+                    // New physical work commits this earlier continuation even
+                    // if its next child hits the token or visit limit. A guard
+                    // probe deferred without replacement work keeps the owner.
                     for &later in &children[index + 1..] {
                         self.clear_subtree(later, true);
                     }

@@ -280,3 +280,205 @@ fn behavior_tree_reference_exhaustive_short_scripts() {
     }
     assert_eq!(comparisons, 40904);
 }
+
+/// Separate flat machine for Fallback[Sequence[guard, action7, action8], action9].
+/// A successful or running higher-priority action claims the continuation. A
+/// failed candidate returns control to action9; an unfinished guard probe leaves
+/// the owner intact. These transitions are independent of evaluator stack state.
+struct PreemptionReference {
+    actions: [Option<Status>; 3],
+    active: BTreeSet<u8>,
+    cursor: u8,
+    deferred: Option<u8>,
+    queue: VecDeque<(Status, u32)>,
+    log: Vec<Event>,
+}
+impl PreemptionReference {
+    fn retire(&mut self, action: usize) {
+        if self.active.remove(&[3, 4, 5][action]) {
+            self.log.push(Event::Halt([7, 8, 9][action]));
+            self.actions[action] = None;
+        }
+    }
+    fn reset(&mut self) {
+        for action in 0..3 {
+            self.retire(action);
+        }
+        self.actions = [None; 3];
+        self.cursor = 0;
+        self.deferred = None;
+    }
+    fn enter(&mut self, node: u8, budget: u16, tick: &mut Tick<u32>) -> bool {
+        if tick.visits == budget {
+            self.deferred = Some(node);
+            tick.exhausted = true;
+            false
+        } else {
+            tick.visits += 1;
+            true
+        }
+    }
+    fn action(&mut self, action: usize, budget: u16, tick: &mut Tick<u32>) -> Option<Status> {
+        if let Some(status @ (Status::Success | Status::Failure)) = self.actions[action] {
+            return Some(status);
+        }
+        let node = [3, 4, 5][action];
+        if !self.enter(node, budget, tick) {
+            return None;
+        }
+        if tick.receipt.is_some() {
+            self.deferred = Some(node);
+            tick.deferred_physical = true;
+            return None;
+        }
+        let (status, receipt) = self
+            .queue
+            .pop_front()
+            .expect("one supplied result per possible physical turn");
+        self.log.push(Event::Physical([7, 8, 9][action]));
+        self.log.push(Event::Settle(receipt));
+        tick.receipt = Some(receipt);
+        self.actions[action] = Some(status);
+        if status == Status::Running {
+            self.active.insert(node);
+        } else {
+            self.active.remove(&node);
+        }
+        Some(status)
+    }
+    fn turn(&mut self, budget: u16, guard: bool) -> Tick<u32> {
+        self.deferred = None;
+        let mut tick = Tick {
+            status: Status::Running,
+            receipt: None,
+            visits: 1,
+            exhausted: false,
+            deferred_physical: false,
+        };
+        if !self.enter(1, budget, &mut tick) || !self.enter(2, budget, &mut tick) {
+            return tick;
+        }
+        self.log.push(Event::Condition(0));
+        if guard {
+            let mut high_succeeded = true;
+            for action in 0..2 {
+                let cached = matches!(
+                    self.actions[action],
+                    Some(Status::Success | Status::Failure)
+                );
+                let Some(status) = self.action(action, budget, &mut tick) else {
+                    return tick;
+                };
+                match TRANSITIONS[0][match status {
+                    Status::Success => 0,
+                    Status::Failure => 1,
+                    Status::Running => 2,
+                }] {
+                    Transition::Advance => {
+                        // Replaying an old success is not new replacement work.
+                        if !cached {
+                            self.retire(2);
+                            self.cursor = 0;
+                        }
+                    }
+                    Transition::Wait => {
+                        self.retire(2);
+                        self.cursor = 0;
+                        return tick;
+                    }
+                    Transition::Finish(_) => {
+                        high_succeeded = false;
+                        break;
+                    }
+                }
+            }
+            if high_succeeded {
+                self.reset();
+                tick.status = Status::Success;
+                return tick;
+            }
+        }
+        // A false guard/failing higher branch retires only its own activity.
+        self.retire(0);
+        self.retire(1);
+        self.cursor = 1;
+        if let Some(status) = self.action(2, budget, &mut tick) {
+            tick.status = status;
+            if status != Status::Running {
+                self.reset();
+            }
+        }
+        tick
+    }
+}
+#[test]
+fn behavior_tree_reference_exhaustive_replacement_deferral() {
+    let tree = Tree::new(vec![
+        Node::ReactiveFallback(vec![1, 5]),
+        Node::ReactiveSequence(vec![2, 3, 4]),
+        Node::Condition(0),
+        Node::Physical(7),
+        Node::Physical(8),
+        Node::Physical(9),
+    ])
+    .unwrap();
+    let mut comparisons = 0;
+    for len in 1..=4 {
+        for script in scripts(len) {
+            for budget in [1, 2, 3, 4, 5, 64] {
+                for guards in [
+                    [true, true, false, true],
+                    [true, false, true, false],
+                    [false, true, true, true],
+                ] {
+                    let mut host = Environment::new(
+                        std::iter::once((Status::Running, 9)).chain(script.clone()),
+                    );
+                    host.guard = false;
+                    let mut state = TreeState::default();
+                    let initial = tick(&tree, &mut state, &mut host, 64).unwrap();
+                    assert_eq!(
+                        initial,
+                        Tick {
+                            status: Status::Running,
+                            receipt: Some(9),
+                            visits: 4,
+                            exhausted: false,
+                            deferred_physical: false
+                        }
+                    );
+                    let mut reference = PreemptionReference {
+                        actions: [None, None, Some(Status::Running)],
+                        active: BTreeSet::from([5]),
+                        cursor: 1,
+                        deferred: None,
+                        queue: script.clone().into(),
+                        log: vec![Event::Condition(0), Event::Physical(9), Event::Settle(9)],
+                    };
+                    for (turn, &guard) in guards.iter().enumerate().take(len as usize) {
+                        host.guard = guard;
+                        let actual = tick(&tree, &mut state, &mut host, budget).unwrap();
+                        let expected = reference.turn(budget, host.guard);
+                        let context = format!(
+                            "script={script:?} budget={budget} guards={guards:?} turn={turn}"
+                        );
+                        assert_eq!(actual, expected, "{context}");
+                        assert_eq!(*host.events.borrow(), reference.log, "{context}");
+                        assert_eq!(state.running_leaves, reference.active, "{context}");
+                        assert_eq!(state.deferred, reference.deferred, "{context}");
+                        assert_eq!(
+                            state.cursors.get(&0).copied(),
+                            (actual.status == Status::Running).then_some(reference.cursor),
+                            "{context}"
+                        );
+                        state.validate_for_tree(&tree).unwrap();
+                        state =
+                            serde_json::from_str(&serde_json::to_string(&state).unwrap()).unwrap();
+                        comparisons += 1;
+                    }
+                }
+            }
+        }
+    }
+    assert_eq!(comparisons, 7668);
+}

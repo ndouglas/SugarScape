@@ -575,3 +575,127 @@ fn behavior_tree_wire_rejects_unknown_tree_and_state_fields() {
     )
     .is_err());
 }
+
+fn preempting_fallback_tree() -> Tree {
+    Tree::new(vec![
+        Node::ReactiveFallback(vec![1, 5]),
+        Node::ReactiveSequence(vec![2, 3, 4]),
+        Node::Condition(0),
+        Node::Physical(7),
+        Node::Physical(8),
+        Node::Physical(9),
+    ])
+    .unwrap()
+}
+fn assert_replacement_halts_before_deferred_continuation(budget: u16) {
+    for reverse_guard in [false, true] {
+        let tree = preempting_fallback_tree();
+        let mut host = Environment::new([
+            (Status::Running, 9),
+            (Status::Success, 7),
+            (Status::Success, 10),
+        ]);
+        host.guard = false;
+        let mut state = TreeState::default();
+        tick(&tree, &mut state, &mut host, 64).unwrap();
+        host.guard = true;
+        let replacement = tick(&tree, &mut state, &mut host, budget).unwrap();
+        assert_eq!(
+            *host.events.borrow(),
+            vec![
+                Event::Condition(0),
+                Event::Physical(9),
+                Event::Settle(9),
+                Event::Condition(0),
+                Event::Physical(7),
+                Event::Settle(7),
+                Event::Halt(9)
+            ]
+        );
+        assert_eq!(
+            (
+                replacement.status,
+                replacement.receipt,
+                replacement.exhausted,
+                replacement.deferred_physical
+            ),
+            (Status::Running, Some(7), budget == 4, budget == 64)
+        );
+        assert_eq!(
+            (
+                state.cursors[&0],
+                state.deferred,
+                state.running_leaves.clone()
+            ),
+            (0, Some(4), BTreeSet::new())
+        );
+        state = serde_json::from_str(&serde_json::to_string(&state).unwrap()).unwrap();
+        host.guard = !reverse_guard;
+        let resumed = tick(&tree, &mut state, &mut host, 64).unwrap();
+        assert_eq!(
+            (resumed.status, resumed.receipt),
+            (Status::Success, Some(10))
+        );
+        halt(&tree, &mut state, &mut host).unwrap();
+        assert_eq!(
+            *host.events.borrow(),
+            vec![
+                Event::Condition(0),
+                Event::Physical(9),
+                Event::Settle(9),
+                Event::Condition(0),
+                Event::Physical(7),
+                Event::Settle(7),
+                Event::Halt(9),
+                Event::Condition(0),
+                Event::Physical(if reverse_guard { 9 } else { 8 }),
+                Event::Settle(10)
+            ]
+        );
+        assert_eq!(state, TreeState::default());
+    }
+}
+#[test]
+fn behavior_tree_replacement_token_deferral_halts_displaced_branch_once() {
+    assert_replacement_halts_before_deferred_continuation(64);
+}
+#[test]
+fn behavior_tree_replacement_budget_after_action_halts_displaced_branch_once() {
+    assert_replacement_halts_before_deferred_continuation(4);
+}
+#[test]
+fn behavior_tree_replacement_guard_budget_before_action_preserves_running_branch() {
+    let tree = preempting_fallback_tree();
+    let mut host = Environment::new([(Status::Running, 9), (Status::Success, 10)]);
+    host.guard = false;
+    let mut state = TreeState::default();
+    tick(&tree, &mut state, &mut host, 64).unwrap();
+    host.guard = true;
+    let deferred = tick(&tree, &mut state, &mut host, 3).unwrap();
+    assert_eq!(
+        (
+            deferred.receipt,
+            deferred.exhausted,
+            state.cursors[&0],
+            state.running_leaves.clone()
+        ),
+        (None, true, 1, BTreeSet::from([5]))
+    );
+    host.guard = false;
+    assert_eq!(
+        tick(&tree, &mut state, &mut host, 64).unwrap().status,
+        Status::Success
+    );
+    assert_eq!(
+        *host.events.borrow(),
+        vec![
+            Event::Condition(0),
+            Event::Physical(9),
+            Event::Settle(9),
+            Event::Condition(0),
+            Event::Condition(0),
+            Event::Physical(9),
+            Event::Settle(10)
+        ]
+    );
+}
