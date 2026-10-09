@@ -131,3 +131,71 @@ fn closed_output_pipe_reports_operational_failure() {
     drop(child.stdout.take());
     assert_eq!(child.wait_with_output().unwrap().status.code(), Some(1));
 }
+
+#[path = "../../test-support/spatial_experiments.rs"]
+mod spatial_test_support;
+use spatial_test_support::{
+    checked_snapshot_bytes, default_seed_cases, invalid_spatial_inputs, spatial_defaults,
+    spatial_saved_mutations, spatial_snapshot_inputs,
+};
+
+#[test]
+fn thirteen_catalog_entries_and_five_complete_spatial_defaults() {
+    assert_eq!(core::catalog().len(), 13);
+    assert_eq!(spatial_defaults().len(), 5);
+    for input in default_seed_cases() {
+        let text = input.to_string();
+        let expected =
+            serde_json::to_value(core::run(&core::normalize_input(&text).unwrap()).unwrap())
+                .unwrap();
+        let actual = successful(invoke("run", Some(&text)));
+        assert_eq!(actual, expected);
+        assert_eq!(
+            successful(invoke("validate", Some(&actual.to_string()))),
+            actual
+        );
+        assert!(actual["checkpoints"].as_array().unwrap().len() <= core::MAX_CHECKPOINTS);
+        assert!(actual.to_string().len() <= core::MAX_EPISODE_BYTES);
+        if let Some((reported, bytes)) = checked_snapshot_bytes(&text) {
+            assert_eq!(reported, bytes);
+            assert_eq!(
+                actual["payload"]["native"]["snapshot_bytes"],
+                json!(bytes.to_string())
+            );
+        }
+    }
+}
+
+#[test]
+fn spatial_boundary_rejects_missing_fields_large_ids_and_resource_products() {
+    for input in spatial_defaults() {
+        for (bad, field) in invalid_spatial_inputs(&input) {
+            rejected("run", &bad.to_string(), field);
+        }
+    }
+}
+
+#[test]
+fn spatial_saved_records_require_complete_same_target_reconstruction() {
+    for input in spatial_defaults() {
+        let text = input.to_string();
+        let actual = successful(invoke("run", Some(&text)));
+        for (bad, field) in spatial_saved_mutations(&input, &actual) {
+            rejected("validate", &bad.to_string(), field);
+        }
+    }
+}
+
+#[test]
+fn spatial_scene_and_bounded_extreme_snapshot_bytes_are_recomputed_on_this_target() {
+    for input in spatial_snapshot_inputs() {
+        let text = input.to_string();
+        let (reported, bytes) = checked_snapshot_bytes(&text).unwrap();
+        assert_eq!(reported, bytes);
+        let actual = successful(invoke("run", Some(&text)));
+        assert_eq!(
+            actual["payload"]["native"]["snapshot_bytes"],
+            json!(bytes.to_string())
+        );
+    }
+}

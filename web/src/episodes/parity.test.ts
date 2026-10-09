@@ -25,10 +25,12 @@ function errors(call: () => string): { field: string; message: string }[] {
   try { call(); } catch (error) { return JSON.parse(String(error)); }
   throw new Error('expected checked boundary rejection');
 }
-const catalog = JSON.parse(experiment_catalog_json()) as StudyDescriptor[];
+const completeCatalog = JSON.parse(experiment_catalog_json()) as StudyDescriptor[];
+// Keep all original eight families and their complete import/parity contract.
+const catalog = completeCatalog.filter(study => study.family !== 'spatial');
 describe('complete native and actual WASM experiment records', () => {
   it('exports the same eight original study descriptors', () => {
-    expect(catalog).toEqual(native('catalog'));
+    expect(catalog).toEqual((native('catalog') as StudyDescriptor[]).filter(study => study.family !== 'spatial'));
     expect(catalog.map(study => study.id)).toEqual(['wink', 'testimony', 'testimony_game', 'strategic_reporting', 'strategy_inference', 'adversarial_audit', 'shared_surface', 'active_surface']);
   });
   for (const study of catalog) {

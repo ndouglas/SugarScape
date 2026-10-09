@@ -90,15 +90,16 @@ describe('episode worker ownership', () => {
 });
 
 // Complete real records and defaults from the native checked boundary, never a simulator double.
-function nativeFixture() {
+function nativeFixture(studyId: StudyDescriptor['id'] = 'wink') {
   const cwd = fileURLToPath(new URL('../../../', import.meta.url));
   const binary = `${cwd}/target/release/sugarscape`;
   const catalog = JSON.parse(execFileSync(binary, ['experiment-view', 'catalog'], { cwd, encoding: 'utf8' })) as StudyDescriptor[];
   const scratch = mkdtempSync(`${tmpdir()}/episode-client-`);
   try {
     const inputPath = `${scratch}/input.json`;
-    writeFileSync(inputPath, JSON.stringify(catalog.find(study => study.id === 'wink')!.default_input));
-    return { catalog, record: JSON.parse(execFileSync(binary, ['experiment-view', 'run', '--input', inputPath], { cwd, encoding: 'utf8' })) as EpisodeRecord };
+    writeFileSync(inputPath, JSON.stringify(catalog.find(study => study.id === studyId)!.default_input));
+    const options = { cwd, encoding: 'utf8' as const, maxBuffer: 16 * 1024 * 1024 + 1 };
+    return { catalog, record: JSON.parse(execFileSync(binary, ['experiment-view', 'run', '--input', inputPath], options)) as EpisodeRecord };
   } finally { rmSync(scratch, { recursive: true, force: true }); }
 }
 describe('episode reply isolation and termination', () => {
@@ -181,4 +182,24 @@ describe('episode reply isolation and termination', () => {
     await expect(next).resolves.toEqual([]);
     expect(vi.getTimerCount()).toBe(0);
   });
+});
+
+
+describe('spatial records keep the shared single-worker client contract', () => {
+  for (const studyId of ['burrow_excavation', 'burrow_access', 'foraging_fixed', 'foraging_passage', 'foraging_construction'] as const) {
+    it(`${studyId} complete checked reply passes unchanged and releases its only worker`, async () => {
+      const { record } = nativeFixture(studyId);
+      const { client, workers } = clientFixture();
+      const text = JSON.stringify(record.input);
+      const pending = client.request('run', text);
+      workers[0].deliver({ id: 1, kind: 'episode', record });
+      expect(await pending).toEqual(record);
+      expect(workers).toHaveLength(1);
+      expect(workers[0].terminated).toBe(true);
+      const imported = client.request('validate', JSON.stringify(record));
+      workers[1].deliver({ id: 2, kind: 'episode', record });
+      expect(await imported).toEqual(record);
+      expect(workers.every(worker => worker.terminated)).toBe(true);
+    });
+  }
 });
