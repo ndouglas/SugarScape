@@ -212,6 +212,8 @@ fn every_declared_engineering_scene_passes_preflight_and_only_implemented_studie
             Input::BurrowExcavation { .. }
                 | Input::BurrowAccess { .. }
                 | Input::ForagingFixed { .. }
+                | Input::ForagingPassage { .. }
+                | Input::ForagingConstruction { .. }
         );
         assert_eq!(
             catalog()

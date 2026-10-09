@@ -174,7 +174,7 @@ for completed in 1..=ticks {
 
 **Interfaces:** `spatial::passage::run(&Input)->Result<EpisodeRecord,Vec<FieldError>>` and `spatial::construction::run(&Input)->Result<EpisodeRecord,Vec<FieldError>>`; all five descriptors now runnable. Use existing World::knowledge(id), snapshot/summary/step. A shared adapter capture helper may factor bounded serialization and sample scheduling, not world/controller behavior.
 
-- [ ] **Step1: RED native equivalence/privacy tests.** Compare complete native Episodes to each original runner at40/7 and8/2. At every recorded boundary compare private maps with the corresponding original World. Validate map/counter/RNG continuation invariance under extra read-only captures. The no-dig F4 example keeps original F3 physical projections where comparable. Censored access/pickup/delivery is null, not zero. Food/spoil equal numeric IDs have different cargo tags. A remembered solid wall remains a solid memory even when researcher terrain is open; adapter must copy knowledge exactly rather than replace it from snapshot.
+- [x] **Step1: RED native equivalence/privacy tests.** Compare complete native Episodes to each original runner at40/7 and8/2. At every recorded boundary compare private maps with the corresponding original World. Validate map/counter/RNG continuation invariance under extra read-only captures. The no-dig F4 example keeps original F3 physical projections where comparable. Censored access/pickup/delivery is null, not zero. Food/spoil equal numeric IDs have different cargo tags. A remembered solid wall remains a solid memory even when researcher terrain is open; adapter must copy knowledge exactly rather than replace it from snapshot.
 
 ```rust
 let local = world.knowledge(0).unwrap();
@@ -184,7 +184,7 @@ assert!(at.local["0"].get("global_food").is_none());
 ```
 
 `adapter_checkpoint` is a test-visible capture helper within the owning adapter, returning Checkpoint and using no RNG. Run `cargo test -p sugarscape-core browser_experiments::tests::spatial_passage` and `cargo test -p sugarscape-core browser_experiments::tests::spatial_construction`, retaining genuine RED.
-- [ ] **Step2: Implement one-World drivers.** Use original normalizing World constructor and sampled step schedule. Capture all bounded private maps one Agent at a time, charging each before retaining. Label capture clock separately from unavailable cell observation timestamps. Preserve F4 native Cargo enum namespace, food/spoil/terrain/access/milestone fields and typed partial states. No global access cache or hidden-food origin lookup enriches local cargo/find fields. Include full normalized native setup in payload.
+- [x] **Step2: Implement one-World drivers.** Use original normalizing World constructor and sampled step schedule. Capture all bounded private maps one Agent at a time, charging each before retaining. Label capture clock separately from unavailable cell observation timestamps. Preserve F4 native Cargo enum namespace, food/spoil/terrain/access/milestone fields and typed partial states. No global access cache or hidden-food origin lookup enriches local cargo/find fields. Include full normalized native setup in payload.
 
 ```rust
 let snapshot = world.snapshot()?;
@@ -196,9 +196,9 @@ for agent in &snapshot.agents {
 ```
 
 Family-local capture helpers convert these original typed views into the declared Checkpoint; charge converted wire data too before retention.
-- [ ] **Step3: GREEN/ref cases.** Public setup fixtures include disconnected exposed food and protected buried food, empty food, duplicate nest occupancy within capacity, mask already open, and nonzero publication/fidelity/waypoint parameters. Use existing core tests as semantic references; tests may use synthetic projected checkpoints for stale-wall display, but native capture equality must use real Worlds. No claim that every selected run produces delivery or a stale wall. Run focused tests, edited formatting/core Clippy, and fullcore on final source.
-- [ ] **Step4: Independent gate.** Check stale memory, namespaces, censored milestones, original normalization and accounting, all-Agent memory budget and no unsupported action-level narrative.
-- [ ] **Step5: Commit.** `feat(experiments): capture passage and construction knowledge`.
+- [x] **Step3: GREEN/ref cases.** Public setup fixtures include disconnected exposed food and protected buried food, empty food, duplicate nest occupancy within capacity, mask already open, and nonzero publication/fidelity/waypoint parameters. Use existing core tests as semantic references; tests may use synthetic projected checkpoints for stale-wall display, but native capture equality must use real Worlds. No claim that every selected run produces delivery or a stale wall. Run focused tests, edited formatting/core Clippy, and fullcore on final source.
+- [x] **Step4: Independent gate.** Check stale memory, namespaces, censored milestones, original normalization and accounting, all-Agent memory budget and no unsupported action-level narrative.
+- [x] **Step5: Commit.** `feat(experiments): capture passage and construction knowledge`.
 
 ## Task 5: Shared bridges, complete parity and actual browser feasibility
 

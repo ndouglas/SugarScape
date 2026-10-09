@@ -256,7 +256,7 @@ fn exact_same_target_import_rejects_float_native_local_and_foreign_target_edits(
 #[test]
 fn fixed_descriptor_is_runnable_and_preserves_browser_profile_rejection() {
     let descriptors = browser::catalog();
-    assert_eq!(descriptors.len(), 11);
+    assert_eq!(descriptors.len(), 13);
     let fixed = descriptors
         .iter()
         .find(|d| d.id == StudyId::ForagingFixed)

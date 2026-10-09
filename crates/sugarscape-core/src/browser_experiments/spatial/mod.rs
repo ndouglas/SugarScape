@@ -1,8 +1,11 @@
 //! Bounded browser inputs and adapters around unchanged spatial lab engines.
 pub mod budget;
 pub mod burrow;
+mod capture;
+pub mod construction;
 pub mod fixed;
 pub mod input;
+pub mod passage;
 pub mod scenes;
 use super::{error, EpisodeRecord, FieldError, Input, StudyDescriptor, StudyId};
 pub use input::IdText;
@@ -34,6 +37,20 @@ pub(crate) fn descriptors() -> Vec<StudyDescriptor> {
             "Supplied arena and original fixed-world CPFA controller.",
             "What do original completed-tick snapshots and each Agent's own captured state show?",
         ),
+        (
+            StudyId::ForagingPassage,
+            "foraging_passage",
+            "Passage foraging engineering demonstration",
+            "Supplied passage geometry and original private-memory CPFA controller.",
+            "What do physical snapshots and each Agent's captured topology beliefs show?",
+        ),
+        (
+            StudyId::ForagingConstruction,
+            "foraging_construction",
+            "Construction foraging engineering demonstration",
+            "Supplied construction task and original private-memory CPFA controller.",
+            "How do recorded physical state and private topology beliefs differ at each boundary?",
+        ),
     ]
     .into_iter()
     .map(|(id, key, title, supplied, question)| {
@@ -51,6 +68,12 @@ pub(crate) fn run(input: &Input) -> Result<EpisodeRecord, Vec<FieldError>> {
     if matches!(input, Input::ForagingFixed { .. }) {
         return fixed::run(input);
     }
+    if matches!(input, Input::ForagingPassage { .. }) {
+        return passage::run(input);
+    }
+    if matches!(input, Input::ForagingConstruction { .. }) {
+        return construction::run(input);
+    }
     Err(error(
         "study",
         format!("spatial adapter {:?} is not implemented", input.study()),
@@ -61,6 +84,8 @@ pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> 
         StudyId::BurrowExcavation => "burrow_excavation",
         StudyId::BurrowAccess => "burrow_access",
         StudyId::ForagingFixed => "foraging_fixed",
+        StudyId::ForagingPassage => "foraging_passage",
+        StudyId::ForagingConstruction => "foraging_construction",
         _ => {
             return Err(error(
                 "rules_identity",
@@ -78,7 +103,10 @@ pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> 
         .as_u64()
         .ok_or_else(|| error("rules_identity", "missing adapter schema version"))?;
     let source = format!("{key}:spatial-adapter-{schema}:source-sha256:{digest}");
-    if study == StudyId::ForagingFixed {
+    if matches!(
+        study,
+        StudyId::ForagingFixed | StudyId::ForagingPassage | StudyId::ForagingConstruction
+    ) {
         Ok(format!("{source}:target:{}", target_tag()))
     } else {
         Ok(source)
