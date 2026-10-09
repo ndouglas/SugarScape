@@ -106,7 +106,7 @@ if opportunities > 8192 { return Err(error("opportunities", "browser spatial lim
 
 **Interfaces:** `spatial::burrow::run(&Input)->Result<EpisodeRecord,Vec<FieldError>>`; original run_episode/run_access_episode called once. Register two descriptors with family spatial. Preserve full original native payload and matching frame/series semantics.
 
-- [ ] **Step1: RED real boundary tests.** Compare the full native subpayload with original APIs, at zero ticks, default128/16, off-cadence17/8 and choice1/1. Initial/terminal same-tick frames remain distinct; frames/series may differ in length. No zip by index. Own traces stop at the chosen sampled boundary; Explore never gets goal coordinates/private completion from KnownGoal. Blocked outcomes and Wait stay distinct, material ID stays string, zero-op rates/null access distances stay unavailable.
+- [x] **Step1: RED real boundary tests.** Compare the full native subpayload with original APIs, at zero ticks, default128/16, off-cadence17/8 and choice1/1. Initial/terminal same-tick frames remain distinct; frames/series may differ in length. No zip by index. Own traces stop at the chosen sampled boundary; Explore never gets goal coordinates/private completion from KnownGoal. Blocked outcomes and Wait stay distinct, material ID stays string, zero-op rates/null access distances stay unavailable.
 
 ```rust
 let record = run(&scenes::input_for("burrow-choice").unwrap()).unwrap();
@@ -117,7 +117,7 @@ assert!(record.payload["native"]["events"].as_array().unwrap().is_empty());
 ```
 
 The choice fixture uses side left/pile fresh_accumulation, direct/blind, freshness32,relay3,response3,minimum_recent2,seed7,ticks1,sample1. Run `cargo test -p sugarscape-core browser_experiments::tests::spatial_burrow` and retain RED.
-- [ ] **Step2: Implement projection.** Call preflight then original runner; convert payload losslessly. Decode exactly width×height exported ASCII glyphs in Rust, ignoring legend bytes as cells, preserving caveat and fingerprint. Match snapshots by native tick/opportunity context, allowing one diagnostic snapshot to describe unchanged physical quantities at distinct same-tick stages. For normal sampled boundaries include only events/choices from completed rounds; for the terminal choice frame include the actual selected choice without a paid action. Access completion markers are filtered by exported opportunity prefix; structural access stays researcher-only. Never use final delivery records to fill early holdings. Do not treat the existing physical validate_episode function as authentication of controller choices/RNG; fresh original-run reconstruction remains the import authority.
+- [x] **Step2: Implement projection.** Call preflight then original runner; convert payload losslessly. Decode exactly width×height exported ASCII glyphs in Rust, ignoring legend bytes as cells, preserving caveat and fingerprint. Match snapshots by native tick/opportunity context, allowing one diagnostic snapshot to describe unchanged physical quantities at distinct same-tick stages. For normal sampled boundaries include only events/choices from completed rounds; for the terminal choice frame include the actual selected choice without a paid action. Access completion markers are filtered by exported opportunity prefix; structural access stays researcher-only. Never use final delivery records to fill early holdings. Do not treat the existing physical validate_episode function as authentication of controller choices/RNG; fresh original-run reconstruction remains the import authority.
 
 ```rust
 let native = burrow::run_episode(config.to_core()?, seed.value(),
@@ -126,9 +126,9 @@ let native_value = wire::lossless_value(serde_json::to_value(&native)
     .map_err(|e| error("episode", e.to_string()))?);
 // Project native.frames in order; native_value is the complete gated payload.
 ```
-- [ ] **Step3: GREEN/preservation.** Compare complete ordinary/access outputs against Task1 baseline and original runners at both seeds. Show raw native equality before comparing wire values. Preserve original fingerprint/RNG source and all original counts, labels and stop reasons. Run focused tests, core Clippy/edited formatting and fullcore once final producer source is stable.
-- [ ] **Step4: Independent gate.** Reviewer checks future/goal privacy, exact frame clock joins, projection/cargo availability, budget assumptions and old export bytes. Fix through producer/scoped rereview.
-- [ ] **Step5: Commit.** `feat(experiments): adapt Burrow excavation and access replays`.
+- [x] **Step3: GREEN/preservation.** Compare complete ordinary/access outputs against Task1 baseline and original runners at both seeds. Show raw native equality before comparing wire values. Preserve original fingerprint/RNG source and all original counts, labels and stop reasons. Run focused tests, core Clippy/edited formatting and fullcore once final producer source is stable.
+- [x] **Step4: Independent gate.** Reviewer checks future/goal privacy, exact frame clock joins, projection/cargo availability, budget assumptions and old export bytes. Fix through producer/scoped rereview.
+- [x] **Step5: Commit.** `feat(experiments): adapt Burrow excavation and access replays`.
 
 ## Task 3: CPFA F2 World capture and own-state projections
 

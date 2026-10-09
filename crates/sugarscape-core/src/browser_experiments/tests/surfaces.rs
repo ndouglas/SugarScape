@@ -80,8 +80,21 @@ fn private_routine_is_excluded_from_helper_view() {
     assert!(r.checkpoints[choice + 1].local["Agent-B"]["decision"].is_object());
 }
 #[test]
-fn eight_catalog_studies_have_working_surface_entries() {
-    assert_eq!(catalog().len(), 8);
+fn original_eight_catalog_studies_remain_uniquely_registered() {
+    use super::super::StudyId;
+    let catalog = catalog();
+    for id in [
+        StudyId::Wink,
+        StudyId::Testimony,
+        StudyId::TestimonyGame,
+        StudyId::StrategicReporting,
+        StudyId::StrategyInference,
+        StudyId::AdversarialAudit,
+        StudyId::SharedSurface,
+        StudyId::ActiveSurface,
+    ] {
+        assert_eq!(catalog.iter().filter(|study| study.id == id).count(), 1);
+    }
 }
 
 #[test]

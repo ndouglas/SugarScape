@@ -1,5 +1,6 @@
 //! Bounded browser inputs and adapters around unchanged spatial lab engines.
 pub mod budget;
+pub mod burrow;
 pub mod input;
 pub mod scenes;
 use super::{error, EpisodeRecord, FieldError, Input, StudyDescriptor, StudyId};
@@ -10,17 +11,61 @@ pub fn validate_input(input: &Input) -> Result<(), Vec<FieldError>> {
 }
 /// Each adapter adds its descriptor only after its original runner is wired.
 pub(crate) fn descriptors() -> Vec<StudyDescriptor> {
-    Vec::new()
+    [
+        (
+            StudyId::BurrowExcavation,
+            "burrow_excavation",
+            "Burrow excavation engineering demonstration",
+            "Supplied excavation fixtures and original preference/transport controllers.",
+            "What do the recorded action and material histories show at each sampled boundary?",
+        ),
+        (
+            StudyId::BurrowAccess,
+            "burrow_access",
+            "Burrow access engineering demonstration",
+            "Supplied structural-access task with Explore or KnownGoal information.",
+            "When does structural access occur, and which Agents have locally observed completion?",
+        ),
+    ]
+    .into_iter()
+    .map(|(id, key, title, supplied, question)| {
+        scenes::descriptor(id, key, title, supplied, question)
+    })
+    .collect()
 }
 pub(crate) fn run(input: &Input) -> Result<EpisodeRecord, Vec<FieldError>> {
+    if matches!(
+        input,
+        Input::BurrowExcavation { .. } | Input::BurrowAccess { .. }
+    ) {
+        return burrow::run(input);
+    }
     Err(error(
         "study",
         format!("spatial adapter {:?} is not implemented", input.study()),
     ))
 }
 pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> {
-    Err(error(
-        "rules_identity",
-        format!("spatial adapter {study:?} is not implemented"),
+    let key = match study {
+        StudyId::BurrowExcavation => "burrow_excavation",
+        StudyId::BurrowAccess => "burrow_access",
+        _ => {
+            return Err(error(
+                "rules_identity",
+                format!("spatial adapter {study:?} is not implemented"),
+            ))
+        }
+    };
+    let identities: serde_json::Value =
+        serde_json::from_str(include_str!("../fixtures/spatial-identities.json"))
+            .map_err(|e| error("rules_identity", e.to_string()))?;
+    let digest = identities[key]["source_sha256"]
+        .as_str()
+        .ok_or_else(|| error("rules_identity", "missing original source digest"))?;
+    let schema = identities[key]["adapter_schema_version"]
+        .as_u64()
+        .ok_or_else(|| error("rules_identity", "missing adapter schema version"))?;
+    Ok(format!(
+        "{key}:spatial-adapter-{schema}:source-sha256:{digest}"
     ))
 }

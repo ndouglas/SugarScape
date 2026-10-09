@@ -199,7 +199,7 @@ fn scene(id: &str) -> Value {
     serde_json::to_value(super::super::spatial::scenes::input_for(id).unwrap()).unwrap()
 }
 #[test]
-fn every_declared_engineering_scene_passes_preflight_without_becoming_runnable() {
+fn every_declared_engineering_scene_passes_preflight_and_only_implemented_studies_run() {
     use super::super::{catalog, run, spatial};
     let definitions: Value =
         serde_json::from_str(include_str!("../fixtures/spatial-scenes.json")).unwrap();
@@ -207,16 +207,25 @@ fn every_declared_engineering_scene_passes_preflight_without_becoming_runnable()
         let id = row["id"].as_str().unwrap();
         let input = spatial::scenes::input_for(id).unwrap_or_else(|e| panic!("{id}: {e:?}"));
         assert_eq!(serde_json::to_value(&input).unwrap(), row["input"]);
-        assert!(
-            !catalog()
+        let implemented = matches!(
+            input,
+            Input::BurrowExcavation { .. } | Input::BurrowAccess { .. }
+        );
+        assert_eq!(
+            catalog()
                 .iter()
                 .any(|descriptor| descriptor.id == input.study()),
-            "premature catalog: {id}"
+            implemented,
+            "catalog: {id}"
         );
-        assert!(run(&input)
-            .unwrap_err()
-            .iter()
-            .any(|e| e.field == "study" && e.message.contains("not implemented")));
+        if implemented {
+            assert!(run(&input).is_ok(), "implemented scene: {id}");
+        } else {
+            assert!(run(&input)
+                .unwrap_err()
+                .iter()
+                .any(|e| e.field == "study" && e.message.contains("not implemented")));
+        }
     }
     assert!(spatial::scenes::input_for("unknown").is_err());
 }
