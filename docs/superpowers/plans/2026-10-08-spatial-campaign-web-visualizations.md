@@ -8,7 +8,7 @@
 
 **Tech Stack:** Existing Rust workspace, serde/serde_json, wasm-bindgen/wasm-pack, TypeScript, Vite, Vitest, plain DOM/SVG or canvas using current utilities, approved browser-control tooling. No new framework, dependency or training pipeline.
 
-**Spec:** [Approved Batch B design](../specs/2026-10-08-spatial-campaign-web-visualizations-design.md). User approval: LGTM on October8,2026; original approved bytes/hash retained in `.superpowers/sdd/2026-10-08-spatial-campaign-web-visualizations/spec-approval.json`. This plan awaits its own user review; no runtime work has started.
+**Spec:** [Approved Batch B design](../specs/2026-10-08-spatial-campaign-web-visualizations-design.md). User approval: LGTM on October8,2026; original approved bytes/hash retained in `.superpowers/sdd/2026-10-08-spatial-campaign-web-visualizations/spec-approval.json`. This plan was approved by user LGTM! on October9,2026; execution is subagent-driven.
 
 ## Global Constraints
 
