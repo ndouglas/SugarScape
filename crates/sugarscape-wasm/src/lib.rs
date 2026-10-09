@@ -1,6 +1,12 @@
 //! JavaScript-facing wrapper around the Sugarscape core. Errors cross the
 //! boundary as JSON strings of `[{ field, message }]`.
 
+mod experiment_view;
+pub use experiment_view::{
+    experiment_catalog_json, experiment_recorded_json, experiment_run_json,
+    experiment_validate_json,
+};
+
 use sugarscape_core::config::{Config, FieldError};
 use sugarscape_core::edit::AgentOverrides;
 use sugarscape_core::geometry::Pos;

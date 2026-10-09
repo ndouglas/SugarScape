@@ -271,3 +271,99 @@ dialog.keep .row { display: flex; gap: 8px; justify-content: flex-end; }
   .panel-body, .sweep-setup { padding: 14px; }
   .shortcuts-card { left: 1rem; }
 }
+
+/* Episode diagrams inherit the Playground palette, including its dark theme. */
+.experiment-switch { margin: 0 0 1rem; }
+.episode-view { display: grid; gap: .8rem; max-width: 1280px; margin: auto; }
+.episode-view[hidden] { display: none; }
+.episode-setup, .episode-playback { min-width: 0; margin: 0; border: 1px solid var(--border); border-radius: 6px; padding: .9rem; background: var(--surface); }
+.episode-controls { display: flex; flex-wrap: wrap; gap: .7rem 1rem; align-items: end; margin: .7rem 0; }
+.episode-controls label { display: grid; gap: .3rem; }
+.episode-controls select { max-width: 27rem; }
+.episode-controls input { width: 13rem; }
+.episode-controls input[type=number] { width: 7rem; }
+.episode-controls .hint { flex-basis: 100%; margin: .1rem 0; }
+.episode-shown-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .7rem; }
+.episode-shown-heading h2 { margin: 0; }
+.episode-timeline { display: flex; align-items: center; gap: 1rem; margin-top: .7rem; }
+.episode-timeline input { flex: 1; min-width: 70px; }
+.episode-timeline output { min-width: 15rem; font-variant-numeric: tabular-nums; }
+.episode-stage { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(250px, 1fr); gap: 1.2rem; align-items: start; }
+.episode-stage > section { min-width: 0; }
+.episode-inspector { border-left: 2px solid var(--border); padding-left: 1rem; min-width: 0; overflow-wrap: anywhere; }
+.episode-inspector h3, .episode-observations h3 { margin-top: 0; }
+.episode-inspector section + section { border-top: 1px solid var(--border); }
+.episode-game-diagram { width: 100%; height: auto; min-height: 220px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+.episode-game-diagram text, .episode-search-curve text { fill: var(--text); font: 13px 'Avenir Next', Avenir, 'Segoe UI', sans-serif; }
+.episode-agent { fill: var(--surface); stroke: var(--border); stroke-width: 2; }
+.episode-agent.selected { stroke: var(--accent); stroke-width: 3; }
+.episode-agent.inactive { stroke-dasharray: 4 3; opacity: .6; }
+.episode-edge { stroke: var(--accent); stroke-width: 2; }
+.episode-edge.pending { stroke-dasharray: 6 5; }
+.episode-game-diagram .episode-edge-label { font-size: 11px; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.episode-events { padding-left: 1.3rem; }
+.episode-events li { margin-bottom: .4rem; }
+.episode-facts { display: grid; grid-template-columns: minmax(90px, .6fr) minmax(0, 2fr); gap: .35rem .8rem; margin: .6rem 0; overflow-wrap: anywhere; }
+.episode-facts dt { color: var(--muted); }
+.episode-facts dd { margin: 0; }
+.episode-view details { margin: .7rem 0; }
+.episode-view summary { cursor: pointer; }
+.episode-view p { overflow-wrap: anywhere; }
+.episode-report-channels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.episode-report-node { border: 1px solid var(--border); background: var(--surface); padding: .7rem; display: grid; gap: .5rem; margin: .5rem 0; }
+.episode-report-channels > section { border-bottom: 3px solid var(--accent); }
+.episode-listener-node { margin: 1.2rem auto; border: 2px solid var(--accent); padding: 1rem; max-width: 24rem; text-align: center; background: var(--surface); }
+.episode-evidence-flow { border-left: 3px solid var(--accent); padding-left: 1.5rem; }
+.episode-probability { display: grid; gap: .35rem; margin: .8rem 0; }
+.episode-probability meter { width: 100%; height: .8rem; accent-color: var(--accent); }
+.episode-probability strong { font-variant-numeric: tabular-nums; }
+.episode-result { margin-top: 1rem; border-top: 1px solid var(--border); padding: .3rem 0; }
+.episode-recorded { border-top: 2px solid var(--border); padding-top: .5rem; }
+.episode-search-curve { width: 100%; max-height: 300px; }
+.episode-table-scroll { overflow: auto; max-height: 30rem; margin: .7rem 0; }
+.episode-table-scroll table { border-collapse: collapse; width: 100%; }
+.episode-table-scroll th, .episode-table-scroll td { border-bottom: 1px solid var(--border); text-align: left; padding: .5rem; vertical-align: top; min-width: 80px; overflow-wrap: anywhere; }
+.episode-view :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 740px) {
+  .episode-stage { grid-template-columns: 1fr; }
+  .episode-inspector { border-left: 0; border-top: 2px solid var(--border); padding: 1rem 0 0; }
+  .episode-timeline { flex-wrap: wrap; }
+  .episode-timeline output { min-width: 0; }
+  .episode-controls { align-items: stretch; }
+  .episode-controls label, .episode-controls select { max-width: 100%; }
+  .episode-facts { grid-template-columns: 1fr; }
+  .episode-view .row { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) { .episode-view * { animation: none !important; transition: none !important; } }
+.episode-view .row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.episode-view > .row .hint { margin: .2rem 0; }
+.episode-report-channels { position: relative; padding-bottom: 1.2rem; }
+.episode-report-channels::after { content: ''; position: absolute; bottom: -.7rem; left: 50%; height: 1.8rem; border-left: 2px solid var(--accent); }
+.episode-setup .row > label { display: flex; align-items: center; gap: .5rem; min-width: 0; max-width: 100%; }
+.episode-view select { min-width: 0; max-width: 100%; }
+@media (max-width: 740px) { .episode-setup .row > label { display: grid; width: 100%; } }
+/* Surface episodes: the opaque field is the visual center; histories retain their delivered clocks. */
+.surface-diagram { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr) minmax(0, 1fr); gap: .7rem; align-items: center; }
+.surface-agent { border: 2px solid var(--border); border-radius: 50% 50% 12px 12px; padding: .8rem; text-align: center; min-width: 0; }
+.surface-agent.selected { border-color: var(--accent); }
+.surface-agent h3 { font-size: 1rem; overflow-wrap: anywhere; }
+.surface-object { background: var(--surface); border: 3px double var(--accent); padding: 1rem; min-width: 0; text-align: center; }
+.surface-object h3 { margin-top: 0; overflow-wrap: anywhere; }
+.surface-symbol { display: block; font-size: 1.35rem; font-weight: 600; overflow-wrap: anywhere; }
+.surface-field + .surface-field { border-top: 2px dashed var(--border); }
+.surface-clock { padding: .3rem .8rem; border-left: 3px solid var(--accent); margin-bottom: 1rem; }
+.surface-clock p { margin: .3rem 0; }
+.surface-events { border-top: 1px solid var(--border); margin-top: 1rem; }
+.surface-events ol { max-height: 18rem; overflow: auto; padding-right: .7rem; }
+.surface-events li { border-left: 2px solid var(--border); padding: .3rem .6rem; overflow-wrap: anywhere; }
+.surface-result { display: flex; flex-wrap: wrap; gap: 1rem; }
+.surface-result > section { flex: 1; min-width: 12rem; }
+.surface-result > p, .surface-result > details { flex-basis: 100%; }
+.episode-comparison { min-width: 0; border-top: 2px solid var(--border); }
+.episode-comparison:empty { display: none; }
+.episode-comparison .row { margin: .8rem 0; }
+.episode-comparison .row input[type=range] { flex: 1; min-width: 6rem; }
+@media (max-width: 1000px) { .surface-view .episode-stage { grid-template-columns: 1fr; } }
+@media (max-width: 540px) { .surface-diagram { grid-template-columns: 1fr; } .surface-agent { border-radius: 12px; } }
+
+.episode-comparison > fieldset.row { border: 0; padding: 0; min-width: 0; }

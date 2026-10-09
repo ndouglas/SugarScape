@@ -6,6 +6,7 @@ mod active_surface;
 mod burrow;
 mod burrow_access;
 mod deduction;
+mod experiment_view;
 mod shared_surface;
 
 use std::path::{Path, PathBuf};
@@ -31,6 +32,8 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Export or reconstruct bounded experiment display episodes.
+    ExperimentView(experiment_view::ExperimentViewArgs),
     /// Run the experimental deduction JSON host.
     Deduction(deduction::DeductionArgs),
     /// List the presets of every model (id, source, name, title).
@@ -185,6 +188,7 @@ fn main() -> ExitCode {
 
 fn run(cli: Cli) -> Result<(), Failure> {
     match cli.command {
+        Command::ExperimentView(args) => experiment_view::run(args),
         Command::Deduction(args) => deduction::run(args),
         Command::ActiveSurface(args) => active_surface::run(args),
         Command::SharedSurface(args) => shared_surface::run(args),

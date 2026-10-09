@@ -59,7 +59,7 @@ impl Engine {
             .collect();
         let mut assigned_holder = None;
         if let Some(a) = &config.assignment {
-            let holder = a.eligible[rng.gen_range(0..a.eligible.len())];
+            let holder = a.eligible[rng.gen_range(0..a.eligible.len() as u64) as usize];
             assigned_holder = Some(holder);
             for (id, state) in agents.iter_mut().enumerate() {
                 state.grants.retain(|c| *c != a.capability);

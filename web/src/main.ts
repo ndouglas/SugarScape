@@ -7,7 +7,8 @@ import { canvasBlob, downloadBlob, downloadText } from './downloads';
 import { Engine, finishedNotice, FULL_NOTICE, type InitialState } from './engine';
 import { errorMessage, fieldErrorsMessage } from './errors';
 import { finishesUnpredictably } from './models';
-import { ExperimentsView } from './experiments/view';
+import { ExperimentsShell } from './experiments/experiments-shell';
+import { decodeEpisode, readEpisodeHash } from './episodes/share';
 import { compareLink, LOG_FULL_NOTICE, sessionLink, shareable } from './sessions';
 import {
   decodeCompare,
@@ -93,7 +94,7 @@ async function main(): Promise<void> {
   installShortcuts(toolbar, () => document.body.dataset.view === 'playground');
   const display = buildDisplay(engine);
   document.querySelector('#display')!.append(display.el);
-  const experiments = new ExperimentsView(engine);
+  const experiments = new ExperimentsShell(engine);
   document.querySelector('#experiments')!.append(experiments.el);
   const views = { playground: 'Playground', experiments: 'Experiments' } as const;
   type View = keyof typeof views;
@@ -103,6 +104,7 @@ async function main(): Promise<void> {
   const showView = (view: View): void => {
     // The playground's worlds are kept, paused, while Experiments is shown.
     if (view === 'experiments') (compare?.lock ?? engine).setRunning(false);
+    else experiments.pause();
     document.body.dataset.view = view;
     document.querySelector<HTMLElement>('#playground')!.hidden = view !== 'playground';
     document.querySelector<HTMLElement>('#experiments')!.hidden = view !== 'experiments';
@@ -122,6 +124,13 @@ async function main(): Promise<void> {
     .querySelector('.toolbar h1')!
     .after(h('div', { class: 'view-switch', role: 'group', 'aria-label': 'View' }, ...viewButtons), compareButton);
   showView('playground');
+
+  window.addEventListener('beforeunload', () => experiments.dispose());
+  const episodeToken = readEpisodeHash();
+  if (episodeToken !== null) {
+    try { experiments.openInput(await decodeEpisode(episodeToken)); showView('experiments'); }
+    catch (e) { showBanner(`That episode link could not be loaded (${errorMessage(e)}).`); }
+  }
 
   const sweepToken = readSweepHash();
   if (sweepToken) {
