@@ -2,7 +2,7 @@ import type { Json, StudyDescriptor, Checkpoint } from './types';
 import { obj, list, valueText } from './presentation';
 export type EpisodeInput = Json;
 export type SurfaceInput = Record<string, Json>;
-function canonical(value: Json): string {
+export function canonical(value: Json): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
   if (value !== null && typeof value === 'object') return `{${Object.keys(value).sort().map(k => `${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`;
   return JSON.stringify(value);

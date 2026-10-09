@@ -138,10 +138,10 @@ for (const study of catalog.filter(study => study.family === 'spatial')) {
 }
 
 describe('five spatial bridges and actual native/WASM complete records', () => {
-  it('catalog extends eight original studies to thirteen runnable entries with spatial renderer deferred', () => {
+  it('catalog extends eight original studies to thirteen runnable entries with spatial renderer available', () => {
     expect(catalog).toHaveLength(13);
     expect(catalog.filter(study => study.family === 'spatial').map(study => study.id)).toEqual(['burrow_excavation', 'burrow_access', 'foraging_fixed', 'foraging_passage', 'foraging_construction']);
-    for (const descriptor of catalog.filter(study => study.family === 'spatial')) expect(rendererAvailable(descriptor)).toBe(false);
+    for (const descriptor of catalog.filter(study => study.family === 'spatial')) expect(rendererAvailable(descriptor)).toBe(true);
   });
   for (const fixture of fixtures) it(`${fixture.id} retains the full records and every declared diagnostic leaf`, async () => {
     const nativeRecord = runNativeFixture(fixture.input);

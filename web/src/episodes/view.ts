@@ -3,7 +3,7 @@ import { downloadText } from '../downloads';
 import { createEpisodeClient } from './client';
 import { EpisodeSession, readEpisodeFile } from './file';
 import { EpisodeControls } from './controls';
-import { rendererAvailable, renderDescriptor } from './catalog';
+import { rendererAvailable, renderDescriptor, spatialCatalog } from './catalog';
 import { ReplayController } from './replay';
 import { projectCheckpoint, resultPayload, type Perspective } from './projection';
 import { renderGame } from './game-view';
@@ -11,10 +11,12 @@ import { renderTestimony } from './testimony-view';
 import { surfaceSummary } from './surface-projection';
 import { renderSurface, renderSurfaceResult } from './surface-view';
 import { comparisonKey, matchedInputs, matchingCheckpoint, surfaceSettingLabel } from './comparison';
+import { renderSpatial, renderSpatialResult } from './spatial-view';
+import { declaredSpatialAxis, spatialMatchedInputs, spatialComparisonKey, spatialAxisValue } from './spatial-comparison';
 import { renderRecorded } from './recorded';
 import { encodeEpisode, checkedInput } from './share';
 import { obj, details, fact, label } from './presentation';
-import type { EpisodeClient, EpisodeRecord, Json, StudyDescriptor } from './types';
+import type { EpisodeClient, EpisodeRecord, Json, StudyDescriptor, SpatialAxis } from './types';
 
 export class EpisodeView {
   readonly el: HTMLElement;
@@ -31,11 +33,15 @@ export class EpisodeView {
   private readonly comparisonControls = h('fieldset', { class: 'row' });
   private comparisonCandidates: Json[] = [];
   private comparisonOptionsKey = '';
+  private spatialAxis: SpatialAxis | null = null;
+  private axisOptionsKey = '';
+  private perspectiveOptionsKey = '';
+  private readonly axisPicker = h('select', { 'aria-label': 'Spatial comparison axis', onchange: () => { this.spatialAxis = null; this.comparisonIndex = null; this.draw(); } });
   private readonly comparisonPicker = h('select', { 'aria-label': 'Matched policy' });
   private readonly comparisonRun = h('button', { onclick: () => {
     const input = this.comparisonCandidates[Number(this.comparisonPicker.value)];
     const record = this.replay.record;
-    if (input && record) void this.compare(input, record);
+    if (input && record) void this.compare(input, record, this.spatialAxis ?? undefined);
   } }, 'Run matched comparison');
   private readonly comparisonSeek = h('input', { type: 'range', min: 0, 'aria-label': 'Comparison checkpoint', oninput: () => { this.comparisonIndex = Number(this.comparisonSeek.value); this.draw(); } });
   private readonly comparisonCounts = h('p');
@@ -69,9 +75,9 @@ export class EpisodeView {
     const previous = h('button', { onclick: () => this.replay.step(-1) }, 'Previous');
     const next = h('button', { onclick: () => this.replay.step() }, 'Next');
     this.playback.append(h('div', { class: 'row' }, h('button', { onclick: () => this.replay.reset() }, 'Reset'), previous, this.playButton, next, h('label', {}, 'Perspective ', this.perspectivePicker)), h('div', { class: 'episode-timeline' }, this.seek, this.counter));
-    this.comparisonControls.append(h('label', {}, 'Compare with ', this.comparisonPicker), this.comparisonRun);
+    this.comparisonControls.append(h('label', {}, 'Control ', this.axisPicker), h('label', {}, 'Compare with ', this.comparisonPicker), this.comparisonRun);
     this.comparisonTimeline.append(this.comparisonCounts, this.comparisonName, h('div', { class: 'row' }, this.comparisonSeek, h('button', { onclick: () => { this.comparisonIndex = null; this.draw(); } }, 'Join current public clock')), this.comparisonBody);
-    this.comparisonSlot.append(h('h3', {}, 'Matched policy comparison'), h('p', { class: 'hint' }, 'Keeps the actual mechanism, role, complete sequence, IDs, and scientific settings of the shown episode. Only compatible original controls are listed.'), this.comparisonControls, this.comparisonTimeline);
+    this.comparisonSlot.append(h('h3', {}, 'Matched original control comparison'), h('p', { class: 'hint' }, 'Changes one declared original control. Retains geometry, resources, spawn order, goals, seed, horizon and sampling. Same seed does not promise paired random draws. Only compatible choices are listed.'), this.comparisonControls, this.comparisonTimeline);
     this.comparisonSlot.hidden = true;
     this.el = h('div', { class: 'episode-view' }, this.setup, h('div', { class: 'row' }, this.cancelButton, this.status), h('div', { class: 'episode-shown-heading' }, this.shownTitle, this.retained), this.shownNote, this.playback, this.stage, this.comparisonSlot, this.recordedButton, this.recordedSlot);
     this.ready = this.initialize();
@@ -79,7 +85,7 @@ export class EpisodeView {
   private async initialize(): Promise<void> {
     this.busy = true;
     try {
-      this.catalog = await this.client.catalog();
+      this.catalog = (await this.client.catalog()).map(spatialCatalog);
       if (this.disposed) return;
       this.picker.replaceChildren(...this.catalog.map(d => h('option', { value: d.id }, `${d.title}${rendererAvailable(d) ? '' : ' (visualization unavailable)'}`)));
       this.pick(); this.status.textContent = '';
@@ -154,7 +160,12 @@ export class EpisodeView {
     for (const row of Array.isArray(obj(checkpoint.public).roster) ? obj(checkpoint.public).roster as Json[] : []) agents.add(String(obj(row).id));
     if (this.perspective.kind === 'agent') agents.add(this.perspective.agent);
     const current = this.perspective.kind === 'researcher' ? 'researcher' : `agent:${this.perspective.agent}`;
-    this.perspectivePicker.replaceChildren(...[...agents].map(agent => h('option', { value: `agent:${agent}`, selected: current === `agent:${agent}` }, `Agent ${agent}`)), h('option', { value: 'researcher', selected: current === 'researcher' }, 'Researcher (privileged)'));
+    const perspectiveOptionsKey = JSON.stringify([...agents]);
+    if (perspectiveOptionsKey !== this.perspectiveOptionsKey) {
+      this.perspectiveOptionsKey = perspectiveOptionsKey;
+      this.perspectivePicker.replaceChildren(...[...agents].map(agent => h('option', { value: `agent:${agent}`, selected: current === `agent:${agent}` }, `Agent ${agent}`)), h('option', { value: 'researcher', selected: current === 'researcher' }, 'Researcher (privileged)'));
+    }
+    this.perspectivePicker.value = current;
     this.playback.disabled = false;
     this.seek.max = String(record.checkpoints.length - 1); this.seek.value = String(this.replay.index);
     this.counter.textContent = `${this.replay.index + 1} / ${record.checkpoints.length} — ${label(checkpoint.kind)}`;
@@ -164,68 +175,84 @@ export class EpisodeView {
     this.shownTitle.textContent = descriptor.title;
     this.shownNote.textContent = `Shown successful episode · ${label(record.semantics)}. Editing controls above changes the next run.`;
     const projected = projectCheckpoint(record, this.replay.index, this.perspective);
-    const rendered = descriptor.family === 'game' ? renderGame(projected, renderDescriptor(descriptor)) : descriptor.family === 'testimony' ? renderTestimony(projected, renderDescriptor(descriptor)) : renderSurface(projected, renderDescriptor(descriptor));
+    const rendered = descriptor.family === 'game' ? renderGame(projected, renderDescriptor(descriptor)) : descriptor.family === 'testimony' ? renderTestimony(projected, renderDescriptor(descriptor)) : descriptor.family === 'spatial' ? renderSpatial(projected, renderDescriptor(descriptor)) : renderSurface(projected, renderDescriptor(descriptor));
     const payload = resultPayload(record, this.replay.index, this.perspective);
     const result = h('section', { class: 'episode-result' });
     if (payload !== null) {
       const p = obj(payload);
       result.append(h('div', {}, h('h3', {}, this.perspective.kind === 'researcher' ? 'Researcher — complete episode result' : 'Final episode result'), fact('Availability', descriptor.family === 'surface' ? surfaceSummary(payload).status : p.availability ?? p.status ?? 'complete'), p.expected_payoff !== undefined ? fact('Conditional expected payoff', p.expected_payoff) : null, p.conditional_regret !== undefined ? fact('Conditional expected regret', p.conditional_regret) : null, p.outcome ? fact('Outcome', p.outcome) : null, p.fingerprint ? fact('Fingerprint', p.fingerprint) : null, details('Shown input and rules identity', { input: record.input, rules_identity: record.rules_identity }), p.retained_audit_summary ? details('Retained population and guarantee measurements', p.retained_audit_summary) : null));
       if (descriptor.family === 'surface') result.append(renderSurfaceResult(payload));
+      if (descriptor.family === 'spatial') result.append(renderSpatialResult(payload));
       if (record.semantics === 'conditional_case') result.append(h('p', { class: 'hint' }, 'Conditional expectations are not a realized reward. Private truth and signals are unavailable.'));
     } else result.append(h('p', { class: 'hint' }, 'Complete results become available at the final checkpoint or in Researcher perspective.'));
     this.stage.replaceChildren(rendered, result);
     this.drawComparison(record, descriptor);
   }
-  private async compare(input: Json, original: EpisodeRecord): Promise<void> {
-    if (this.busy || comparisonKey(input) !== comparisonKey(original.input)) return;
+  private async compare(input: Json, original: EpisodeRecord, axis?: SpatialAxis): Promise<void> {
+    const key = (value: Json) => axis ? spatialComparisonKey(value, axis) : comparisonKey(value);
+    if (this.busy || key(input) !== key(original.input)) return;
     const generation = this.generation;
     this.setBusy(true); this.status.textContent = 'Running matched policy…';
     try {
       const next = await this.client.request('run', checkedInput(input));
       if (this.disposed || generation !== this.generation || this.replay.record !== original) return;
-      if (comparisonKey(next.input) !== comparisonKey(original.input)) throw new Error('Comparison inputs differ');
+      if (key(next.input) !== key(original.input)) throw new Error('Comparison inputs differ');
       this.session.records = [original, next];
       this.showRecord(original);
       this.status.textContent = 'Matched episodes ready. Public clocks align only where both records contain the same stage.';
     } catch (error) { this.error(error); } finally { this.setBusy(false); }
   }
   private drawComparison(record: EpisodeRecord, descriptor: StudyDescriptor): void {
-    this.comparisonSlot.hidden = descriptor.family !== 'surface';
-    if (descriptor.family !== 'surface') return;
-    const candidates = matchedInputs(record.input, descriptor);
+    const spatial = descriptor.family === 'spatial';
+    this.comparisonSlot.hidden = descriptor.family !== 'surface' && !spatial;
+    if (this.comparisonSlot.hidden) return;
+    this.axisPicker.parentElement!.hidden = !spatial;
+    if (spatial) {
+      const axes = obj(descriptor.controls).comparisons;
+      const rows = Array.isArray(axes) ? axes.map(obj) : [];
+      const axesKey = JSON.stringify(rows);
+      if (axesKey !== this.axisOptionsKey) { this.axisOptionsKey = axesKey; this.axisPicker.replaceChildren(...rows.map(a => h('option', { value: a.id }, label(String(a.id))))); this.spatialAxis = null; }
+      this.spatialAxis = declaredSpatialAxis(descriptor, this.axisPicker.value);
+    } else this.spatialAxis = null;
+    const axis = this.spatialAxis;
+    const candidates = axis ? spatialMatchedInputs(record.input, descriptor, axis.id) : matchedInputs(record.input, descriptor);
+    const name = (input: Json) => axis ? `${label(axis.id)}: ${String(spatialAxisValue(input, axis))}` : surfaceSettingLabel(input);
+    const key = (input: Json) => axis ? spatialComparisonKey(input, axis) : comparisonKey(input);
     const optionsKey = JSON.stringify(candidates);
     // Updating checkpoint content must not detach controls being focused or dragged.
     // Only a changed compatible candidate set replaces options/reset selection.
     if (optionsKey !== this.comparisonOptionsKey) {
       this.comparisonOptionsKey = optionsKey;
       this.comparisonCandidates = candidates;
-      this.comparisonPicker.replaceChildren(...candidates.map((input, i) => h('option', { value: i }, surfaceSettingLabel(input))));
+      this.comparisonPicker.replaceChildren(...candidates.map((input, i) => h('option', { value: i }, name(input))));
     }
     this.comparisonRun.disabled = !candidates.length;
-    const other = this.session.records.find(r => r !== record && comparisonKey(r.input) === comparisonKey(record.input));
+    const other = this.session.records.find(r => r !== record && r.study === record.study && key(r.input) === key(record.input));
     this.comparisonTimeline.hidden = !other;
     this.comparisonBody.replaceChildren();
     if (!other) return;
     const at = record.checkpoints[this.replay.index];
     const index = this.comparisonIndex ?? matchingCheckpoint(other.checkpoints, at);
     this.comparisonCounts.textContent = `Independent timelines: shown ${record.checkpoints.length} checkpoints; comparison ${other.checkpoints.length} checkpoints.`;
-    this.comparisonName.textContent = surfaceSettingLabel(other.input);
+    this.comparisonName.textContent = name(other.input);
     this.comparisonSeek.max = String(other.checkpoints.length - 1);
     this.comparisonSeek.value = String(Math.max(0, index));
     if (index < 0) {
       this.comparisonBody.append(h('p', { role: 'status' }, 'Unavailable at this public clock and stage. This run ended or did not visit this checkpoint; no wait or state is inferred. Use its independent timeline to inspect it.'));
       return;
     }
-    this.comparisonBody.append(h('p', {}, `${index + 1} / ${other.checkpoints.length} · ${this.comparisonIndex === null ? 'Matched public clock and stage' : 'Independent checkpoint'}`), renderSurface(projectCheckpoint(other, index, this.perspective), renderDescriptor(descriptor)));
+    this.comparisonBody.append(h('p', {}, `${index + 1} / ${other.checkpoints.length} · ${this.comparisonIndex === null ? 'Matched public clock and stage' : 'Independent checkpoint'}`), spatial ? renderSpatial(projectCheckpoint(other, index, this.perspective), renderDescriptor(descriptor)) : renderSurface(projectCheckpoint(other, index, this.perspective), renderDescriptor(descriptor)));
     const payload = resultPayload(other, index, this.perspective);
-    if (payload !== null) this.comparisonBody.append(h('h3', {}, this.perspective.kind === 'researcher' ? 'Researcher · comparison complete result' : 'Comparison final result'), renderSurfaceResult(payload));
+    if (payload !== null) this.comparisonBody.append(h('h3', {}, this.perspective.kind === 'researcher' ? 'Researcher · comparison complete result' : 'Comparison final result'), spatial ? renderSpatialResult(payload) : renderSurfaceResult(payload));
   }
   pause(): void { this.replay.pause(); this.draw(); }
   dispose(): void {
     this.disposed = true;
-    this.replay.dispose(); this.session.dispose();
+    this.replay.dispose(); this.session.edit(null); this.session.dispose();
     this.comparisonIndex = null; this.comparisonCandidates = []; this.comparisonOptionsKey = '';
-    this.pendingInput = undefined; this.editor = null;
+    this.pendingInput = undefined; this.editor = null; this.spatialAxis = null; this.catalog = [];
+    this.axisOptionsKey = ''; this.perspectiveOptionsKey = '';
+    this.editorSlot.replaceChildren(); this.axisPicker.replaceChildren(); this.perspectivePicker.replaceChildren(); this.retained.replaceChildren(); this.picker.replaceChildren();
     this.stage.replaceChildren(); this.comparisonBody.replaceChildren();
     this.comparisonCounts.textContent = ''; this.comparisonName.textContent = '';
     this.comparisonPicker.replaceChildren(); this.comparisonSlot.hidden = true;

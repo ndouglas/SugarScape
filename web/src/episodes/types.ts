@@ -35,3 +35,4 @@ export interface WorkerLike {
   postMessage(message: WorkerRequest): void;
   terminate(): void;
 }
+export interface SpatialAxis { id:string; path:string[]; values:Json[] }
