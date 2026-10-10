@@ -164,15 +164,29 @@ impl Engagement {
             contributed_rate[0] * self.config.dt,
             contributed_rate[1] * self.config.dt,
         ];
+        let source_context = |side: usize| {
+            let name = ["blue", "red"][side];
+            let rate = [self.config.blue_rate, self.config.red_rate][side];
+            format!("source_side={name}; source_count={}; source_rate={rate:?}; dt={:?}; contributed_rate={:?}; integrated={:?}", sources[side], self.config.dt, contributed_rate[side], integrated[side])
+        };
         for side in 0..2 {
             if !contributed_rate[side].is_finite() || !integrated[side].is_finite() {
                 return Err(issue(
                     "exposure",
-                    "contributed rate and integrated dose must remain finite",
+                    &format!(
+                        "{}; contributed rate and integrated dose must remain finite",
+                        source_context(side)
+                    ),
                 ));
             }
             if contributed_rate[side] > 0.0 && integrated[side] == 0.0 {
-                return Err(issue("exposure", "positive integrated exposure underflow"));
+                return Err(issue(
+                    "exposure",
+                    &format!(
+                        "{}; positive integrated exposure underflow",
+                        source_context(side)
+                    ),
+                ));
             }
         }
         let hazards = if duel {
@@ -199,7 +213,13 @@ impl Engagement {
                             .iter()
                             .find(|id| !duel || matched.contains(id))
                             .expect("validated nonempty exposure");
-                        error.detail = format!("target_id={target}; {}", error.detail);
+                        error.detail = format!(
+                            "{}; target_side={}; target_count={}; target_id={target}; {}",
+                            source_context(1 - side),
+                            ["blue", "red"][side],
+                            if duel { sources[side] } else { start[side] },
+                            error.detail
+                        );
                         error
                     })?,
                 );
@@ -207,10 +227,10 @@ impl Engagement {
             } else if !hazards[side].is_finite() || hazards[side] < 0.0 {
                 return Err(issue(
                     "hazard",
-                    "target hazard must be finite and nonnegative",
+                    &format!("{}; target_side={}; target_count={}; hazard={:?}; target hazard must be finite and nonnegative", source_context(1 - side), ["blue", "red"][side], start[side], hazards[side]),
                 ));
             } else if contributed_rate[1 - side] > 0.0 {
-                return Err(issue("hazard", "positive target hazard underflow"));
+                return Err(issue("hazard", &format!("{}; target_side={}; target_count={}; hazard={:?}; positive target hazard underflow", source_context(1 - side), ["blue", "red"][side], start[side], hazards[side])));
             }
         }
         let next_step = self.step + 1;

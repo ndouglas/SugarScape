@@ -7,12 +7,14 @@ pub const FILES: &[&str] = &[
     "Cargo.toml",
     "Cargo.lock",
     "crates/sugarscape-core/Cargo.toml",
+    "crates/sugarscape-core/assets/sugar-map.txt",
     "survey/Cargo.toml",
     "survey/Cargo.lock",
     "survey/build.rs",
     "survey/src/bin/war1.rs",
     "survey/build_support/war1_source_identity.rs",
     "docs/superpowers/specs/2026-10-09-war-1-engagement-design.md",
+    "docs/superpowers/specs/2026-10-10-war-1-engineering-amendment.md",
     "docs/superpowers/plans/2026-10-09-war-1-engagement.md",
 ];
 pub const REQUIRED_SOURCES: &[&str] = &[

@@ -302,3 +302,22 @@ fn fifo_input_is_rejected_without_waiting_for_a_writer() {
         "FIFO must be rejected before blocking open"
     );
 }
+
+// Catches treating literal zero as an underflowed nonzero JSON token.
+#[test]
+fn literal_zero_rates_are_accepted_and_end_without_a_settlement() {
+    let case = Case::new();
+    let input = GRAPH
+        .replace("\"blue_rate\":1.0", "\"blue_rate\":0")
+        .replace("\"red_rate\":1.0", "\"red_rate\":0.0");
+    let out = case.run(&input);
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let receipt: Value =
+        serde_json::from_slice(&fs::read(case.0.join("out/success.json")).unwrap()).unwrap();
+    assert_eq!(receipt["summary"]["completed_steps"], 0);
+    assert_eq!(receipt["summary"]["ending"]["reason"], "rate_zero");
+}

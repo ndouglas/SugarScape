@@ -78,3 +78,55 @@ fn runtime_binding_refuses_changed_source_bytes() {
     std::fs::remove_dir_all(root).unwrap();
     assert!(result.unwrap_err().contains("changed since compilation"));
 }
+
+const MAP: &str = "crates/sugarscape-core/assets/sugar-map.txt";
+const AMENDMENT: &str = "docs/superpowers/specs/2026-10-10-war-1-engineering-amendment.md";
+
+// Removing either explicit dependency must reject an incomplete stamp.
+#[test]
+fn stamp_requires_embedded_map_and_engineering_amendment() {
+    for source in [MAP, AMENDMENT] {
+        let inputs = entries()
+            .into_iter()
+            .filter(|(path, _)| path != source)
+            .map(Ok);
+        assert!(
+            fingerprint(inputs).is_err(),
+            "missing {source} was accepted"
+        );
+    }
+}
+
+// Exercise the real reader/verifier against changed, absent and linked assets.
+#[test]
+fn embedded_map_changes_and_missing_map_invalidate_compiled_binding() {
+    let root = std::env::temp_dir()
+        .canonicalize()
+        .unwrap()
+        .join(format!("war1-map-{}", std::process::id()));
+    std::fs::create_dir(&root).unwrap();
+    for (path, bytes) in entries() {
+        let file = root.join(path);
+        std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+        std::fs::write(file, bytes).unwrap();
+    }
+    let map = root.join(MAP);
+    std::fs::create_dir_all(map.parent().unwrap()).unwrap();
+    std::fs::write(&map, b"original map").unwrap();
+    let compiled = fingerprint(read(&root).unwrap().into_iter().map(Ok)).unwrap();
+    verify(&root, &compiled).unwrap();
+    std::fs::write(&map, b"changed map").unwrap();
+    let changed = verify(&root, &compiled);
+    std::fs::remove_file(&map).unwrap();
+    let missing = verify(&root, &compiled);
+    #[cfg(unix)]
+    let linked = {
+        std::os::unix::fs::symlink(root.join("Cargo.toml"), &map).unwrap();
+        verify(&root, &compiled)
+    };
+    std::fs::remove_dir_all(root).unwrap();
+    assert!(changed.unwrap_err().contains("changed since compilation"));
+    assert!(missing.unwrap_err().contains("sugar-map.txt"));
+    #[cfg(unix)]
+    assert!(linked.unwrap_err().contains("symlink"));
+}

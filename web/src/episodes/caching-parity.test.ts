@@ -128,13 +128,40 @@ describe('caching import authority and strict bounds', () => {
     reject(() => experiment_run_json(' '.repeat(64 * 1024 + 1))); reject(() => experiment_validate_json(' '.repeat(16 * 1024 * 1024 + 1)));
   });
 });
+// Test-only historical source authentication; production episode identities stay frozen.
+async function cachingIdentityBytes(path: string, live: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> {
+  if (path !== 'crates/sugarscape-core/src/lib.rs') return live;
+  const historical = bytes(`${root}/web/src/episodes/test-fixtures/pre-war-core-lib.rs.txt`);
+  expect(await sha(historical)).toBe('6ac710e9fe3521e6591dc8edc02b884e2aaae55a36298ab7313d9a9fb4c85f4f');
+  const nativeGate = '\n#[cfg(all(feature = "war-benchmarks", not(target_arch = "wasm32")))]\npub mod war;\n';
+  // Compare every byte, including whitespace; no stripping or hash exemption.
+  const gateBytes = new TextEncoder().encode(nativeGate);
+  const expectedLive = new Uint8Array(historical.length + gateBytes.length);
+  expectedLive.set(historical);
+  expectedLive.set(gateBytes, historical.length);
+  expect(new Uint8Array(live), 'live lib.rs differs beyond the authorized native W1 gate').toEqual(expectedLive);
+  return historical;
+}
 describe('caching source identity integrity', () => {
+  it('rejects arbitrary live lib changes despite authentic historical bytes', async () => {
+    const path = 'crates/sugarscape-core/src/lib.rs';
+    const live = new TextDecoder().decode(bytes(`${root}/${path}`));
+    for (const changed of [
+      `${live}\n// unrelated delta\n`,
+      live.replace('not(target_arch = "wasm32")', 'target_arch = "wasm32"'),
+      live.replace('pub mod world;', '// removed world'),
+      live.replace('feature = "war-benchmarks"', 'feature = "other-feature"'),
+    ]) {
+      expect(changed).not.toBe(live);
+      await expect(cachingIdentityBytes(path, new TextEncoder().encode(changed))).rejects.toThrow();
+    }
+  });
   const identities = JSON.parse(readFileSync(`${root}/crates/sugarscape-core/src/browser_experiments/fixtures/caching-identities.json`, 'utf8')) as Record<string, { source_files: Record<string, string>; source_sha256: string }>;
   for (const [study, identity] of Object.entries(identities)) it(`${study} authenticates paths, files and canonical digest`, async () => {
     let canonical = '';
     for (const [path, digest] of Object.entries(identity.source_files).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
       expect(path).toMatch(/^(Cargo\.lock|crates\/sugarscape-core\/src\/.+\.rs)$/); expect(path.split('/')).not.toContain('..');
-      const actual = await sha(bytes(`${root}/${path}`)); expect(actual, path).toBe(digest); canonical += `${path}\0${actual}\n`;
+      const actual = await sha(await cachingIdentityBytes(path, bytes(`${root}/${path}`))); expect(actual, path).toBe(digest); canonical += `${path}\0${actual}\n`;
     }
     expect(await sha(canonical)).toBe(identity.source_sha256);
   });

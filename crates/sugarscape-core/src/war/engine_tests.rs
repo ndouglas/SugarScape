@@ -265,3 +265,94 @@ fn observation_and_seed_order_do_not_change_trajectories() {
     assert_eq!(run(8, false), eight);
     assert_eq!(run(7, true), seven);
 }
+
+// Catches aggregate guards losing the operands before target validation.
+#[test]
+fn aggregate_underflow_identifies_source_side_and_operands() {
+    for blue_source in [true, false] {
+        let mut c = config(Geometry::DuelContact);
+        if blue_source {
+            c.blue_rate = f64::from_bits(1);
+        } else {
+            c.red_rate = f64::from_bits(1);
+        }
+        let mut engine = Engagement::new(c, 7).unwrap();
+        let before = engine.checkpoint();
+        let error = engine.step().unwrap_err();
+        for context in [
+            if blue_source {
+                "source_side=blue"
+            } else {
+                "source_side=red"
+            },
+            "source_count=2",
+            "source_rate=5e-324",
+            "dt=0.05",
+            "underflow",
+        ] {
+            assert!(
+                error.issue.detail.contains(context),
+                "missing {context}: {}",
+                error.issue.detail
+            );
+        }
+        assert_eq!(engine.checkpoint(), before);
+    }
+}
+
+// A coupled permutation swaps rates, side/ID assignments and target words.
+// The midpoint word lies between the two probabilities, so swapping only IDs
+// without their hazard/draw allocation would change the settlement.
+#[test]
+fn coupled_side_rate_id_and_word_swap_mirrors_settlement() {
+    let mut c = config(Geometry::DuelContact);
+    c.blue = 3;
+    c.red = 2;
+    c.blue_rate = 1.0;
+    c.red_rate = 0.2;
+    let midpoint = 1_u64 << 59; // u=1/32, between 1-exp(-.01) and 1-exp(-.05).
+    let mut original = Engagement::new(c.clone(), 7).unwrap();
+    let a = original
+        .step_supplied(&[(0, 4), (2, 3)], &[midpoint, 0, midpoint, u64::MAX])
+        .unwrap()
+        .unwrap();
+    std::mem::swap(&mut c.blue, &mut c.red);
+    std::mem::swap(&mut c.blue_rate, &mut c.red_rate);
+    let mut swapped = Engagement::new(c, 7).unwrap();
+    // Old red 3,4 -> blue 0,1; old blue 0,1,2 -> red 2,3,4.
+    let b = swapped
+        .step_supplied(&[(1, 2), (0, 4)], &[midpoint, u64::MAX, midpoint, 0])
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        a.casualties
+            .iter()
+            .map(|c| (c.id, c.side))
+            .collect::<Vec<_>>(),
+        [(2, Side::Blue), (3, Side::Red)]
+    );
+    assert_eq!(
+        b.casualties
+            .iter()
+            .map(|c| (c.id, c.side))
+            .collect::<Vec<_>>(),
+        [(0, Side::Blue), (4, Side::Red)]
+    );
+    assert_eq!((a.survivors, b.survivors), ([2, 1], [1, 2]));
+    assert_eq!(
+        b.exposure.contributed_rate,
+        [
+            a.exposure.contributed_rate[1],
+            a.exposure.contributed_rate[0]
+        ]
+    );
+    assert_eq!(
+        b.exposure.target_probability,
+        [
+            a.exposure.target_probability[1].clone(),
+            a.exposure.target_probability[0].clone()
+        ]
+    );
+    assert_eq!(original.checkpoint().blue_alive, [0, 1]);
+    assert_eq!(swapped.checkpoint().red_alive, [2, 3]);
+}

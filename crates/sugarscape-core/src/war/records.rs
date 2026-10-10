@@ -27,6 +27,13 @@ pub struct RunHeader {
     pub clock_unit: String,
 }
 
+/// The stationary graph supplies aggregate exposure, never a unique killer.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GraphCasualtyCause {
+    BenchmarkExposure,
+}
+
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "kind", content = "data", rename_all = "snake_case")]
 #[allow(clippy::large_enum_variant)] // Public record contract keeps the observation inline.
@@ -35,6 +42,7 @@ pub enum ObservedFrame {
         counts: Option<[u32; 2]>,
     },
     Graph {
+        cause: GraphCasualtyCause,
         frame: Frame,
         reference: Option<super::reference::ReferencePoint>,
         reference_error: Option<super::reference::ReferenceFailure>,

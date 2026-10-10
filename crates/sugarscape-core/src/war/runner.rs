@@ -121,6 +121,7 @@ pub fn run_to(
                     .observe(
                         frame.step,
                         ObservedFrame::Graph {
+                            cause: super::records::GraphCasualtyCause::BenchmarkExposure,
                             frame,
                             reference,
                             reference_error,
@@ -329,7 +330,36 @@ fn book_frame(world: &World) -> Result<BookFrame, String> {
             }
         }
     }
+    validate_snapshot(&frame.snapshot)
+        .map_err(|detail| format!("tick {}: {detail}", world.tick))?;
     Ok(frame)
+}
+
+/// Snapshot omits absent Option groups. Every serialized null therefore denotes
+/// a nonfinite numeric observation, including nested/private statistic fields.
+/// Check the wire representation so new numeric fields cannot bypass this guard.
+pub(super) fn validate_snapshot(snapshot: &Snapshot) -> Result<(), String> {
+    fn check(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        match value {
+            serde_json::Value::Null => Err(format!("{path} is nonfinite in actual World Snapshot")),
+            serde_json::Value::Array(values) => {
+                for (index, value) in values.iter().enumerate() {
+                    check(value, &format!("{path}[{index}]"))?;
+                }
+                Ok(())
+            }
+            serde_json::Value::Object(fields) => {
+                for (name, value) in fields {
+                    check(value, &format!("{path}.{name}"))?;
+                }
+                Ok(())
+            }
+            _ => Ok(()),
+        }
+    }
+    let value = serde_json::to_value(snapshot)
+        .map_err(|error| format!("Snapshot serialization: {error}"))?;
+    check(&value, "snapshot")
 }
 
 struct Output<'a> {

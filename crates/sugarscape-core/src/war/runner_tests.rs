@@ -465,6 +465,7 @@ fn unavailable_reference_preserves_successful_finite_graph_frame() {
                         frame,
                         reference,
                         reference_error,
+                        ..
                     },
             } => Some((frame, reference, reference_error)),
             _ => None,
@@ -678,5 +679,135 @@ fn wire_records_are_tagged_and_unavailable_quantities_are_honest() {
             json.as_array().unwrap().last().unwrap()["payload"]["kind"],
             "terminal"
         );
+    }
+}
+
+// Catches accepted World snapshots becoming unlabeled JSON null observations.
+#[test]
+fn nonfinite_book_snapshot_fails_after_completed_tick_before_emission() {
+    let mut config = Config::default();
+    config.goods[0].map = crate::config::Map::Flat {
+        capacity: 1.121e303,
+    };
+    config.validate().unwrap();
+    let mut direct = World::new(config.clone(), 7).unwrap();
+    direct.step();
+    let snapshot = Snapshot::of(&direct);
+    assert!(!snapshot.gini.is_finite());
+    assert!(!snapshot.gini_total.is_finite());
+    assert!(direct
+        .agents()
+        .map(|a| a.holdings[0])
+        .sum::<f64>()
+        .is_finite());
+    assert!(direct
+        .sites
+        .iter()
+        .map(|s| s.resource[0])
+        .sum::<f64>()
+        .is_finite());
+    let mut records = Vec::new();
+    let failure = run_to(
+        &StudyInput::BookC {
+            config,
+            seed: 7,
+            max_steps: 1,
+        },
+        &Capture {
+            retain_steps: vec![],
+        },
+        &mut |r| {
+            records.push(r.clone());
+            Ok(())
+        },
+    )
+    .unwrap_err();
+    assert_eq!(failure.kind, "invalid_observation");
+    assert!(
+        failure.detail.contains("snapshot.gini"),
+        "{}",
+        failure.detail
+    );
+    assert!(failure.detail.contains("tick 1"));
+    assert_eq!(
+        (
+            failure.completed_steps,
+            failure.emitted_steps,
+            failure.attempted_step
+        ),
+        (1, 0, Some(1))
+    );
+    assert_eq!(records.len(), 2);
+}
+
+// Catches loss of the explicit casualty interpretation in the wire envelope.
+#[test]
+fn graph_envelope_serializes_benchmark_exposure_cause() {
+    let (_, records) = collect(
+        &StudyInput::ReciprocalGraph {
+            config: graph(),
+            seed: 7,
+        },
+        vec![],
+    );
+    let json = serde_json::to_value(&records[2]).unwrap();
+    assert_eq!(
+        json["payload"]["data"]["frame"]["data"]["cause"],
+        "benchmark_exposure"
+    );
+}
+
+// Catches omitted guards for vectors/nested statistics and misclassified absence.
+#[test]
+fn snapshot_guard_checks_all_serialized_numbers_and_allows_absent_groups() {
+    use crate::stats::{GoodStats, MemoryStats};
+    let finite = Snapshot::default();
+    super::runner::validate_snapshot(&finite).unwrap();
+    let cases = [
+        (
+            Snapshot {
+                gini_total: f64::NEG_INFINITY,
+                ..finite.clone()
+            },
+            "snapshot.gini_total",
+        ),
+        (
+            Snapshot {
+                goods: vec![GoodStats {
+                    traded: f64::NAN,
+                    ..GoodStats::default()
+                }],
+                ..finite.clone()
+            },
+            "snapshot.goods[0].traded",
+        ),
+        (
+            Snapshot {
+                pollution: vec![f64::INFINITY],
+                ..finite.clone()
+            },
+            "snapshot.pollution[0]",
+        ),
+        (
+            Snapshot {
+                groups: vec![f64::NAN],
+                ..finite.clone()
+            },
+            "snapshot.groups[0]",
+        ),
+        (
+            Snapshot {
+                memory: Some(MemoryStats {
+                    belief_error: f64::NAN,
+                    ..MemoryStats::default()
+                }),
+                ..finite
+            },
+            "snapshot.memory.belief_error",
+        ),
+    ];
+    for (snapshot, path) in cases {
+        let error = super::runner::validate_snapshot(&snapshot).unwrap_err();
+        assert!(error.contains(path), "{error}");
     }
 }
