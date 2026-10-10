@@ -138,3 +138,78 @@ fn spatial_scene_and_bounded_extreme_snapshot_bytes_are_recomputed_on_this_targe
         );
     }
 }
+
+#[wasm_bindgen_test]
+fn caching_defaults_presets_and_max_u64_reconstruct_complete_native_records() {
+    let scenes: Value = serde_json::from_str(include_str!(
+        "../../sugarscape-core/src/browser_experiments/fixtures/caching-scenes.json"
+    ))
+    .unwrap();
+    for scene in scenes["scenes"].as_array().unwrap() {
+        for seed in ["7", "18446744073709551615"] {
+            let mut input = scene["input"].clone();
+            input["seed"] = json!(seed);
+            if input["study"] == "protection_recaching" {
+                input["lab"]["exposure_span"] = json!("18446744073709551615");
+            }
+            let text = input.to_string();
+            let expected =
+                serde_json::to_value(core::run(&core::normalize_input(&text).unwrap()).unwrap())
+                    .unwrap();
+            let raw = experiment_run_json(&text).unwrap();
+            let actual: Value = serde_json::from_str(&raw).unwrap();
+            assert_eq!(actual, expected);
+            assert_eq!(experiment_validate_json(&raw).unwrap(), raw);
+            assert_eq!(actual["input"]["seed"], seed);
+            assert!(actual["checkpoints"].as_array().unwrap().len() <= 65);
+        }
+    }
+}
+
+#[wasm_bindgen_test]
+fn caching_imports_reject_forged_evidence_source_version_and_input() {
+    for descriptor in core::catalog().into_iter().filter(|d| {
+        matches!(
+            d.id,
+            core::StudyId::ProtectionRecaching | core::StudyId::DeceptionGestures
+        )
+    }) {
+        let raw = experiment_run_json(&descriptor.default_input.to_string()).unwrap();
+        let base: Value = serde_json::from_str(&raw).unwrap();
+        for (pointer, replacement, field) in [
+            ("/version", json!(99), "version"),
+            ("/rules_identity", json!("foreign-source"), "rules_identity"),
+            ("/input/seed", json!("18446744073709551615"), "episode"),
+            ("/payload/native/seed", json!("0"), "episode"),
+            (
+                "/checkpoints/1/researcher/frame/fingerprint",
+                json!("forged"),
+                "episode",
+            ),
+            ("/checkpoints/1/local/1/seen", json!([]), "episode"),
+        ] {
+            let mut forged = base.clone();
+            *forged.pointer_mut(pointer).unwrap() = replacement;
+            // The empty seen mutation may match initial memory; use a clearly
+            // non-native atom rather than assume evidence exists at this tick.
+            if pointer.ends_with("/seen") {
+                *forged.pointer_mut(pointer).unwrap() = json!(["forged"]);
+            }
+            errors(experiment_validate_json(&forged.to_string()), field);
+        }
+        let mut forged = base.clone();
+        forged["checkpoints"] = json!(vec![
+            json!({"index":0,"clock":null,"kind":"caching_initial","public":null,"local":{},"researcher":null});
+            4097
+        ]);
+        errors(experiment_validate_json(&forged.to_string()), "checkpoints");
+        let mut input = descriptor.default_input.clone();
+        input["lab"]["invented"] = json!(true);
+        errors(experiment_run_json(&input.to_string()), "input");
+        for seed in ["07", "+7", "18446744073709551616"] {
+            let mut input = descriptor.default_input.clone();
+            input["seed"] = json!(seed);
+            errors(experiment_run_json(&input.to_string()), "input");
+        }
+    }
+}

@@ -22,10 +22,10 @@
 **Goal**: Imports, native/WASM boundaries and unchanged sources
 **Success Criteria**: Exact reproduction and original-export preservation
 **Tests**: WASM bridges, caching parity and original determinism
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 5: Reviewed delivery
 **Goal**: Browser acceptance, docs, full gates, main integration
 **Success Criteria**: Independent review clear; exact-commit CI and Pages success
 **Tests**: Full local gates and source-bound browser/remote receipts
-**Status**: Not Started
+**Status**: In Progress

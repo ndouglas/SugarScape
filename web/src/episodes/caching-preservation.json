@@ -1,0 +1,260 @@
+{
+  "exports": [
+    {
+      "name": "original-p3-18446744073709551615-erased.json",
+      "sha256": "0b1d3ad7e0d5bceee700c4f386014da8a17bc57abf3f386f18e5368fd417d1ab",
+      "seed": "18446744073709551615",
+      "lab": {
+        "policy": "erased",
+        "fixture": {
+          "kind": "single",
+          "initial_observed": true,
+          "redeposit_observed": false
+        },
+        "mirrored": false,
+        "reburial_cost": 0.25,
+        "discovery": 0.0,
+        "exposure_span": 64,
+        "observer_span": 64
+      },
+      "study": "protection_recaching"
+    },
+    {
+      "name": "original-p3-18446744073709551615-indiscriminate.json",
+      "sha256": "8809aa9dca2739cd86e98ea444cb4f58f48220d585ce0a14dfc0c4ef1944d354",
+      "seed": "18446744073709551615",
+      "lab": {
+        "policy": "indiscriminate",
+        "fixture": {
+          "kind": "single",
+          "initial_observed": true,
+          "redeposit_observed": false
+        },
+        "mirrored": false,
+        "reburial_cost": 0.25,
+        "discovery": 0.0,
+        "exposure_span": 64,
+        "observer_span": 64
+      },
+      "study": "protection_recaching"
+    },
+    {
+      "name": "original-p3-18446744073709551615-off.json",
+      "sha256": "d11b6a1985349708f5930da2378fa237da49e8fcd64b61e3365167be435f1e18",
+      "seed": "18446744073709551615",
+      "lab": {
+        "policy": "off",
+        "fixture": {
+          "kind": "single",
+          "initial_observed": true,
+          "redeposit_observed": false
+        },
+        "mirrored": false,
+        "reburial_cost": 0.25,
+        "discovery": 0.0,
+        "exposure_span": 64,
+        "observer_span": 64
+      },
+      "study": "protection_recaching"
+    },
+    {
+      "name": "original-p3-18446744073709551615-selective.json",
+      "sha256": "775f131cb66b7cd38f88e52bfe6548b1dab9c63e1e5f07df37166718afb6c0ee",
+      "seed": "18446744073709551615",
+      "lab": {
+        "policy": "selective",
+        "fixture": {
+          "kind": "single",
+          "initial_observed": true,
+          "redeposit_observed": false
+        },
+        "mirrored": false,
+        "reburial_cost": 0.25,
+        "discovery": 0.0,
+        "exposure_span": 64,
+        "observer_span": 64
+      },
+      "study": "protection_recaching"
+    },
+    {
+      "name": "original-p3-7-erased.json",
+      "sha256": "54f3c9332e4322dffedec0615ccd5fae9637fe010de7400c6a1c343924098c65",
+      "seed": "7",
+      "lab": {
+        "policy": "erased",
+        "fixture": {
+          "kind": "single",
+          "initial_observed": true,
+          "redeposit_observed": false
+        },
+        "mirrored": false,
+        "reburial_cost": 0.25,
+        "discovery": 0.0,
+        "exposure_span": 64,
+        "observer_span": 64
+      },
+      "study": "protection_recaching"
+    },
+    {
+      "name": "original-p3-7-indiscriminate.json",
+      "sha256": "0d16349c0278451866267da0462334821619852516ab16e8cdcdbe4d17610a5d",
+      "seed": "7",
+      "lab": {
+        "policy": "indiscriminate",
+        "fixture": {
+          "kind": "single",
+          "initial_observed": true,
+          "redeposit_observed": false
+        },
+        "mirrored": false,
+        "reburial_cost": 0.25,
+        "discovery": 0.0,
+        "exposure_span": 64,
+        "observer_span": 64
+      },
+      "study": "protection_recaching"
+    },
+    {
+      "name": "original-p3-7-off.json",
+      "sha256": "afd29a836f35c4742b03afa3f8a2d8eb0c40d5047b79a00be6f67ab09e777122",
+      "seed": "7",
+      "lab": {
+        "policy": "off",
+        "fixture": {
+          "kind": "single",
+          "initial_observed": true,
+          "redeposit_observed": false
+        },
+        "mirrored": false,
+        "reburial_cost": 0.25,
+        "discovery": 0.0,
+        "exposure_span": 64,
+        "observer_span": 64
+      },
+      "study": "protection_recaching"
+    },
+    {
+      "name": "original-p3-7-selective.json",
+      "sha256": "f09935af1f2f0e94fd97c36a2a0c763e6febaf3616ac99390ec690c7b742070e",
+      "seed": "7",
+      "lab": {
+        "policy": "selective",
+        "fixture": {
+          "kind": "single",
+          "initial_observed": true,
+          "redeposit_observed": false
+        },
+        "mirrored": false,
+        "reburial_cost": 0.25,
+        "discovery": 0.0,
+        "exposure_span": 64,
+        "observer_span": 64
+      },
+      "study": "protection_recaching"
+    },
+    {
+      "name": "original-p4-18446744073709551615-matched_neutral.json",
+      "sha256": "2d920b946789c894a4df1b3b19f78d30f17de4ec695d17cbb1fdd9f209471cd1",
+      "seed": "18446744073709551615",
+      "lab": {
+        "sender": "matched_neutral",
+        "view": "ambiguous",
+        "display_seen": true,
+        "layout": "off_route",
+        "effort_cost": 3.0,
+        "mirrored": false
+      },
+      "study": "deception_gestures"
+    },
+    {
+      "name": "original-p4-18446744073709551615-ordinary.json",
+      "sha256": "2607f12f47594110a7b092ef5560583c4fb858dfb8a444242efa374ebbb28085",
+      "seed": "18446744073709551615",
+      "lab": {
+        "sender": "ordinary",
+        "view": "ambiguous",
+        "display_seen": true,
+        "layout": "off_route",
+        "effort_cost": 3.0,
+        "mirrored": false
+      },
+      "study": "deception_gestures"
+    },
+    {
+      "name": "original-p4-18446744073709551615-sham.json",
+      "sha256": "e72d44ad95b0fb4024471b950931170ceb648c05d4a5b428066a06f698ec2fb5",
+      "seed": "18446744073709551615",
+      "lab": {
+        "sender": "sham",
+        "view": "ambiguous",
+        "display_seen": true,
+        "layout": "off_route",
+        "effort_cost": 3.0,
+        "mirrored": false
+      },
+      "study": "deception_gestures"
+    },
+    {
+      "name": "original-p4-7-matched_neutral.json",
+      "sha256": "2925aec6aa3676bac273ad233bb29cebe250455de667ccfdd336b1e09c19066e",
+      "seed": "7",
+      "lab": {
+        "sender": "matched_neutral",
+        "view": "ambiguous",
+        "display_seen": true,
+        "layout": "off_route",
+        "effort_cost": 3.0,
+        "mirrored": false
+      },
+      "study": "deception_gestures"
+    },
+    {
+      "name": "original-p4-7-ordinary.json",
+      "sha256": "2f10f67963defdd810d3f817fb02ecdc5ccd418803ce4a4daac43a6217b9cad8",
+      "seed": "7",
+      "lab": {
+        "sender": "ordinary",
+        "view": "ambiguous",
+        "display_seen": true,
+        "layout": "off_route",
+        "effort_cost": 3.0,
+        "mirrored": false
+      },
+      "study": "deception_gestures"
+    },
+    {
+      "name": "original-p4-7-sham.json",
+      "sha256": "7fe876b17406c27db34e7e4e0bc8d6526e00d3c4a7cdc1d244df3ca9c6841257",
+      "seed": "7",
+      "lab": {
+        "sender": "sham",
+        "view": "ambiguous",
+        "display_seen": true,
+        "layout": "off_route",
+        "effort_cost": 3.0,
+        "mirrored": false
+      },
+      "study": "deception_gestures"
+    }
+  ],
+  "guides": {
+    "source": "unchanged pre-adapter HEAD file bytes; full prefix length bound",
+    "files": {
+      "web/src/minds.ts": "6b61511e9cb653a015a793f9a390d1290bdba4cc600e8a3767920c309366fd7c"
+    },
+    "prefix_bytes": {
+      "web/src/minds.ts": 5343
+    }
+  },
+  "provenance": "Preimplementation native exports at 6fd70b4, task-1-original-exports.json; exact UTF-8 serialized bytes. Guide hashes from task-1-original-guide-prefixes.json; byte prefixes of the same pre-adapter HEAD. Mutable product viewer documentation excluded by Task4 scope clarification. Mutable visualization inventory excluded by Task4 scope clarification; both historical full-prefix receipts remain in retained Task1 evidence.",
+  "scientific_files": {
+    "docs/superpowers/specs/2026-10-07-minds-deception-findings.md": "55b7c680fcea2d8e1e993807359381db5b949a4fb721e49ef49e241982551be7",
+    "docs/superpowers/specs/2026-10-02-minds-protection-protocol.md": "e9ab9622a53c29920d01292ffbc713376315bd6f8d3f89c2c2b16ff8304ec42f",
+    "docs/superpowers/specs/2026-10-06-minds-protection-findings.md": "6dada0f63298ab29835f3b3caa711e8f38bbab207c655f61b6eff58bd7d1ea4d",
+    "docs/superpowers/specs/2026-10-07-minds-deception-protocol.md": "7e0b9a7fb6973a3ba95fad70ddf911105f753a73b7fe45a8ab5040e3d6901d4d",
+    "web/public/studies/minds-deception-2026-10-07/protocol.md": "7e0b9a7fb6973a3ba95fad70ddf911105f753a73b7fe45a8ab5040e3d6901d4d",
+    "web/public/studies/minds-deception-2026-10-07/findings.md": "f53c3d55e4d38135e90c16cee152f0246c7a5b7f7a51a396b3c3d5ff5031f871",
+    "web/public/studies/minds-deception-2026-10-07/results.md": "b2ec0bcc72cdd6f2b82e46f26d16cc30f17294be2bab9a8af2a9eeaba0832470",
+    "web/public/studies/minds-deception-2026-10-07/provenance.json": "b5e6d0cf6d09bc325c31f9f5b9179304fb878065f24794f9b199226121079403"
+  }
+}

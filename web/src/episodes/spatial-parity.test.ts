@@ -115,7 +115,7 @@ async function retain(id: string, input: Json, nativeRecord: EpisodeRecord, brow
   } }, null, 2));
 }
 const fixtures = scenes.scenes.map(scene => ({ id: scene.id, input: structuredClone(scene.input) }));
-for (const study of catalog.filter(study => study.family === 'spatial')) {
+for (const study of catalog.filter(study => study.family === 'spatial' && !['protection_recaching', 'deception_gestures'].includes(study.id))) {
   const max = structuredClone(study.default_input) as ObjectJson; max.seed = '18446744073709551615';
   if (max.config) {
     const config = object(max.config); object(config.lab ?? config).freshness_window = '18446744073709551615';
@@ -138,10 +138,10 @@ for (const study of catalog.filter(study => study.family === 'spatial')) {
 }
 
 describe('five spatial bridges and actual native/WASM complete records', () => {
-  it('catalog extends eight original studies to thirteen runnable entries with spatial renderer available', () => {
-    expect(catalog).toHaveLength(13);
-    expect(catalog.filter(study => study.family === 'spatial').map(study => study.id)).toEqual(['burrow_excavation', 'burrow_access', 'foraging_fixed', 'foraging_passage', 'foraging_construction']);
-    for (const descriptor of catalog.filter(study => study.family === 'spatial')) expect(rendererAvailable(descriptor)).toBe(true);
+  it('catalog preserves five original spatial entries among fifteen runnable studies', () => {
+    expect(catalog).toHaveLength(15);
+    expect(catalog.filter(study => study.family === 'spatial' && !['protection_recaching', 'deception_gestures'].includes(study.id)).map(study => study.id)).toEqual(['burrow_excavation', 'burrow_access', 'foraging_fixed', 'foraging_passage', 'foraging_construction']);
+    for (const descriptor of catalog.filter(study => study.family === 'spatial' && !['protection_recaching', 'deception_gestures'].includes(study.id))) expect(rendererAvailable(descriptor)).toBe(true);
   });
   for (const fixture of fixtures) it(`${fixture.id} retains the full records and every declared diagnostic leaf`, async () => {
     const nativeRecord = runNativeFixture(fixture.input);
