@@ -1,4 +1,5 @@
 //! Display adapters around the original fixed P3/P4 lab episodes.
+pub mod deception;
 pub mod input;
 pub mod projection;
 pub mod protection;
@@ -35,17 +36,27 @@ pub fn run(input: &Input) -> Result<EpisodeRecord, Vec<FieldError>> {
     validate_input(input)?;
     match input {
         Input::ProtectionRecaching { .. } => protection::run(input),
-        _ => Err(error("study", "deception adapter is not implemented")),
+        Input::DeceptionGestures { .. } => deception::run(input),
+        _ => Err(error("study", "caching adapter requires a caching study")),
     }
 }
 pub(crate) fn descriptors() -> Vec<StudyDescriptor> {
-    vec![scenes::descriptor(
-        StudyId::ProtectionRecaching,
-        "protection_recaching",
-        "Protection re-caching engineering demonstration",
-        "Supplied P3 protection policies and original exposure-memory controller.",
-        "What do recorded re-caching actions and perceived exposure show at each native boundary?",
-    )]
+    vec![
+        scenes::descriptor(
+            StudyId::ProtectionRecaching,
+            "protection_recaching",
+            "Protection re-caching engineering demonstration",
+            "Supplied P3 protection policies and original exposure-memory controller.",
+            "What do recorded re-caching actions and perceived exposure show at each native boundary?",
+        ),
+        scenes::descriptor(
+            StudyId::DeceptionGestures,
+            "deception_gestures",
+            "Supplied caching gestures engineering demonstration",
+            "Supplied P4 gestures and native bounded receiver evidence.",
+            "How do supplied gestures and received public evidence differ from physical transfer?",
+        ),
+    ]
 }
 pub fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> {
     let key = match study {

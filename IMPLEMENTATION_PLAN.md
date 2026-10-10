@@ -10,13 +10,13 @@
 **Goal**: Original P4 runner and receiver-only evidence
 **Success Criteria**: Exact payload; clear/ambiguous signals preserved
 **Tests**: Core caching deception tests
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 3: Web integration
 **Goal**: Controls, reference maps, replay, perspectives
 **Success Criteria**: Both entries usable without hidden-state or stale-input submission
 **Tests**: Projection and real DOM tests
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 4: Parity and preservation
 **Goal**: Imports, native/WASM boundaries and unchanged sources

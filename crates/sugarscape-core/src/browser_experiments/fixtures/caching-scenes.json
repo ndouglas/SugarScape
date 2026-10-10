@@ -64,6 +64,117 @@
         }
       ],
       "comparison_contract": "Change policy only; preserve fixture, seed, mirror, cost, discovery and spans. Fixed native 64 requested ticks. Same seed does not promise paired random draws."
+    },
+    "deception_gestures": {
+      "default_scene": "deception-sham-ambiguous",
+      "controls": {
+        "lab_kind": "deception",
+        "seed": {
+          "type": "decimal_u64"
+        },
+        "comparison_axes": [
+          {
+            "id": "sender",
+            "path": [
+              "lab",
+              "sender"
+            ],
+            "values": [
+              "ordinary",
+              "matched_neutral",
+              "sham"
+            ]
+          },
+          {
+            "id": "view",
+            "path": [
+              "lab",
+              "view"
+            ],
+            "values": [
+              "ambiguous",
+              "clear"
+            ]
+          },
+          {
+            "id": "display_seen",
+            "path": [
+              "lab",
+              "display_seen"
+            ],
+            "values": [
+              false,
+              true
+            ]
+          },
+          {
+            "id": "effort_cost",
+            "path": [
+              "lab",
+              "effort_cost"
+            ],
+            "values": [
+              0.0,
+              3.0
+            ]
+          }
+        ],
+        "scenes": [
+          "deception-sham-ambiguous",
+          "deception-neutral-ambiguous",
+          "deception-sham-clear",
+          "deception-sham-unseen",
+          "deception-sham-free"
+        ]
+      },
+      "comparisons": [
+        {
+          "id": "sender",
+          "path": [
+            "lab",
+            "sender"
+          ],
+          "values": [
+            "ordinary",
+            "matched_neutral",
+            "sham"
+          ]
+        },
+        {
+          "id": "view",
+          "path": [
+            "lab",
+            "view"
+          ],
+          "values": [
+            "ambiguous",
+            "clear"
+          ]
+        },
+        {
+          "id": "display_seen",
+          "path": [
+            "lab",
+            "display_seen"
+          ],
+          "values": [
+            false,
+            true
+          ]
+        },
+        {
+          "id": "effort_cost",
+          "path": [
+            "lab",
+            "effort_cost"
+          ],
+          "values": [
+            0.0,
+            3.0
+          ]
+        }
+      ],
+      "comparison_contract": "Change declared treatment axes only; preserve seed, layout, mirror and all other settings. Fixed native 64 requested ticks. Same seed does not promise paired random draws."
     }
   },
   "scenes": [
@@ -297,6 +408,104 @@
         }
       },
       "provenance": "minds::protection::state::LabConfig and checked lab::rig_config; explanatory single episode"
+    },
+    {
+      "id": "deception-sham-ambiguous",
+      "label": "deception sham ambiguous",
+      "input": {
+        "study": "deception_gestures",
+        "seed": "7",
+        "lab": {
+          "sender": "sham",
+          "view": "ambiguous",
+          "display_seen": true,
+          "layout": "off_route",
+          "effort_cost": 3.0,
+          "mirrored": false
+        }
+      },
+      "delta_from_default": {},
+      "provenance": "minds::deception::state::LabConfig and checked lab::rig_config; explanatory single episode; frozen before viewer evaluation"
+    },
+    {
+      "id": "deception-neutral-ambiguous",
+      "label": "deception neutral ambiguous",
+      "input": {
+        "study": "deception_gestures",
+        "seed": "7",
+        "lab": {
+          "sender": "matched_neutral",
+          "view": "ambiguous",
+          "display_seen": true,
+          "layout": "off_route",
+          "effort_cost": 3.0,
+          "mirrored": false
+        }
+      },
+      "delta_from_default": {
+        "sender": "matched_neutral"
+      },
+      "provenance": "minds::deception::state::LabConfig and checked lab::rig_config; explanatory single episode; frozen before viewer evaluation"
+    },
+    {
+      "id": "deception-sham-clear",
+      "label": "deception sham clear",
+      "input": {
+        "study": "deception_gestures",
+        "seed": "7",
+        "lab": {
+          "sender": "sham",
+          "view": "clear",
+          "display_seen": true,
+          "layout": "off_route",
+          "effort_cost": 3.0,
+          "mirrored": false
+        }
+      },
+      "delta_from_default": {
+        "view": "clear"
+      },
+      "provenance": "minds::deception::state::LabConfig and checked lab::rig_config; explanatory single episode; frozen before viewer evaluation"
+    },
+    {
+      "id": "deception-sham-unseen",
+      "label": "deception sham unseen",
+      "input": {
+        "study": "deception_gestures",
+        "seed": "7",
+        "lab": {
+          "sender": "sham",
+          "view": "ambiguous",
+          "display_seen": false,
+          "layout": "off_route",
+          "effort_cost": 3.0,
+          "mirrored": false
+        }
+      },
+      "delta_from_default": {
+        "display_seen": false
+      },
+      "provenance": "minds::deception::state::LabConfig and checked lab::rig_config; explanatory single episode; frozen before viewer evaluation"
+    },
+    {
+      "id": "deception-sham-free",
+      "label": "deception sham free",
+      "input": {
+        "study": "deception_gestures",
+        "seed": "7",
+        "lab": {
+          "sender": "sham",
+          "view": "ambiguous",
+          "display_seen": true,
+          "layout": "off_route",
+          "effort_cost": 0.0,
+          "mirrored": false
+        }
+      },
+      "delta_from_default": {
+        "effort_cost": 0.0
+      },
+      "provenance": "minds::deception::state::LabConfig and checked lab::rig_config; explanatory single episode; frozen before viewer evaluation"
     }
   ]
 }

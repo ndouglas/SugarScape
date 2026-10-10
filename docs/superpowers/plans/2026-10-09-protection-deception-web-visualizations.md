@@ -96,7 +96,7 @@ for (checkpoint, frame) in record.checkpoints.iter().zip(&native.frames) {
 **Files:** `caching/deception.rs`, shared caching scenes/projection/dispatch/identities, `tests/caching_deception.rs`, common catalog as needed.
 **Interfaces:** Consume Task 1 DTOs/checkpoint shape; produce both completed catalog entries and receiver-only observation projection.
 
-- [ ] **Step 1: Write RED signal separation tests.** Run sham/ambiguous/seen and sham/clear/seen examples. Compare each local receiver's observations to that boundary's native public observations and forbid added physical diagnostics:
+- [x] **Step 1: Write RED signal separation tests.** Run sham/ambiguous/seen and sham/clear/seen examples. Compare each local receiver's observations to that boundary's native public observations and forbid added physical diagnostics:
 
 ```rust
 let record = browser::run(&input).unwrap();
@@ -111,9 +111,9 @@ for checkpoint in &record.checkpoints {
 ```
 
 `input` is parsed from the second literal JSON above. Add direct equality tests for received_observations against actor-filtered native `public` fields, and sentinel tests using contrasting researcher values to detect leakage without relying solely on key scans. Run `cargo test -p sugarscape-core browser_experiments::tests::caching_deception` and retain behavioral RED.
-- [ ] **Step 2: Implement original single-run wrapper.** Convert `EpisodeFailure` into contextual common FieldErrors; preserve partial data only as failure context, never verified success. Keep all Choices and physical stock/transfer diagnostics under Researcher. Show legitimate clear zero/positive transfer observations even when earlier seen memory remains unchanged. Verify native begin-tick reset and post-step association before appending signals/actions.
-- [ ] **Step 3: GREEN parity and provenance matrix.** Compare full original native payload and all frame fingerprints for ordinary/matched-neutral/sham × ambiguous/clear × seen/unseen × on/off-route × costs 0/3 × mirror choices using bounded representative fixtures; ensure every axis and crucial interaction is covered. Include seeds 7/u64-max, stale seen evidence, clear zero, absent receiver, and repeated-run exact equality. Default is the second literal JSON; neutral, clear, unseen and zero-cost presets change one field each. Comparison axes sender/view/display_seen/effort_cost preserve geometry and other settings. Do not compare layouts/mirror as matched treatment axes.
-- [ ] **Step 4: Review and commit.** Focused core tests, edited-file rustfmt/core Clippy; independent native/visibility review and corrections. Commit `feat(experiments): visualize supplied gestures and receiver evidence`.
+- [x] **Step 2: Implement original single-run wrapper.** Convert `EpisodeFailure` into contextual common FieldErrors; preserve partial data only as failure context, never verified success. Keep all Choices and physical stock/transfer diagnostics under Researcher. Show legitimate clear zero/positive transfer observations even when earlier seen memory remains unchanged. Verify native begin-tick reset and post-step association before appending signals/actions.
+- [x] **Step 3: GREEN parity and provenance matrix.** Compare full original native payload and all frame fingerprints for ordinary/matched-neutral/sham × ambiguous/clear × seen/unseen × on/off-route × costs 0/3 × mirror choices using bounded representative fixtures; ensure every axis and crucial interaction is covered. Include seeds 7/u64-max, stale seen evidence, clear zero, absent receiver, and repeated-run exact equality. Default is the second literal JSON; neutral, clear, unseen and zero-cost presets change one field each. Comparison axes sender/view/display_seen/effort_cost preserve geometry and other settings. Do not compare layouts/mirror as matched treatment axes.
+- [x] **Step 4: Review and commit.** Focused core tests, edited-file rustfmt/core Clippy; independent native/visibility review and corrections. Commit `feat(experiments): visualize supplied gestures and receiver evidence`.
 
 ## Task 3 / Stage 3: Browser Controls, Reference Maps, and Replay
 

@@ -79,7 +79,7 @@ use spatial_test_support::{
 
 #[wasm_bindgen_test]
 fn runnable_catalog_and_five_legacy_spatial_defaults() {
-    assert_eq!(core::catalog().len(), 14);
+    assert_eq!(core::catalog().len(), 15);
     assert_eq!(spatial_defaults().len(), 5);
     for input in default_seed_cases() {
         let text = input.to_string();

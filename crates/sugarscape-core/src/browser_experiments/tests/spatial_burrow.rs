@@ -237,12 +237,12 @@ fn exact_reconstruction_rejects_edited_native_and_local_claims() {
 }
 #[test]
 fn catalog_registers_only_implemented_spatial_adapters() {
-    assert_eq!(browser::catalog().len(), 14);
+    assert_eq!(browser::catalog().len(), 15);
     let spatial: Vec<_> = browser::catalog()
         .into_iter()
         .filter(|d| d.family == StudyFamily::Spatial)
         .collect();
-    assert_eq!(spatial.len(), 6);
+    assert_eq!(spatial.len(), 7);
     assert_eq!(
         spatial.iter().map(|d| d.id).collect::<Vec<_>>(),
         [
@@ -251,14 +251,18 @@ fn catalog_registers_only_implemented_spatial_adapters() {
             StudyId::ForagingFixed,
             StudyId::ForagingPassage,
             StudyId::ForagingConstruction,
-            StudyId::ProtectionRecaching
+            StudyId::ProtectionRecaching,
+            StudyId::DeceptionGestures
         ]
     );
     for descriptor in spatial {
         assert!(descriptor.title.contains("engineering"));
         let input = browser::normalize_input(&descriptor.default_input.to_string()).unwrap();
         assert!(browser::run(&input).is_ok());
-        if descriptor.id == StudyId::ProtectionRecaching {
+        if matches!(
+            descriptor.id,
+            StudyId::ProtectionRecaching | StudyId::DeceptionGestures
+        ) {
             assert!(descriptor.controls["sample_every"].is_null());
         } else {
             assert!(descriptor.controls["sample_every"].is_object());
