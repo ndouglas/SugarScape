@@ -7,6 +7,22 @@ pub const RULES_ID: &str = "war1-engagement-v1";
 pub const CHECKPOINT_SCHEMA: &str = "war1-checkpoint-v1";
 pub const RECORD_SCHEMA: &str = "war1-records-v1";
 
+/// Resolved core input; source-file decoding belongs to the survey executable.
+#[derive(Clone, Debug, Serialize)]
+#[serde(tag = "kind", content = "data", rename_all = "snake_case")]
+#[allow(clippy::large_enum_variant)] // The public resolved-input contract owns Config.
+pub enum StudyInput {
+    BookC {
+        config: crate::config::Config,
+        seed: u64,
+        max_steps: u64,
+    },
+    ReciprocalGraph {
+        config: EngagementConfig,
+        seed: u64,
+    },
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Side {

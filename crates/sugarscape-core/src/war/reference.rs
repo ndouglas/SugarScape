@@ -2,9 +2,11 @@
 //!
 //! An unavailable floating-point evaluation is an error, never an extinction event.
 use super::config::{EngagementConfig, Geometry, Side};
+use serde::Serialize;
 use std::cmp::Ordering;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ReferenceRegime {
     InitialExtinction,
     FiniteExtinction,
@@ -12,7 +14,7 @@ pub enum ReferenceRegime {
     RateZero,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct ReferencePoint {
     pub requested_time: f64,
     pub evaluated_time: f64,
@@ -23,7 +25,7 @@ pub struct ReferencePoint {
     pub survivor: Option<Side>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct ReferenceFailure {
     pub field: String,
     pub detail: String,

@@ -6,6 +6,128 @@ use super::{
 };
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct Capture {
+    pub retain_steps: Vec<u64>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct EqualityBasis {
+    pub counts: Option<bool>,
+    pub rates: Option<bool>,
+    pub resources: Option<bool>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct RunHeader {
+    pub input: super::config::StudyInput,
+    pub equality: EqualityBasis,
+    pub unavailable: Vec<UnavailableObservation>,
+    pub force_unit: String,
+    pub clock_unit: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(tag = "kind", content = "data", rename_all = "snake_case")]
+#[allow(clippy::large_enum_variant)] // Public record contract keeps the observation inline.
+pub enum ObservedFrame {
+    Initial {
+        counts: Option<[u32; 2]>,
+    },
+    Graph {
+        frame: Frame,
+        reference: Option<super::reference::ReferencePoint>,
+        reference_error: Option<super::reference::ReferenceFailure>,
+    },
+    Book {
+        frame: BookFrame,
+    },
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(tag = "kind", content = "data", rename_all = "snake_case")]
+#[allow(clippy::large_enum_variant)] // Public record contract owns its resolved header.
+pub enum RunPayload {
+    Header { header: RunHeader },
+    Observed { frame: ObservedFrame },
+    Terminal { summary: RunSummary },
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct RunRecord {
+    pub schema: String,
+    pub input_identity: String,
+    pub payload: RunPayload,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct BookFrame {
+    pub tick: u64,
+    pub fingerprint: String,
+    pub rng_state: String,
+    pub snapshot: crate::stats::Snapshot,
+    pub combat_enabled: bool,
+    pub deaths: Vec<BookDeath>,
+    pub kills: Vec<BookKill>,
+    /// Living holdings, in the current World configuration's good order.
+    pub agent_stores: Vec<f64>,
+    /// Site resources, in the current World configuration's good order.
+    pub site_stores: Vec<f64>,
+    pub unavailable: Vec<UnavailableObservation>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct UnavailableObservation {
+    pub quantity: String,
+    pub reason: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct BookDeath {
+    pub id: u64,
+    pub tribe: String,
+    pub cause: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct BookKill {
+    pub attacker: u64,
+    pub victim: u64,
+    pub loot: f64,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(tag = "kind", content = "data", rename_all = "snake_case")]
+#[allow(clippy::large_enum_variant)] // Only explicitly requested nonterminal frames are retained.
+pub enum CapturedFrame {
+    Available {
+        input_identity: String,
+        frame: ObservedFrame,
+    },
+    Unavailable {
+        step: u64,
+        reason: String,
+    },
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct RunSummary {
+    pub completed_steps: u64,
+    pub ending: Option<Ending>,
+    pub capture: Vec<CapturedFrame>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct RunFailure {
+    pub kind: String,
+    pub detail: String,
+    pub attempted_step: Option<u64>,
+    pub completed_steps: u64,
+    /// Successfully emitted settlement records; header/initial/terminal do not count.
+    pub emitted_steps: u64,
+    pub checkpoint: Option<super::checkpoint::Checkpoint>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EndReason {
