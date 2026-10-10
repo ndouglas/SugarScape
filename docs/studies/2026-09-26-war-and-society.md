@@ -380,6 +380,6 @@ damage does not measure casualties, AI intent or a real-world power law.
 
 The [first focused literature pass](2026-10-09-war-literature-pass.md) is complete. The
 [W1 engagement-benchmark design](../superpowers/specs/2026-10-09-war-1-engagement-design.md)
-is ready for review before an implementation plan; no simulator implementation or
-measurement protocol is approved by this note. Other existing campaigns retain their
-independent schedules.
+is approved for planning. Its [implementation plan](../superpowers/plans/2026-10-09-war-1-engagement.md)
+is ready for review before execution; no simulator implementation or measurement protocol
+is approved by this note. Other existing campaigns retain their independent schedules.
