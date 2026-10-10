@@ -8,6 +8,15 @@ publish = false
 # Not a member of the repository's workspace.
 [workspace]
 
+[features]
+default = []
+war-benchmarks = ["sugarscape-core/war-benchmarks"]
+
+[[bin]]
+name = "war1"
+path = "src/bin/war1.rs"
+required-features = ["war-benchmarks"]
+
 [dependencies]
 # Native-only exact evidence binding; MIT OR Apache-2.0.
 sha2 = { version = "=0.10.9", default-features = false }

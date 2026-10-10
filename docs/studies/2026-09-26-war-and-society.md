@@ -1,8 +1,9 @@
 # War inside a society: a study program
 
 **Date:** 2026-09-26
-**Status:** first focused literature pass completed on 2026-10-09; study design remains
-proposed. No new simulator or measurements are claimed. See the
+**Status:** first focused literature pass completed on 2026-10-09; W1 native
+engineering cases are implemented. Scientific registration and collection remain
+pending; no new research findings are claimed. See [native W1 usage](../war.md) and the
 [first literature pass](2026-10-09-war-literature-pass.md).
 **Separate from:** the reproductions (`docs/papers.md`) and Flump Studio (`studio/`). Those
 reproduce and explain published models. These are our own experiments, built on a model we have
@@ -380,6 +381,11 @@ damage does not measure casualties, AI intent or a real-world power law.
 
 The [first focused literature pass](2026-10-09-war-literature-pass.md) is complete. The
 [W1 engagement-benchmark design](../superpowers/specs/2026-10-09-war-1-engagement-design.md)
-is approved for planning. Its [implementation plan](../superpowers/plans/2026-10-09-war-1-engagement.md)
-is ready for review before execution; no simulator implementation or measurement protocol
-is approved by this note. Other existing campaigns retain their independent schedules.
+and its [implementation plan](../superpowers/plans/2026-10-09-war-1-engagement.md)
+have been implemented as a default-off native engineering runner. [W1 usage and
+limits](../war.md) describe literal book controls, reciprocal finite engagements,
+durable receipts and source/binary binding. The next scientific step is a separate
+prospective protocol declaring parameter arms, seed population, refinement grid,
+ensemble size, numerical tolerances, output budget and horizons, followed by
+approval before collection. No ensemble or calibration has run as this delivery.
+Other existing campaigns retain their independent schedules.

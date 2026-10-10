@@ -113,3 +113,16 @@ jobs:
       - run: python -m venv survey/out/democratic-peace-report-env
       - run: survey/out/democratic-peace-report-env/bin/python -m pip install -r survey/democratic_peace/report-requirements.txt
       - run: survey/out/democratic-peace-report-env/bin/python -m unittest discover -s survey/democratic_peace/report_tests -p 'test_*.py'
+  war:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: "cargo test -p sugarscape-core --locked --features war-benchmarks war::"
+      - run: cargo test -p sugarscape-core --locked --features war-benchmarks --test golden
+      - run: cargo test --manifest-path survey/Cargo.toml --locked --features war-benchmarks --bin war1 --test war1_cli
+      - run: cargo clippy -p sugarscape-core --all-targets --features war-benchmarks -- -D warnings
+      - run: cargo clippy --manifest-path survey/Cargo.toml --bin war1 --test war1_cli --features war-benchmarks -- -D warnings
