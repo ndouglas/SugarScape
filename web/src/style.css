@@ -274,7 +274,7 @@ dialog.keep .row { display: flex; gap: 8px; justify-content: flex-end; }
 
 /* Episode diagrams inherit the Playground palette, including its dark theme. */
 .experiment-switch { margin: 0 0 1rem; }
-.episode-view { display: grid; gap: .8rem; max-width: 1280px; margin: auto; }
+.episode-view { display: grid; grid-template-columns: minmax(0, 1fr); gap: .8rem; max-width: 1280px; margin: auto; }
 .episode-view[hidden] { display: none; }
 .episode-setup, .episode-playback { min-width: 0; margin: 0; border: 1px solid var(--border); border-radius: 6px; padding: .9rem; background: var(--surface); }
 .episode-controls { display: flex; flex-wrap: wrap; gap: .7rem 1rem; align-items: end; margin: .7rem 0; }
