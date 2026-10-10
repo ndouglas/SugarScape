@@ -1,3 +1,4 @@
+import { CachingControls } from './caching-controls';
 import { SpatialControls } from './spatial-controls';
 import { surfaceSettingLabel } from './comparison';
 import { h } from '../ui/dom';
@@ -10,7 +11,7 @@ export class EpisodeControls {
   private spatial: SpatialControls | null = null;
   constructor(private descriptor: StudyDescriptor, input: Json = descriptor.default_input, private changed: (input: Json) => void = () => {}) {
     this.draft = structuredClone(obj(input));
-    if (descriptor.family === 'spatial') { this.spatial = new SpatialControls(descriptor, input, changed); this.el.append(this.spatial.el); } else this.render();
+    if (descriptor.family === 'spatial') { this.spatial = new (['protection_recaching','deception_gestures'].includes(descriptor.id)?CachingControls:SpatialControls)(descriptor, input, changed); this.el.append(this.spatial.el); } else this.render();
   }
   input(): Json { return this.spatial ? this.spatial.input() : structuredClone(this.draft); }
   private renderSurfaceControls(): void {

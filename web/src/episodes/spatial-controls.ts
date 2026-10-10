@@ -12,7 +12,8 @@ export class SpatialControls {
   private jsonChanged=false;
   constructor(private descriptor:StudyDescriptor,input:Json=descriptor.default_input,private changed:(input:Json)=>void=()=>{}){this.draft=structuredClone(obj(input));this.render();}
   input():Json{this.readCurrentJson();return structuredClone(this.draft);}
-  private rootKey():string{return this.descriptor.id.startsWith('burrow')?'config':'setup';}
+  private caching():boolean{return ['protection_recaching','deception_gestures'].includes(this.descriptor.id);}
+  private rootKey():string{if(this.caching())return 'lab';return this.descriptor.id.startsWith('burrow')?'config':'setup';}
   /** Action consumers read current text even if no input/change/blur event fired. */
   private readCurrentJson():void {
     const editor=this.jsonEditor;
@@ -53,7 +54,7 @@ export class SpatialControls {
   private selector(path:string[],title:string,values:Json[]):HTMLElement {
     const value=this.get(path),picker=h('select',{'aria-label':title},...values.map(v=>h('option',{value:v,selected:v===value},label(valueText(v)))));
     if(!values.includes(value??null)){picker.prepend(h('option',{value:'',selected:true,disabled:true},`Opened ${value===undefined?'missing':valueText(value)} · validation on run`));picker.setAttribute('aria-invalid','true');}
-    picker.addEventListener('change',()=>{this.set(path,picker.value);picker.removeAttribute('aria-invalid');});return h('label',{},title,picker);
+    picker.addEventListener('change',()=>{this.set(path,values.find(v=>String(v)===picker.value)??picker.value);picker.removeAttribute('aria-invalid');});return h('label',{},title,picker);
   }
   private render():void {
     this.el.replaceChildren();
@@ -61,9 +62,17 @@ export class SpatialControls {
     const picker=h('select',{'aria-label':'Spatial setup'},h('option',{value:'',selected:selected<0,disabled:true},'Opened/custom input · validation on run'),...scenes.map((s,i)=>h('option',{value:i,selected:i===selected},label(String(s.id)))));
     picker.addEventListener('change',()=>{const scene=scenes[Number(picker.value)];if(scene){this.draft=structuredClone(obj(scene.input));this.render();this.changed(this.input());}});
     this.el.append(h('label',{},'Named engineering setup',picker),h('p',{class:'hint'},'Selecting a named setup explicitly supplies its complete input. Edits affect the next run; native validation checks the opened values.'));
-    const common=h('div',{class:'row'},this.scalar(['seed'],'Seed (decimal u64)','text'),this.scalar(['ticks'],'Requested ticks','number',this.descriptor.id.startsWith('burrow')?0:1),this.scalar(['sample_every'],'Sample every','number',1));this.el.append(common);
+    const common=h('div',{class:'row'},this.scalar(['seed'],'Seed (decimal u64)','text'));
+    if(this.caching())common.append(h('p',{class:'hint'},'Fixed native 64 requested ticks; initial state and every completed-step boundary are retained. No horizon or sampling setting.'));
+    else common.append(this.scalar(['ticks'],'Requested ticks','number',this.descriptor.id.startsWith('burrow')?0:1),this.scalar(['sample_every'],'Sample every','number',1));this.el.append(common);
     const controls=obj(this.descriptor.controls),parameters=h('div',{class:'spatial-parameters'});
     for(const [key,value] of Object.entries(controls)){const spec=obj(value),path=list(spec.path);if(!path.length)continue;const strings=path.map(String),cpfa=this.descriptor.id.startsWith('foraging_');parameters.append(cpfa?this.scalar(strings,label(key),'number',0,key.startsWith('p_')?1:key==='omega'?4*Math.PI:['lambda_fidelity','lambda_publish'].includes(key)?256:undefined):this.selector(strings,label(key),list(spec.values)));}
+    if(this.caching()){
+      if(this.descriptor.id==='protection_recaching')parameters.append(this.scalar(['lab','reburial_cost'],'Reburial cost','number',0),this.scalar(['lab','discovery'],'Discovery probability','number',0,1),this.scalar(['lab','exposure_span'],'Exposure span (decimal u64)','text'),this.scalar(['lab','observer_span'],'Observer span','number',1,4294967295));
+      else for(const [key,values] of Object.entries({sender:['ordinary','matched_neutral','sham'],view:['ambiguous','clear'],display_seen:[false,true],layout:['on_route','off_route'],effort_cost:[0,3]}))parameters.append(this.selector(['lab',key],label(key),values));
+      parameters.append(this.selector(['lab','mirrored'],'Mirrored',[false,true]));
+      if(this.descriptor.id==='protection_recaching')parameters.append(h('p',{class:'hint'},'Fixture JSON uses single (initial_observed, redeposit_observed), mixed (observed_first), cue_visible_nonwatcher, cue_unseen_watcher, or stumble (initial_observed). Boolean fields retain native values. Named examples supply complete fixtures.'));
+    }
     this.el.append(parameters);
     if(this.descriptor.id.startsWith('burrow')){
       const base=this.descriptor.id==='burrow_access'?['config','lab']:['config'];
@@ -84,7 +93,7 @@ export class SpatialControls {
       try{input=this.input();}catch{return;} // input() has shown the contextual parse error.
       this.render();this.changed(input);
     });
-    const geometry=h('details',{},h('summary',{},'Geometry, resources and complete native settings'),h('p',{class:'hint'},'JSON retains spawn order, geometry, resource identities and all original fields. Resource IDs must be quoted decimal strings.'),json,error);
+    const geometry=h('details',{},h('summary',{},this.caching()?'Complete native lab settings':'Geometry, resources and complete native settings'),h('p',{class:'hint'},this.caching()?'JSON retains every native lab field. Seed and exposure_span use quoted canonical decimal strings; missing or extra fields remain subject to native validation.':'JSON retains spawn order, geometry, resource identities and all original fields. Resource IDs must be quoted decimal strings.'),json,error);
     const setup=obj(this.draft.setup),field=this.descriptor.id==='foraging_construction'?'food':'resources';
     for(const [index,resource] of list(setup[field]).entries()){
       const id=h('input',{type:'text',value:valueText(obj(resource).id),'aria-label':`${field} ${index} ID (decimal u64)`});

@@ -16,13 +16,13 @@
 **Goal**: Controls, reference maps, replay, perspectives
 **Success Criteria**: Both entries usable without hidden-state or stale-input submission
 **Tests**: Projection and real DOM tests
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 4: Parity and preservation
 **Goal**: Imports, native/WASM boundaries and unchanged sources
 **Success Criteria**: Exact reproduction and original-export preservation
 **Tests**: WASM bridges, caching parity and original determinism
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 5: Reviewed delivery
 **Goal**: Browser acceptance, docs, full gates, main integration

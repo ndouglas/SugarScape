@@ -1,10 +1,11 @@
 import type { Json, StudyDescriptor, SpatialAxis } from './types';
 import { obj, list } from './presentation';
 import { canonical } from './comparison';
+const cachingDomains:Record<string,Record<string,Json[]>>={protection_recaching:{policy:['off','selective','indiscriminate','erased']},deception_gestures:{sender:['ordinary','matched_neutral','sham'],view:['ambiguous','clear'],display_seen:[false,true],effort_cost:[0,3]}};
 const common = ['p_search','p_return','lambda_fidelity','lambda_publish','lambda_waypoint'];
 /** Catalog declarations are constrained to original family controls, never arbitrary paths. */
 export function validSpatialPath(study:string,id:string,path:string[]):boolean {
-  const expected = study === 'burrow_excavation' && ['transport','cue'].includes(id) ? ['config',id]
+  const expected = cachingDomains[study]?.[id] ? ['lab',id] : study === 'burrow_excavation' && ['transport','cue'].includes(id) ? ['config',id]
     : study === 'burrow_access' && ['transport','cue'].includes(id) ? ['config','lab',id]
     : study === 'burrow_access' && id === 'objective' ? ['config','task',id]
     : ['foraging_fixed','foraging_passage','foraging_construction'].includes(study) && [...common,...(study === 'foraging_fixed' ? ['omega','lambda_informed'] : [])].includes(id) ? ['setup','parameters',id] : null;
@@ -15,7 +16,7 @@ export function declaredSpatialAxis(descriptor:StudyDescriptor,axisId:string):Sp
   if(descriptor.family!=='spatial'||rows.length!==1) throw new Error('Unknown spatial comparison axis');
   const row=rows[0],path=list(row.path),values=list(row.values);
   if(!path.every(p=>typeof p==='string')||!validSpatialPath(descriptor.id,axisId,path as string[])||!values.length) throw new Error('Invalid spatial comparison path');
-  const allowed=descriptor.id.startsWith('foraging_') ? [0,1] : axisId==='transport' ? ['direct','relay'] : axisId==='cue' ? ['blind','responsive'] : ['explore','known_goal'];
+  const allowed=cachingDomains[descriptor.id]?.[axisId] ?? (descriptor.id.startsWith('foraging_') ? [0,1] : axisId==='transport' ? ['direct','relay'] : axisId==='cue' ? ['blind','responsive'] : ['explore','known_goal']);
   if(!values.every(v=>allowed.includes(v as never))) throw new Error('Invalid spatial comparison values');
   return {id:axisId,path:path as string[],values:structuredClone(values)};
 }

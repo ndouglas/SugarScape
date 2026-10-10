@@ -11,6 +11,7 @@ import { renderTestimony } from './testimony-view';
 import { surfaceSummary } from './surface-projection';
 import { renderSurface, renderSurfaceResult } from './surface-view';
 import { comparisonKey, matchedInputs, matchingCheckpoint, surfaceSettingLabel } from './comparison';
+import { renderCaching } from './caching-view';
 import { renderSpatial, renderSpatialResult } from './spatial-view';
 import { declaredSpatialAxis, spatialMatchedInputs, spatialComparisonKey, spatialAxisValue } from './spatial-comparison';
 import { renderRecorded } from './recorded';
@@ -175,7 +176,7 @@ export class EpisodeView {
     this.shownTitle.textContent = descriptor.title;
     this.shownNote.textContent = `Shown successful episode · ${label(record.semantics)}. Editing controls above changes the next run.`;
     const projected = projectCheckpoint(record, this.replay.index, this.perspective);
-    const rendered = descriptor.family === 'game' ? renderGame(projected, renderDescriptor(descriptor)) : descriptor.family === 'testimony' ? renderTestimony(projected, renderDescriptor(descriptor)) : descriptor.family === 'spatial' ? renderSpatial(projected, renderDescriptor(descriptor)) : renderSurface(projected, renderDescriptor(descriptor));
+    const rendered = descriptor.family === 'game' ? renderGame(projected, renderDescriptor(descriptor)) : descriptor.family === 'testimony' ? renderTestimony(projected, renderDescriptor(descriptor)) : descriptor.family === 'spatial' ? (['protection_recaching','deception_gestures'].includes(descriptor.id)?renderCaching:renderSpatial)(projected, renderDescriptor(descriptor)) : renderSurface(projected, renderDescriptor(descriptor));
     const payload = resultPayload(record, this.replay.index, this.perspective);
     const result = h('section', { class: 'episode-result' });
     if (payload !== null) {
@@ -241,7 +242,7 @@ export class EpisodeView {
       this.comparisonBody.append(h('p', { role: 'status' }, 'Unavailable at this public clock and stage. This run ended or did not visit this checkpoint; no wait or state is inferred. Use its independent timeline to inspect it.'));
       return;
     }
-    this.comparisonBody.append(h('p', {}, `${index + 1} / ${other.checkpoints.length} · ${this.comparisonIndex === null ? 'Matched public clock and stage' : 'Independent checkpoint'}`), spatial ? renderSpatial(projectCheckpoint(other, index, this.perspective), renderDescriptor(descriptor)) : renderSurface(projectCheckpoint(other, index, this.perspective), renderDescriptor(descriptor)));
+    this.comparisonBody.append(h('p', {}, `${index + 1} / ${other.checkpoints.length} · ${this.comparisonIndex === null ? 'Matched public clock and stage' : 'Independent checkpoint'}`), spatial ? (['protection_recaching','deception_gestures'].includes(descriptor.id)?renderCaching:renderSpatial)(projectCheckpoint(other, index, this.perspective), renderDescriptor(descriptor)) : renderSurface(projectCheckpoint(other, index, this.perspective), renderDescriptor(descriptor)));
     const payload = resultPayload(other, index, this.perspective);
     if (payload !== null) this.comparisonBody.append(h('h3', {}, this.perspective.kind === 'researcher' ? 'Researcher · comparison complete result' : 'Comparison final result'), spatial ? renderSpatialResult(payload) : renderSurfaceResult(payload));
   }
