@@ -35,10 +35,14 @@ pub fn catalog() -> Vec<StudyDescriptor> {
     studies.extend(super::reporting::descriptors());
     studies.extend(super::surfaces::descriptors());
     studies.extend(super::spatial::descriptors());
+    studies.extend(super::caching::descriptors());
     studies
 }
 pub(crate) fn rules_identity(study: StudyId) -> Result<String, Vec<FieldError>> {
     match study {
+        StudyId::ProtectionRecaching | StudyId::DeceptionGestures => {
+            super::caching::rules_identity(study)
+        }
         StudyId::BurrowExcavation
         | StudyId::BurrowAccess
         | StudyId::ForagingFixed

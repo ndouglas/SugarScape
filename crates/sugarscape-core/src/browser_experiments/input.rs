@@ -39,6 +39,16 @@ pub enum WinkMode {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "study", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Input {
+    ProtectionRecaching {
+        lab: super::caching::ProtectionInput,
+        #[serde(deserialize_with = "spatial::input::deserialize_seed")]
+        seed: SeedText,
+    },
+    DeceptionGestures {
+        lab: super::caching::DeceptionInput,
+        #[serde(deserialize_with = "spatial::input::deserialize_seed")]
+        seed: SeedText,
+    },
     BurrowExcavation {
         config: spatial::input::BurrowConfigInput,
         #[serde(deserialize_with = "spatial::input::deserialize_seed")]
@@ -118,6 +128,8 @@ pub enum Input {
 impl Input {
     pub fn study(&self) -> StudyId {
         match self {
+            Self::ProtectionRecaching { .. } => StudyId::ProtectionRecaching,
+            Self::DeceptionGestures { .. } => StudyId::DeceptionGestures,
             Self::BurrowExcavation { .. } => StudyId::BurrowExcavation,
             Self::BurrowAccess { .. } => StudyId::BurrowAccess,
             Self::ForagingFixed { .. } => StudyId::ForagingFixed,
@@ -143,6 +155,9 @@ pub fn normalize_input(json: &str) -> Result<Input, Vec<FieldError>> {
         serde_json::from_str(json).map_err(|e| super::error("input", e.to_string()))?;
     record::serialized_size(&input, MAX_INPUT_BYTES, "input")?;
     match &input {
+        Input::ProtectionRecaching { .. } | Input::DeceptionGestures { .. } => {
+            super::caching::validate_input(&input)?
+        }
         Input::BurrowExcavation { .. }
         | Input::BurrowAccess { .. }
         | Input::ForagingFixed { .. }

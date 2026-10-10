@@ -8,7 +8,7 @@
 
 **Tech Stack:** Existing Rust/serde workspace, wasm-bindgen/wasm-pack, TypeScript, Vite, Vitest, plain DOM and the inherited spatial renderer; no new dependency or framework.
 
-**Spec:** [Approved Batch C design](../specs/2026-10-09-protection-deception-web-visualizations-design.md), written-spec approval by user LGTM on 2026-10-09. This plan awaits review.
+**Spec:** [Approved Batch C design](../specs/2026-10-09-protection-deception-web-visualizations-design.md), written-spec approval by user LGTM on 2026-10-09. Plan approved by user LGTM! on 2026-10-09; execution is subagent-driven.
 
 ## Global Constraints
 
@@ -66,8 +66,8 @@ Before native adapter edits bind original `minds/protection`, `minds/deception`,
 **Files:** Common Rust dispatch/input/catalog, new caching modules except deception implementation, scene/identity fixtures, `tests/caching_input.rs`, `tests/caching_protection.rs`.
 **Interfaces:** Produce codecs and common functions above, P3 adapter, and projection shape consumed by Tasks 2–4.
 
-- [ ] **Step 1: Bind baseline and field contract.** Save manifest/original exports and a table mapping each local/public field to exact native source. Verify native site indexing, boundary/action clocks, memory caps, and whether dead role absence removes local state. Establish a conservative preflight for fixed native record sizes before runner allocation; charge payload and each projected checkpoint with the existing serialized-size/budget helpers before retaining them.
-- [ ] **Step 2: Write RED codec and payload tests.** Add strict nested-field/fixture tests, missing P4 fields, malformed decimal/overflow seeds/spans, domain violations, and original P3 payload/fingerprint comparisons. Test helpers parse the exact JSON examples in this plan through `normalize_input`; do not invent normalization defaults.
+- [x] **Step 1: Bind baseline and field contract.** Save manifest/original exports and a table mapping each local/public field to exact native source. Verify native site indexing, boundary/action clocks, memory caps, and whether dead role absence removes local state. Establish a conservative preflight for fixed native record sizes before runner allocation; charge payload and each projected checkpoint with the existing serialized-size/budget helpers before retaining them.
+- [x] **Step 2: Write RED codec and payload tests.** Add strict nested-field/fixture tests, missing P4 fields, malformed decimal/overflow seeds/spans, domain violations, and original P3 payload/fingerprint comparisons. Test helpers parse the exact JSON examples in this plan through `normalize_input`; do not invent normalization defaults.
 
 ```rust
 let input = browser::normalize_input(P3_JSON).unwrap();
@@ -86,9 +86,9 @@ for (checkpoint, frame) in record.checkpoints.iter().zip(&native.frames) {
 ```
 
 `P3_JSON` is a literal test constant containing the first input above; the test imports `crate::browser_experiments as browser` and `browser::Input`. Run `cargo test -p sugarscape-core browser_experiments::tests::caching`; retain behavioral RED after the skeleton compiles.
-- [ ] **Step 3: Implement minimal P3 wrapper/projections.** Call original runner once, reject fixture/ledger errors contextually, project fixed boundary geometry and own fields only, retain full researcher frame, set common identity/semantics and check final record bounds. Native core capture/controller code remains untouched. Add off/selective/indiscriminate/erased, mixed/stumble/cue mismatch, mirrors, seed-max/span-max and death/early-terminal coverage with actual clock assertions.
-- [ ] **Step 4: Freeze GREEN examples and review.** P3 default uses the exact first JSON above. Named variants change only policy, or a native fixture with required fields; record each delta before output evaluation. Define policy comparison axis preserving fixture/seed/all other settings. Run focused tests, edited-file rustfmt (`rustfmt --edition 2021 --config skip_children=true <edited files>`), and core Clippy. Reviewer checks native equality, allowlist and preflight. Resolve findings through producer and scoped rereview.
-- [ ] **Step 5: Commit scoped reviewed files.** `feat(experiments): visualize protection episode evidence`.
+- [x] **Step 3: Implement minimal P3 wrapper/projections.** Call original runner once, reject fixture/ledger errors contextually, project fixed boundary geometry and own fields only, retain full researcher frame, set common identity/semantics and check final record bounds. Native core capture/controller code remains untouched. Add off/selective/indiscriminate/erased, mixed/stumble/cue mismatch, mirrors, seed-max/span-max and death/early-terminal coverage with actual clock assertions.
+- [x] **Step 4: Freeze GREEN examples and review.** P3 default uses the exact first JSON above. Named variants change only policy, or a native fixture with required fields; record each delta before output evaluation. Define policy comparison axis preserving fixture/seed/all other settings. Run focused tests, edited-file rustfmt (`rustfmt --edition 2021 --config skip_children=true <edited files>`), and core Clippy. Reviewer checks native equality, allowlist and preflight. Resolve findings through producer and scoped rereview.
+- [x] **Step 5: Commit scoped reviewed files.** `feat(experiments): visualize protection episode evidence`.
 
 ## Task 2 / Stage 2: P4 Native Adapter and Gesture Evidence
 

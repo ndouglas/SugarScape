@@ -3,10 +3,21 @@
 use serde_json::{json, Value};
 use sugarscape_core::browser_experiments as core;
 
+// The original five sampled fixtures retain their horizon/sampling contract.
+// Spatial family also includes fixed-schedule caching; it does not imply sampling.
 pub(super) fn spatial_defaults() -> Vec<Value> {
     core::catalog()
         .into_iter()
-        .filter(|descriptor| descriptor.family == core::StudyFamily::Spatial)
+        .filter(|descriptor| {
+            matches!(
+                descriptor.id,
+                core::StudyId::BurrowExcavation
+                    | core::StudyId::BurrowAccess
+                    | core::StudyId::ForagingFixed
+                    | core::StudyId::ForagingPassage
+                    | core::StudyId::ForagingConstruction
+            )
+        })
         .map(|descriptor| descriptor.default_input)
         .collect()
 }

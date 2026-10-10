@@ -1,0 +1,302 @@
+{
+  "schema_version": 1,
+  "studies": {
+    "protection_recaching": {
+      "default_scene": "protection-observed-selective",
+      "controls": {
+        "lab_kind": "protection",
+        "seed": {
+          "type": "decimal_u64"
+        },
+        "policy": {
+          "id": "policy",
+          "path": [
+            "lab",
+            "policy"
+          ],
+          "values": [
+            "off",
+            "selective",
+            "indiscriminate",
+            "erased"
+          ]
+        },
+        "comparison_axes": [
+          {
+            "id": "policy",
+            "path": [
+              "lab",
+              "policy"
+            ],
+            "values": [
+              "off",
+              "selective",
+              "indiscriminate",
+              "erased"
+            ]
+          }
+        ],
+        "scenes": [
+          "protection-observed-selective",
+          "protection-observed-off",
+          "protection-observed-indiscriminate",
+          "protection-observed-erased",
+          "protection-unobserved-selective",
+          "protection-mixed-selective",
+          "protection-visible-nonwatcher",
+          "protection-unseen-watcher",
+          "protection-stumble"
+        ]
+      },
+      "comparisons": [
+        {
+          "id": "policy",
+          "path": [
+            "lab",
+            "policy"
+          ],
+          "values": [
+            "off",
+            "selective",
+            "indiscriminate",
+            "erased"
+          ]
+        }
+      ],
+      "comparison_contract": "Change policy only; preserve fixture, seed, mirror, cost, discovery and spans. Fixed native 64 requested ticks. Same seed does not promise paired random draws."
+    }
+  },
+  "scenes": [
+    {
+      "id": "protection-observed-selective",
+      "label": "P3 observed selective",
+      "input": {
+        "study": "protection_recaching",
+        "seed": "7",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": "64",
+          "observer_span": 64
+        }
+      },
+      "delta_from_default": {},
+      "provenance": "minds::protection::state::LabConfig and checked lab::rig_config; explanatory single episode"
+    },
+    {
+      "id": "protection-observed-off",
+      "label": "P3 observed off",
+      "input": {
+        "study": "protection_recaching",
+        "seed": "7",
+        "lab": {
+          "policy": "off",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": "64",
+          "observer_span": 64
+        }
+      },
+      "delta_from_default": {
+        "policy": "off"
+      },
+      "provenance": "minds::protection::state::LabConfig and checked lab::rig_config; explanatory single episode"
+    },
+    {
+      "id": "protection-observed-indiscriminate",
+      "label": "P3 observed indiscriminate",
+      "input": {
+        "study": "protection_recaching",
+        "seed": "7",
+        "lab": {
+          "policy": "indiscriminate",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": "64",
+          "observer_span": 64
+        }
+      },
+      "delta_from_default": {
+        "policy": "indiscriminate"
+      },
+      "provenance": "minds::protection::state::LabConfig and checked lab::rig_config; explanatory single episode"
+    },
+    {
+      "id": "protection-observed-erased",
+      "label": "P3 observed erased",
+      "input": {
+        "study": "protection_recaching",
+        "seed": "7",
+        "lab": {
+          "policy": "erased",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": true,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": "64",
+          "observer_span": 64
+        }
+      },
+      "delta_from_default": {
+        "policy": "erased"
+      },
+      "provenance": "minds::protection::state::LabConfig and checked lab::rig_config; explanatory single episode"
+    },
+    {
+      "id": "protection-unobserved-selective",
+      "label": "P3 unobserved selective",
+      "input": {
+        "study": "protection_recaching",
+        "seed": "7",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "single",
+            "initial_observed": false,
+            "redeposit_observed": false
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": "64",
+          "observer_span": 64
+        }
+      },
+      "delta_from_default": {
+        "fixture": {
+          "kind": "single",
+          "initial_observed": false,
+          "redeposit_observed": false
+        }
+      },
+      "provenance": "minds::protection::state::LabConfig and checked lab::rig_config; explanatory single episode"
+    },
+    {
+      "id": "protection-mixed-selective",
+      "label": "P3 mixed selective",
+      "input": {
+        "study": "protection_recaching",
+        "seed": "7",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "mixed",
+            "observed_first": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": "64",
+          "observer_span": 64
+        }
+      },
+      "delta_from_default": {
+        "fixture": {
+          "kind": "mixed",
+          "observed_first": true
+        }
+      },
+      "provenance": "minds::protection::state::LabConfig and checked lab::rig_config; explanatory single episode"
+    },
+    {
+      "id": "protection-visible-nonwatcher",
+      "label": "P3 visible nonwatcher",
+      "input": {
+        "study": "protection_recaching",
+        "seed": "7",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "cue_visible_nonwatcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": "64",
+          "observer_span": 64
+        }
+      },
+      "delta_from_default": {
+        "fixture": {
+          "kind": "cue_visible_nonwatcher"
+        }
+      },
+      "provenance": "minds::protection::state::LabConfig and checked lab::rig_config; explanatory single episode"
+    },
+    {
+      "id": "protection-unseen-watcher",
+      "label": "P3 unseen watcher",
+      "input": {
+        "study": "protection_recaching",
+        "seed": "7",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "cue_unseen_watcher"
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": "64",
+          "observer_span": 64
+        }
+      },
+      "delta_from_default": {
+        "fixture": {
+          "kind": "cue_unseen_watcher"
+        }
+      },
+      "provenance": "minds::protection::state::LabConfig and checked lab::rig_config; explanatory single episode"
+    },
+    {
+      "id": "protection-stumble",
+      "label": "P3 stumble",
+      "input": {
+        "study": "protection_recaching",
+        "seed": "7",
+        "lab": {
+          "policy": "selective",
+          "fixture": {
+            "kind": "stumble",
+            "initial_observed": true
+          },
+          "mirrored": false,
+          "reburial_cost": 0.25,
+          "discovery": 0.0,
+          "exposure_span": "64",
+          "observer_span": 64
+        }
+      },
+      "delta_from_default": {
+        "fixture": {
+          "kind": "stumble",
+          "initial_observed": true
+        }
+      },
+      "provenance": "minds::protection::state::LabConfig and checked lab::rig_config; explanatory single episode"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 //! Bounded, reproducible display adapters for retained experiment engines.
+pub mod caching;
 mod catalog;
 mod equivalence;
 mod input;
@@ -27,6 +28,8 @@ pub const MAX_EPISODE_BYTES: usize = 16 * 1024 * 1024;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum StudyId {
+    ProtectionRecaching,
+    DeceptionGestures,
     BurrowExcavation,
     BurrowAccess,
     ForagingFixed,
@@ -46,6 +49,7 @@ pub fn run(input: &Input) -> Result<EpisodeRecord, Vec<FieldError>> {
     // Revalidate typed inputs too as other adapters acquire bounded selectors.
     let input = normalize_input(&record::bounded_json(input, MAX_INPUT_BYTES, "input")?)?;
     match input {
+        Input::ProtectionRecaching { .. } | Input::DeceptionGestures { .. } => caching::run(&input),
         Input::BurrowExcavation { .. }
         | Input::BurrowAccess { .. }
         | Input::ForagingFixed { .. }

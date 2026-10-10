@@ -18,3 +18,6 @@ mod spatial_fixed;
 
 mod spatial_construction;
 mod spatial_passage;
+
+mod caching_input;
+mod caching_protection;
