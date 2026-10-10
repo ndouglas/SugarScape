@@ -8,7 +8,7 @@
 
 **Tech Stack:** Existing Rust/serde workspace, wasm-bindgen/wasm-pack, TypeScript, Vite, Vitest, plain DOM and the inherited spatial renderer; no new dependency or framework.
 
-**Spec:** [Approved Batch C design](../specs/2026-10-09-protection-deception-web-visualizations-design.md), written-spec approval by user LGTM on 2026-10-09. Plan approved by user LGTM! on 2026-10-09; execution is subagent-driven. Local implementation and independent reviews are complete; exact-commit remote delivery remains in progress.
+**Spec:** [Approved Batch C design](../specs/2026-10-09-protection-deception-web-visualizations-design.md), written-spec approval by user LGTM on 2026-10-09. Plan approved by user LGTM! on 2026-10-09; execution is subagent-driven. Implementation and independent reviews complete; runtime delivery `409f6b8` passed exact-commit CI and Pages verification.
 
 ## Global Constraints
 
@@ -166,7 +166,7 @@ cargo build --release -p sugarscape-cli
 
 In `web`: `npm run build`, `npm run typecheck`, `npm test`. From the worktree root: `python3 -m unittest discover -s studio/tests -t studio -v`. Workspace fmt is check-only; repair formatting only in edited Rust files. Do not repeat broader gates unless source changes/failures justify it. Native code/source-identity changes require parity and dependent browser evidence refresh, not reuse of old receipts. Existing browser-only WASM skips are disclosed.
 - [x] **Step 4: Fresh final independent review.** Reviewer compares full delivered diff to approved spec/plan and source-bound receipts, including all visibility/clock/invalid-input/source-preservation boundaries. Route findings to producers, scope corrections and rerun required checks. Snapshot/remove owned completed tracker, retain all evidence, commit reviewed docs/fixes with explicit files. No open material review findings at integration.
-- [ ] **Step 5: Integrate and verify exact commit.** Inspect main and all relevant worktree status/HEADs; coordinate any concurrent integration using actual Git state without discarding/stashing others. Merge incoming main into crowd if needed, resolve through producer/review, refresh source identities/checks warranted by the merged source. Integrate reviewed crowd into main normally, push, and inspect CI plus Pages for that exact final SHA. If bookkeeping produces a later delivered commit, verify that SHA as well. Record remote run links/conclusions and final source receipt; report two new entries, checks, scientific preservation and material limits. Preserve crowd and evidence.
+- [x] **Step 5: Integrate and verify exact commit.** Inspect main and all relevant worktree status/HEADs; coordinate any concurrent integration using actual Git state without discarding/stashing others. Merge incoming main into crowd if needed, resolve through producer/review, refresh source identities/checks warranted by the merged source. Integrate reviewed crowd into main normally, push, and inspect CI plus Pages for that exact final SHA. If bookkeeping produces a later delivered commit, verify that SHA as well. Record remote run links/conclusions and final source receipt; report two new entries, checks, scientific preservation and material limits. Preserve crowd and evidence.
 
 ## Self-review and Handoff
 

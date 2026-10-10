@@ -1,7 +1,7 @@
 # Protection and deception web visualizations — Batch C
 
 **Date:** 2026-10-09
-**Status:** conversational design and written spec approved by user LGTM on 2026-10-09; implementation plan approved by user LGTM! on 2026-10-09; local implementation and independent review complete; exact-commit remote delivery in progress.
+**Status:** conversational design and written spec approved by user LGTM on 2026-10-09; implementation plan approved by user LGTM! on 2026-10-09; implementation and independent review complete; runtime delivery `409f6b8` passed exact-commit CI and Pages verification.
 **Builds on:** the [visualization inventory](2026-10-08-campaign-visualization-inventory.md), [Batch B design](2026-10-08-spatial-campaign-web-visualizations-design.md), and [episode viewer](../../experiment-viewer.md).
 
 ## Intended outcome
