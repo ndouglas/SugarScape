@@ -2,8 +2,8 @@
 
 **Date:** 2026-10-09
 
-**Status:** Proposed for review. This is a design, not implementation approval, a registered
-measurement protocol, or new findings.
+**Status:** Approved for implementation planning on 2026-10-09. This is a design, not
+implementation approval, a registered measurement protocol, or new findings.
 
 **Research basis:** [first focused literature pass](../../studies/2026-10-09-war-literature-pass.md).
 
@@ -176,7 +176,9 @@ Contributor exposure can be recorded optionally; it must not affect the RNG or o
 
 The pure kernel has no sugar, possessions or resource destruction; use unavailable resource
 fields, not invented zero-valued economic measurements. The C path reports existing World
-stores, harvest, loot, removals and causes as separate observations. If a later adapter
+stores, loot and death causes as separate observations. Existing ordinary events do not
+expose complete harvest or removed-wealth flows; those quantities remain unavailable,
+rather than being inferred from a net wealth change. If a later adapter
 freezes possessions from World, label them diagnostic frozen stores, record zero movement/
 transfers/destruction by construction, and debit a dead actor's possessions to an explicit
 removal sink. Removal loss is not combat resource destruction or a casualty count.
@@ -260,7 +262,8 @@ to increase the number of mechanics.
   explicit failed receipts and provenance. Reuse their conventions without coupling W1
   to their model-specific schemas.
 
-Review this design before an implementation plan. Implementation, measurement registration,
+The user approved this design for implementation planning on 2026-10-09. Review the written
+implementation plan before execution. Implementation, measurement registration,
 calibration, archive generation and browser integration each remain unapproved here. No
 new simulator behavior, casualty measurements, war-duration results or WASM optimizations
 are claimed by this specification.
