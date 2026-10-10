@@ -1,7 +1,9 @@
 # War inside a society: a study program
 
 **Date:** 2026-09-26
-**Status:** an idea, persisted for later. Nothing is scheduled or built.
+**Status:** first focused literature pass completed on 2026-10-09; study design remains
+proposed. No new simulator or measurements are claimed. See the
+[first literature pass](2026-10-09-war-literature-pass.md).
 **Separate from:** the reproductions (`docs/papers.md`) and Flump Studio (`studio/`). Those
 reproduce and explain published models. These are our own experiments, built on a model we have
 reproduced.
@@ -14,8 +16,10 @@ where and what stopped it, alongside who won.
 The field has a pull toward strategy as a puzzle: arrows on maps, brilliant maneuvers, campaigns told
 like chess. That pull turns deaths into moves. The questions that started this program came from the
 ground instead: how many families were murdered, how many houses were burned, how long a pursuit
-lasts, and when and where the violence stops. They are also where the less-explored science is:
-aftermath, civilians, famine and the end of violence get far less modeling than maneuver does.
+lasts, and when and where the violence stops. These are the program's priorities. The
+[first literature pass](2026-10-09-war-literature-pass.md) finds existing civilian, demographic
+and termination models; a comparative claim about how much modeling each topic receives
+is not established.
 Lewis Fry Richardson, who founded the quantitative study of war, was a Quaker ambulance driver who
 counted deadly quarrels to help prevent them. That is the tradition this program belongs to.
 
@@ -44,9 +48,10 @@ From the War spike (`docs/superpowers/specs/2026-09-26-markets-and-war-spikes.md
   are the faster you grow". It stays quiet for hundreds of ticks, then one Flump does about 70 % of
   the killing, and one tribe ends ≥ 90 % in 14 of 20 runs by tick 2000. The winner ends about 20
   times richer.
-- **Rule C is a deterrence rule.** A Flump may attack only a poorer enemy, and not if a richer enemy
-  would see it afterward. So equals never fight: war comes only when it is lopsided, and then it is
-  quick.
+- **Rule C is a deterrence rule.** A Flump may attack only a poorer enemy. The retaliation
+  filter uses the attacker's sight range to check for richer enemies after movement. Equal
+  individuals cannot attack each other under C; equal group totals can contain unequal pairs.
+  The spike's rapid conquest is an observation under its conditions, not a general duration law.
 - **III-11's "coherent battle fronts … a prolonged war of attrition" don't reproduce** under the
   book's stated random replacement. **III-14's conquest and conversion** become a civil war under the
   stated random tags.
@@ -55,9 +60,14 @@ The first open question follows: what would it take for **equals** to fight a **
 
 ## Step one: the literature pass
 
-Every regularity below is cited from memory and marked *(check)* where a number or attribution needs
-verifying. Before any modeling, a sourced research pass turns this list into a **regularities
-table** with these columns:
+The [first focused pass](2026-10-09-war-literature-pass.md) is complete. It covers reciprocal
+engagement, geometry, duration/termination and nearby prior work; it does not validate the
+whole ladder. It recommends W1 reciprocal finite engagement before W2 morale/rout and W3
+supply. The proposals below remain candidates unless that pass explicitly verifies them.
+
+The original candidate regularities below were cited from memory and marked *(check)* where
+a number or attribution needs verifying. Further focused passes must turn the remaining
+candidates into a **regularities table** with these columns:
 
 | Column | Content |
 |---|---|
@@ -198,8 +208,9 @@ must reduce to it when every switch is off.
     is a spatial prediction a grid can test.
   - In non-state warfare, raids and burned settlements kill more than battles do (Keeley, *War
     Before Civilization*).
-  - Most of a war's deaths are indirect: famine from destroyed crops, refugee flows, disease among
-    the displaced. Sugarscape already models carrying capacity and migration.
+  - Indirect deaths can arise from famine, displacement and disease. Their share is
+    conflict-dependent; the [first pass](2026-10-09-war-literature-pass.md) endorses no universal
+    majority. Sugarscape already models carrying capacity and migration.
   - Burning is also an attack on supply, which links this rung to rung 4.
 
 ### 8. Social threads
@@ -258,10 +269,12 @@ must reduce to it when every switch is off.
 6. From physiology to small units, battles, campaigns, wars and states: can one society carry the
    whole chain, each scale checked against an attested regularity? Where does it break?
 
-The gap this program aims at: combat models usually strip away the economy, families, disease and
-culture, and Sugarscape has all of them. Epstein and Axtell titled Chapter III "The Emergence of
-History" and did little with war. As far as we know, nobody has run the chain end to end on a shared
-economic and demographic base *(check)*.
+The integration this program aims to investigate is a shared economic and demographic base
+with explicit accounting of combat and its consequences. The
+[first pass](2026-10-09-war-literature-pass.md) identifies prior models coupling battles,
+resources, civilian decisions, displacement, demography, identity and authority. A claim to
+be first, or an end-to-end gap claim, remains unestablished. The specific proposed
+contribution is controlled ablation on a reproduced Sugarscape base.
 
 ## Measured polarity handoff (2026-10-03)
 
@@ -363,7 +376,8 @@ damage does not measure casualties, AI intent or a real-world power law.
 - **Presentation:** if any of this becomes video, it's labeled as our experiment, and violence
   against civilians is shown with restraint: as counts and consequences, never as spectacle.
 
-## Not now
+## Current next step
 
-The Sugarscape series (Markets next), the papers queue and the milestones in progress continue as
-planned. This program starts with the literature pass whenever it's picked up.
+The [first focused literature pass](2026-10-09-war-literature-pass.md) is complete. W1
+engagement-benchmark design is next; no simulator implementation or measurement protocol
+is approved by this note. Other existing campaigns retain their independent schedules.
